@@ -42,7 +42,7 @@ class TemplateController extends Controller
             'slug'          => $slug,
             'icon_type'     => $request->icon_type,
             'icon_value'    => $iconValue,
-            'canvas_config' => $request->canvas_config,
+            'canvas_config' => json_decode($request->canvas_config, true),
             'is_active'     => $request->boolean('is_active', true),
             'sort_order'    => (int) $request->input('sort_order', 0),
         ]);
@@ -74,7 +74,7 @@ class TemplateController extends Controller
             'name'          => $request->name,
             'icon_type'     => $request->icon_type,
             'icon_value'    => $iconValue,
-            'canvas_config' => $request->canvas_config,
+            'canvas_config' => json_decode($request->canvas_config, true),
             'is_active'     => $request->boolean('is_active', false),
             'sort_order'    => (int) $request->input('sort_order', 0),
         ]);
