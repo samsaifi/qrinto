@@ -7,10 +7,11 @@
 
      READY-MADE TEMPLATES:
      A template = a set of layers (text, raster images, and/or SVGs) positioned as
-     canvas fractions so they scale across screens. Text is added as _isUserText;
-     images and SVGs are added as _isUserImage. Because they reuse the existing
-     layer flags, save/restore, z-ordering, masking and the composite export all
-     keep working unchanged.
+     canvas fractions so they scale across screens.
+     Layer flags: _isTemplateText | _isTemplateImage | _isTemplateSvg (template content)
+                  _isUserText (customer text)  |  _isUserImage (customer uploaded photo)
+     Z-order (bottom→top): _isUserImage → _isTemplateImage → _isTemplateSvg
+                            → _isTemplateText → _isUserText → maskGuide
      ═══════════════════════════════════════════════════════════════════════ --}}
 
 @extends('layouts.quick-flow')
@@ -1119,9 +1120,9 @@
                         H = fc.height,
                         sf = cv.scaleFactor;
 
-                    // Optionally clear existing user layers first (keep nothing / clean swap)
+                    // Clear previous template layers only — keep the customer's own photo and text
                     if (tpl.replace !== false) {
-                        fc.getObjects().filter(o => o._isUserImage || o._isUserText).forEach(o => fc.remove(o));
+                        fc.getObjects().filter(o => o._isTemplateText || o._isTemplateImage || o._isTemplateSvg).forEach(o => fc.remove(o));
                     }
 
                     // 1) Raster images (await each so they all land before z-ordering)
@@ -1154,7 +1155,7 @@
                             fontFamily: spec.fontFamily || 'Inter',
                             fill: spec.fill || '#000000',
                             textAlign: align,
-                            _isUserText: true,
+                            _isTemplateText: true,
                             objectCaching: false,
                             cornerSize: 12,
                             transparentCorners: false,
@@ -1181,14 +1182,7 @@
                         }).catch(() => {});
                     });
 
-                    // Enforce z-order: images/svg below, text above, guide on top
-                    fc.getObjects().forEach(o => {
-                        if (o._isUserImage) o.moveTo(0);
-                    });
-                    fc.getObjects().forEach(o => {
-                        if (o._isUserText) o.bringToFront();
-                    });
-                    if (cv.maskGuide) cv.maskGuide.bringToFront();
+                    this._enforceZOrder(key);
 
                     fc.renderAll();
                     this._saveCanvasState(key);
@@ -1220,7 +1214,7 @@
                             scaleX: scale,
                             scaleY: scale,
                             angle: spec.angle || 0,
-                            _isUserImage: true, // saves/restores & is baked into the composite
+                            _isTemplateImage: true,
                             selectable: !spec.locked,
                             evented: !spec.locked,
                             hasControls: !spec.locked,
@@ -1266,7 +1260,7 @@
                             scaleX: scale,
                             scaleY: scale,
                             angle: spec.angle || 0,
-                            _isUserImage: true, // treated like an image layer
+                            _isTemplateSvg: true,
                             selectable: !spec.locked,
                             evented: !spec.locked,
                             hasControls: !spec.locked,
@@ -1450,11 +1444,10 @@
 
                         upperCanvasEl.addEventListener('touchstart', (e) => {
                             const target = fc.findTarget(e);
-                            if (target && (target._isUserImage || target._isUserText)) {
-                                // Dragging/scaling active user content -> lock scroll
+                            if (target && (target._isUserImage || target._isUserText ||
+                                           target._isTemplateText || target._isTemplateImage || target._isTemplateSvg)) {
                                 upperCanvasEl.style.touchAction = 'none';
                             } else {
-                                // Touching background/guides/empty space -> allow scroll
                                 upperCanvasEl.style.touchAction = 'pan-y';
                             }
                         }, {
@@ -1718,14 +1711,7 @@
                             fc.renderAll();
                             fc.getObjects().forEach(o => o.setCoords());
 
-                            // Enforce z-order: images below, text above
-                            fc.getObjects().forEach(o => {
-                                if (o._isUserImage) o.moveTo(0);
-                            });
-                            fc.getObjects().forEach(o => {
-                                if (o._isUserText) o.bringToFront();
-                            });
-                            if (this.canvases[key].maskGuide) this.canvases[key].maskGuide.bringToFront();
+                            this._enforceZOrder(key);
 
                             fc.renderAll();
                             this.updateUI();
@@ -1945,11 +1931,7 @@
 
                         cv.fabricCanvas.add(img);
 
-                        // Ensure text layers & guide are always on top of all images
-                        cv.fabricCanvas.getObjects().forEach(o => {
-                            if (o._isUserText) o.bringToFront();
-                        });
-                        if (cv.maskGuide) cv.maskGuide.bringToFront();
+                        this._enforceZOrder(key);
 
                         cv.fabricCanvas.setActiveObject(img);
                         cv.fabricCanvas.renderAll();
@@ -2110,9 +2092,7 @@
 
                 cv.fabricCanvas.add(t);
 
-                // Ensure text layer and guide are always on top of all images
-                t.bringToFront();
-                if (cv.maskGuide) cv.maskGuide.bringToFront();
+                this._enforceZOrder(this.activeCanvas);
 
                 t.setCoords();
                 cv.fabricCanvas.setActiveObject(t);
@@ -2171,8 +2151,8 @@
             submitAllCanvases() {
                 if (this.isSavingComposite) return;
                 const hasUpload = Object.values(this.uploadIds).some(id => id !== null) ||
-                    Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.getObjects().some(o => o
-                        ._isUserText));
+                    Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.getObjects().some(o =>
+                        o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg));
 
                 if (!hasUpload) {
                     document.getElementById('upload_ids_field').value = JSON.stringify({});
@@ -2191,7 +2171,7 @@
                     const cv = this.canvases[key];
                     if (!cv || !this.canvasEnabled[key]) return;
                     const hasEdit = this.canvasImages[key] !== null || cv.fabricCanvas.getObjects().some(
-                        o => o._isUserText);
+                        o => o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg);
                     if (!hasEdit) return;
 
                     cv.fabricCanvas.discardActiveObject();
@@ -2452,9 +2432,10 @@
                     const cv = this.canvases[key];
                     if (!cv?.fabricCanvas) return;
                     const objects = cv.fabricCanvas.getObjects();
-                    // Filter out background image and mask guide by identifying user objects
+                    // Remove all user and template content, keep background and mask guide
                     objects.forEach(o => {
-                        if (o._isUserImage || o._isUserText) {
+                        if (o._isUserImage || o._isUserText ||
+                            o._isTemplateText || o._isTemplateImage || o._isTemplateSvg) {
                             cv.fabricCanvas.remove(o);
                         }
                     });
@@ -2556,22 +2537,22 @@
                 }
             },
 
-            // Ensure z-index ordering: images at bottom, text on top
+            // Layer order (bottom → top):
+            //   customer photo → template images → template SVGs → template text → user text → guide
             _enforceZOrder(key) {
                 const cv = this.canvases[key];
                 if (!cv || !cv.fabricCanvas) return;
-
-                // Move all image objects to the bottom
-                cv.fabricCanvas.getObjects().forEach(o => {
-                    if (o._isUserImage) o.moveTo(0);
-                });
-                // Move all text layers above
-                cv.fabricCanvas.getObjects().forEach(o => {
-                    if (o._isUserText) o.bringToFront();
-                });
-                // Mask guide always on top
+                const fc = cv.fabricCanvas;
+                // Call bringToFront bottom-up: each group lands above the previous
+                [
+                    o => o._isUserImage,      // customer uploaded photo — lowest
+                    o => o._isTemplateImage,  // template raster images
+                    o => o._isTemplateSvg,    // template SVG decorations
+                    o => o._isTemplateText,   // template text
+                    o => o._isUserText,       // user-typed text — topmost content
+                ].forEach(pred => fc.getObjects().filter(pred).forEach(o => o.bringToFront()));
                 if (cv.maskGuide) cv.maskGuide.bringToFront();
-                cv.fabricCanvas.renderAll();
+                fc.renderAll();
             }
         };
 
