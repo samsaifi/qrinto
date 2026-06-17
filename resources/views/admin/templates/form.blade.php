@@ -58,7 +58,7 @@
             <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-5">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-semibold text-surface-800">Canvas Builder</h2>
-                    <span class="text-xs text-surface-400">350 × 500 reference canvas</span>
+                    <span class="text-xs text-surface-400">500 × 500 square canvas</span>
                 </div>
 
                 {{-- Toolbar --}}
@@ -223,7 +223,7 @@
 <script>
 (function () {
     // ── Constants ──────────────────────────────────────────────────────────
-    const CANVAS_W = 350;
+    const CANVAS_W = 500;
     const CANVAS_H = 500;
     const UPLOAD_URL = '{{ route("admin.templates.upload-asset") }}';
     const CSRF = document.getElementById('upload-csrf').value;
