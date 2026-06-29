@@ -562,6 +562,7 @@
             padding: 6px 4px 2px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
+            flex-wrap: wrap;
         }
 
         .template-strip::-webkit-scrollbar {
@@ -606,9 +607,51 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: .06em;
-            color: #94a3b8;
+            color: #000000;
             padding-right: 4px;
             white-space: nowrap;
+            width: 100%;
+            display: block;
+            padding: 13px 5px;
+            border-bottom: 1px solid;
+        }
+
+        /* ── Template Category Filter ── */
+        .template-cat-filter {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 4px 4px 2px;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .template-cat-filter::-webkit-scrollbar {
+            display: none;
+        }
+
+        .template-cat-chip {
+            flex: 0 0 auto;
+            padding: 5px 13px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            color: #64748b;
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+
+        .template-cat-chip:hover {
+            background: #e2e8f0;
+        }
+
+        .template-cat-chip.active {
+            background: #0ea5e9;
+            border-color: #0ea5e9;
+            color: #fff;
         }
     </style>
 @endpush
@@ -654,7 +697,7 @@
                 </a>
                 Design Your Order
             </h1>
-            <p class="text-slate-500 font-medium text-xs md:ml-14">Customize each image by uploading photos and adding text.
+            <p class="text-slate-500 font-medium text-xs  ">Customize each image by uploading photos and adding text.
             </p>
         </div>
 
@@ -688,11 +731,6 @@
                     </div>
                 </div>
 
-                <!-- ═══ Ready-made Template Strip (chips generated from JS) ═══ -->
-                <div class="template-strip" id="template-strip">
-                    <span class="template-chip-label">Templates</span>
-                    <!-- buttons injected by customizer.renderTemplateChips() -->
-                </div>
 
                 <!-- Main Workspace Canvas -->
                 <div class="canvas-wrapper" id="canvas-container">
@@ -721,7 +759,66 @@
                         </button>
                     </div>
                 </div>
+                @if ($product->store_id)
+                    @php
+                        /** @var \App\Models\Store|null $reservedStore */
+                        $reservedStore = $product->relationLoaded('store')
+                            ? $product->store
+                            : \App\Models\Store::find($product->store_id);
 
+                        $isCanadianStore = $reservedStore?->isCanadian() ?? false;
+                        $cadRate = \App\Services\CurrencyService::getRate(); // e.g. 1.38
+                        $basePriceUsd = (float) $product->base_price;
+                        $comparePriceUsd = (float) $product->compare_price;
+                        $basePriceCad = round($basePriceUsd * $cadRate, 2);
+                        $comparePriceCad = round($comparePriceUsd * $cadRate, 2);
+                    @endphp
+
+                    {{-- ── Store-Reserved Product Notice ─────────────────────── --}}
+                    <div
+                        class="flex items-start gap-2.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 my-2 text-xs leading-relaxed shadow-sm">
+
+                        {{-- Warning icon --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-3.5 w-3.5 shrink-0 fill-amber-500"
+                            viewBox="0 0 512 512">
+                            <path
+                                d="M256 0c14.7 0 28.2 8.1 35.2 21l216 400c6.7 12.4 6.4 27.4-.8 39.5S486.1 480 472 480L40 480c-14.1 0-27.2-7.4-34.4-19.5s-7.5-27.1-.8-39.5l216-400c7-12.9 20.5-21 35.2-21zm0 352a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm0-192c-18.2 0-32.7 15.5-31.4 33.7l7.4 104c.9 12.5 11.4 22.3 23.9 22.3 12.6 0 23-9.7 23.9-22.3l7.4-104c1.3-18.2-13.1-33.7-31.4-33.7z" />
+                        </svg>
+
+                        {{-- Notice body --}}
+                        <div class="text-amber-800">
+                            <p class="font-semibold">
+                                Store-exclusive card
+                                @if ($reservedStore)
+                                    reserved for
+                                    <span class="font-bold text-amber-900">{{ $reservedStore->store_name }}</span>
+                                @endif
+                            </p>
+                            <p class="mt-0.5">
+                                Pricing applied on
+                                @if ($isCanadianStore)
+                                    <span class="mx-1 text-amber-400">&bull;</span>
+                                    @if ($comparePriceCad > 0 && $comparePriceCad > $basePriceCad)
+                                        <s class="text-amber-400">C${{ number_format($comparePriceCad, 2) }}</s>
+                                    @endif
+                                    <strong class="text-amber-900">C${{ number_format($basePriceCad, 2) }} CAD</strong>
+                                @else
+                                    ${{ number_format($product->base_price, 2) }}
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- ═══ Ready-made Template Strip ═══ -->
+                <div class="pt-1">
+                    <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 px-1 mb-1">Templates
+                    </div>
+                    <!-- Category Filter -->
+                    <div id="template-cat-filter" class="template-cat-filter mb-1"></div>
+                    <!-- Template Chips -->
+                    <div class="template-strip" id="template-strip"></div>
+                </div>
 
             </div>
 
@@ -960,6 +1057,8 @@
 
             // ── Ready-made Design Templates (loaded from DB) ──────────────────────
             templates: @json($activeTemplates ?? []),
+            templateCategories: @json($templateCategories ?? []),
+            activeTplCategory: null,
 
             // Injected from PHP
             imageTypes: <?php echo json_encode($imageTypes); ?>,
@@ -1014,7 +1113,8 @@
                 // 6. Floating Action Icon Listeners (fire BEFORE Fabric clears selection)
                 this._initActionIconListeners();
 
-                // 7. Build the ready-made template chips
+                // 7. Build the ready-made template category filter + chips
+                this.renderCategoryFilter();
                 this.renderTemplateChips();
 
                 // Final UI Sync
@@ -1074,24 +1174,59 @@
 
             },
 
+            // ── Build the category filter tabs ─────────────────────────────────────
+            renderCategoryFilter() {
+                const filter = document.getElementById('template-cat-filter');
+                if (!filter) return;
+                filter.innerHTML = '';
+
+                const allBtn = document.createElement('button');
+                allBtn.type = 'button';
+                allBtn.className = 'template-cat-chip' + (this.activeTplCategory === null ? ' active' : '');
+                allBtn.dataset.cat = '';
+                allBtn.textContent = 'All';
+                allBtn.onclick = () => this.filterTemplates(null);
+                filter.appendChild(allBtn);
+
+                (this.templateCategories || []).forEach(cat => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'template-cat-chip' + (this.activeTplCategory === cat.id ? ' active' : '');
+                    btn.dataset.cat = String(cat.id);
+                    btn.textContent = cat.name;
+                    btn.onclick = () => this.filterTemplates(cat.id);
+                    filter.appendChild(btn);
+                });
+            },
+
+            // ── Filter templates by category ───────────────────────────────────────
+            filterTemplates(catId) {
+                this.activeTplCategory = catId;
+                document.querySelectorAll('.template-cat-chip').forEach(el => {
+                    el.classList.toggle('active', el.dataset.cat === (catId === null ? '' : String(catId)));
+                });
+                this.renderTemplateChips();
+            },
+
             // ── Build the template chips from the templates object ──────────────────
             renderTemplateChips() {
                 const strip = document.getElementById('template-strip');
                 if (!strip) return;
 
-                // Remove any previously generated chips (keep the label span)
                 strip.querySelectorAll('.template-chip').forEach(el => el.remove());
 
                 Object.keys(this.templates).forEach(id => {
                     const tpl = this.templates[id];
+                    // Filter by active category
+                    if (this.activeTplCategory !== null && tpl.categoryId !== this.activeTplCategory) return;
                     const btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = 'template-chip';
                     btn.setAttribute('data-template', id);
                     btn.onclick = () => this.applyTemplate(id);
-                    const iconHtml = tpl.iconUrl
-                        ? `<img src="${tpl.iconUrl}" alt="" style="width:1em;height:1em;object-fit:contain;">`
-                        : `<i data-lucide="${tpl.icon || 'layout-template'}"></i>`;
+                    const iconHtml = tpl.iconUrl ?
+                        `<img src="${tpl.iconUrl}" alt="" style="width:1em;height:1em;object-fit:contain;">` :
+                        `<i data-lucide="${tpl.icon || 'layout-template'}"></i>`;
                     btn.innerHTML = `${iconHtml}<span>${tpl.label || id}</span>`;
                     strip.appendChild(btn);
                 });
@@ -1107,8 +1242,7 @@
                 if (!tpl) return;
 
                 const keys = tpl.applyTo === 'all' ?
-                    Object.keys(this.canvases).filter(k => this.canvasEnabled[k]) :
-                    [this.activeCanvas];
+                    Object.keys(this.canvases).filter(k => this.canvasEnabled[k]) : [this.activeCanvas];
 
                 const firstKey = Object.keys(this.imageTypes)[0];
 
@@ -1122,7 +1256,8 @@
 
                     // Clear previous template layers only — keep the customer's own photo and text
                     if (tpl.replace !== false) {
-                        fc.getObjects().filter(o => o._isTemplateText || o._isTemplateImage || o._isTemplateSvg).forEach(o => fc.remove(o));
+                        fc.getObjects().filter(o => o._isTemplateText || o._isTemplateImage || o._isTemplateSvg)
+                            .forEach(o => fc.remove(o));
                     }
 
                     // 1) Raster images (await each so they all land before z-ordering)
@@ -1399,16 +1534,27 @@
                 if (!containerEl) return;
                 const displayWidth = containerEl.offsetWidth;
 
+                const isPortrait = <?php echo ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false'; ?>;
+
+                // All 4 product images share the same dimensions, so every page must use a
+                // single canvas aspect ratio. The admin mask editor only records canvasWidth/
+                // canvasHeight for tabs that were actually visited — unvisited tabs keep the
+                // default 600×400 (landscape). Trusting each page's own saved dims therefore
+                // squishes portrait pages that were never masked. Derive one shared ratio from
+                // the first page whose config has real dimensions (the masked page), so every
+                // canvas matches the actual product image instead of the stale default.
+                const sharedConfig = Object.keys(this.imageTypes)
+                    .map(k => this.allMaskData[k] || {})
+                    .find(c => c.canvasWidth && c.canvasHeight) || {};
+                const adminW = sharedConfig.canvasWidth || (isPortrait ? 400 : 560);
+                const adminH = sharedConfig.canvasHeight || (isPortrait ? 560 : 400);
+
                 Object.keys(this.imageTypes).forEach(key => {
                     const canvasEl = document.getElementById('canvas-' + key);
                     if (!canvasEl) return;
 
                     const config = this.allMaskData[key] || {};
                     const isEditable = this.canvasEnabled[key];
-
-                    const isPortrait = <?php echo ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false'; ?>;
-                    const adminW = config.canvasWidth || (isPortrait ? 400 : 560);
-                    const adminH = config.canvasHeight || (isPortrait ? 560 : 400);
 
                     const scaleFactor = displayWidth / adminW;
                     const displayHeight = Math.round(adminH * scaleFactor);
@@ -1445,7 +1591,8 @@
                         upperCanvasEl.addEventListener('touchstart', (e) => {
                             const target = fc.findTarget(e);
                             if (target && (target._isUserImage || target._isUserText ||
-                                           target._isTemplateText || target._isTemplateImage || target._isTemplateSvg)) {
+                                    target._isTemplateText || target._isTemplateImage || target
+                                    ._isTemplateSvg)) {
                                 upperCanvasEl.style.touchAction = 'none';
                             } else {
                                 upperCanvasEl.style.touchAction = 'pan-y';
@@ -2171,7 +2318,8 @@
                     const cv = this.canvases[key];
                     if (!cv || !this.canvasEnabled[key]) return;
                     const hasEdit = this.canvasImages[key] !== null || cv.fabricCanvas.getObjects().some(
-                        o => o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg);
+                        o => o._isUserText || o._isTemplateText || o._isTemplateImage || o
+                        ._isTemplateSvg);
                     if (!hasEdit) return;
 
                     cv.fabricCanvas.discardActiveObject();
@@ -2545,11 +2693,11 @@
                 const fc = cv.fabricCanvas;
                 // Call bringToFront bottom-up: each group lands above the previous
                 [
-                    o => o._isUserImage,      // customer uploaded photo — lowest
-                    o => o._isTemplateImage,  // template raster images
-                    o => o._isTemplateSvg,    // template SVG decorations
-                    o => o._isTemplateText,   // template text
-                    o => o._isUserText,       // user-typed text — topmost content
+                    o => o._isUserImage, // customer uploaded photo — lowest
+                    o => o._isTemplateImage, // template raster images
+                    o => o._isTemplateSvg, // template SVG decorations
+                    o => o._isTemplateText, // template text
+                    o => o._isUserText, // user-typed text — topmost content
                 ].forEach(pred => fc.getObjects().filter(pred).forEach(o => o.bringToFront()));
                 if (cv.maskGuide) cv.maskGuide.bringToFront();
                 fc.renderAll();

@@ -1,0 +1,12 @@
+   Created:
+  1. database/migrations/2026_06_17_000001_create_templates_table.php
+  2. app/Models/Template.php
+  3. app/Http/Controllers/Admin/TemplateController.php
+  4. resources/views/admin/templates/index.blade.php
+  5. resources/views/admin/templates/form.blade.php
+
+  Modified:
+  6. routes/web.php — added 9 template routes
+  7. resources/views/layouts/admin.blade.php — added Templates nav item
+  8. app/Http/Controllers/QuickFlowController.php — passes active templates to customize view
+  9. resources/views/quick-flow/customize.blade.php — dynamic templates + z-order layer fix

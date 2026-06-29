@@ -1,0 +1,243 @@
+update the project depend on this  : 1) Goal (What we’re trying to achieve)
+What we want to build is not a typical “website,” but an ordering web application that covers the full flow: ordering, payment, print-ready file generation (PDF), and delivery.
+
+Key points:
+
+QR as the entry point: a printed QR code at a store is enough for customers to start an order on their own phone
+
+No native app (Web/PWA): scan QR → open browser → start immediately
+
+No printing equipment or operations at the store: all printing is centralized at a Noritsu site (quality, cost, and process control)
+
+Two fulfillment options:
+
+Store pickup (Noritsu site → ship to store → customer picks up)
+
+Home delivery (Noritsu site → ship to customer)
+
+Template-led “easy creation”: not Canva-level freeform editing; instead, templates + controlled editable areas so customers can reliably complete an order (practical MVP approach)
+
+2) Core Customer Experience (UX concept: “QR → Order in ~3 minutes”)
+We want a flow that customers can complete smoothly from the moment they see the QR code.
+
+Scan QR
+
+Customer scans QR printed on a store POP/sign
+
+Example URL: print.noritsu.com/start?store_id=XXXX
+
+store_id identifies the store/location (also useful for store-level reporting later)
+
+Select photos (1–3)
+
+Select multiple photos from phone library
+
+Show count + upload progress clearly
+
+Ideally add lightweight quality guidance (e.g., low resolution warning)
+
+Choose card type (start with a small SKU set)
+
+Example: Folded 5×7 inch, Postcard 4×6 inch, Premium (thicker stock)
+
+Keep SKU scope tight until the workflow is proven end-to-end
+
+Choose a template
+
+Categories: Birthday / Thank You / Seasonal / Simple
+
+Priority is “anyone can finish without failing”
+
+Template data structure matters operationally (image frames, text frames, safe area)
+
+Edit (minimal)
+
+Photo: position / scale / crop
+
+Text: short message + name (keep font/color options minimal in MVP)
+
+Don’t let customers spend too long here (conversion driver)
+
+Preview
+
+Check front/back (or folded: front/inside/back)
+
+Use user-friendly language for safe area warnings
+
+Select fulfillment (two choices)
+A. Store pickup: Print at Noritsu → ship to selected store → customer pickup
+B. Home delivery: Print at Noritsu → ship to customer address
+
+Payment (mobile-first)
+
+Prioritize Apple Pay / Google Pay / credit card (minimize drop-off)
+
+Show tax/shipping/total clearly
+
+Confirmation & Order Tracking
+
+Order number
+
+Status: Printing → Shipped → Delivered (to store / to home)
+
+Notifications (email/SMS) can be phased, but operationally we should include them early if possible
+
+3) Operating Model (What makes centralized printing work)
+This must not only “take orders,” but also “run reliably in real operations.”
+
+Automate print-ready output (PDF generation)
+
+Generate print-ready PDF from template + photos + text
+
+System must enforce bleed/safe area, font embedding, resolution checks, etc.
+
+Weakness here directly increases complaints and reprint cost
+
+Order status management (visibility for the Noritsu site)
+
+New → Printing → Shipped → Delivered
+
+For store pickup, “Delivered to store” is a key status
+
+Shipping model
+
+Store pickup: batch shipments from Noritsu site to stores (frequency determined operationally)
+
+Home delivery: USPS/UPS etc., including tracking notifications
+
+MVP can start with store pickup only, and add home delivery in v1 (but design the flow so adding the second option later is easy)
+
+Cancellation / refund / reprint policy
+
+Clearly communicate rules (e.g., no cancellation once printing starts)
+
+Define reprint conditions (shipping damage, print defect, customer error) as an internal policy
+
+4) Why this must be built as a “Web app” (not a content website)
+This is not about presenting information; it is a stateful application that must handle:
+
+Image uploads
+
+Maintaining template/editing state
+
+Payment
+
+PDF generation
+
+Logistics + status updates
+
+Ops/admin dashboard
+
+So this should be designed separately from CMS-style work tied to the PA site.
+
+5) Development approach with AI (e.g. ChatGPT / Claude / GitHub) built in
+We should explicitly use AI as an accelerator—not to reduce quality, but to generate fast drafts that engineers review and harden.
+
+What AI can draft
+
+Screen flows and microcopy drafts
+
+Initial data model (orders/stores/templates/assets)
+
+API draft
+
+Implementation skeleton (e.g., Next.js scaffolding)
+
+Test checklist (edge cases, boundaries, security)
+
+What humans must finalize
+
+Security (PII, images, payments)
+
+Performance (uploads, rendering, generation)
+
+Print-output quality (PDF spec, bleed, resolution, fonts)
+
+Error handling and operational reliability
+
+Consistency across ordering/shipping/status rules
+
+6) Deliverables to prepare first (MVP-oriented)
+After PA web is completed, please prepare the following (English is fine; diagrams are preferred):
+
+Architecture proposal (diagram)
+
+Frontend (customer UI + admin UI)
+
+API/DB/storage
+
+PDF generation
+
+Payment/notification/shipping integration candidates
+
+Screen list + wireframes
+
+Customer: start → upload → template → edit → preview → delivery → payment → done → track
+
+Admin: orders list → order detail → PDF → status update → shipping info
+
+Proposed data model
+
+Store / Order / OrderItem / Asset / Template / Shipment, etc.
+
+Separate MVP-minimum fields vs future expansion fields
+
+API list (endpoint draft)
+
+Session creation
+
+Image upload (signed URLs, etc.)
+
+Order creation
+
+Payment integration
+
+Status update
+
+Admin APIs
+
+MVP scope + phased roadmap
+
+MVP: tight card SKU set + store pickup (or both options if feasible)
+
+v1: home delivery, tracking notifications, more templates, re-order, etc.
+
+Risk & open-issues list
+
+Print file quality (PDF/fonts/bleed)
+
+Image handling (signed URL expiry, access control)
+
+Payment/tax/shipping
+
+Store shipment operations (frequency, cutoff times)
+
+Refund/reprint policy
+
+7) Next actions
+Once PA web reaches a stable completion point, please start this discovery work.
+
+Share the first draft of the deliverables above for initial review.
+
+If anything is unclear or risky, list questions/concerns early—I'll make decisions quickly on our side.
+
+--------------------------------------------------------------------------------
+DAILY REPORT - 2026-02-19
+--------------------------------------------------------------------------------
+1. Editor Enhancements:
+   - Completely rewrote the EditDesign component logic for robustness.
+   - Implemented logic to ensure frame images intentionally fill the canvas edge-to-edge.
+   - Solved frame scaling issues by loading images natively to get true naturalWidth and naturalHeight.
+   - Fixed layer management: Frame is now the background (locked), with masks and text overlays on top.
+
+2. Mask Implementation:
+   - Integrated shape masks (circles, rects, hearts, etc.) from backend data.
+   - Added visual 'Upload Image' placeholders for mask zones.
+   - Implemented image uploading into masks with proper clipping.
+   - Added 'Text' masks that are fully editable (font face, size, color).
+
+3. Technical Fixes:
+   - Fixed Fabric.js v7 implementation details (clipPath, Group scaling).
+   - Resolved coordinate system mismatches between Admin Canvas and Frontend Editor.
+   - Fixed CSS duplicate property warnings.
+

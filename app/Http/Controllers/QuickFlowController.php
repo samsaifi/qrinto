@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\Template;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Store;
+use App\Services\CurrencyService;
 use App\Models\CustomerUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,8 +19,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderConfirmationMail;
 use App\Mail\AdminOrderAlertMail;
 use App\Mail\StoreOrderAlertMail;
-use App\Mail\QuickFlowOrderMail;
-use App\Services\CurrencyService;
+use App\Mail\QuickFlowOrderMail; 
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\File;
 
@@ -65,7 +66,8 @@ class QuickFlowController extends Controller
 
         // Save progress in session
         $flowData = session('quick_flow_data', []);
-
+        $active_store_id = session('active_store_id', null);
+        
         // If this is a parent type, reset/start fresh with the new type
         if (!$type->parent_id) {
             
@@ -97,7 +99,17 @@ class QuickFlowController extends Controller
             return view($this->getViewPath('category'), compact('type', 'subTypes'));
         }
 
-        $templates = Product::orderBy('sort_order')->where('product_type_id', $type->parent_id)->orWhere('product_type_id', $type->id)->get();
+        $templates = Product::where('is_active', true)
+        ->where(function ($query) use ($type) {
+            $query->where('product_type_id', $type->parent_id)
+                ->orWhere('product_type_id', $type->id);
+        })
+        ->where(function ($query) use ($active_store_id) {
+            $query->where('store_id', $active_store_id)
+                ->orWhereNull('store_id');
+        })
+        ->orderBy('sort_order')
+        ->get();
         $categories = Category::parents()->orderBy('sort_order')->get();
         // die('inside category');
         return view($this->getViewPath('templates'), compact('type', 'templates', 'categories'));
@@ -119,40 +131,38 @@ class QuickFlowController extends Controller
         if (!$product->is_active) {
             abort(404);
         }
-
+       
         $product->load('images', 'productType');
 
         // Use sub-type price from session if available
         $flowData = session('quick_flow_data', []);
         
-        $unitPrice = isset($flowData['size_price']) ? $flowData['size_price'] : $product->base_price;
+        // $unitPrice = isset($flowData['size_price']) ? $flowData['size_price'] : $product->base_price;
+        if (!empty($product->store_id)) {
+            $unitPrice = (float) $product->base_price;
+        } else {
+            $unitPrice = isset($flowData['size_price'])
+                ? (float) $flowData['size_price']
+                : $product->base_price;
+        }
         $oldPrice = isset($flowData['size_old_price']) ? $flowData['size_old_price'] : $product->compare_price;
         
+        $activeTemplates     = $this->buildTemplatesForJs();
+        $templateCategories  = $this->buildTemplateCategoriesForJs();
+          
         if($product->no_of_pages == 4){
-            $activeTemplates = $this->buildTemplatesForJs();
-            return view($this->getViewPath('customize'), compact('product', 'unitPrice', 'oldPrice', 'activeTemplates'));
-        }elseif($product->no_of_pages == 2){ 
-            return view($this->getViewPath('customize-single-mask'), compact('product', 'unitPrice', 'oldPrice', 'flowData'));
+            return view($this->getViewPath('customize'), compact('product', 'unitPrice', 'oldPrice', 'activeTemplates', 'templateCategories'));
+        }elseif($product->no_of_pages == 2){
+            return view($this->getViewPath('customize-single-mask'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
         }else{
-            // Check if product has mask data — use masking view for single-page products with masks
-            // $maskData = $product->mask_data ?? [];
-            // if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
-            // $hasMasks = !empty($maskData) && (
-            //     isset($maskData['masks']) || 
-            //     collect($maskData)->contains(fn($v) => is_array($v) && isset($v['masks']))
-            // );
-
-            // if ($hasMasks) {
-            //     return view($this->getViewPath('customize-single-mask'), compact('product', 'unitPrice', 'oldPrice', 'flowData'));
-            // }
-            return view($this->getViewPath('customize-single'), compact('product', 'unitPrice', 'oldPrice', 'flowData'));
+            return view($this->getViewPath('customize-single'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
         }
 
 
     }
 
     /**
-     * Build the templates keyed object for JS consumption.
+     * Build all active templates keyed by slug for JS consumption.
      */
     private function buildTemplatesForJs(): array
     {
@@ -163,11 +173,30 @@ class QuickFlowController extends Controller
             ->mapWithKeys(function ($tpl) {
                 $config = $tpl->canvas_config ?? [];
                 return [$tpl->slug => array_merge($config, [
-                    'label'   => $tpl->name,
-                    'icon'    => $tpl->icon_type === 'lucide' ? $tpl->icon_value : 'layout-template',
-                    'iconUrl' => $tpl->icon_type === 'upload' ? asset('storage/' . $tpl->icon_value) : null,
+                    'label'      => $tpl->name,
+                    'icon'       => $tpl->icon_type === 'lucide' ? $tpl->icon_value : 'layout-template',
+                    'iconUrl'    => $tpl->icon_type === 'upload' ? asset('storage/' . $tpl->icon_value) : null,
+                    'categoryId' => $tpl->category_id,
                 ])];
             })
+            ->toArray();
+    }
+
+    /**
+     * Build the list of template categories for JS consumption.
+     */
+    private function buildTemplateCategoriesForJs(): array
+    {
+        return Template::active()
+            ->whereNotNull('category_id')
+            ->with('category')
+            ->get()
+            ->pluck('category')
+            ->filter()
+            ->unique('id')
+            ->sortBy('name')
+            ->values()
+            ->map(fn($c) => ['id' => $c->id, 'name' => $c->name])
             ->toArray();
     }
 
@@ -250,18 +279,16 @@ class QuickFlowController extends Controller
      * Step 5: Review & Pay
      */
     public function checkout(Request $request)
-    {   
-
-       
-        $productId = $request->input('product_id');
-        $product = Product::findOrFail($productId);
-        $quantity = $request->input('quantity', 1);
-        $message = $request->input('message');
-        $styleData = json_decode($request->input('style_data'), true);
+    {
+        $productId  = $request->input('product_id');
+        $product    = Product::findOrFail($productId);
+        $quantity   = $request->input('quantity', 1);
+        $message    = $request->input('message');
+        $styleData  = json_decode($request->input('style_data'), true);
 
         // Handle multiple uploads
         $uploadIdsJson = $request->input('upload_ids');
-        $uploadIds = $uploadIdsJson ? json_decode($uploadIdsJson, true) : [];
+        $uploadIds     = $uploadIdsJson ? json_decode($uploadIdsJson, true) : [];
 
         $uploads = [];
         if (!empty($uploadIds)) {
@@ -275,12 +302,29 @@ class QuickFlowController extends Controller
 
         $paypalClientId = config('services.paypal.client_id', env('PAYPAL_CLIENT_ID'));
 
-        // Use sub-type price from session if available
+        // ── Unit-price resolution ────────────────────────────────────────────
+        // Priority:
+        //  1. Store-exclusive product + Canadian store  → use CAD-converted base_price
+        //  2. Store-exclusive product + non-Canadian store → use base_price (USD)
+        //  3. No store restriction → honour size_price from session, else base_price
+        // ────────────────────────────────────────────────────────────────────
         $flowData = session('quick_flow_data', []);
-        $unitPrice = isset($flowData['size_price']) ? $flowData['size_price'] : $product->base_price;
 
-        return view($this->getViewPath('checkout'), compact('product', 'quantity', 'message', 'styleData', 'upload', 'uploads', 'uploadIds', 'paypalClientId', 'unitPrice'));
+        if ($product->store_id) {
+             $unitPrice = (float) $product->base_price;
+        } else {
+            // Generic product: honour the size-tier price stored in the session
+            $unitPrice = isset($flowData['size_price'])
+                ? $flowData['size_price']
+                : $product->base_price;
+        }
+
+        return view($this->getViewPath('checkout'), compact(
+            'product', 'quantity', 'message', 'styleData',
+            'upload', 'uploads', 'uploadIds', 'paypalClientId', 'unitPrice'
+        ));
     }
+
 
     /**
      * PayPal: Create Order (AJAX)
@@ -300,7 +344,14 @@ class QuickFlowController extends Controller
 
         // Use sub-type price from session if available, else fallback to product base price
         $flowData = session('quick_flow_data', []);
-        $unitPrice = isset($flowData['size_price']) ? $flowData['size_price'] : $product->base_price;
+        // $unitPrice = isset($flowData['size_price']) ? $flowData['size_price'] : $product->base_price;
+        if (!empty($product->store_id)) {
+            $unitPrice = (float) $product->base_price;
+        } else {
+            $unitPrice = isset($flowData['size_price'])
+                ? $flowData['size_price']
+                : $product->base_price;
+        }
         $unitPrice = CurrencyService::convert((float) $unitPrice);
         $subtotal = $unitPrice * $quantity;
         $discountAmount = 0;
@@ -547,7 +598,14 @@ class QuickFlowController extends Controller
 
         // Use sub-type price from session if available
         $flowData = session('quick_flow_data', []);
-        $unitPrice = isset($flowData['size_price']) ? $flowData['size_price'] : $product->base_price;
+        // $unitPrice = isset($flowData['size_price']) ? $flowData['size_price'] : $product->base_price;
+        if (!empty($product->store_id)) {
+    $unitPrice = (float) $product->base_price;
+} else {
+    $unitPrice = isset($flowData['size_price'])
+        ? $flowData['size_price']
+        : $product->base_price;
+}
         $unitPrice = CurrencyService::convert((float) $unitPrice);
         $subtotal = $unitPrice * $quantity;
         $discountAmount = 0;
@@ -906,7 +964,6 @@ class QuickFlowController extends Controller
 
         try {
             $order = $this->storeCustomPrintOrder($request, 'cash', null, 'pending');
-
             return response()->json([
                 'success' => true,
                 'order_id' => $order->id,
@@ -1002,11 +1059,17 @@ class QuickFlowController extends Controller
      * Shared logic to store Custom Print orders without PDF generation
      */
     private function storeCustomPrintOrder($request, $paymentGateway, $paymentId = null, $paymentStatus = 'pending')
-    {
+    {  
+         
         $upload = CustomerUpload::findOrFail($request->upload_id);
         $type = \App\Models\ProductType::findOrFail($request->size_id);
         $quantity = (int)$request->quantity;
-        $unitPrice = $type->active_price;
+        $product = Product::find($request->product_id);
+        if($product->store_id && $product->store_id != null && $product->store_id != ""){
+            $unitPrice = (float) $product->base_price;            
+        }else{
+            $unitPrice = $type->active_price;
+        }
         $total = $unitPrice * $quantity;
         $storeId = session('active_store_id');
 

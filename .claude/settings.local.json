@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\xampp\\\\htdocs\\\\qrinto\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\xampp\\\\htdocs\\\\qrinto\" -Force | Select-Object Name, @{Name='Type';Expression={if\\($_.PSIsContainer\\){'Dir'}else{'File'}}} | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\xampp\\\\htdocs\\\\qrinto\\\\app\" -Recurse -Force | Select-Object FullName, @{Name='Type';Expression={if\\($_.PSIsContainer\\){'Dir'}else{'File'}}} | Where-Object {$_.FullName -match '\\\\.\\(php|json\\)$|Dir'} | Format-Table -AutoSize -Wrap)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\xampp\\\\htdocs\\\\qrinto\\\\resources\" -Recurse -Force -ErrorAction SilentlyContinue | Where-Object {$_.Extension -match '\\\\.\\(blade\\\\.php|jsx|js|css\\)$'} | Select-Object FullName | Sort-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\xampp\\\\htdocs\\\\qrinto\\\\resources\\\\views\" -Recurse -Force | Where-Object {$_.Extension -eq '.blade.php'} | Select-Object @{Name='Path';Expression={$_.FullName.Replace\\('C:\\\\xampp\\\\htdocs\\\\qrinto\\\\resources\\\\views\\\\', ''\\)}} | Select-Object Path -First 30)",
+      "Read(//c/Users/sadda/Downloads/**)",
+      "Bash(python3 -c ' *)",
+      "Bash(Get-ChildItem *)",
+      "PowerShell(head *)",
+      "PowerShell(cd C:\\\\xampp\\\\htdocs\\\\qrinto; php -r \"require 'vendor/autoload.php'; \\\\$app = require_once 'bootstrap/app.php'; \\\\$app->boot\\(\\); \\\\$cols = \\\\Illuminate\\\\Support\\\\Facades\\\\DB::select\\('DESCRIBE templates'\\); foreach\\(\\\\$cols as \\\\$c\\) { echo \\\\$c->Field . ' ' . \\\\$c->Type . PHP_EOL; }\" 2>&1)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost/qrinto/public/\" -TimeoutSec 5 -UseBasicParsing; \"HTTP $\\($r.StatusCode\\)\" } catch { \"Error: $_\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost/qrinto/public/admin/templates\" -TimeoutSec 5 -UseBasicParsing; \"HTTP $\\($r.StatusCode\\)\" } catch { \"Error: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(where.exe npx 2>&1; npx playwright --version 2>&1)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

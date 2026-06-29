@@ -2,7 +2,39 @@
 @section('title', isset($template) ? 'Edit Template' : 'New Template')
 
 @push('styles')
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Cinzel:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Lora:ital,wght@0,400;0,700;1,400&family=Pacifico&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Curated Fonts (synced with customizer) ── */
+@font-face { font-family: 'ABeeZee'; src: url("{{ asset('fonts/ABeeZeeRegular.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Alex Brush'; src: url("{{ asset('fonts/AlexBrush.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Alfa Slab One'; src: url("{{ asset('fonts/AlfaSlabOne.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Amatic SC'; src: url("{{ asset('fonts/AmaticSC.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Anton'; src: url("{{ asset('fonts/Anton.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Bangers'; src: url("{{ asset('fonts/Bangers.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Bebas Neue'; src: url("{{ asset('fonts/BebasNeue.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Bungee'; src: url("{{ asset('fonts/Bungee.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Caveat'; src: url("{{ asset('fonts/Caveat.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Cinzel'; src: url("{{ asset('fonts/Cinzel.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Courgette'; src: url("{{ asset('fonts/Courgette.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Crimson Pro'; src: url("{{ asset('fonts/CrimsonPro.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Dancing Script'; src: url("{{ asset('fonts/DancingScript.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Great Vibes'; src: url("{{ asset('fonts/GreatVibes.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Indie Flower'; src: url("{{ asset('fonts/IndieFlower.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Inter'; src: url("{{ asset('fonts/Inter.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Lato'; src: url("{{ asset('fonts/Lato.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Lobster'; src: url("{{ asset('fonts/Lobster.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Lora'; src: url("{{ asset('fonts/Lora.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Open Sans'; src: url("{{ asset('fonts/OpenSans.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Oswald'; src: url("{{ asset('fonts/Oswald.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Pacifico'; src: url("{{ asset('fonts/Pacifico.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Permanent Marker'; src: url("{{ asset('fonts/PermanentMarker.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Playfair Display'; src: url("{{ asset('fonts/PlayfairDisplay.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Poppins'; src: url("{{ asset('fonts/Poppins.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Righteous'; src: url("{{ asset('fonts/Righteous.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Roboto'; src: url("{{ asset('fonts/Roboto.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Sacramento'; src: url("{{ asset('fonts/Sacramento.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Satisfy'; src: url("{{ asset('fonts/Satisfy.ttf') }}"); font-display: swap; }
+@font-face { font-family: 'Shadows Into Light'; src: url("{{ asset('fonts/ShadowsIntoLightTwo.ttf') }}"); font-display: swap; }
+</style>
 <style>
 #builder-canvas-container { position:relative; display:inline-block; }
 #builder-canvas-container canvas { display:block; border:1px solid #e2e8f0; border-radius:8px; }
@@ -113,6 +145,21 @@
                     <label class="prop-label" for="name">Name *</label>
                     <input id="name" name="name" type="text" class="prop-input"
                            value="{{ old('name', $template->name ?? '') }}" placeholder="e.g. Birthday" required>
+                </div>
+
+                {{-- Category --}}
+                <div class="prop-row">
+                    <label class="prop-label" for="category_id">Category</label>
+                    <select id="category_id" name="category_id" class="prop-input">
+                        <option value="">All Categories (Global)</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}"
+                                {{ old('category_id', $template->category_id ?? '') == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span class="text-xs text-surface-400 mt-1">Leave as "Global" to show this template for all products.</span>
                 </div>
 
                 {{-- Icon --}}
@@ -229,9 +276,13 @@
     const CSRF = document.getElementById('upload-csrf').value;
 
     const FONT_FAMILIES = [
-        'Inter','Poppins','Lora','Great Vibes','Pacifico',
-        'Cinzel','Dancing Script','Anton','Outfit','Arial',
-        'Georgia','Times New Roman','Courier New',
+        'Inter','Roboto','Open Sans','Poppins','Lato',
+        'ABeeZee','Oswald','Bebas Neue','Anton','Alfa Slab One',
+        'Playfair Display','Lora','Crimson Pro','Cinzel',
+        'Dancing Script','Great Vibes','Pacifico','Alex Brush',
+        'Satisfy','Courgette','Sacramento','Caveat',
+        'Indie Flower','Amatic SC','Shadows Into Light',
+        'Lobster','Righteous','Bangers','Bungee','Permanent Marker',
     ];
 
     // ── Existing config (for edit) ─────────────────────────────────────────

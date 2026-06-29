@@ -45,7 +45,11 @@ Route::get('/storage-link', function () {
 | Public Routes
 |--------------------------------------------------------------------------
 */
-
+// artisan route to clear cache in laravel
+Route::get('/clear-cache', function () {
+    Artisan::call('optimize:clear');
+    return 'Cache cleared successfully!';
+});
 /*
 |--------------------------------------------------------------------------
 | Public & Customer Flow Routes
@@ -156,7 +160,10 @@ Route::prefix('noritsu')->name('noritsu.')->group(function () {
 | Store QR Code Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/store/{storeCode}', [\App\Http\Controllers\StoreQrController::class, 'scan'])->name('store.scan');
+Route::get('/store/{storeCode}', function ($storeCode) {
+    session()->flush(); 
+    return app(\App\Http\Controllers\StoreQrController::class)->scan($storeCode);
+})->name('store.scan');
 Route::get('/store/{storeCode}/qr', [\App\Http\Controllers\StoreQrController::class, 'show'])->name('store.qr');
 
 /*

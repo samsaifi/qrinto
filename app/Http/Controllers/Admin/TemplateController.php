@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Template;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,19 +13,21 @@ class TemplateController extends Controller
 {
     public function index()
     {
-        $templates = Template::orderBy('sort_order')->orderBy('name')->paginate(20);
+        $templates = Template::orderBy('name')->paginate(20);
         return view('admin.templates.index', compact('templates'));
     }
 
     public function create()
     {
-        return view('admin.templates.form');
+        $categories = Category::orderBy('name')->get();
+        return view('admin.templates.form', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name'          => 'required|string|max:255',
+            'category_id'   => 'nullable|exists:categories,id',
             'icon_type'     => 'required|in:lucide,upload',
             'icon_lucide'   => 'nullable|string|max:100',
             'icon_file'     => 'nullable|file|mimes:svg|max:1024',
@@ -40,6 +43,7 @@ class TemplateController extends Controller
         Template::create([
             'name'          => $request->name,
             'slug'          => $slug,
+            'category_id'   => $request->input('category_id') ?: null,
             'icon_type'     => $request->icon_type,
             'icon_value'    => $iconValue,
             'canvas_config' => json_decode($request->canvas_config, true),
@@ -53,13 +57,15 @@ class TemplateController extends Controller
 
     public function edit(Template $template)
     {
-        return view('admin.templates.form', compact('template'));
+        $categories = Category::orderBy('name')->get();
+        return view('admin.templates.form', compact('template', 'categories'));
     }
 
     public function update(Request $request, Template $template)
     {
         $request->validate([
             'name'          => 'required|string|max:255',
+            'category_id'   => 'nullable|exists:categories,id',
             'icon_type'     => 'required|in:lucide,upload',
             'icon_lucide'   => 'nullable|string|max:100',
             'icon_file'     => 'nullable|file|mimes:svg|max:1024',
@@ -72,6 +78,7 @@ class TemplateController extends Controller
 
         $template->update([
             'name'          => $request->name,
+            'category_id'   => $request->input('category_id') ?: null,
             'icon_type'     => $request->icon_type,
             'icon_value'    => $iconValue,
             'canvas_config' => json_decode($request->canvas_config, true),
