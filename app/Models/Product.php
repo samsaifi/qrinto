@@ -27,8 +27,9 @@ class Product extends Model
         'no_of_pages'
     ];
     public $no_of_pages_array = [
-        1 => 'Megnet category without marking area', 
-        2 => 'Single Page with marking area', 
+        // 1 => 'Megnet category without marking area', 
+        1 => 'Single Page with marking area', 
+        2 => 'Double Page with marking area', 
         4 => 'Four Pages with marking area', 
     ];
     protected function casts(): array
@@ -146,6 +147,56 @@ class Product extends Model
         }
         $primary = $this->images()->where('is_primary', true)->first();
         return $primary ? asset('storage/' . $primary->image_path) : null;
+    }
+
+    /**
+     * Always return a thumbnail URL for the given storage-relative image path.
+     * If the thumbnail does not exist yet it is created first, then returned.
+     */
+    public function getFeaturedImageUrl($img_url): ?string
+    {
+        if (!$img_url) {
+            return null;
+        }
+
+        // Accept either a full asset URL (e.g. $product->featured_image_url)
+        // or a plain storage-relative path — normalise to the relative path.
+        $img_url = str_replace(asset('storage') . '/', '', $img_url);
+        $img_url = ltrim(preg_replace('#^/?storage/#', '', $img_url), '/');
+
+        // Original file on the "public" storage disk.
+        $source = storage_path('app/public/' . $img_url);
+
+        // Thumbnail mirrors the original path under a "thumbnails/" prefix.
+        $thumbRelative = 'thumbnails/' . $img_url;
+        $thumbFull = storage_path('app/public/' . $thumbRelative);
+
+        // Create the thumbnail if it is missing or older than the source.
+        if (!is_file($thumbFull) || (is_file($source) && filemtime($thumbFull) < filemtime($source))) {
+            if (!is_file($source)) {
+                // No source to build from — fall back to the original URL.
+                return asset('storage/' . $img_url);
+            }
+
+            if (!is_dir(dirname($thumbFull))) {
+                @mkdir(dirname($thumbFull), 0755, true);
+            }
+
+            try {
+                $manager = new \Intervention\Image\ImageManager(
+                    new \Intervention\Image\Drivers\Gd\Driver()
+                );
+                $manager->read($source)
+                    ->scaleDown(width: 400) // keep aspect ratio, max 400px wide
+                    ->save($thumbFull, quality: 80);
+            } catch (\Throwable $e) {
+                // If thumbnailing fails, degrade gracefully to the full image.
+                return asset('storage/' . $img_url);
+            }
+        }
+
+        // Always return the thumbnail.
+        return asset('storage/' . $thumbRelative);
     }
 
     public function getDiscountPercentAttribute(): ?int

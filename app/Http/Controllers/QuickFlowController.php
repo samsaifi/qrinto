@@ -75,6 +75,7 @@ class QuickFlowController extends Controller
                 'type_id' => $type->id,
                 'type_name' => $type->name,
                 'type_slug' => $type->slug,
+                
                 'category_name' => $type->name, // Legacy support
                 'category_slug' => $type->slug  // Legacy support
             ];
@@ -87,31 +88,48 @@ class QuickFlowController extends Controller
             $flowData['size_height'] = $type->height;
             $flowData['size_unit'] = $type->unit;
             $flowData['size_price'] = $type->price;
+            $flowData['size_title']    = $type->title;
             $flowData['size_old_price'] = $type->old_price;
+            
         }
 
         session(['quick_flow_data' => $flowData]);
 
-        $subTypes = $type->children()->where('is_active', true)->get();
+        $subTypes = $type->children()
+            ->where('is_active', 1)
+            ->orderBy('sort_order')
+            ->get();
 
         if ($subTypes->isNotEmpty()) {
-            
             return view($this->getViewPath('category'), compact('type', 'subTypes'));
         }
 
-        $templates = Product::where('is_active', true)
-        ->where(function ($query) use ($type) {
-            $query->where('product_type_id', $type->parent_id)
-                ->orWhere('product_type_id', $type->id);
-        })
-        ->where(function ($query) use ($active_store_id) {
-            $query->where('store_id', $active_store_id)
-                ->orWhereNull('store_id');
-        })
-        ->orderBy('sort_order')
-        ->get();
+        $q = Product::where('is_active', 1)
+            ->where(function ($query) use ($type) {
+                $query->where('product_type_id', $type->parent_id)
+                    ->orWhere('product_type_id', $type->id);
+            })
+            ->where(function ($query) use ($active_store_id) {
+                $query->where('store_id', $active_store_id)
+                    ->orWhereNull('store_id');
+            });
+
+        if ($flowData['size_title'] === 'Flat') {
+            $q->where('no_of_pages', 1);
+        }
+
+        if ($flowData['size_title'] === 'Flat - double') {
+            $q->where('no_of_pages', 2);
+        }
+        // dd($q->toRawSql());
+
+        $templates = $q->orderBy('sort_order')->get();
+
+
+        // $templates = $query->get();
         $categories = Category::parents()->orderBy('sort_order')->get();
-        // die('inside category');
+         
+        // die($flowData['size_title'] );
         return view($this->getViewPath('templates'), compact('type', 'templates', 'categories'));
     }
 
@@ -153,9 +171,11 @@ class QuickFlowController extends Controller
         if($product->no_of_pages == 4){
             return view($this->getViewPath('customize'), compact('product', 'unitPrice', 'oldPrice', 'activeTemplates', 'templateCategories'));
         }elseif($product->no_of_pages == 2){
+            return view($this->getViewPath('customize-double'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
+        }else {  
             return view($this->getViewPath('customize-single-mask'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
-        }else{
-            return view($this->getViewPath('customize-single'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
+        // }else{
+        //     return view($this->getViewPath('customize-single'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
         }
 
 
@@ -698,19 +718,385 @@ class QuickFlowController extends Controller
     {
         $order->load(['items.product', 'store']);
 
-        $designUrl = null;
         $item = $order->items->first();
-        if ($item) {
-            $uploadedImages = $item->uploaded_images;
-            if ($uploadedImages && is_array($uploadedImages) && count($uploadedImages) > 0) {
-                $firstImage = reset($uploadedImages);
-                $designUrl = str_starts_with($firstImage, 'http') ? $firstImage : asset('storage/' . $firstImage);
-            } elseif (!empty($item->customization_data['preview_url'])) {
-                $designUrl = $item->customization_data['preview_url'];
-            }
+        $product = $item?->product;
+        $designUrl = null;
+        $pdfUrl = null;
+
+        $pdfName = 'Design_' . $order->order_number . '.pdf';
+        $pdfDirectory = storage_path('app/public/orders/pdfs');
+        $pdfPath = $pdfDirectory . '/' . $pdfName;
+
+        $noOfPages = $product->no_of_pages ?? 1;
+        $flowData = $order->flow_data ?? [];
+        $orientation = ($product && $product->pdf_orientation) ? strtolower($product->pdf_orientation) : 'portrait';
+
+        if ($noOfPages == 4) {
+            $landscape_imageTypes = [
+                'sample_image' => 'rotate_0',
+                'background_image' => 'rotate_0',
+                'frame_image' => 'rotate_180_plus',
+                'overlay_image' => 'rotate_0',
+            ];
+            $portrait_imageTypes = [
+                'frame_image' => 'rotate_90_minus',
+                'overlay_image' => 'rotate_90_minus',
+                'sample_image' => 'rotate_90_plus',
+                'background_image' => 'rotate_90_plus',
+            ];
+            $imageTypes = ($orientation === 'portrait') ? $portrait_imageTypes : $landscape_imageTypes;
+            $slots = array_keys($imageTypes);
+        } elseif ($noOfPages == 2) {
+            $landscape_imageTypes = [
+                'sample_image' => 'rotate_0',
+                'frame_image'  => 'rotate_180_plus',
+            ];
+            $portrait_imageTypes = [
+                'frame_image'  => 'rotate_90_minus',
+                'sample_image' => 'rotate_90_minus',
+            ];
+            $imageTypes = ($orientation === 'portrait') ? $portrait_imageTypes : $landscape_imageTypes;
+            $slots = ['frame_image', 'sample_image'];
+        } else {
+            $imageTypes = [];
+            $slots = [];
         }
 
-        return view($this->getViewPath('print'), compact('order', 'designUrl'));
+        if ($noOfPages >= 2 && $item && $product) {
+            $uploadedImages = $item->uploaded_images ?? [];
+            $absolutePaths = [];
+
+            foreach ($slots as $key) {
+                $localPath = null;
+
+                if (!empty($uploadedImages[$key])) {
+                    $localPath = storage_path('app/public/' . $uploadedImages[$key]);
+                    if (!file_exists($localPath)) {
+                        $localPath = public_path('storage/' . $uploadedImages[$key]);
+                    }
+                }
+
+                if (empty($localPath) || !file_exists($localPath)) {
+                    $dbPath = $product->getRawOriginal($key);
+                    if ($dbPath) {
+                        $localPath = storage_path('app/public/' . $dbPath);
+                        if (!file_exists($localPath)) {
+                            $localPath = public_path('storage/' . $dbPath);
+                        }
+                    }
+                }
+
+                if ($localPath && file_exists($localPath)) {
+                    $rotation = $imageTypes[$key] ?? 'rotate_0';
+                    $rotatedAbsPath = $this->physicallyRotateImage($localPath, $rotation);
+                    $absolutePaths[$key] = str_replace('\\', '/', $rotatedAbsPath);
+                } else {
+                    $absolutePaths[$key] = null;
+                    \Log::warning("printDesign Image Missing: Key {$key} for order {$order->order_number}");
+                }
+            }
+
+            $firstAvailable = collect($absolutePaths)->filter()->first();
+            if ($firstAvailable) {
+                $relativePath = str_replace(str_replace('\\', '/', storage_path('app/public/')), '', $firstAvailable);
+                $designUrl = asset('storage/' . $relativePath);
+            }
+
+            $width = floatval($flowData['size_width'] ?? 3.5);
+            $height = floatval($flowData['size_height'] ?? 5);
+            $pdfWidth = min($width, $height);
+            $pdfHeight = max($width, $height);
+            $pdfOrientation = ($product && $product->pdf_orientation) ? $product->pdf_orientation : 'landscape';
+
+            if (!File::isDirectory($pdfDirectory)) {
+                File::makeDirectory($pdfDirectory, 0755, true, true);
+            }
+
+            if ($noOfPages == 4) {
+                $pdf = PDF::loadView('quick-flow.pdf.design', [
+                    'images' => $absolutePaths,
+                    'rotations' => $imageTypes,
+                    'width' => $pdfWidth,
+                    'height' => $pdfHeight,
+                    'orientation' => $pdfOrientation,
+                ]);
+                $pdf->setPaper([0, 0, $pdfWidth * 72, $pdfHeight * 72]);
+            } else {
+                $widthVal = floatval($flowData['size_width'] ?? 5.00);
+                $heightVal = floatval($flowData['size_height'] ?? 7.00);
+                
+                $unit = strtolower(trim($flowData['size_unit'] ?? 'inch'));
+                $cssUnit = ($unit === 'inch') ? 'in' : $unit;
+
+                $pdf = PDF::loadView('quick-flow.pdf.design-double', [
+                    'images' => $absolutePaths,
+                    'rotations' => $imageTypes,
+                    'width' => $pdfWidth,
+                    'height' => $pdfHeight,
+                    'cssUnit' => $cssUnit,
+                    'orientation' => $pdfOrientation,
+                ]);
+                $pdf->setPaper([0, 0, $pdfWidth * 72, $pdfHeight * 72]);
+            }
+            
+            $pdf->save($pdfPath);
+        } else {
+            // Single-page product
+            if ($item) {
+                $uploadedImages = $item->uploaded_images;
+                $absolutePath = null;
+                $relPath = null;
+
+                if ($uploadedImages && is_array($uploadedImages) && count($uploadedImages) > 0) {
+                    $firstImage = is_string(reset($uploadedImages)) ? reset($uploadedImages) : null;
+                    if ($firstImage) {
+                        $relPath = $firstImage;
+                        $localPath = storage_path('app/public/' . $firstImage);
+                        if (file_exists($localPath)) {
+                            $absolutePath = str_replace('\\', '/', $localPath);
+                        } else {
+                            $localPath = public_path('storage/' . $firstImage);
+                            if (file_exists($localPath)) {
+                                $absolutePath = str_replace('\\', '/', $localPath);
+                            }
+                        }
+                    }
+                }
+
+                if (!$absolutePath && !empty($item->customization_data['preview_url'])) {
+                    $designUrl = $item->customization_data['preview_url'];
+                } elseif ($relPath) {
+                    $designUrl = str_starts_with($relPath, 'http') ? $relPath : asset('storage/' . $relPath);
+                }
+
+                if (!file_exists($pdfPath) && $absolutePath) {
+                    $widthVal = floatval($flowData['size_width'] ?? 5.00);
+                    $heightVal = floatval($flowData['size_height'] ?? 7.00);
+                    $unit = strtolower(trim($flowData['size_unit'] ?? 'inch'));
+
+                    if ($orientation === 'landscape') {
+                        $pdfWidthVal = $heightVal;
+                        $pdfHeightVal = $widthVal;
+                    } else {
+                        $pdfWidthVal = $widthVal;
+                        $pdfHeightVal = $heightVal;
+                    }
+
+                    $cssUnit = ($unit === 'inch') ? 'in' : $unit;
+                    $ptsPerUnit = 72;
+                    if ($unit === 'cm') {
+                        $ptsPerUnit = 72 / 2.54;
+                    } elseif ($unit === 'mm') {
+                        $ptsPerUnit = 72 / 25.4;
+                    } elseif ($unit === 'px' || $unit === 'pixel') {
+                        $ptsPerUnit = 0.75;
+                    }
+
+                    $pdfWidthPts = $pdfWidthVal * $ptsPerUnit;
+                    $pdfHeightPts = $pdfHeightVal * $ptsPerUnit;
+
+                    if (!File::isDirectory($pdfDirectory)) {
+                        File::makeDirectory($pdfDirectory, 0755, true, true);
+                    }
+
+                    $pdf = PDF::loadView('quick-flow.pdf.design-single', [
+                        'image' => $absolutePath,
+                        'width' => $pdfWidthVal,
+                        'height' => $pdfHeightVal,
+                        'cssUnit' => $cssUnit,
+                    ]);
+                    $pdf->setPaper([0, 0, $pdfWidthPts, $pdfHeightPts]);
+                    $pdf->save($pdfPath);
+                }
+            }
+        }
+        
+        if (file_exists($pdfPath)) {
+            $pdfUrl = asset('storage/orders/pdfs/' . $pdfName);
+        }
+
+        return view($this->getViewPath('print'), compact('order', 'designUrl', 'pdfUrl'));
+    }
+
+    public function viewPdf(Order $order)
+    {
+        $order->load(['items.product']);
+
+        $item = $order->items->first();
+        $product = $item?->product;
+        $flowData = $order->flow_data ?? [];
+        $orientation = ($product && $product->pdf_orientation) ? strtolower($product->pdf_orientation) : 'portrait';
+        $noOfPages = $product->no_of_pages ?? 1;
+
+        $pdfName = 'Design_' . $order->order_number . '.pdf';
+        $pdfDirectory = storage_path('app/public/orders/pdfs');
+        $pdfPath = $pdfDirectory . '/' . $pdfName;
+
+        // if (file_exists($pdfPath)) {
+        //     return response()->file($pdfPath, [
+        //         'Content-Type' => 'application/pdf',
+        //         'Content-Disposition' => 'inline; filename="' . $pdfName . '"',
+        //     ]);
+        // }
+
+        if (!$item || !$product) {
+            abort(404, 'Order has no product.');
+        }
+
+        if ($noOfPages == 4) {
+            $landscape_imageTypes = [
+                'sample_image' => 'rotate_0',
+                'background_image' => 'rotate_0',
+                'frame_image' => 'rotate_180_plus',
+                'overlay_image' => 'rotate_0',
+            ];
+            $portrait_imageTypes = [
+                'frame_image' => 'rotate_90_minus',
+                'overlay_image' => 'rotate_90_minus',
+                'sample_image' => 'rotate_90_plus',
+                'background_image' => 'rotate_90_plus',
+            ];
+            $imageTypes = ($orientation === 'portrait') ? $portrait_imageTypes : $landscape_imageTypes;
+            $slots = array_keys($imageTypes);
+        } elseif ($noOfPages == 2) {
+            $landscape_imageTypes = [
+                'sample_image' => 'rotate_0',
+                'frame_image'  => 'rotate_180_plus',
+            ];
+            $portrait_imageTypes = [
+                'frame_image'  => 'rotate_90_minus',
+                'sample_image' => 'rotate_90_minus',
+            ];
+            $imageTypes = ($orientation === 'portrait') ? $portrait_imageTypes : $landscape_imageTypes;
+            $slots = ['frame_image', 'sample_image'];
+        } else {
+            $imageTypes = [];
+            $slots = [];
+        }
+
+        if (!File::isDirectory($pdfDirectory)) {
+            File::makeDirectory($pdfDirectory, 0755, true, true);
+        }
+
+        if ($noOfPages >= 2) {
+            $uploadedImages = $item->uploaded_images ?? [];
+            $absolutePaths = [];
+
+            foreach ($slots as $key) {
+                $localPath = null;
+
+                if (!empty($uploadedImages[$key])) {
+                    $localPath = storage_path('app/public/' . $uploadedImages[$key]);
+                    if (!file_exists($localPath)) {
+                        $localPath = public_path('storage/' . $uploadedImages[$key]);
+                    }
+                }
+
+                if (empty($localPath) || !file_exists($localPath)) {
+                    $dbPath = $product->getRawOriginal($key);
+                    if ($dbPath) {
+                        $localPath = storage_path('app/public/' . $dbPath);
+                        if (!file_exists($localPath)) {
+                            $localPath = public_path('storage/' . $dbPath);
+                        }
+                    }
+                }
+
+                if ($localPath && file_exists($localPath)) {
+                    $rotation = $imageTypes[$key] ?? 'rotate_0';
+                    $rotatedAbsPath = $this->physicallyRotateImage($localPath, $rotation);
+                    $absolutePaths[$key] = str_replace('\\', '/', $rotatedAbsPath);
+                } else {
+                    $absolutePaths[$key] = null;
+                }
+            }
+
+            $width = floatval($flowData['size_width'] ?? 3.5);
+            $height = floatval($flowData['size_height'] ?? 5);
+            $pdfWidth = min($width, $height);
+            $pdfHeight = max($width, $height);
+            $pdfOrientation = ($product && $product->pdf_orientation) ? $product->pdf_orientation : 'landscape';
+             
+            if ($noOfPages == 4) {
+                $pdf = PDF::loadView('quick-flow.pdf.design', [
+                    'images' => $absolutePaths,
+                    'rotations' => $imageTypes,
+                    'width' => $pdfWidth,
+                    'height' => $pdfHeight,
+                    'orientation' => $pdfOrientation,
+                ]);
+                $pdf->setPaper([0, 0, $pdfWidth * 72, $pdfHeight * 72]);
+            } else {
+                 
+                    $a = $pdfWidth;
+                    $pdfWidth = $pdfHeight;
+                    $pdfHeight = $a;
+                 
+                // dd($pdfWidth, $pdfHeight, $pdfOrientation);
+                $unit = strtolower(trim($flowData['size_unit'] ?? 'inch'));
+                $cssUnit = ($unit === 'inch') ? 'in' : $unit;
+
+                $pdf = PDF::loadView('quick-flow.pdf.design-double', [
+                    'images' => $absolutePaths,
+                    'rotations' => $imageTypes,
+                    'width' => $pdfWidth,
+                    'height' => $pdfHeight,
+                    'cssUnit' => $cssUnit,
+                    'orientation' => $pdfOrientation,
+                ]);
+                $pdf->setPaper([0, 0, $pdfWidth * 72, $pdfHeight * 72]);
+            }
+        } else {
+            $uploadedImages = $item->uploaded_images ?? [];
+            $absolutePath = null;
+
+            if (is_array($uploadedImages) && count($uploadedImages) > 0) {
+                $firstImage = reset($uploadedImages);
+                if (is_string($firstImage)) {
+                    $localPath = storage_path('app/public/' . $firstImage);
+                    if (file_exists($localPath)) {
+                        $absolutePath = str_replace('\\', '/', $localPath);
+                    }
+                }
+            }
+
+            $widthVal = floatval($flowData['size_width'] ?? 5.00);
+            $heightVal = floatval($flowData['size_height'] ?? 7.00);
+            $unit = strtolower(trim($flowData['size_unit'] ?? 'inch'));
+
+            if ($orientation === 'landscape') {
+                $pdfWidthVal = $heightVal;
+                $pdfHeightVal = $widthVal;
+            } else {
+                $pdfWidthVal = $widthVal;
+                $pdfHeightVal = $heightVal;
+            }
+
+            $cssUnit = ($unit === 'inch') ? 'in' : $unit;
+            $ptsPerUnit = 72;
+            if ($unit === 'cm') {
+                $ptsPerUnit = 72 / 2.54;
+            } elseif ($unit === 'mm') {
+                $ptsPerUnit = 72 / 25.4;
+            } elseif ($unit === 'px' || $unit === 'pixel') {
+                $ptsPerUnit = 0.75;
+            }
+
+            $pdf = PDF::loadView('quick-flow.pdf.design-single', [
+                'image' => $absolutePath,
+                'width' => $pdfWidthVal,
+                'height' => $pdfHeightVal,
+                'cssUnit' => $cssUnit,
+            ]);
+            $pdf->setPaper([0, 0, $pdfWidthVal * $ptsPerUnit, $pdfHeightVal * $ptsPerUnit]);
+        }
+
+        $pdf->save($pdfPath);
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $pdfName . '"',
+        ]);
     }
 
     /**
@@ -1028,31 +1414,32 @@ class QuickFlowController extends Controller
         $apiBase = $this->getPaypalApiBase();
 
         $response = Http::withToken($accessToken)
-            ->withHeaders([
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])
-            ->send('POST', "{$apiBase}/v2/checkout/orders/{$request->paypal_order_id}/capture");
+            ->acceptJson()
+            ->post("{$apiBase}/v2/checkout/orders/{$request->paypal_order_id}/capture");
 
-        if ($response->successful() && ($response->json()['status'] ?? '') === 'COMPLETED') {
-            $captureId = $response->json()['purchase_units'][0]['payments']['captures'][0]['id'] ?? $request->paypal_order_id;
-
-            try {
-                $order = $this->storeCustomPrintOrder($request, 'paypal', $captureId, 'paid');
-
-                return response()->json([
-                    'success' => true,
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'redirect_url' => route('flow.confirmation', $order->id),
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Qrinto PayPal Finalize Error: ' . $e->getMessage());
-                return response()->json(['error' => 'Order storage failed'], 500);
-            }
+        if (!$response->successful() || ($response->json()['status'] ?? '') !== 'COMPLETED') {
+            Log::error('Qrinto PayPal Capture Error', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            return response()->json(['error' => 'Payment failed'], 500);
         }
 
-        return response()->json(['error' => 'Payment failed'], 500);
+        $captureId = $response->json()['purchase_units'][0]['payments']['captures'][0]['id'] ?? $request->paypal_order_id;
+
+        try {
+            $order = $this->storeCustomPrintOrder($request, 'paypal', $captureId, 'paid');
+
+            return response()->json([
+                'success' => true,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'redirect_url' => route('flow.confirmation', $order->id),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Qrinto PayPal Finalize Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Order storage failed'], 500);
+        }
     }
 
     /**
@@ -1064,9 +1451,9 @@ class QuickFlowController extends Controller
         $upload = CustomerUpload::findOrFail($request->upload_id);
         $type = \App\Models\ProductType::findOrFail($request->size_id);
         $quantity = (int)$request->quantity;
-        $product = Product::find($request->product_id);
-        if($product->store_id && $product->store_id != null && $product->store_id != ""){
-            $unitPrice = (float) $product->base_price;            
+        $product = $request->product_id ? Product::find($request->product_id) : null;
+        if($product && $product->store_id){
+            $unitPrice = (float) $product->base_price;
         }else{
             $unitPrice = $type->active_price;
         }
@@ -1171,11 +1558,47 @@ class QuickFlowController extends Controller
     /**
      * Process Order Logic: PDF Generation & Emails
      */
-    private function processOrderAndNotify(Order $order, array $uploadIds, ?Product $product = null)
+   
+
+    private function getPaypalApiBase(): string
+    {
+        $mode = env('PAYPAL_MODE', 'sandbox');
+        return $mode === 'live'
+            ? 'https://api-m.paypal.com'
+            : 'https://api-m.sandbox.paypal.com';
+    }
+
+    private function getPaypalAccessToken(): ?string
+    {
+        $clientId = env('PAYPAL_CLIENT_ID');
+        $secret = env('PAYPAL_SECRET');
+        $apiBase = $this->getPaypalApiBase();
+
+        $response = Http::asForm()
+            ->withBasicAuth($clientId, $secret)
+            ->post("{$apiBase}/v1/oauth2/token", [
+                'grant_type' => 'client_credentials',
+            ]);
+
+        if ($response->successful()) {
+            return $response->json()['access_token'];
+        }
+
+        Log::error('PayPal Auth Error', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
+        return null;
+    }
+     private function processOrderAndNotify(Order $order, array $uploadIds, ?Product $product = null)
     {   
         // Prevent 500 error timeouts if SMTP server takes too long to fail
         set_time_limit(120);
+        
+        \Log::warning("number of pages  {$product->no_of_pages}");
         if($product->no_of_pages == 4){ 
+            
             $orientation = ($product && $product->pdf_orientation) ? $product->pdf_orientation : 'landscape';
 
             $landscape_imageTypes = [
@@ -1191,6 +1614,9 @@ class QuickFlowController extends Controller
                 'sample_image' => 'rotate_90_plus',
                 'background_image' => 'rotate_90_plus',
             ];
+            
+
+
 
             $imageTypes = ($orientation === 'portrait') ? $portrait_imageTypes : $landscape_imageTypes;
             $mappedImages = [];
@@ -1266,6 +1692,127 @@ class QuickFlowController extends Controller
                 'height' => $pdfHeight,
                 'orientation' => $orientation
             ]);
+            
+            $pdf->setPaper([0, 0, $pdfWidth * 72, $pdfHeight * 72]);
+
+            $pdfName = 'Design_' . $order->order_number . '.pdf';
+            $pdfDirectory = storage_path('app/public/orders/pdfs');
+            if (!File::isDirectory($pdfDirectory)) {
+                File::makeDirectory($pdfDirectory, 0755, true, true);
+            }
+            $pdfPath = $pdfDirectory . '/' . $pdfName;
+            $pdf->save($pdfPath);        
+        }elseif ($product->no_of_pages == 2) {
+             // ── Double Page: two independent full-bleed images (Page 1 + Page 2) ──
+            $orderItem = OrderItem::where('order_id', $order->id)->first();
+            $flowData = session('quick_flow_data') ?? $order->flow_data ?? [];
+            $widthVal = floatval($flowData['size_width'] ?? 5.00);
+            $heightVal = floatval($flowData['size_height'] ?? 7.00);
+            $unit = strtolower(trim($flowData['size_unit'] ?? 'inch'));
+
+            $orientation = ($product && $product->pdf_orientation) ? strtolower($product->pdf_orientation) : 'portrait';
+
+            // if ($orientation === 'landscape') {
+            //     $pdfWidthVal = $heightVal;
+            //     $pdfHeightVal = $widthVal;
+            // } else {
+            //     $pdfWidthVal = $widthVal;
+            //     $pdfHeightVal = $heightVal;
+            // }
+
+            $cssUnit = ($unit === 'inch') ? 'in' : $unit;
+
+            // $ptsPerUnit = 72;
+            // if ($unit === 'cm') {
+            //     $ptsPerUnit = 72 / 2.54;
+            // } elseif ($unit === 'mm') {
+            //     $ptsPerUnit = 72 / 25.4;
+            // } elseif ($unit === 'px' || $unit === 'pixel') {
+            //     $ptsPerUnit = 0.75;
+            // }
+
+            // $pdfWidthPts = $pdfWidthVal * $ptsPerUnit;
+            // $pdfHeightPts = $pdfHeightVal * $ptsPerUnit;
+
+            // Rotation map for the 2-page flow.
+            // Default to 'rotate_0' (no rotation) for full-bleed uploads.
+            // Change individual values here ONLY if a specific slot/orientation
+            // is confirmed to need correction (e.g. source asset stored sideways).
+            $landscape_imageTypes = [
+                'sample_image' => 'rotate_0',
+                'frame_image'  => 'rotate_180_plus',
+            ];
+            $portrait_imageTypes = [
+                'frame_image'  => 'rotate_90_minus',
+                'sample_image' => 'rotate_90_minus',
+            ]; 
+            $slots = ['frame_image', 'sample_image'];
+            $imageTypes = ($orientation === 'portrait') ? $portrait_imageTypes : $landscape_imageTypes;
+
+            // Two ordered slots — customer edit first, else fall back to product image
+            $slots = ['frame_image', 'sample_image'];
+            $mappedImages = [];
+            $absolutePaths = [];
+
+            foreach ($slots as $key) {
+                $uploadId = $uploadIds[$key] ?? null;
+                $localPath = null;
+
+                if ($uploadId) {
+                    $upload = CustomerUpload::find($uploadId);
+                    if ($upload) {
+                        $localPath = storage_path('app/public/' . $upload->file_path);
+                        $mappedImages[$key] = $upload->file_path;
+                    }
+                }
+
+                if (empty($localPath) && $product) {
+                    $dbPath = $product->getRawOriginal($key);
+                    if ($dbPath) {
+                        $localPath = storage_path('app/public/' . $dbPath);
+                        if (!file_exists($localPath)) {
+                            $localPath = public_path('storage/' . $dbPath);
+                        }
+                        $mappedImages[$key] = $dbPath;
+                    }
+                }
+
+                if ($localPath && file_exists($localPath)) {
+                    $rotation = $imageTypes[$key] ?? 'rotate_0';
+                    $rotatedAbsPath = $this->physicallyRotateImage($localPath, $rotation);
+                    $absolutePaths[$key] = str_replace('\\', '/', $rotatedAbsPath);
+                } else {
+                    $absolutePaths[$key] = null;
+                    \Log::warning("Print Image Missing (double): Key {$key} expected at {$localPath}");
+                }
+            }
+
+            if ($orderItem) {
+                $orderItem->update(['uploaded_images' => $mappedImages]);
+            }
+            $pdfOrientation = ($product && $product->pdf_orientation) ? $product->pdf_orientation : 'landscape';
+            $flowData = $order->flow_data;
+            $width = floatval($flowData['size_width'] ?? 3.5);
+            $height = floatval($flowData['size_height'] ?? 5);
+            $pdfWidth = min($width, $height);
+            $pdfHeight = max($width, $height);
+
+            // Swap width/height for 2-page layout (same as viewPdf)
+            $a = $pdfWidth;
+            $pdfWidth = $pdfHeight;
+            $pdfHeight = $a;
+
+            $unit = strtolower(trim($flowData['size_unit'] ?? 'inch'));
+            $cssUnit = ($unit === 'inch') ? 'in' : $unit;
+
+            $pdf = PDF::loadView('quick-flow.pdf.design-double', [
+                'images' => $absolutePaths,
+                'rotations' => $imageTypes,
+                'width' => $pdfWidth,
+                'height' => $pdfHeight,
+                'cssUnit' => $cssUnit,
+                'orientation' => $pdfOrientation,
+            ]);
             $pdf->setPaper([0, 0, $pdfWidth * 72, $pdfHeight * 72]);
 
             $pdfName = 'Design_' . $order->order_number . '.pdf';
@@ -1276,7 +1823,7 @@ class QuickFlowController extends Controller
             $pdfPath = $pdfDirectory . '/' . $pdfName;
             $pdf->save($pdfPath);
         }else{
-             $orderItem = OrderItem::where('order_id', $order->id)->first();
+            $orderItem = OrderItem::where('order_id', $order->id)->first();
             $flowData = session('quick_flow_data') ?? $order->flow_data ?? [];
             $widthVal = floatval($flowData['size_width'] ?? 5.00);
             $heightVal = floatval($flowData['size_height'] ?? 7.00);
@@ -1340,6 +1887,7 @@ class QuickFlowController extends Controller
                 'height' => $pdfHeightVal,
                 'cssUnit' => $cssUnit
             ]);
+             
             $pdf->setPaper([0, 0, $pdfWidthPts, $pdfHeightPts]);
 
             $pdfName = 'Design_' . $order->order_number . '.pdf';
@@ -1349,6 +1897,8 @@ class QuickFlowController extends Controller
             }
             $pdfPath = $pdfDirectory . '/' . $pdfName;
             $pdf->save($pdfPath);
+            
+
         }
         // 3. User Confirmation Email
         try {
@@ -1375,39 +1925,6 @@ class QuickFlowController extends Controller
             $orderItem->update(['pdf_path' => 'orders/pdfs/' . $pdfName]);
         }
     }
-
-    private function getPaypalApiBase(): string
-    {
-        $mode = env('PAYPAL_MODE', 'sandbox');
-        return $mode === 'live'
-            ? 'https://api-m.paypal.com'
-            : 'https://api-m.sandbox.paypal.com';
-    }
-
-    private function getPaypalAccessToken(): ?string
-    {
-        $clientId = env('PAYPAL_CLIENT_ID');
-        $secret = env('PAYPAL_SECRET');
-        $apiBase = $this->getPaypalApiBase();
-
-        $response = Http::asForm()
-            ->withBasicAuth($clientId, $secret)
-            ->post("{$apiBase}/v1/oauth2/token", [
-                'grant_type' => 'client_credentials',
-            ]);
-
-        if ($response->successful()) {
-            return $response->json()['access_token'];
-        }
-
-        Log::error('PayPal Auth Error', [
-            'status' => $response->status(),
-            'body' => $response->body(),
-        ]);
-
-        return null;
-    }
-
     private function physicallyRotateImage($sourcePath, $rotationString)
     {
         $degrees = 0;

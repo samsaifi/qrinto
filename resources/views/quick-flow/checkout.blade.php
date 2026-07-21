@@ -147,7 +147,7 @@
         .page-face {
             position: absolute;
             width: 100%;
-            height: 100%;
+            height: auto;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             border-radius: 0;
@@ -235,12 +235,20 @@
         </div>
 
         @php
-            $types = [
-                'frame_image' => 'Frame',
-                'sample_image' => 'Sample',
-                'background_image' => 'Background',
-                'overlay_image' => 'Overlay',
-            ];
+            // Double Page products (no_of_pages == 2) use only two slots.
+            if (($product->no_of_pages ?? null) == 2) {
+                $types = [
+                    'frame_image' => 'Page 1',
+                    'sample_image' => 'Page 2',
+                ];
+            } else {
+                $types = [
+                    'frame_image' => 'Frame',
+                    'sample_image' => 'Sample',
+                    'background_image' => 'Background',
+                    'overlay_image' => 'Overlay',
+                ];
+            }
 
             $orientation = $product->pdf_orientation ?? 'portrait';
             $isPortrait = $orientation === 'portrait';
@@ -267,7 +275,7 @@
             }
         @endphp
 
-        @if (count($flipPages) >= 2)
+        @if (count($flipPages) >= 3 && $flipPages[0] && $flipPages[1] && $flipPages[2])
             <!-- 3D Interactive Preview -->
             <div class="space-y-4 py-6 bg-gray-100 border-2 border-slate-50 rounded-[2rem] p-5 shadow-premium">
                 <div class="text-center space-y-1">
@@ -299,6 +307,23 @@
                 <div class="book-hint">
                     <i data-lucide="mouse-pointer-2" class="w-3 h-3"></i>
                     Tap to flip pages
+                </div>
+            </div>
+        @elseif(count($flipPages) == 2 && $flipPages[0] && $flipPages[1])
+            <!-- Two Page Preview -->
+            <div class="py-6 bg-gray-100 border-2 border-slate-50 rounded-[2rem] p-5 shadow-premium">
+                <div class="text-center space-y-1 mb-4">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Your Design</h3>
+                    <p class="text-xs font-extrabold text-brand-500 uppercase tracking-wider">Page 1 &amp; Page 2</p>
+                </div>
+                <div class="flex justify-center gap-4 flex-wrap">
+                    @foreach ($flipPages as $i => $pageUrl)
+                        <div class="flex flex-col items-center gap-1.5" style="width: {{ $baseWidth }}px; max-width: 42%;">
+                            <img src="{{ $pageUrl }}" alt="Page {{ $i + 1 }}"
+                                class="w-full h-auto rounded-xl shadow-lg border border-slate-200 {{ $orientation }}">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Page {{ $i + 1 }}</span>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         @elseif(count($flipPages) == 1)
@@ -689,7 +714,7 @@
                         .catch(err => {
                             console.error('Checkout error:', err);
                             this.isProcessing = false;
-                            alert('An error occurred. Please try again.');
+                            alert('An error occurred. Please try again.',  );
                         });
                 },
 

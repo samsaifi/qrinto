@@ -1,0 +1,306 @@
+{
+  "version": 2,
+  "dgSpecHash": "a+iiFhCTN/Y=",
+  "success": false,
+  "projectFilePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.Extensions.Hosting (>= 8.0.1)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.Extensions.Hosting",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.Extensions.Hosting.WindowsServices (>= 8.0.1)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.Extensions.Hosting.WindowsServices",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'SkiaSharp (>= 2.88.9)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "SkiaSharp",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Serilog.Extensions.Hosting (>= 8.0.0)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Serilog.Extensions.Hosting",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Serilog.Sinks.File (>= 6.0.0)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Serilog.Sinks.File",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Serilog.Sinks.Console (>= 6.0.0)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Serilog.Sinks.Console",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Serilog.Formatting.Compact (>= 3.0.0)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Serilog.Formatting.Compact",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'System.Text.Json (>= 8.0.5)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'System.Management (>= 8.0.0)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "System.Management",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.NET.ILLink.Tasks (>= 8.0.28)' for 'net8.0-windows'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.NET.ILLink.Tasks",
+      "targetGraphs": [
+        "net8.0-windows"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.Extensions.Hosting (>= 8.0.1)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.Extensions.Hosting",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.Extensions.Hosting.WindowsServices (>= 8.0.1)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.Extensions.Hosting.WindowsServices",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'SkiaSharp (>= 2.88.9)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "SkiaSharp",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Serilog.Extensions.Hosting (>= 8.0.0)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Serilog.Extensions.Hosting",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Serilog.Sinks.File (>= 6.0.0)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Serilog.Sinks.File",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Serilog.Sinks.Console (>= 6.0.0)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Serilog.Sinks.Console",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Serilog.Formatting.Compact (>= 3.0.0)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Serilog.Formatting.Compact",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'System.Text.Json (>= 8.0.5)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "System.Text.Json",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'System.Management (>= 8.0.0)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "System.Management",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.NET.ILLink.Tasks (>= 8.0.28)' for 'net8.0-windows/win-x64'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.NET.ILLink.Tasks",
+      "targetGraphs": [
+        "net8.0-windows/win-x64"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.NETCore.App.Ref (= 8.0.28)' for 'net8.0-windows7.0'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.NETCore.App.Ref",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.NETCore.App.Runtime.win-x64 (= 8.0.28)' for 'net8.0-windows7.0'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.NETCore.App.Runtime.win-x64",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.WindowsDesktop.App.Ref (= 8.0.28)' for 'net8.0-windows7.0'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.WindowsDesktop.App.Ref",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.WindowsDesktop.App.Runtime.win-x64 (= 8.0.28)' for 'net8.0-windows7.0'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.AspNetCore.App.Ref (= 8.0.28)' for 'net8.0-windows7.0'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.AspNetCore.App.Ref",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.AspNetCore.App.Runtime.win-x64 (= 8.0.28)' for 'net8.0-windows7.0'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.AspNetCore.App.Runtime.win-x64",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    },
+    {
+      "code": "NU1100",
+      "level": "Error",
+      "message": "Unable to resolve 'Microsoft.NETCore.App.Host.win-x64 (= 8.0.28)' for 'net8.0-windows7.0'.",
+      "projectPath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "filePath": "C:\\xampp\\htdocs\\qrinto\\public\\agent\\QrintoPrintAgent\\QrintoPrintAgent.csproj",
+      "libraryId": "Microsoft.NETCore.App.Host.win-x64",
+      "targetGraphs": [
+        "net8.0-windows7.0"
+      ]
+    }
+  ]
+}

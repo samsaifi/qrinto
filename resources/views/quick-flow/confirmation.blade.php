@@ -209,9 +209,10 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Clear all Qrinto-related local storage upon order confirmation
+        // Clear all Qrinto-related local storage upon order confirmation, but preserve tour completion flags.
+        const tourKeys = new Set(['qrinto_tour_completed_v1']);
         Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('qrinto_')) {
+            if (key.startsWith('qrinto_') && !tourKeys.has(key)) {
                 localStorage.removeItem(key);
             }
         });

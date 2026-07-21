@@ -116,9 +116,9 @@
                     <div class="grid sm:grid-cols-2 gap-6">
                         <!-- Frame Image -->
                         <div>
-                            <label class="block text-sm font-medium text-surface-700 mb-1">Frame Image <span
+                            <label class="block text-sm font-medium text-surface-700 mb-1">Front Image <span
                                     class="text-brand-500">*</span></label>
-                            <p class="text-xs text-surface-400 mb-3">Upload the empty frame only (no photo inside)</p>
+                            <p class="text-xs text-surface-400 mb-3">Upload the empty Front only (no photo inside)</p>
                             <div class="relative group" id="frameDropZone">
                                 <div class="border-2 border-dashed border-surface-200 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer {{ isset($product) && $product->frame_image ? 'border-brand-300 bg-brand-50/30' : '' }}"
                                     onclick="document.getElementById('frame_image_input').click()">
@@ -158,8 +158,8 @@
 
                         <!-- Sample Image -->
                         <div>
-                            <label class="block text-sm font-medium text-surface-700 mb-1">Sample Image</label>
-                            <p class="text-xs text-surface-400 mb-3">Upload frame with a sample photo inside (preview)</p>
+                            <label class="block text-sm font-medium text-surface-700 mb-1">Inside Left Image</label>
+                            <p class="text-xs text-surface-400 mb-3">Upload frame with a Inside Left Image   (preview)</p>
                             <div class="relative group" id="sampleDropZone">
                                 <div class="border-2 border-dashed border-surface-200 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer {{ isset($product) && $product->sample_image ? 'border-brand-300 bg-brand-50/30' : '' }}"
                                     onclick="document.getElementById('sample_image_input').click()">
@@ -201,8 +201,8 @@
                         </div>
                         <!-- Background Image -->
                         <div class="mt-4">
-                            <label class="block text-sm font-medium text-surface-700 mb-1">Background Image</label>
-                            <p class="text-xs text-surface-400 mb-3">Upload a background for the canvas (e.g. bg.jpg)</p>
+                            <label class="block text-sm font-medium text-surface-700 mb-1">Inside Right Image</label>
+                            <p class="text-xs text-surface-400 mb-3">Upload a inside right image for the canvas (e.g. bg.jpg)</p>
                             <div class="relative group" id="backgroundDropZone">
                                 <div class="border-2 border-dashed border-surface-200 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer {{ isset($product) && $product->background_image ? 'border-brand-300 bg-brand-50/30' : '' }}"
                                     onclick="document.getElementById('background_image_input').click()">
@@ -243,8 +243,8 @@
 
                         <!-- Overlay Image -->
                         <div class="mt-4">
-                            <label class="block text-sm font-medium text-surface-700 mb-1">Overlay Image</label>
-                            <p class="text-xs text-surface-400 mb-3">Upload an optional overlay layer</p>
+                            <label class="block text-sm font-medium text-surface-700 mb-1">Back Cover Image</label>
+                            <p class="text-xs text-surface-400 mb-3">Upload an optional Back Cover layer</p>
                             <div class="relative group" id="overlayDropZone">
                                 <div class="border-2 border-dashed border-surface-200 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer {{ isset($product) && $product->overlay_image ? 'border-brand-300 bg-brand-50/30' : '' }}"
                                     onclick="document.getElementById('overlay_image_input').click()">
@@ -360,14 +360,12 @@
                                 class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
                                 <option value="">Select a category...</option>
                                 @foreach ($no_of_pages_array as $key => $val)
-                                    @if ($isNotAdmin && $key == 1)
-                                        @continue
-                                    @else
+                                     
                                         <option value="{{ $key }}"
                                             {{ old('no_of_pages', $product->no_of_pages ?? '') == $key ? 'selected' : '' }}>
                                             {{ $val }}
                                         </option>
-                                    @endif
+                                     
                                 @endforeach
                             </select>
                             @error('no_of_pages')
@@ -385,24 +383,24 @@
                                 Selection <span class="text-red-500">*</span></label>
                             <select name="store_id"
                                 class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
-
-                                <option value=""
-                                    {{ old('store_id', $product->store_id ?? '') === '' ? 'selected' : '' }}>
-                                    All Store
-                                </option>
                                 @if ($isNotAdmin)
                                     <option value="{{ auth()->user()->store->id ?? '' }}"
                                         {{ old('store_id', $product->store_id ?? '') == (auth()->user()->store->id ?? '') ? 'selected' : '' }}>
                                         My Store only
                                     </option>
+                                
                                 @endif
+                                <option value="" >
+                                    All Store 
+                                </option>
+
                                 @if (!$isNotAdmin && isset($product) && $product->product_store)
                                     @php
                                         $store = \App\Models\Store::find($product->product_store);
                                     @endphp
                                     <option value="{{ $product->product_store ?? '' }}"
                                         {{ old('store_id', $product->product_store ?? '') == ($product->store_id ?? '') ? 'selected' : '' }}>
-                                        {{ $store->store_name ?? '' }} Only
+                                        {{ $store->store_name ?? '' }} Only (My Store only)
                                     </option>
                                 @endif
                             </select>
@@ -430,7 +428,7 @@
                                     @foreach ($categories->where('parent_id', $cat->id) as $sub)
                                         <option value="{{ $sub->id }}"
                                             {{ old('category_id', $product->category_id ?? '') == $sub->id ? 'selected' : '' }}>
-                                            &nbsp;&nbsp;&nbsp;— {{ $sub->name }}
+                                            &nbsp;&nbsp;&nbsp;- {{ $sub->name }} 
                                         </option>
                                     @endforeach
                                 @endforeach
@@ -460,7 +458,7 @@
                                     @foreach ($productTypes->where('parent_id', $type->id) as $sub)
                                         <option value="{{ $sub->id }}"
                                             {{ old('product_type_id', $product->product_type_id ?? '') == $sub->id ? 'selected' : '' }}>
-                                            &nbsp;&nbsp;&nbsp;— {{ $sub->name }}
+                                            &nbsp;&nbsp;&nbsp;- {{ $sub->name }} {{ $sub->title }} - {{ $sub->width }} x  {{ $sub->height }} {{ $sub->unit }}
                                         </option>
                                     @endforeach
                                 @endforeach
@@ -541,9 +539,21 @@
                 <!-- Sort Order -->
                 <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
                     <h2 class="font-display font-semibold text-lg mb-5">Display Order</h2>
-                    <input type="number" name="sort_order" value="{{ old('sort_order', $product->sort_order ?? 0) }}"
-                        class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
-                    <p class="text-xs text-surface-400 mt-1">Lower number = higher priority</p>
+                
+                    @php
+                        $nextId = (\App\Models\Product::max('id') ?? 0) + 1;
+                    @endphp
+                
+                    <input
+                        type="number"
+                        name="sort_order"
+                        value="{{ old('sort_order', $product->sort_order ?? $nextId) }}"
+                        class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500"
+                    >
+                
+                    <p class="text-xs text-surface-400 mt-1">
+                        Lower number = higher priority
+                    </p>
                 </div>
             </div>
         </div>

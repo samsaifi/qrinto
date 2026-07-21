@@ -1,4 +1,0 @@
-[09-Jun-2026 17:02:21 UTC] PHP Fatal error:  Uncaught Error: Class "App\Http\Controllers\Controller" not found in /home/mwbutx4wfe19/public_html/qrinto.com/app/Http/Controllers/CartController.php:9
-Stack trace:
-#0 {main}
-  thrown in /home/mwbutx4wfe19/public_html/qrinto.com/app/Http/Controllers/CartController.php on line 9

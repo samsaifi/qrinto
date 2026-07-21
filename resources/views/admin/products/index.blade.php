@@ -31,6 +31,8 @@
                         <input type="checkbox" id="selectAll" class="rounded text-brand-600 focus:ring-brand-500 cursor-pointer" onchange="toggleSelectAll(this)">
                     </th>
                     <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">Product</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">Page type</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">Number of pages</th>
                     <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider hidden md:table-cell">Category</th>
                     <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider w-28">Price</th>
                     <th class="px-3 py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider w-20 hidden sm:table-cell">Status</th>
@@ -48,8 +50,8 @@
                     <td class="px-3 py-3">
                         <div class="flex items-center gap-3 min-w-0">
                             <div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-100 flex-shrink-0 ring-1 ring-surface-200/50">
-                                @if($product->featured_image_url)
-                                <img src="{{ $product->featured_image_url }}" alt="" class="w-full h-full object-cover">
+                                @if($product->frame_image)
+                                <img src="{{ $product->getFeaturedImageUrl($product->frame_image) }}" alt="" class="w-full h-full object-cover">
                                 @else
                                 <div class="w-full h-full flex items-center justify-center"><i data-lucide="image" class="w-4 h-4 text-surface-300"></i></div>
                                 @endif
@@ -59,6 +61,27 @@
                                 <p class="text-xs text-surface-400">{{ $product->sku ?: '—' }}</p>
                             </div>
                         </div>
+                    </td>
+                    <td class="px-3 py-3 hidden md:table-cell">
+                        <span class="text-sm text-surface-600"> 
+                            {{ $product->pdf_orientation }}
+                                 
+                        </span>
+                    </td>
+                    <td class="px-3 py-3 hidden md:table-cell">
+                        <span class="text-sm text-surface-600"> 
+                            @switch($product->no_of_pages)
+                                @case(4)
+                                    Four pages
+                                    @break
+                                @case(2)
+                                    Double pages 
+                                    @break 
+                                @case(1)
+                                    Single Page  
+                                @break 
+                            @endswitch
+                        </span>
                     </td>
                     <td class="px-3 py-3 hidden md:table-cell">
                         <span class="text-sm text-surface-600">{{ $product->category->name ?? '—' }}</span>

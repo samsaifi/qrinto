@@ -1,0 +1,235 @@
+/* ════════════════════════════════════════════════════════════════════
+   QRinto Print Studio — Premium Onboarding Tour
+   Driver.js theme override  ·  scoped via .driver-popover.qrinto-tour
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+    --qt-brand: #0ea5e9;
+    --qt-brand-600: #0284c7;
+    --qt-brand-700: #0369a1;
+    --qt-ink: #0f172a;
+    --qt-muted: #64748b;
+    --qt-faint: #94a3b8;
+    --qt-line: #eef2f7;
+    --qt-radius: 22px;
+}
+
+/* ── Dimmed backdrop (Driver renders the SVG overlay; we soften it) ── */
+.driver-overlay {
+    /* overlayColor / opacity are set in JS; this just smooths the fade */
+    transition: opacity .35s ease;
+}
+
+/* The cut-out highlight around the active element */
+.driver-active-element {
+    transition: all .35s cubic-bezier(.4, 0, .2, 1) !important;
+}
+
+/* ════════════════════ Popover shell ════════════════════ */
+.driver-popover.qrinto-tour {
+    background: #ffffff;
+    border-radius: var(--qt-radius);
+    padding: 18px 18px 16px;
+    max-width: 320px;
+    box-shadow:
+        0 0 0 1px rgba(15, 23, 42, .04),
+        0 18px 48px -12px rgba(2, 132, 199, .28),
+        0 8px 24px -8px rgba(15, 23, 42, .18);
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    animation: qt-pop-in .32s cubic-bezier(.34, 1.56, .64, 1) both;
+}
+
+@keyframes qt-pop-in {
+    from { opacity: 0; transform: scale(.94) translateY(6px); }
+    to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+/* Thin gradient accent rail along the top edge */
+.driver-popover.qrinto-tour::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 18px; right: 18px;
+    height: 3px;
+    border-radius: 0 0 6px 6px;
+    background: linear-gradient(90deg, var(--qt-brand), #38bdf8 60%, #818cf8);
+}
+
+/* ── Icon chip (injected before the title) ── */
+.driver-popover.qrinto-tour .qt-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    color: var(--qt-brand-600);
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    box-shadow: inset 0 0 0 1px rgba(14, 165, 233, .14);
+}
+.driver-popover.qrinto-tour .qt-icon svg {
+    width: 21px;
+    height: 21px;
+    stroke-width: 2.1;
+}
+
+/* ── Title ── */
+.driver-popover.qrinto-tour .driver-popover-title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    color: var(--qt-ink);
+    line-height: 1.25;
+    margin: 0;
+    padding-right: 26px; /* room for close (X) */
+}
+
+/* ── Description ── */
+.driver-popover.qrinto-tour .driver-popover-description {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--qt-muted);
+    margin-top: 6px;
+}
+
+/* ── Close (X) — doubles as Skip ── */
+.driver-popover.qrinto-tour .driver-popover-close-btn {
+    width: 26px;
+    height: 26px;
+    top: 14px;
+    right: 14px;
+    color: var(--qt-faint);
+    font-size: 20px;
+    line-height: 1;
+    border-radius: 8px;
+    transition: all .2s ease;
+}
+.driver-popover.qrinto-tour .driver-popover-close-btn:hover {
+    color: var(--qt-ink);
+    background: var(--qt-line);
+}
+
+/* ── Custom global progress (injected after description) ── */
+.driver-popover.qrinto-tour .qt-progress {
+    margin: 14px 0 4px;
+}
+.driver-popover.qrinto-tour .qt-progress-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+.driver-popover.qrinto-tour .qt-progress-head .qt-step { color: var(--qt-brand-600); }
+.driver-popover.qrinto-tour .qt-progress-head .qt-pct  { color: var(--qt-faint); }
+.driver-popover.qrinto-tour .qt-progress-track {
+    height: 5px;
+    border-radius: 99px;
+    background: var(--qt-line);
+    overflow: hidden;
+}
+.driver-popover.qrinto-tour .qt-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--qt-brand), #38bdf8);
+    transition: width .4s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ── Footer / buttons ── */
+.driver-popover.qrinto-tour .driver-popover-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+.driver-popover.qrinto-tour .driver-popover-footer .driver-popover-navigation-btns {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+/* Hide Driver's built-in progress text (we render our own) */
+.driver-popover.qrinto-tour .driver-popover-progress-text { display: none; }
+
+/* Skip link (injected, sits far-left) */
+.driver-popover.qrinto-tour .qt-skip {
+    background: transparent;
+    border: 0;
+    padding: 8px 4px;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--qt-faint);
+    cursor: pointer;
+    transition: color .2s ease;
+}
+.driver-popover.qrinto-tour .qt-skip:hover { color: var(--qt-muted); text-decoration: underline; }
+
+/* Shared button base */
+.driver-popover.qrinto-tour .driver-popover-prev-btn,
+.driver-popover.qrinto-tour .driver-popover-next-btn {
+    all: unset;
+    box-sizing: border-box;
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -.01em;
+    padding: 9px 16px;
+    border-radius: 12px;
+    transition: all .2s cubic-bezier(.4, 0, .2, 1);
+    text-shadow: none;
+}
+
+/* Back (secondary) */
+.driver-popover.qrinto-tour .driver-popover-prev-btn {
+    color: var(--qt-muted);
+    background: var(--qt-line);
+}
+.driver-popover.qrinto-tour .driver-popover-prev-btn:hover {
+    background: #e2e8f0;
+    color: var(--qt-ink);
+}
+
+/* Next / Finish (primary) */
+.driver-popover.qrinto-tour .driver-popover-next-btn {
+    color: #fff;
+    background: linear-gradient(135deg, var(--qt-brand), var(--qt-brand-600));
+    box-shadow: 0 4px 14px -3px rgba(2, 132, 199, .5);
+}
+.driver-popover.qrinto-tour .driver-popover-next-btn:hover {
+    background: linear-gradient(135deg, var(--qt-brand-600), var(--qt-brand-700));
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px -3px rgba(2, 132, 199, .55);
+}
+.driver-popover.qrinto-tour .driver-popover-next-btn:active { transform: translateY(0) scale(.98); }
+
+/* Disabled (e.g. Back hidden on first step) */
+.driver-popover.qrinto-tour .driver-popover-prev-btn.driver-popover-btn-disabled { display: none; }
+
+/* Arrow tint to match the card */
+.driver-popover.qrinto-tour .driver-popover-arrow { border-color: #ffffff; }
+
+/* ════════════════════ Responsive / mobile ════════════════════ */
+@media (max-width: 480px) {
+    .driver-popover.qrinto-tour {
+        max-width: calc(100vw - 28px);
+        padding: 16px 16px 14px;
+        border-radius: 20px;
+    }
+    .driver-popover.qrinto-tour .driver-popover-title { font-size: 15px; }
+    .driver-popover.qrinto-tour .driver-popover-description { font-size: 12.5px; }
+    .driver-popover.qrinto-tour .driver-popover-prev-btn,
+    .driver-popover.qrinto-tour .driver-popover-next-btn { padding: 10px 14px; }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .driver-popover.qrinto-tour { animation: none; }
+    .driver-active-element,
+    .qt-progress-fill { transition: none !important; }
+}

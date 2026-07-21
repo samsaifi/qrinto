@@ -662,8 +662,6 @@
         $slots = [
             'frame_image' => 'Page 1',
             'sample_image' => 'Page 2',
-            'background_image' => 'Page 3',
-            'overlay_image' => 'Page 4',
         ];
 
         $galleryImages = $product->images->values();

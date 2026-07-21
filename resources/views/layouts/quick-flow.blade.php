@@ -24,6 +24,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Onboarding Tour (Driver.js) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.css">
+    <link rel="stylesheet" href="{{ asset('css/qrinto-tour.css') }}">
+
     <style>
         body {
             background-color: #f8fafc;
@@ -397,6 +401,28 @@
                             </div>
                         </div>
                     </a>
+
+                    <!-- Replay Onboarding Tour -->
+                    <button type="button" data-qt-restart="{{ route('flow.find-store') }}"
+                        class="w-full text-left bg-white rounded-[28px] shadow-sm border border-slate-100 transition-all hover:border-brand-200 group overflow-hidden">
+                        <div class="flex items-center justify-between p-5">
+                            <div class="flex items-center gap-5">
+                                <div
+                                    class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl text-slate-400 group-hover:text-brand-600 group-hover:bg-brand-50 transition-all">
+                                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-black text-slate-900 uppercase text-xs tracking-widest">Replay
+                                        Tutorial</span>
+                                    <span class="text-[10px] font-bold text-slate-400">See how QRinto works</span>
+                                </div>
+                            </div>
+                            <div
+                                class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white group-hover:border-brand-600 transition-all">
+                                <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                    </button>
                 </div>
 
                 <!-- Modal Footer -->
@@ -520,6 +546,10 @@
         };
     </script>
     @stack('scripts')
+
+    <!-- Onboarding Tour (Driver.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.js.iife.js"></script>
+    <script src="{{ asset('js/qrinto-tour.js') }}" defer></script>
 
     <!-- PWA Service Worker -->
     <script>

@@ -114,7 +114,7 @@ class ProductController extends Controller
         if (auth()->user()->isStoreAdmin() && auth()->user()->store_id) {
             $validated['store_id'] = auth()->user()->store_id;
         }
-        
+
         $product = Product::create($validated);
 
         return redirect()->route('admin.products.edit', $product)

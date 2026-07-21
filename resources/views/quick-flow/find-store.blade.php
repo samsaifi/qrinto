@@ -42,7 +42,7 @@
     @endif
 
     <!-- Nearby Stores Section -->
-    <div class="mb-8 text-left bg-white border-2 border-slate-100 p-6 rounded-[2rem] shadow-sm" x-show="geolocationChecked || nearbyLoading" x-cloak>
+    <div class="mb-8 text-left bg-white border-2 border-slate-100 p-6 rounded-[2rem] shadow-sm" data-tour="nearby-stores" x-show="geolocationChecked || nearbyLoading" x-cloak>
         <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
             <i data-lucide="map-pin" class="w-4 h-4 text-brand-500"></i> Nearby Stores
         </h3>
@@ -116,7 +116,7 @@
     <form action="{{ url()->current() }}" method="GET" class="w-full space-y-4 text-left" @submit.prevent="fetchStores">
         <div class="relative">
             <i data-lucide="search" class="absolute left-4 top-[18px] w-5 h-5 text-slate-400"></i>
-            <input type="text" name="q" placeholder="Type to search stores..."
+            <input type="text" name="q" placeholder="Type to search stores..." data-tour="store-search"
                 x-model="query" @input.debounce.300ms="fetchStores" autocomplete="off"
                 class="w-full bg-white border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-bold focus:border-brand-500 focus:ring-0 transition-all outline-none shadow-sm">
             <div x-show="isLoading" class="absolute right-4 top-[18px]">

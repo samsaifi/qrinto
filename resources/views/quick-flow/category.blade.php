@@ -8,19 +8,20 @@
     .category-header {
         display: flex;
         align-items: center;
-        gap: 20px;
-        margin-bottom: 30px;
+        gap: 16px;
+        margin-bottom: 28px;
     }
 
     .header-icon {
-        width: 70px;
-        height: 70px;
-        background: #f8fafc;
+        width: 64px;
+        height: 64px;
+        background: #f0f9ff;
         border-radius: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 15px;
+        padding: 14px;
+        flex-shrink: 0;
     }
 
     .header-icon svg {
@@ -29,70 +30,108 @@
         fill: #0284c7 !important;
     }
 
-    .size-list {
+    /* ── Size groups ─────────────────────────────── */
+    .size-groups {
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 16px;
     }
 
-    .size-card {
+    .size-group {
         background: #ffffff;
-        border: 2px solid #f1f5f9;
-        border-radius: 35px;
-        padding: 25px;
+        border: 1px solid #eef2f6;
+        border-radius: 24px;
+        padding: 18px 18px 8px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+    }
+
+    .size-group-head {
         display: flex;
-        align-items: center;
+        align-items: baseline;
         justify-content: space-between;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+        gap: 12px;
+        padding: 0 4px 4px;
     }
 
-    .size-card:hover {
-        border-color: #0ea5e9;
-        box-shadow: 0 8px 25px rgba(14, 165, 233, 0.08);
-        transform: translateX(5px);
-    }
-
-    .size-info h3 {
+    .size-group-name {
         font-family: 'Outfit', sans-serif;
         font-size: 20px;
         font-weight: 800;
         color: #0f172a;
         margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
     }
 
-    .size-dim {
-        background: #f1f5f9;
-        color: #64748b;
-        font-size: 10px;
+    .size-group-dim {
+        color: #0284c7;
+        background: #f0f9ff;
+        font-size: 11px;
         font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
+        letter-spacing: 0.03em;
+        padding: 4px 10px;
+        border-radius: 999px;
         text-transform: uppercase;
+        white-space: nowrap;
     }
 
-    .size-title {
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        color: #94a3b8;
-        margin-top: 5px;
-    }
-
-    .size-price {
-        margin-top: 8px;
+    /* ── Variant rows (Folded / Flat …) ──────────── */
+    .variant-row {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 14px;
+        text-decoration: none;
+        padding: 14px 12px;
+        border-radius: 16px;
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .variant-row + .variant-row {
+        border-top: 1px solid #f4f6f9;
+    }
+
+    .variant-row:hover {
+        background: #f8fbfe;
+    }
+
+    .variant-row:active {
+        transform: scale(0.99);
+    }
+
+    .variant-glyph {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        background: #f0f9ff;
+        color: #0ea5e9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .variant-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .variant-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .variant-price {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 2px;
     }
 
     .price-current {
         color: #0ea5e9;
-        font-weight: 800;
-        font-size: 14px;
+        font-weight: 700;
+        font-size: 13px;
     }
 
     .price-old {
@@ -101,15 +140,15 @@
         font-size: 12px;
     }
 
-    .arrow-box {
-        width: 50px;
-        height: 50px;
-        background: #f0f9ff;
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .variant-arrow {
+        color: #cbd5e1;
+        flex-shrink: 0;
+        transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .variant-row:hover .variant-arrow {
         color: #0ea5e9;
+        transform: translateX(3px);
     }
 </style>
 
@@ -125,37 +164,43 @@
         @endif
     </div>
     <div>
-        <h1 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0;">{{ $type->name }}</h1>
-        <p style="font-size: 16px; color: #64748b; font-weight: 500; margin: 0;">Choose your size</p>
+        <h1 style="font-size: 26px; font-weight: 900; color: #0f172a; margin: 0;">{{ $type->name }}</h1>
+        <p style="font-size: 15px; color: #64748b; font-weight: 500; margin: 0;">Choose your size</p>
     </div>
 </div>
 
-<div class="size-list">
+<div class="size-groups" data-tour="size-list">
     @if(isset($subTypes))
-        @foreach($subTypes as $sub)
-        <a href="{{ route('flow.category', $sub->slug) }}" class="size-card">
-            <div class="size-info">
-                <h3>
-                    {{ $sub->name }}
-                    @if($sub->width && $sub->height)
-                    <span class="size-dim">{{ $sub->width }}x{{ $sub->height }}{{ $sub->unit }}</span>
-                    @endif
-                </h3>
-                <p class="size-title">{{ $sub->title ?? 'Premium quality print' }}</p>
-                
-                @if($sub->price)
-                <div class="size-price">
-                    <span class="price-current">Starting at {{ \App\Services\CurrencyService::format($sub->price) }}</span>
-                    @if($sub->old_price)
-                    <span class="price-old">{{ \App\Services\CurrencyService::format($sub->old_price) }}</span>
-                    @endif
-                </div>
+        @foreach($subTypes->groupBy('name') as $groupName => $variants)
+        @php($first = $variants->first())
+        <div class="size-group">
+            <div class="size-group-head">
+                <h2 class="size-group-name">{{ $groupName }}</h2>
+                @if($first->width && $first->height)
+                <span class="size-group-dim">{{ $first->width }} × {{ $first->height }} {{ $first->unit }}</span>
                 @endif
             </div>
-            <div class="arrow-box">
-                <i data-lucide="chevron-right" style="width: 24px; height: 24px;"></i>
-            </div>
-        </a>
+
+            @foreach($variants as $sub)
+            <a href="{{ route('flow.category', $sub->slug) }}" class="variant-row">
+                <div class="variant-glyph">
+                    <i data-lucide="{{ \Illuminate\Support\Str::contains(strtolower($sub->title ?? ''), 'flat') ? 'square' : 'book-open' }}" style="width: 20px; height: 20px;"></i>
+                </div>
+                <div class="variant-body">
+                    <p class="variant-title">{{ $sub->title ?? 'Standard' }}</p>
+                    @if($sub->price)
+                    <div class="variant-price">
+                        <span class="price-current">Starting at {{ \App\Services\CurrencyService::format($sub->price) }}</span>
+                        @if($sub->old_price)
+                        <span class="price-old">{{ \App\Services\CurrencyService::format($sub->old_price) }}</span>
+                        @endif
+                    </div>
+                    @endif
+                </div>
+                <i data-lucide="chevron-right" class="variant-arrow" style="width: 22px; height: 22px;"></i>
+            </a>
+            @endforeach
+        </div>
         @endforeach
     @endif
 </div>

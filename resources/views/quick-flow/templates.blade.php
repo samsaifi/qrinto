@@ -34,7 +34,7 @@
         </div>
 
         <!-- Category Filter Tabs -->
-        <div class="flex flex-wrap gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6">
+        <div class="flex flex-wrap gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6" data-tour="template-filters">
             <button @click="activeCategory = 'all'"
                 :class="activeCategory === 'all' ? 'bg-brand-500 text-white border-brand-500' :
                     'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
@@ -57,12 +57,21 @@
             @endforeach
         </div>
 
-        <div class="template-grid grid grid-cols-2 gap-4">
+        <div class="template-grid grid grid-cols-2 gap-4" data-tour="template-grid">
             @forelse($templates as $tpl)
                 <a href="{{ route('flow.customize', $tpl->slug) }}" data-tpl-id="{{ $tpl->id }}"
                     x-show="activeCategory === 'all' || activeCategory === {{ $tpl->category_id }}"
                     class="group relative bg-slate-50   overflow-hidden border-2 border-transparent hover:border-brand-500 transition-all duration-300 shadow-sm hover:shadow-premium"
                     style="aspect-ratio: {{ $tpl->aspect_ratio }};">
+                    @if ($loop->index == 0 || $loop->index == 1)
+                    <div
+                            class="absolute top-0 text-gray-400 left-0 w-full h-full bg-white   flex items-center justify-center shadow-lg">
+                            Add your stuff 
+                    </div>
+                    @endif
+
+
+
                     @if ($tpl->pdf_orientation == 'portrait')
                         <!-- display fixed rectangle-vertical icon in div -->
                         <div

@@ -40,6 +40,10 @@ Route::get('/storage-link', function () {
 
     return 'Storage link created successfully!';
 });
+Route::get('/store/{storeCode}', function ($storeCode) { 
+    return app(\App\Http\Controllers\StoreQrController::class)->scan($storeCode);
+})->name('store.scan');
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -77,6 +81,7 @@ Route::name('flow.')->group(function () {
 
     Route::get('/confirmation/{order}', [\App\Http\Controllers\QuickFlowController::class, 'confirmation'])->name('confirmation');
     Route::get('/print/{order}', [\App\Http\Controllers\QuickFlowController::class, 'printDesign'])->name('print');
+    Route::get('/print/{order}/pdf', [\App\Http\Controllers\QuickFlowController::class, 'viewPdf'])->name('print.pdf');
 
     // Store Selection
     Route::get('/find-store', [\App\Http\Controllers\QuickFlowController::class, 'findStore'])->name('find-store');
@@ -116,6 +121,7 @@ Route::prefix('pc')->group(function () {
 
         Route::get('/confirmation/{order}', [\App\Http\Controllers\QuickFlowPcController::class, 'confirmation'])->name('confirmation');
         Route::get('/print/{order}', [\App\Http\Controllers\QuickFlowPcController::class, 'printDesign'])->name('print');
+        Route::get('/print/{order}/pdf', [\App\Http\Controllers\QuickFlowPcController::class, 'viewPdf'])->name('print.pdf');
 
         // Store Selection
         Route::get('/find-store', [\App\Http\Controllers\QuickFlowPcController::class, 'findStore'])->name('find-store');
@@ -160,10 +166,7 @@ Route::prefix('noritsu')->name('noritsu.')->group(function () {
 | Store QR Code Routes
 |--------------------------------------------------------------------------
 */
-Route::get('/store/{storeCode}', function ($storeCode) {
-    session()->flush(); 
-    return app(\App\Http\Controllers\StoreQrController::class)->scan($storeCode);
-})->name('store.scan');
+
 Route::get('/store/{storeCode}/qr', [\App\Http\Controllers\StoreQrController::class, 'show'])->name('store.qr');
 
 /*

@@ -257,6 +257,7 @@ class OrderController extends Controller
 
         $oldStatus = $order->status;
         $newStatus = $request->status;
+        $mailFailed = false;
 
         $updates = [
             'status' => $newStatus,
@@ -292,13 +293,28 @@ class OrderController extends Controller
             if ($oldStatus !== $newStatus) {
                 $customerEmail = $order->guest_email ?? ($order->shipping_address['pickup_email'] ?? ($order->user->email ?? null));
                 if ($customerEmail) {
-                    Mail::to($customerEmail)->send(new OrderStatusUpdateMail($order, $request->admin_notes));
+                    // Don't let a mail/SMTP failure roll back or 500 the status update.
+                    try {
+                        Mail::to($customerEmail)->send(new OrderStatusUpdateMail($order, $request->admin_notes));
+                    } catch (\Throwable $e) {
+                        $mailFailed = true;
+                        \Log::error('Order status email failed to send', [
+                            'order_id' => $order->id,
+                            'email' => $customerEmail,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
                 }
             }
         }
 
-        return redirect()->route('admin.orders.show', $order)
-            ->with('success', 'Order status updated successfully');
+        $redirect = redirect()->route('admin.orders.show', $order);
+
+        if ($mailFailed) {
+            return $redirect->with('warning', 'Order status updated, but the customer notification email could not be sent.');
+        }
+
+        return $redirect->with('success', 'Order status updated successfully');
     }
 
     private function physicallyRotateImage($sourcePath, $rotationString)
