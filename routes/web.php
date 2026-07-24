@@ -13,7 +13,9 @@ use App\Http\Controllers\Admin\StoreController as AdminStoreController;
 use App\Http\Controllers\Admin\OrderPrintController;
 use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\NoritsuController;
-use Illuminate\Support\Facades\Artisan;;
+use App\Http\Controllers\QuickFlowController;
+use App\Http\Controllers\QuickFlowPcController;
+use Illuminate\Support\Facades\Artisan;
 
 Route::get('/storage-link', function () {
     $link = public_path('storage');
@@ -60,83 +62,46 @@ Route::get('/clear-cache', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [\App\Http\Controllers\QuickFlowController::class, 'index'])->name('flow.index');
+$registerFlowRoutes = function (string $controller, string $namePrefix) {
+    Route::name("$namePrefix.")->group(function () use ($controller, $namePrefix) {
+        Route::get('/type/{type:slug}', [$controller, 'category'])->name('category');
+        Route::get('/product/{product:slug}', [$controller, 'product'])->name('product');
+        Route::get('/customize/{product:slug}', [$controller, 'customize'])->name('customize');
+        Route::post('/upload', [$controller, 'upload'])->name('upload');
+        Route::post('/upload-composite', [$controller, 'uploadComposite'])->name('upload_composite');
+        Route::post('/checkout', [$controller, 'checkout'])->name('checkout');
+        Route::post('/paypal/create', [$controller, 'createPaypalOrder'])->name('paypal.create');
+        Route::post('/paypal/capture', [$controller, 'capturePaypalOrder'])->name('paypal.capture');
+        Route::post('/checkout/cash', [$controller, 'checkoutCash'])->name('checkout.cash');
 
-Route::name('flow.')->group(function () {
-    Route::get('/type/{type:slug}', [\App\Http\Controllers\QuickFlowController::class, 'category'])->name('category');
-    Route::get('/product/{product:slug}', [\App\Http\Controllers\QuickFlowController::class, 'product'])->name('product');
-    Route::get('/customize/{product:slug}', [\App\Http\Controllers\QuickFlowController::class, 'customize'])->name('customize');
-    Route::post('/upload', [\App\Http\Controllers\QuickFlowController::class, 'upload'])->name('upload');
-    Route::post('/upload-composite', [\App\Http\Controllers\QuickFlowController::class, 'uploadComposite'])->name('upload_composite');
-    Route::post('/checkout', [\App\Http\Controllers\QuickFlowController::class, 'checkout'])->name('checkout');
-    Route::post('/paypal/create', [\App\Http\Controllers\QuickFlowController::class, 'createPaypalOrder'])->name('paypal.create');
-    Route::post('/paypal/capture', [\App\Http\Controllers\QuickFlowController::class, 'capturePaypalOrder'])->name('paypal.capture');
-    Route::post('/checkout/cash', [\App\Http\Controllers\QuickFlowController::class, 'checkoutCash'])->name('checkout.cash');
+        Route::get('/custom-print', [$controller, 'qrinto'])->name('qrinto');
+        Route::post('/custom-print/checkout/cash', [$controller, 'qrintoCheckoutCash'])->name('qrinto.checkout.cash');
+        Route::post('/custom-print/paypal/create', [$controller, 'qrintoPaypalCreate'])->name('qrinto.paypal.create');
+        Route::post('/custom-print/paypal/capture', [$controller, 'qrintoPaypalCapture'])->name('qrinto.paypal.capture');
 
-    // Qrinto Direct Checkout
-    Route::get('/custom-print', [\App\Http\Controllers\QuickFlowController::class, 'qrinto'])->name('qrinto');
-    Route::post('/custom-print/checkout/cash', [\App\Http\Controllers\QuickFlowController::class, 'qrintoCheckoutCash'])->name('qrinto.checkout.cash');
-    Route::post('/custom-print/paypal/create', [\App\Http\Controllers\QuickFlowController::class, 'qrintoPaypalCreate'])->name('qrinto.paypal.create');
-    Route::post('/custom-print/paypal/capture', [\App\Http\Controllers\QuickFlowController::class, 'qrintoPaypalCapture'])->name('qrinto.paypal.capture');
+        Route::get('/confirmation/{order}', [$controller, 'confirmation'])->name('confirmation');
+        Route::get('/print/{order}', [$controller, 'printDesign'])->name('print');
+        Route::get('/print/{order}/pdf', [$controller, 'viewPdf'])->name('print.pdf');
 
-    Route::get('/confirmation/{order}', [\App\Http\Controllers\QuickFlowController::class, 'confirmation'])->name('confirmation');
-    Route::get('/print/{order}', [\App\Http\Controllers\QuickFlowController::class, 'printDesign'])->name('print');
-    Route::get('/print/{order}/pdf', [\App\Http\Controllers\QuickFlowController::class, 'viewPdf'])->name('print.pdf');
+        Route::get('/find-store', [$controller, 'findStore'])->name('find-store');
+        Route::get('/set-store', fn() => redirect()->route("$namePrefix.find-store"));
+        Route::post('/set-store', [$controller, 'setStore'])->name('set-store');
+        Route::post('/apply-coupon', [$controller, 'applyCoupon'])->name('apply-coupon');
 
-    // Store Selection
-    Route::get('/find-store', [\App\Http\Controllers\QuickFlowController::class, 'findStore'])->name('find-store');
-    Route::get('/set-store', fn() => redirect()->route('flow.find-store'));
-    Route::post('/set-store', [\App\Http\Controllers\QuickFlowController::class, 'setStore'])->name('set-store');
-    Route::post('/apply-coupon', [\App\Http\Controllers\QuickFlowController::class, 'applyCoupon'])->name('apply-coupon');
+        Route::get('/track', [$controller, 'trackForm'])->name('track.form');
+        Route::post('/track', [$controller, 'track'])->name('track');
+        Route::get('/track/{orderNumber}', [$controller, 'trackOrder'])->name('track.order');
 
-    // Order Tracking
-    Route::get('/track', [\App\Http\Controllers\QuickFlowController::class, 'trackForm'])->name('track.form');
-    Route::post('/track', [\App\Http\Controllers\QuickFlowController::class, 'track'])->name('track');
-    Route::get('/track/{orderNumber}', [\App\Http\Controllers\QuickFlowController::class, 'trackOrder'])->name('track.order');
-
-    // Thumbnail Utility
-    Route::get('/thumbnails/generate', [\App\Http\Controllers\UtilityController::class, 'generateThumbnails'])->name('utility.thumbnails');
-});
-
-// Separate PC Routes
-Route::prefix('pc')->group(function () {
-    Route::get('/', [\App\Http\Controllers\QuickFlowPcController::class, 'index'])->name('flow-pc.index');
-    
-    Route::name('flow-pc.')->group(function () {
-        Route::get('/type/{type:slug}', [\App\Http\Controllers\QuickFlowPcController::class, 'category'])->name('category');
-        Route::get('/product/{product:slug}', [\App\Http\Controllers\QuickFlowPcController::class, 'product'])->name('product');
-        Route::get('/customize/{product:slug}', [\App\Http\Controllers\QuickFlowPcController::class, 'customize'])->name('customize');
-        Route::post('/upload', [\App\Http\Controllers\QuickFlowPcController::class, 'upload'])->name('upload');
-        Route::post('/upload-composite', [\App\Http\Controllers\QuickFlowPcController::class, 'uploadComposite'])->name('upload_composite');
-        Route::post('/checkout', [\App\Http\Controllers\QuickFlowPcController::class, 'checkout'])->name('checkout');
-        Route::post('/paypal/create', [\App\Http\Controllers\QuickFlowPcController::class, 'createPaypalOrder'])->name('paypal.create');
-        Route::post('/paypal/capture', [\App\Http\Controllers\QuickFlowPcController::class, 'capturePaypalOrder'])->name('paypal.capture');
-        Route::post('/checkout/cash', [\App\Http\Controllers\QuickFlowPcController::class, 'checkoutCash'])->name('checkout.cash');
-
-        // Qrinto Direct Checkout
-        Route::get('/custom-print', [\App\Http\Controllers\QuickFlowPcController::class, 'qrinto'])->name('qrinto');
-        Route::post('/custom-print/checkout/cash', [\App\Http\Controllers\QuickFlowPcController::class, 'qrintoCheckoutCash'])->name('qrinto.checkout.cash');
-        Route::post('/custom-print/paypal/create', [\App\Http\Controllers\QuickFlowPcController::class, 'qrintoPaypalCreate'])->name('qrinto.paypal.create');
-        Route::post('/custom-print/paypal/capture', [\App\Http\Controllers\QuickFlowPcController::class, 'qrintoPaypalCapture'])->name('qrinto.paypal.capture');
-
-        Route::get('/confirmation/{order}', [\App\Http\Controllers\QuickFlowPcController::class, 'confirmation'])->name('confirmation');
-        Route::get('/print/{order}', [\App\Http\Controllers\QuickFlowPcController::class, 'printDesign'])->name('print');
-        Route::get('/print/{order}/pdf', [\App\Http\Controllers\QuickFlowPcController::class, 'viewPdf'])->name('print.pdf');
-
-        // Store Selection
-        Route::get('/find-store', [\App\Http\Controllers\QuickFlowPcController::class, 'findStore'])->name('find-store');
-        Route::get('/set-store', fn() => redirect()->route('flow-pc.find-store'));
-        Route::post('/set-store', [\App\Http\Controllers\QuickFlowPcController::class, 'setStore'])->name('set-store');
-        Route::post('/apply-coupon', [\App\Http\Controllers\QuickFlowPcController::class, 'applyCoupon'])->name('apply-coupon');
-
-        // Order Tracking
-        Route::get('/track', [\App\Http\Controllers\QuickFlowPcController::class, 'trackForm'])->name('track.form');
-        Route::post('/track', [\App\Http\Controllers\QuickFlowPcController::class, 'track'])->name('track');
-        Route::get('/track/{orderNumber}', [\App\Http\Controllers\QuickFlowPcController::class, 'trackOrder'])->name('track.order');
-
-        // Thumbnail Utility
         Route::get('/thumbnails/generate', [\App\Http\Controllers\UtilityController::class, 'generateThumbnails'])->name('utility.thumbnails');
     });
+};
+
+Route::get('/', [QuickFlowController::class, 'index'])->name('flow.index');
+$registerFlowRoutes(QuickFlowController::class, 'flow');
+
+Route::prefix('pc')->group(function () use ($registerFlowRoutes) {
+    Route::get('/', [QuickFlowPcController::class, 'index'])->name('flow-pc.index');
+    $registerFlowRoutes(QuickFlowPcController::class, 'flow-pc');
 });
 
 // Alias for homepage
@@ -201,14 +166,6 @@ Route::get('/dashboard', function () {
 // Order Printing (accessible from frontend confirmation page)
 Route::post('/orders/{order}/print', [OrderPrintController::class, 'sendPrint'])->name('orders.print');
 Route::get('/stores-search', [AdminStoreController::class, 'searchStores'])->name('stores.search');
-
-// Customer dashboard redirect
-Route::get('/dashboard', function () {
-    if (auth()->user()->canAccessAdmin()) {
-        return redirect()->route('admin.dashboard');
-    }
-    return redirect()->route('customer.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------

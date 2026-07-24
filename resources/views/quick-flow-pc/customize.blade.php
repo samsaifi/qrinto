@@ -10,202 +10,190 @@
 @section('title', 'Customize Your ' . $product->name)
 @section('header_title', 'Customize')
 
-@section('breadcrumbs')
-@if($product->category?->parent)
-<i data-lucide="chevron-right" class="w-4 h-4 text-surface-300 shrink-0"></i>
-<a href="{{ route('flow-pc.category', $product->category->parent->slug) }}" class="text-surface-600 hover:text-brand-500 font-medium truncate max-w-[100px] transition-colors">{{ $product->category->parent->name }}</a>
-@endif
-@if($product->category)
-<i data-lucide="chevron-right" class="w-4 h-4 text-surface-300 shrink-0"></i>
-<a href="{{ route('flow-pc.category', $product->category->slug) }}" class="text-surface-600 hover:text-brand-500 font-medium truncate max-w-[100px] transition-colors">{{ $product->category->name }}</a>
-@endif
-<i data-lucide="chevron-right" class="w-4 h-4 text-surface-300 shrink-0"></i>
-<span class="text-surface-900 font-bold max-w-[100px] truncate">Customize</span>
-@endsection
-
 @push('styles')
 <style>
+    /* ── Page Layout ── */
+    .cust-page {
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 32px;
+        align-items: start;
+    }
+    @media (max-width: 1024px) {
+        .cust-page { grid-template-columns: 1fr; }
+    }
+
+    /* ── Breadcrumb ── */
+    .cust-breadcrumb a { transition: color 0.2s ease; }
+    .cust-breadcrumb a:hover { color: #6366f1; }
+
+    /* ── Thumbnail Nav ── */
     .thumb-nav {
         display: flex;
-        flex-direction: column;
         gap: 8px;
         justify-content: start;
         flex-wrap: wrap;
     }
-
     .thumb-nav-item {
         width: 72px;
         height: 72px;
-        border-radius: 12px;
+        border-radius: 14px;
         overflow: hidden;
         cursor: pointer;
-        border: 3px solid #e2e8f0;
-        transition: all .2s;
+        border: 2px solid #e2e8f0;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         background: #f8fafc;
     }
-
+    .thumb-nav-item:hover { border-color: #a5b4fc; }
     .thumb-nav-item.active {
-        border-color: #0ea5e9;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, .2);
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
     }
-
-    .thumb-nav-item.disabled-tab {
-        opacity: .5;
-        cursor: default;
-    }
-
-    .thumb-nav-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
+    .thumb-nav-item.disabled-tab { opacity: 0.45; cursor: default; }
+    .thumb-nav-item img { width: 100%; height: 100%; object-fit: cover; }
     .thumb-nav-item .thumb-label {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, .6);
-        color: #fff;
-        font-size: 8px;
-        font-weight: 700;
-        text-align: center;
-        padding: 2px 0;
-        text-transform: uppercase;
-        letter-spacing: .05em;
+        position: absolute; bottom: 0; left: 0; right: 0;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff; font-size: 8px; font-weight: 700;
+        text-align: center; padding: 2px 0;
+        text-transform: uppercase; letter-spacing: 0.04em;
     }
-
     .thumb-nav-item .thumb-lock {
-        position: absolute;
-        top: 3px;
-        right: 3px;
-        background: rgba(0, 0, 0, .5);
-        border-radius: 50%;
-        padding: 2px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        position: absolute; top: 3px; right: 3px;
+        background: rgba(0, 0, 0, 0.5); border-radius: 50%;
+        padding: 2px; display: flex; align-items: center; justify-content: center;
     }
+    .thumb-nav-clear {
+        width: 72px; height: 72px; border-radius: 14px;
+        border: 2px dashed #fca5a5; background: #fef2f2;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .thumb-nav-clear:hover { background: #fee2e2; border-color: #ef4444; }
+    .thumb-nav-clear i { color: #ef4444; }
+    .thumb-nav-clear span { font-size: 10px; font-weight: 700; color: #ef4444; margin-top: 2px; text-align: center; line-height: 1; }
 
+    /* ── Canvas ── */
     .canvas-wrapper {
-        position: relative;
-        background: #fff;
-        border-radius: 1.5rem;
-        overflow: hidden;
+        position: relative; background: #fff;
+        border-radius: 1rem; overflow: hidden; touch-action: none;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px -4px rgba(0,0,0,0.06);
     }
-
-    .canvas-hidden {
-        display: none !important;
+    .canvas-hidden { display: none !important; }
+    .canvas-disabled-overlay {
+        position: absolute; inset: 0;
+        background: rgba(0, 0, 0, 0.05);
+        z-index: 200; pointer-events: none; border-radius: 1rem;
     }
+    .canvas-wrapper:has(.canvas-disabled-overlay) { cursor: not-allowed; }
+    .canvas-container { z-index: 100; touch-action: none; }
+    .hidden { display: none !important; }
 
+    /* ── Upload Zone ── */
     .upload-zone {
-        border: 2px dashed #e2e8f0;
-        border-radius: 1.25rem;
-        padding: 1.25rem;
-        background: #f8fafc;
+        border: 2px dashed #e2e8f0; border-radius: 1rem;
+        padding: 1rem; background: #f8fafc;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
     }
+    .upload-zone:hover { border-color: #6366f1; background: #eef2ff; transform: translateY(-1px); }
+    .upload-zone.has-image { border-style: solid; border-color: #10b981; background: #f0fdf4; }
 
-    .upload-zone:hover {
-        border-color: #0ea5e9;
-        background: #f0f9ff;
-        transform: translateY(-2px);
-    }
-
-    .upload-zone.has-image {
-        border-style: solid;
-        border-color: #10b981;
-        background: #f0fdf4;
-    }
-
+    /* ── Text Toolbar ── */
     .text-toolbar {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        border-radius: 1.25rem;
-        padding: 8px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        background: #fff; border: 1px solid #e2e8f0;
+        border-radius: 1rem; padding: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
-
     .text-toolbar input[type="text"],
     .text-toolbar textarea {
-        border: 1px solid #e2e8f0;
-        border-radius: 0.75rem;
-        padding: 10px 14px;
-        font-size: 14px;
-        background: #fff;
-        transition: all 0.2s;
-        width: 100%;
-        resize: none;
-        min-height: 44px;
+        border: 1px solid #e2e8f0; border-radius: 0.625rem;
+        padding: 10px 14px; font-size: 14px; background: #f8fafc;
+        transition: all 0.2s; width: 100%; resize: none; min-height: 44px;
     }
-
     .text-toolbar input[type="text"]:focus,
     .text-toolbar textarea:focus {
-        border-color: #0ea5e9;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
-        outline: none;
+        border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); outline: none; background: #fff;
     }
-
     .text-toolbar select {
-        border: 1px solid #e2e8f0;
-        border-radius: 0.75rem;
-        padding: 8px 12px;
-        font-size: 13px;
-        font-weight: 600;
-        background: #fff;
-        cursor: pointer;
-        outline: none;
-        -webkit-appearance: none;
-        appearance: none;
+        border: 1px solid #e2e8f0; border-radius: 0.625rem;
+        padding: 8px 12px; font-size: 13px; font-weight: 600;
+        background: #f8fafc; cursor: pointer; outline: none;
+        -webkit-appearance: none; appearance: none;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        padding-right: 32px;
+        background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px;
+        transition: border-color 0.2s;
     }
-
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-
-    .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-
+    .text-toolbar select:focus { border-color: #6366f1; }
     .text-toolbar button {
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        transition: all .2s;
+        padding: 6px 14px; border-radius: 8px;
+        font-size: 12px; font-weight: 600; border: none;
+        cursor: pointer; transition: all 0.2s;
     }
 
-    .canvas-disabled-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.05);
-        z-index: 200;
-        pointer-events: none;
-        border-radius: 1.5rem;
+    /* ── Mockup Preview ── */
+    .preview-toggle-btn {
+        color: #64748b; transition: all 0.2s ease;
+        cursor: pointer; border: none; background: transparent;
+    }
+    .preview-toggle-btn.active {
+        background: #fff; color: #0f172a;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    }
+    .mockup-stage {
+        border-radius: 16px; overflow: hidden;
+        transition: background 0.35s ease, padding 0.35s ease;
+        display: flex; align-items: center; justify-content: center;
+        min-height: 200px;
+    }
+    .mockup-stage.flat { background: #f8fafc; padding: 24px; }
+    .mockup-stage.room {
+        background: linear-gradient(180deg, #eef2f7 0%, #e6ebf2 62%, #dfe5ee 62%, #d3dae4 100%);
+        padding: 24px 24px 40px; position: relative;
+    }
+    .mockup-stage.room::after {
+        content: ""; position: absolute; left: 0; right: 0; bottom: 26px;
+        height: 2px; background: rgba(15, 23, 42, 0.08);
+    }
+    .mockup-scene { display: flex; align-items: center; justify-content: center; width: 100%; }
+    .mockup-frame {
+        position: relative; display: inline-block; background: #fff;
+        transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    border 0.35s ease, box-shadow 0.35s ease, padding 0.35s ease;
+    }
+    .mockup-stage.flat .mockup-frame {
+        max-width: 100%; border-radius: 6px; padding: 0;
+        box-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.28);
+    }
+    .mockup-stage.room .mockup-frame {
+        max-width: 74%; border: 10px solid #fff; border-radius: 2px; padding: 4px;
+        box-shadow: 0 2px 3px rgba(0,0,0,0.1), 0 22px 44px -14px rgba(15,23,42,0.48);
+    }
+    .mockup-frame img { display: block; width: 100%; height: auto; border-radius: 2px; }
+    .mockup-frame:not(.has-preview) img { min-height: 160px; }
+    .mockup-empty {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 6px; min-height: 160px; color: #94a3b8; font-size: 12px; font-weight: 600;
     }
 
-    .canvas-wrapper:has(.canvas-disabled-overlay) {
-        cursor: not-allowed;
-    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    .canvas-container {
-        z-index: 100;
-        touch-action: none;
-    }
-
-    .hidden {
-        display: none !important;
+    /* ── Mobile ── */
+    @media (max-width: 768px) {
+        .mobile-sticky-action {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 1rem;
+            border-top: 1px solid #e2e8f0; z-index: 50;
+            box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .container { padding-bottom: 120px; }
+        .text-toolbar { padding: 8px; gap: 4px; }
+        .text-toolbar select { max-width: 80px; }
     }
 
     /* ── Curated Fonts ── */
@@ -240,76 +228,6 @@
     @font-face { font-family: 'Satisfy'; src: url("{{ asset('fonts/Satisfy.ttf') }}"); font-display: swap; }
     @font-face { font-family: 'Shadows Into Light'; src: url("{{ asset('fonts/ShadowsIntoLightTwo.ttf') }}"); font-display: swap; }
 </style>
-<style>
-    /* Removed mobile thumbnail overrides for PC */
-    /* Sticky Bottom Action for Mobile */
-    @media (max-width: 768px) {
-        .mobile-sticky-action {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 1rem;
-            border-top: 1px solid #e2e8f0;
-            z-index: 50;
-            box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .container {
-            padding-bottom: 120px;
-        }
-
-        .text-toolbar {
-            padding: 8px;
-            gap: 4px;
-        }
-
-        .text-toolbar select {
-            max-width: 80px;
-        }
-    }
-
-    .canvas-wrapper {
-        background: #f1f5f9;
-        border-radius: 1rem;
-        touch-action: none;
-    }
-
-    .thumb-nav-clear {
-        width: 72px;
-        height: 72px;
-        border-radius: 12px;
-        border: 2px dashed #fca5a5;
-        background: #fef2f2;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all .2s;
-        margin-top: 4px;
-    }
-
-    .thumb-nav-clear:hover {
-        background: #fee2e2;
-        border-color: #ef4444;
-    }
-
-    .thumb-nav-clear i {
-        color: #ef4444;
-    }
-
-    .thumb-nav-clear span {
-        font-size: 10px;
-        font-weight: 700;
-        color: #ef4444;
-        margin-top: 2px;
-        text-align: center;
-        line-height: 1;
-    }
-
-</style>
 @endpush
 
 @section('content')
@@ -327,103 +245,162 @@ $galleryIndex = 0;
 
 foreach($slots as $field => $label) {
     $url = $product->{$field . '_url'};
-    
-    // If field is empty, try to take from gallery
     if (!$url && isset($galleryImages[$galleryIndex])) {
         $url = asset('storage/' . $galleryImages[$galleryIndex]->image_path);
         $galleryIndex++;
     }
-    
     $imageTypes[$field] = ['label' => $label, 'url' => $url];
 }
 
 $maskData = $product->mask_data ?? [];
 if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
+
+$flowData = session('quick_flow_data', []);
 @endphp
 
-<div id="customizer-app" class="container mx-auto mb-12">
+<div id="customizer-app" class="max-w-[1400px] mx-auto pb-16">
 
-    <div class="space-y-2   text-left mb-4">
-        <h1 class="text-lg lg:text-2xl font-display font-black tracking-tight flex items-start justify-start gap-3">
-            <a href="javascript:history.back()"
-                class="w-5 h-5 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors text-slate-500 hover:text-slate-900 inline-flex items-center justify-center">
-                <i data-lucide="arrow-left" class="w-3 h-3"></i>
+    {{-- ── Header ── --}}
+    <div class="mb-6">
+        {{-- Breadcrumbs --}}
+        <nav class="cust-breadcrumb flex items-center gap-2 text-sm mb-4">
+            <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium flex items-center gap-1.5">
+                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
             </a>
-            Design Your Order
-        </h1>
-        <p class="text-slate-500 font-medium text-xs md:ml-14">Customize each image by uploading photos and adding text.</p>
+            @if(isset($flowData['type_slug']))
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+            <a href="{{ route('flow-pc.category', $flowData['type_slug']) }}" class="text-slate-400 font-medium">{{ $flowData['type_name'] ?? 'Category' }}</a>
+            @endif
+            @if(isset($flowData['size_slug']))
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+            <a href="{{ route('flow-pc.category', $flowData['size_slug']) }}" class="text-slate-400 font-medium">{{ $flowData['size_name'] ?? 'Size' }}</a>
+            @endif
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+            <span class="text-slate-700 font-semibold">Customize</span>
+        </nav>
+
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="javascript:history.back()"
+                    class="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center hover:bg-slate-50 hover:border-indigo-200 transition-all text-slate-500 hover:text-indigo-600">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl xl:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $product->name }}</h1>
+                    <p class="text-sm text-slate-500 mt-0.5">Customize each page by uploading photos and adding text.</p>
+                </div>
+            </div>
+            @if(isset($flowData['size_width']) && isset($flowData['size_height']))
+            <div class="hidden lg:flex items-center gap-3">
+                <span class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-100">
+                    <i data-lucide="ruler" class="w-3.5 h-3.5"></i>
+                    {{ $flowData['size_width'] }}&times;{{ $flowData['size_height'] }}{{ $flowData['size_unit'] ?? '' }}
+                </span>
+                @if(isset($flowData['size_price']))
+                <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-100">
+                    {{ \App\Services\CurrencyService::format($flowData['size_price']) }}
+                </span>
+                @endif
+            </div>
+            @endif
+        </div>
     </div>
 
-    <div class=" flex flex-col lg:flex-row gap-8 items-start">
+    {{-- ── Main 2-Column Layout ── --}}
+    <div class="cust-page">
 
-        <!-- ═══ SECTION 1: Design & Preview Area ═══ -->
-        <div class="flex flex-row items-start gap-6 flex-1 min-w-0 w-full">
-            <!-- Thumbnail Navigation -->
-            <div class="thumb-nav shrink-0 w-[72px]" id="thumb-nav">
-                @foreach($imageTypes as $key => $img)
-                @php $config = $maskData[$key] ?? []; $enabled = ($config['enabled'] ?? true) !== false; @endphp
-                <div class="thumb-nav-item {{ !$enabled ? 'disabled-tab' : '' }}"
-                    data-key="{{ $key }}"
-                    onclick="customizer.switchCanvas('{{ $key }}')">
-                    <img src="{{ $img['url'] }}">
-                    <span class="thumb-label">Page {{ $loop->iteration }}</span>
-                    @if(!$enabled)
-                    <div class="thumb-lock">
-                        <i data-lucide="lock" class="w-3 h-3 text-white"></i>
+        {{-- ═══ LEFT: Canvas & Thumbnails ═══ --}}
+        <div class="min-w-0 w-full space-y-5">
+
+            {{-- Page Thumbnails (Horizontal) --}}
+            <div class="flex items-center gap-3">
+                <div class="thumb-nav" id="thumb-nav">
+                    @foreach($imageTypes as $key => $img)
+                    @php $config = $maskData[$key] ?? []; $enabled = ($config['enabled'] ?? true) !== false; @endphp
+                    <div class="thumb-nav-item {{ !$enabled ? 'disabled-tab' : '' }}"
+                        data-key="{{ $key }}"
+                        onclick="customizer.switchCanvas('{{ $key }}')">
+                        <img src="{{ $img['url'] }}">
+                        <span class="thumb-label">Page {{ $loop->iteration }}</span>
+                        @if(!$enabled)
+                        <div class="thumb-lock">
+                            <i data-lucide="lock" class="w-3 h-3 text-white"></i>
+                        </div>
+                        @endif
                     </div>
-                    @endif
+                    @endforeach
                 </div>
-                @endforeach
- 
-                <!-- Clear All Button -->
                 <div class="thumb-nav-clear" onclick="customizer.clearAll()">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                     <span>Clear All</span>
                 </div>
             </div>
 
-            <div class="flex-1 flex flex-col gap-4 min-w-0 w-full">
-                <!-- Main Workspace Canvas -->
-                <div class="canvas-wrapper w-full bg-gray-200 shadow-[0_0_40px_-15px_rgba(0,0,0,0.1)]" id="canvas-container">
-                    @foreach($imageTypes as $key => $img)
-                    @php $config = $maskData[$key] ?? []; $enabled = ($config['enabled'] ?? true) !== false; @endphp
-                    <div id="canvas-wrapper-{{ $key }}" class="canvas-layer" style="position:absolute;top:0;left:0;width:100%;visibility:hidden;pointer-events:none;z-index:-1;">
-                        <canvas id="canvas-{{ $key }}"></canvas>
-                        @if(!$enabled)
-                        <div class="canvas-disabled-overlay"></div>
-                        @endif
-                    </div>
-                    @endforeach
+            {{-- Canvas --}}
+            <div class="canvas-wrapper w-full bg-white" id="canvas-container">
+                @foreach($imageTypes as $key => $img)
+                @php $config = $maskData[$key] ?? []; $enabled = ($config['enabled'] ?? true) !== false; @endphp
+                <div id="canvas-wrapper-{{ $key }}" class="canvas-layer" style="position:absolute;top:0;left:0;width:100%;visibility:hidden;pointer-events:none;z-index:-1;">
+                    <canvas id="canvas-{{ $key }}"></canvas>
+                    @if(!$enabled)
+                    <div class="canvas-disabled-overlay"></div>
+                    @endif
                 </div>
+                @endforeach
+            </div>
 
-                <!-- Zoom Control -->
-                <div id="zoom-control" class="hidden flex items-center gap-4 px-5 bg-white border-2 border-slate-100 rounded-2xl py-3 shadow-sm mt-4">
-                    <div class="p-2 bg-slate-50 rounded-lg"><i data-lucide="image" class="w-4 h-4 text-slate-400"></i></div>
-                    <input type="range" id="zoom-slider" oninput="customizer.updateImageScale(this.value)"
-                        min="0.1" max="3" step="0.01" value="1"
-                        class="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-500">
-                    <div class="p-2 bg-slate-50 rounded-lg"><i data-lucide="zoom-in" class="w-5 h-5 text-slate-400"></i></div>
-                </div>
+            {{-- Zoom --}}
+            <div id="zoom-control" class="hidden flex items-center gap-4 px-5 bg-white border border-slate-200 rounded-xl py-3">
+                <div class="p-2 bg-slate-50 rounded-lg"><i data-lucide="image" class="w-4 h-4 text-slate-400"></i></div>
+                <input type="range" id="zoom-slider" oninput="customizer.updateImageScale(this.value)"
+                    min="0.1" max="3" step="0.01" value="1"
+                    class="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                <div class="p-2 bg-slate-50 rounded-lg"><i data-lucide="zoom-in" class="w-5 h-5 text-slate-400"></i></div>
             </div>
         </div>
 
-        <!-- ═══ SECTION 2: Editing Tools ═══ -->
-        <div class="space-y-6 w-full lg:w-[420px] shrink-0 lg:sticky lg:top-24">
+        {{-- ═══ RIGHT: Tools Panel ═══ --}}
+        <div class="space-y-5 w-full lg:sticky lg:top-20">
+
+            {{-- Live Preview --}}
+            <div id="mockup-preview-card" class="bg-white border border-slate-200 rounded-2xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">See it real</span>
+                    </div>
+                    <div class="flex items-center gap-1 bg-slate-100 rounded-full p-1" id="preview-toggle">
+                        <button type="button" data-mode="flat" class="preview-toggle-btn active px-3 py-1 rounded-full text-[11px] font-bold">Flat</button>
+                        <button type="button" data-mode="room" class="preview-toggle-btn px-3 py-1 rounded-full text-[11px] font-bold">In the room</button>
+                    </div>
+                </div>
+                <div id="mockup-stage" class="mockup-stage flat">
+                    <div class="mockup-scene">
+                        <div id="mockup-frame" class="mockup-frame">
+                            <img id="mockup-image" alt="Live preview of your design">
+                            <div id="mockup-empty" class="mockup-empty">
+                                <i data-lucide="image" class="w-6 h-6"></i>
+                                <span>Your design appears here</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400 font-medium text-center mt-3">Live preview &middot; updates as you design</p>
+            </div>
+
+            {{-- Status + Upload Row --}}
             <div class="grid grid-cols-2 gap-3">
-                <!-- Current Status -->
-                <div id="status-card" class="border-2 rounded-2xl p-4 flex items-center h-full bg-slate-50 border-slate-200">
+                <div id="status-card" class="border rounded-xl p-4 flex items-center h-full bg-slate-50 border-slate-200">
                     <div class="flex items-center gap-3">
                         <div id="status-icon-bg" class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-300">
                             <i id="status-icon" data-lucide="lock" class="w-4 h-4 text-white"></i>
                         </div>
                         <div class="min-w-0 overflow-hidden">
                             <p id="status-badge" class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Locked</p>
-                            <p id="status-label" class="text-xs font-black truncate text-slate-600">Layer</p>
+                            <p id="status-label" class="text-xs font-extrabold truncate text-slate-600">Layer</p>
                         </div>
                     </div>
                 </div>
-
-                <!-- Photo Upload Area -->
                 <div id="upload-area" class="relative hidden">
                     <label class="block cursor-pointer h-full">
                         <div id="upload-zone" class="upload-zone !p-3 h-full flex items-center">
@@ -439,13 +416,12 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                         </div>
                         <input type="file" onchange="customizer.handleFileUpload(this)"
                             class="absolute opacity-0 w-0 h-0 pointer-events-none"
-                            id="photo-upload-input"
-                            accept="image/*">
+                            id="photo-upload-input" accept="image/*">
                     </label>
                 </div>
             </div>
 
-            <!-- Advanced Text Toolbar -->
+            {{-- Text Toolbar --}}
             <div id="text-toolbar" class="hidden text-toolbar flex flex-wrap items-center gap-3">
                 <div class="relative flex-1 min-w-[140px]">
                     <textarea id="text-input" placeholder="Add text..."
@@ -455,9 +431,7 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                         <i data-lucide="x-circle" class="w-4 h-4"></i>
                     </button>
                 </div>
-
                 <div class="flex flex-col gap-2 w-full md:flex-1 relative">
-                    <!-- First Row: 2 Buttons -->
                     <div class="flex items-center gap-2 w-full">
                         <select id="font-family-select" onchange="customizer._updateSelectedStyle('fontFamily', this.value)" class="flex-1 bg-transparent min-w-0">
                             <option style="font-family: 'Inter'">Inter</option>
@@ -498,15 +472,12 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                             <option value="justify">Justify</option>
                         </select>
                     </div>
-
-                    <!-- Second Row: 3 Buttons -->
                     <div class="flex items-center gap-2 w-full">
                         <select id="font-size-select" onchange="customizer._updateSelectedStyle('fontSize', parseInt(this.value))" class="flex-1 bg-transparent min-w-0">
                             @for($i=8; $i<=96; $i+=2)
-                                <option value="{{ $i }}" {{ $i == 16 ? 'selected' : '' }}>{{ $i }}</option>
-                                @endfor
+                            <option value="{{ $i }}" {{ $i == 16 ? 'selected' : '' }}>{{ $i }}</option>
+                            @endfor
                         </select>
-
                         <div class="relative w-10 h-10 shrink-0">
                             <input type="color" id="text-color-input" oninput="customizer._updateSelectedStyle('fill', this.value)"
                                 class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10">
@@ -514,39 +485,49 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                                 <i data-lucide="palette" class="w-4 h-4 text-white mix-blend-difference opacity-50"></i>
                             </div>
                         </div>
-
                         <div class="flex-1 min-w-0">
-                            <button id="add-text-btn" onclick="customizer.addText()" class="w-full bg-brand-500 hover:bg-brand-600 text-white h-10 px-2 rounded-xl text-sm font-bold shadow-lg shadow-brand-100 transition-all active:scale-95">
+                            <button id="add-text-btn" onclick="customizer.addText()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-2 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95">
                                 + Add
                             </button>
-                            <div id="editing-badge" class="hidden w-full flex items-center justify-center gap-1 h-10 px-2 bg-brand-50 text-brand-600 rounded-xl border border-brand-100">
+                            <div id="editing-badge" class="hidden w-full flex items-center justify-center gap-1 h-10 px-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100">
                                 <i data-lucide="type" class="w-4 h-4 shrink-0"></i>
-                                <span class="text-[10px] md:text-xs font-black uppercase tracking-widest truncate">Editing</span>
+                                <span class="text-[10px] md:text-xs font-extrabold uppercase tracking-widest truncate">Editing</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Eraser / Remove Action -->
+            {{-- Remove Button --}}
             <button id="remove-btn" onclick="customizer.handleRemove()"
-                class="hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 border-2 border-red-100 rounded-xl text-red-600 font-bold text-sm hover:bg-red-100 transition">
+                class="hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 font-semibold text-sm hover:bg-red-100 transition-all">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                 <span id="remove-btn-text">Remove Photo</span>
             </button>
 
-            <!-- Final Checkout Action -->
-            <div class="pt-1 border-t border-slate-100">
+            {{-- Checkout --}}
+            <div class="pt-2 border-t border-slate-100">
                 <form action="{{ route('flow-pc.checkout') }}" method="POST" id="checkout-form">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                     <input type="hidden" name="upload_ids" id="upload_ids_field">
                     <button type="button" id="submit-btn" onclick="customizer.submitAllCanvases()"
-                        class="w-full bg-slate-900 text-white font-display font-black py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-black transition-all active:scale-[0.98] shadow-xl shadow-slate-200">
+                        class="w-full bg-slate-900 hover:bg-black text-white font-extrabold py-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-lg">
                         <i data-lucide="shopping-cart" class="w-5 h-5"></i>
                         Confirm Design & Continue
                     </button>
                 </form>
+            </div>
+
+            {{-- Help --}}
+            <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-slate-200">
+                    <i data-lucide="help-circle" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-600">Need help designing?</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Upload a photo, add text, then confirm to continue.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -603,11 +584,17 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
             const firstEnabled = Object.keys(this.canvasEnabled).find(k => this.canvasEnabled[k] === true);
             this.activeCanvas = firstEnabled || Object.keys(this.imageTypes)[0];
 
-            // 4. Initialization
-            setTimeout(() => {
-                this._initAllCanvases();
-                this.updateUI(); // Ensure UI reflects initialized canvases
-            }, 100);
+            // 4. Initialization — poll until grid layout resolves
+            const waitForLayout = () => {
+                const cont = document.getElementById('canvas-container');
+                if (cont && cont.offsetWidth > 300) {
+                    this._initAllCanvases();
+                    this.updateUI();
+                } else {
+                    setTimeout(waitForLayout, 50);
+                }
+            };
+            setTimeout(waitForLayout, 50);
             window.addEventListener('resize', this._debounce(() => this._resizeAllCanvases(), 150));
 
             // 5. Keyboard Shortcuts
@@ -658,17 +645,17 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
             const statusLabel = document.getElementById('status-label');
 
             if (enabled) {
-                statusCard.className = 'border-2 rounded-2xl p-4 flex items-center h-full bg-gradient-to-r from-brand-50 to-sky-50 border-brand-100';
-                statusIconBg.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-brand-500';
-                statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-brand-700';
+                statusCard.className = 'border rounded-xl p-4 flex items-center h-full bg-gradient-to-r from-indigo-50 to-violet-50 border-indigo-100';
+                statusIconBg.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-indigo-500';
+                statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-indigo-700';
                 statusBadge.textContent = 'Editing';
-                statusLabel.className = 'text-xs font-black truncate text-brand-900';
+                statusLabel.className = 'text-xs font-extrabold truncate text-indigo-900';
             } else {
-                statusCard.className = 'border-2 rounded-2xl p-4 flex items-center h-full bg-slate-50 border-slate-200';
+                statusCard.className = 'border rounded-xl p-4 flex items-center h-full bg-slate-50 border-slate-200';
                 statusIconBg.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-300';
                 statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-slate-500';
                 statusBadge.textContent = 'Locked';
-                statusLabel.className = 'text-xs font-black truncate text-slate-600';
+                statusLabel.className = 'text-xs font-extrabold truncate text-slate-600';
             }
             statusLabel.textContent = this.imageTypes[key]?.label || 'Layer';
 
@@ -739,7 +726,7 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                     backgroundColor: '#ffffff',
                     selection: false,
                     preserveObjectStacking: true,
-                    allowTouchScrolling: true // Allow browser touch scrolling when not dragging objects
+                    allowTouchScrolling: true
                 });
 
                 this.canvases[key] = {
@@ -750,23 +737,17 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                     adminH: adminH
                 };
 
-                // Dynamic touch action scroll optimizer:
-                // Allows modern mobile browsers to scroll the page up/down if not touching an editable object.
                 const upperCanvasEl = fc.upperCanvasEl;
                 if (upperCanvasEl) {
                     upperCanvasEl.style.touchAction = 'pan-y';
-
                     upperCanvasEl.addEventListener('touchstart', (e) => {
                         const target = fc.findTarget(e);
                         if (target && (target._isUserImage || target._isUserText)) {
-                            // Dragging/scaling active user content -> lock scroll
                             upperCanvasEl.style.touchAction = 'none';
                         } else {
-                            // Touching background/guides/empty space -> allow scroll
                             upperCanvasEl.style.touchAction = 'pan-y';
                         }
                     }, { passive: true });
-
                     upperCanvasEl.addEventListener('touchend', () => {
                         upperCanvasEl.style.touchAction = 'pan-y';
                     });
@@ -776,65 +757,35 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                 if (url) {
                     fabric.Image.fromURL(url, img => {
                         img.set({
-                            left: 0,
-                            top: 0,
+                            left: 0, top: 0,
                             scaleX: displayWidth / img.width,
                             scaleY: displayHeight / img.height,
-                            selectable: false,
-                            evented: false,
+                            selectable: false, evented: false,
                         });
                         fc.setBackgroundImage(img, fc.requestRenderAll.bind(fc));
-                    }, {
-                        crossOrigin: 'anonymous'
-                    });
+                    }, { crossOrigin: 'anonymous' });
                 }
 
-                // --- Add Mask Guide (Visual Only) ---
                 const firstKey = Object.keys(this.imageTypes)[0];
                 const mData = this.allMaskData[key] || {};
                 const masks = mData.masks || this.allMaskData.masks;
                 if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
                     const m = masks[0];
                     const guide = this._createMaskObject(m, scaleFactor, {
-                        fill: 'transparent',
-                        stroke: '#3b82f6',
-                        strokeWidth: 2,
-                        strokeDashArray: [5, 5],
-                        selectable: false,
-                        evented: false,
-                        name: 'mask_guide'
+                        fill: 'transparent', stroke: '#3b82f6', strokeWidth: 2,
+                        strokeDashArray: [5, 5], selectable: false, evented: false, name: 'mask_guide'
                     });
-                    if (guide) {
-                        fc.add(guide);
-                        this.canvases[key].maskGuide = guide;
-                    }
+                    if (guide) { fc.add(guide); this.canvases[key].maskGuide = guide; }
                 }
 
-                fc.on('mouse:down', () => {
-                    fc.calcOffset();
-                });
-                fc.on('mouse:up', () => {
-                    fc.isDragging = false;
-                    fc.calcOffset();
-                });
-                fc.on('mouse:out', () => {
-                    fc.isDragging = false;
-                    fc.calcOffset();
-                });
+                fc.on('mouse:down', () => { fc.calcOffset(); });
+                fc.on('mouse:up', () => { fc.isDragging = false; fc.calcOffset(); });
+                fc.on('mouse:out', () => { fc.isDragging = false; fc.calcOffset(); });
 
-                fc.on('selection:created', (e) => {
-                    this.selectedObject = e.selected[0];
-                    this.updateUI();
-                });
-                fc.on('selection:updated', (e) => {
-                    this.selectedObject = e.selected[0];
-                    this.updateUI();
-                });
+                fc.on('selection:created', (e) => { this.selectedObject = e.selected[0]; this.updateUI(); });
+                fc.on('selection:updated', (e) => { this.selectedObject = e.selected[0]; this.updateUI(); });
                 fc.on('selection:cleared', () => {
-                    if (this.activeCanvas === key) {
-                        this.selectedObject = null;
-                        this.updateUI();
-                    }
+                    if (this.activeCanvas === key) { this.selectedObject = null; this.updateUI(); }
                 });
 
                 fc.on('object:modified', () => this._saveCanvasState(key));
@@ -848,7 +799,6 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                     }
                 });
 
-                // --- Mobile Pinch to Zoom & Rotate ---
                 let initialPinchDistance = null;
                 let initialPinchAngle = null;
                 let initialObjScale = null;
@@ -867,9 +817,7 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                             initialObjAngle = obj.angle;
                         }
                     }
-                }, {
-                    passive: false
-                });
+                }, { passive: false });
 
                 fc.upperCanvasEl.addEventListener('touchmove', (e) => {
                     if (e.touches.length === 2 && initialPinchDistance !== null) {
@@ -880,24 +828,13 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                             const dy = e.touches[0].clientY - e.touches[1].clientY;
                             const currentDistance = Math.hypot(dx, dy);
                             const currentPinchAngle = Math.atan2(dy, dx) * 180 / Math.PI;
-
                             const scaleFactor = currentDistance / initialPinchDistance;
                             let angleDelta = currentPinchAngle - initialPinchAngle;
-
-                            // Normalize angle delta to prevent jumping
                             if (angleDelta > 180) angleDelta -= 360;
                             if (angleDelta < -180) angleDelta += 360;
-
                             const newScale = Math.max(0.05, initialObjScale * scaleFactor);
-
-                            obj.set({
-                                scaleX: newScale,
-                                scaleY: newScale,
-                                angle: initialObjAngle + angleDelta
-                            });
-                            obj.setCoords();
-                            fc.requestRenderAll();
-
+                            obj.set({ scaleX: newScale, scaleY: newScale, angle: initialObjAngle + angleDelta });
+                            obj.setCoords(); fc.requestRenderAll();
                             if (obj._isUserImage) {
                                 this.imgScales[key] = newScale;
                                 const slider = document.getElementById('zoom-slider');
@@ -905,14 +842,11 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                             }
                         }
                     }
-                }, {
-                    passive: false
-                });
+                }, { passive: false });
 
                 fc.upperCanvasEl.addEventListener('touchend', (e) => {
                     if (e.touches.length < 2 && initialPinchDistance !== null) {
-                        initialPinchDistance = null;
-                        initialPinchAngle = null;
+                        initialPinchDistance = null; initialPinchAngle = null;
                         this._saveCanvasState(key);
                     }
                 });
@@ -923,14 +857,12 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
         },
 
         _saveCanvasState(key) {
-            const cv = this.canvases[key];
-            if (!cv) return;
+            const cv = this.canvases[key]; if (!cv) return;
             const fc = cv.fabricCanvas;
             const objects = fc.getObjects().filter(obj => obj._isUserImage || obj._isUserText);
             const data = {
                 objects: objects.map(obj => obj.toObject(['_isUserImage', '_isUserText', '_uploadId'])),
-                imgScale: this.imgScales[key],
-                uploadId: this.uploadIds[key]
+                imgScale: this.imgScales[key], uploadId: this.uploadIds[key]
             };
             localStorage.setItem(`qrinto_design_v1_${this.productId}_${key}`, JSON.stringify(data));
         },
@@ -940,69 +872,34 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
             if (!saved) return;
             try {
                 const data = JSON.parse(saved);
-                const cv = this.canvases[key];
-                const fc = cv.fabricCanvas;
+                const cv = this.canvases[key]; const fc = cv.fabricCanvas;
                 this.imgScales[key] = data.imgScale || 1;
                 this.uploadIds[key] = data.uploadId;
-
                 if (data.objects && data.objects.length > 0) {
                     fabric.util.enlivenObjects(data.objects, (enlivenedObjects) => {
                         enlivenedObjects.forEach(obj => {
                             if (obj._isUserImage) {
-                                obj.set({
-                                    selectable: true,
-                                    evented: true,
-                                    hasControls: true,
-                                    lockScalingFlip: true,
-                                    uniformScaling: true,
-                                    cornerSize: 12,
-                                    transparentCorners: false,
-                                    borderColor: '#378ADD',
-                                    cornerColor: '#378ADD',
-                                    cornerStyle: 'circle'
-                                });
-                                cv.imgObj = obj;
-                                this.canvasImages[key] = true;
+                                obj.set({ selectable: true, evented: true, hasControls: true, lockScalingFlip: true, uniformScaling: true, cornerSize: 12, transparentCorners: false, borderColor: '#378ADD', cornerColor: '#378ADD', cornerStyle: 'circle' });
+                                cv.imgObj = obj; this.canvasImages[key] = true;
                             }
                             if (obj._isUserText) {
-                                obj.set({
-                                    selectable: true,
-                                    evented: true,
-                                    hasControls: true,
-                                    lockScalingFlip: true,
-                                    uniformScaling: true,
-                                    cornerSize: 10,
-                                    transparentCorners: false,
-                                    borderColor: '#378ADD',
-                                    cornerColor: '#378ADD',
-                                    cornerStyle: 'circle'
-                                });
+                                obj.set({ selectable: true, evented: true, hasControls: true, lockScalingFlip: true, uniformScaling: true, cornerSize: 10, transparentCorners: false, borderColor: '#378ADD', cornerColor: '#378ADD', cornerStyle: 'circle' });
                             }
-
-                            // --- Apply Mask to First Canvas Only ---
                             const firstKey = Object.keys(this.imageTypes)[0];
                             const mData = this.allMaskData[key] || {};
                             const masks = mData.masks || this.allMaskData.masks;
                             if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
-                                const m = masks[0];
-                                const sf = cv.scaleFactor;
-                                const clipPath = this._createMaskObject(m, sf, {
-                                    absolutePositioned: true
-                                });
+                                const m = masks[0]; const sf = cv.scaleFactor;
+                                const clipPath = this._createMaskObject(m, sf, { absolutePositioned: true });
                                 if (clipPath) obj.set('clipPath', clipPath);
                             }
-
                             fc.add(obj);
                         });
-                        fc.renderAll();
-                        fc.getObjects().forEach(o => o.setCoords());
-                        fc.renderAll();
+                        fc.renderAll(); fc.getObjects().forEach(o => o.setCoords()); fc.renderAll();
                         this.updateUI();
                     });
                 }
-            } catch (e) {
-                console.error('Restore design error:', e);
-            }
+            } catch (e) { console.error('Restore design error:', e); }
         },
 
         _syncToolbarToSelection(obj) {
@@ -1010,95 +907,56 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
             const clearBtn = document.getElementById('clear-text-btn');
             const addBtn = document.getElementById('add-text-btn');
             const editBadge = document.getElementById('editing-badge');
-
             if (!obj || !(obj.type === 'i-text' || obj.type === 'text' || obj.type === 'textbox')) {
                 textInput.placeholder = 'Add text...';
-                clearBtn.classList.add('hidden');
-                addBtn.classList.remove('hidden');
-                editBadge.classList.add('hidden');
+                clearBtn.classList.add('hidden'); addBtn.classList.remove('hidden'); editBadge.classList.add('hidden');
                 return;
             }
-
-            if (textInput.value !== obj.text) {
-                textInput.value = obj.text;
-            }
+            if (textInput.value !== obj.text) { textInput.value = obj.text; }
             document.getElementById('font-family-select').value = obj.fontFamily;
             document.getElementById('font-size-select').value = obj.fontSize.toString();
             document.getElementById('text-color-input').value = obj.fill;
             document.getElementById('text-color-preview').style.background = obj.fill;
             document.getElementById('text-align-select').value = obj.textAlign || 'center';
-
-            clearBtn.classList.remove('hidden');
-            addBtn.classList.add('hidden');
-            editBadge.classList.remove('hidden');
+            clearBtn.classList.remove('hidden'); addBtn.classList.add('hidden'); editBadge.classList.remove('hidden');
         },
 
         async _updateSelectedStyle(property, value) {
             if (property === 'fill') document.getElementById('text-color-preview').style.background = value;
             if (!this.selectedObject) return;
             const obj = this.selectedObject;
-
             if (property === 'fontFamily') {
-                try {
-                    await document.fonts.load(`1em "${value}"`);
-                } catch (e) {
-                    console.warn("Font load failed:", value);
-                }
+                try { await document.fonts.load(`1em "${value}"`); } catch (e) { console.warn("Font load failed:", value); }
             }
-
             obj.set(property, value);
-
             if (obj.type === 'textbox' && (property === 'fontSize' || property === 'fontFamily' || property === 'fontWeight')) {
                 const cv = this.canvases[this.activeCanvas];
                 const maxScreenW = cv.fabricCanvas.width * 0.9;
                 const maxUnscaledW = maxScreenW / obj.scaleX;
-
-                const temp = new fabric.Text(obj.text, {
-                    fontSize: obj.fontSize,
-                    fontFamily: obj.fontFamily,
-                    fontWeight: obj.fontWeight,
-                    fontStyle: obj.fontStyle
-                });
+                const temp = new fabric.Text(obj.text, { fontSize: obj.fontSize, fontFamily: obj.fontFamily, fontWeight: obj.fontWeight, fontStyle: obj.fontStyle });
                 const desiredWidth = temp.width + (obj.fontSize * 0.2);
                 obj.set('width', Math.min(desiredWidth, maxUnscaledW));
             }
-
             const cv = this.canvases[this.activeCanvas];
-            if (cv) {
-                cv.fabricCanvas.requestRenderAll();
-                this._saveCanvasState(this.activeCanvas);
-            }
+            if (cv) { cv.fabricCanvas.requestRenderAll(); this._saveCanvasState(this.activeCanvas); }
         },
 
         onTextInputChange(value) {
             if (this.selectedObject && (this.selectedObject.type === 'i-text' || this.selectedObject.type === 'text' || this.selectedObject.type === 'textbox')) {
                 const obj = this.selectedObject;
                 obj.set('text', value);
-
                 if (obj.type === 'textbox') {
                     const cv = this.canvases[this.activeCanvas];
                     const maxScreenW = cv.fabricCanvas.width * 0.9;
                     const maxUnscaledW = maxScreenW / obj.scaleX;
-
-                    const temp = new fabric.Text(value, {
-                        fontSize: obj.fontSize,
-                        fontFamily: obj.fontFamily,
-                        fontWeight: obj.fontWeight,
-                        fontStyle: obj.fontStyle
-                    });
+                    const temp = new fabric.Text(value, { fontSize: obj.fontSize, fontFamily: obj.fontFamily, fontWeight: obj.fontWeight, fontStyle: obj.fontStyle });
                     const desiredWidth = temp.width + (obj.fontSize * 0.2);
                     obj.set('width', Math.min(desiredWidth, maxUnscaledW));
                 }
-
                 this.canvases[this.activeCanvas]?.fabricCanvas?.requestRenderAll();
                 this._saveCanvasState(this.activeCanvas);
-
-                if (value.trim().length === 0) {
-                    this.handleRemove();
-                }
+                if (value.trim().length === 0) { this.handleRemove(); }
             } else if (value.trim().length > 0) {
-                // To prevent race conditions while typing fast, 
-                // we check if we already have a text object we just added.
                 this.addText(true);
             }
         },
@@ -1115,21 +973,16 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
 
         switchCanvas(key) {
             const currentCv = this.canvases[this.activeCanvas];
-            if (currentCv && currentCv.fabricCanvas) {
-                currentCv.fabricCanvas.discardActiveObject();
-                currentCv.fabricCanvas.renderAll();
-            }
+            if (currentCv && currentCv.fabricCanvas) { currentCv.fabricCanvas.discardActiveObject(); currentCv.fabricCanvas.renderAll(); }
             this.selectedObject = null;
             document.getElementById('text-input').value = '';
             this.activeCanvas = key;
-
             this.updateUI();
             setTimeout(() => {
                 const newCv = this.canvases[key];
                 if (newCv && newCv.fabricCanvas) {
                     const cont = document.getElementById('canvas-container');
                     if (cont) cont.style.height = newCv.fabricCanvas.height + 'px';
-
                     newCv.fabricCanvas.calcOffset();
                     newCv.fabricCanvas.discardActiveObject().renderAll();
                 }
@@ -1138,58 +991,31 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
 
         _addImageToCanvas(key, url) {
             if (this.canvasEnabled[key] === false) return;
-            const cv = this.canvases[key];
-            if (!cv) return;
+            const cv = this.canvases[key]; if (!cv) return;
             if (cv.imgObj) cv.fabricCanvas.remove(cv.imgObj);
-
             fabric.Image.fromURL(url, img => {
-                const canvasW = cv.fabricCanvas.width;
-                const canvasH = cv.fabricCanvas.height;
+                const canvasW = cv.fabricCanvas.width; const canvasH = cv.fabricCanvas.height;
                 const s = Math.min(canvasW / img.width, canvasH / img.height) * 0.8;
                 img.set({
-                    left: (canvasW - img.width * s) / 2,
-                    top: (canvasH - img.height * s) / 2,
-                    scaleX: s,
-                    scaleY: s,
-                    cornerStyle: 'circle',
-                    cornerSize: 12,
-                    transparentCorners: false,
-                    borderColor: '#378ADD',
-                    cornerColor: '#378ADD',
-                    hasControls: true,
-                    hasBorders: true,
-                    selectable: true,
-                    _isUserImage: true,
-                    objectCaching: true,
-                    lockScalingFlip: true,
-                    uniformScaling: true,
-                    centeredScaling: false
+                    left: (canvasW - img.width * s) / 2, top: (canvasH - img.height * s) / 2,
+                    scaleX: s, scaleY: s, cornerStyle: 'circle', cornerSize: 12,
+                    transparentCorners: false, borderColor: '#378ADD', cornerColor: '#378ADD',
+                    hasControls: true, hasBorders: true, selectable: true, _isUserImage: true,
+                    objectCaching: true, lockScalingFlip: true, uniformScaling: true, centeredScaling: false
                 });
-
-                // --- Apply Mask to First Canvas Only ---
                 const firstKey = Object.keys(this.imageTypes)[0];
                 const mData = this.allMaskData[key] || {};
                 const masks = mData.masks || this.allMaskData.masks;
                 if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
-                    const m = masks[0];
-                    const sf = cv.scaleFactor;
-                    const clipPath = this._createMaskObject(m, sf, {
-                        absolutePositioned: true
-                    });
+                    const m = masks[0]; const sf = cv.scaleFactor;
+                    const clipPath = this._createMaskObject(m, sf, { absolutePositioned: true });
                     if (clipPath) img.set('clipPath', clipPath);
                 }
-
                 cv.fabricCanvas.add(img);
                 if (cv.maskGuide) cv.maskGuide.bringToFront();
-                cv.fabricCanvas.setActiveObject(img);
-                cv.fabricCanvas.renderAll();
-                img.setCoords();
-                cv.imgObj = img;
-                this.imgScales[key] = s;
-                this.updateUI();
-            }, {
-                crossOrigin: 'anonymous'
-            });
+                cv.fabricCanvas.setActiveObject(img); cv.fabricCanvas.renderAll();
+                img.setCoords(); cv.imgObj = img; this.imgScales[key] = s; this.updateUI();
+            }, { crossOrigin: 'anonymous' });
         },
 
         async handleFileUpload(input) {
@@ -1197,37 +1023,19 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
             if (!file || !this.activeCanvas) return;
             const key = this.activeCanvas;
             if (this.canvasEnabled[key] === false) return;
-
-            this.isUploading = true;
-            this.updateUI();
-
+            this.isUploading = true; this.updateUI();
             try {
-                // 1. Process & Optimize Image (Resize & Convert to WebP)
                 const optimized = await this._processImage(file);
-
-                // 2. Display on Fabric Canvas
                 this.canvasImages[key] = optimized.dataUrl;
                 this._addImageToCanvas(key, optimized.dataUrl);
-
-                // 3. Upload to Server
                 const fd = new FormData();
                 fd.append('image', optimized.blob, 'upload.webp');
                 fd.append('_token', '<?php echo csrf_token(); ?>');
-
-                const res = await fetch('<?php echo route("flow-pc.upload"); ?>', {
-                    method: 'POST',
-                    body: fd
-                });
+                const res = await fetch('<?php echo route("flow-pc.upload"); ?>', { method: 'POST', body: fd });
                 const dat = await res.json();
                 if (dat.success) this.uploadIds[key] = dat.upload_id;
-
-            } catch (err) {
-                console.error('Image processing/upload error:', err);
-            } finally {
-                this.isUploading = false;
-                input.value = '';
-                this.updateUI();
-            }
+            } catch (err) { console.error('Image processing/upload error:', err); }
+            finally { this.isUploading = false; input.value = ''; this.updateUI(); }
         },
 
         _processImage(file) {
@@ -1235,32 +1043,16 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-                    const maxDim = 1200; // High quality but manageable
-
+                    let width = img.width; let height = img.height; const maxDim = 1200;
                     if (width > maxDim || height > maxDim) {
-                        if (width > height) {
-                            height *= maxDim / width;
-                            width = maxDim;
-                        } else {
-                            width *= maxDim / height;
-                            height = maxDim;
-                        }
+                        if (width > height) { height *= maxDim / width; width = maxDim; }
+                        else { width *= maxDim / height; height = maxDim; }
                     }
-
-                    canvas.width = width;
-                    canvas.height = height;
+                    canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-
                     const dataUrl = canvas.toDataURL('image/webp', 0.85);
-                    canvas.toBlob((blob) => {
-                        resolve({
-                            blob,
-                            dataUrl
-                        });
-                    }, 'image/webp', 0.85);
+                    canvas.toBlob((blob) => { resolve({ blob, dataUrl }); }, 'image/webp', 0.85);
                 };
                 img.onerror = reject;
                 img.src = URL.createObjectURL(file);
@@ -1268,15 +1060,10 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
         },
 
         updateImageScale(val) {
-            const cv = this.canvases[this.activeCanvas];
-            if (!cv?.imgObj) return;
+            const cv = this.canvases[this.activeCanvas]; if (!cv?.imgObj) return;
             this.imgScales[this.activeCanvas] = val;
-            cv.imgObj.set({
-                scaleX: parseFloat(val),
-                scaleY: parseFloat(val)
-            });
-            cv.imgObj.setCoords();
-            cv.fabricCanvas.requestRenderAll();
+            cv.imgObj.set({ scaleX: parseFloat(val), scaleY: parseFloat(val) });
+            cv.imgObj.setCoords(); cv.fabricCanvas.requestRenderAll();
         },
 
         addText(isLiveType = false) {
@@ -1285,69 +1072,37 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
             const cv = this.canvases[key];
             const textVal = document.getElementById('text-input').value;
             if (!cv || !textVal.trim()) return;
-
             const fontSize = parseInt(document.getElementById('font-size-select').value);
             const fontFamily = document.getElementById('font-family-select').value;
             const color = document.getElementById('text-color-input').value;
             const align = document.getElementById('text-align-select').value;
-
-            // 1. Create the Textbox immediately (synchronously) to prevent duplication
             const t = new fabric.Textbox(textVal, {
-                left: cv.fabricCanvas.width * 0.1,
-                top: cv.fabricCanvas.height / 3,
-                width: cv.fabricCanvas.width * 0.8,
-                fontSize: fontSize,
-                fontFamily: fontFamily,
-                fill: color,
-                textAlign: align,
-                _isUserText: true,
-                objectCaching: false,
-                cornerSize: 12,
-                transparentCorners: false,
-                borderColor: '#378ADD',
-                cornerColor: '#378ADD',
-                cornerStyle: 'circle',
-                lockScalingFlip: true,
-                hasRotatingPoint: true
+                left: cv.fabricCanvas.width * 0.1, top: cv.fabricCanvas.height / 3,
+                width: cv.fabricCanvas.width * 0.8, fontSize: fontSize, fontFamily: fontFamily,
+                fill: color, textAlign: align, _isUserText: true, objectCaching: false,
+                cornerSize: 12, transparentCorners: false, borderColor: '#378ADD',
+                cornerColor: '#378ADD', cornerStyle: 'circle', lockScalingFlip: true, hasRotatingPoint: true
             });
-
-            // 2. Set as selected immediately! This prevents the "new layer on every character" bug.
             this.selectedObject = t;
-
             cv.fabricCanvas.add(t);
-            // --- Apply Mask to First Canvas Only ---
             const firstKey = Object.keys(this.imageTypes)[0];
             const mData = this.allMaskData[key] || {};
             const masks = mData.masks || this.allMaskData.masks;
             if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
-                const m = masks[0];
-                const sf = cv.scaleFactor;
-                const clipPath = this._createMaskObject(m, sf, {
-                    absolutePositioned: true
-                });
+                const m = masks[0]; const sf = cv.scaleFactor;
+                const clipPath = this._createMaskObject(m, sf, { absolutePositioned: true });
                 if (clipPath) t.set('clipPath', clipPath);
             }
-
             if (cv.maskGuide) cv.maskGuide.bringToFront();
-            t.setCoords();
-            cv.fabricCanvas.setActiveObject(t);
-            cv.fabricCanvas.renderAll();
-
-            // 3. Background Font Load - once loaded, refresh the canvas
+            t.setCoords(); cv.fabricCanvas.setActiveObject(t); cv.fabricCanvas.renderAll();
             document.fonts.load(`${fontSize}px "${fontFamily}"`).then(() => {
-                if (t.canvas) {
-                    t.set('fontFamily', fontFamily);
-                    t.setCoords();
-                    t.canvas.requestRenderAll();
-                }
+                if (t.canvas) { t.set('fontFamily', fontFamily); t.setCoords(); t.canvas.requestRenderAll(); }
             }).catch(e => console.warn("Font load error:", e));
-
             this.updateUI();
         },
 
         handleRemove() {
-            const cv = this.canvases[this.activeCanvas];
-            if (!cv) return;
+            const cv = this.canvases[this.activeCanvas]; if (!cv) return;
             if (this.selectedObject) {
                 cv.fabricCanvas.remove(this.selectedObject);
                 cv.fabricCanvas.discardActiveObject();
@@ -1355,257 +1110,114 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
                 document.getElementById('text-input').value = '';
             } else if (cv.imgObj) {
                 cv.fabricCanvas.remove(cv.imgObj);
-                cv.imgObj = null;
-                this.canvasImages[this.activeCanvas] = null;
-                this.uploadIds[this.activeCanvas] = null;
+                cv.imgObj = null; this.canvasImages[this.activeCanvas] = null; this.uploadIds[this.activeCanvas] = null;
             }
-            cv.fabricCanvas.renderAll();
-            this.updateUI();
+            cv.fabricCanvas.renderAll(); this.updateUI();
         },
 
         submitAllCanvases() {
             if (this.isSavingComposite) return;
             const hasUpload = Object.values(this.uploadIds).some(id => id !== null) ||
                 Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.getObjects().some(o => o._isUserText));
-
             if (!hasUpload) {
                 document.getElementById('upload_ids_field').value = JSON.stringify({});
-                document.getElementById('checkout-form').submit();
-                return;
+                document.getElementById('checkout-form').submit(); return;
             }
-
             this.isSavingComposite = true;
             const btn = document.getElementById('submit-btn');
             btn.disabled = true;
             btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> Saving...';
             lucide.createIcons();
-
             const ids = {};
             const uploadPromises = Object.keys(this.canvases).map(async key => {
                 const cv = this.canvases[key];
                 if (!cv || !this.canvasEnabled[key]) return;
                 const hasEdit = this.canvasImages[key] !== null || cv.fabricCanvas.getObjects().some(o => o._isUserText);
                 if (!hasEdit) return;
-
                 cv.fabricCanvas.discardActiveObject();
-                
-                // --- Hide Guide for Capture ---
                 const guide = cv.maskGuide;
-                if (guide) {
-                    guide.set('visible', false);
-                    cv.fabricCanvas.renderAll();
-                }
-
-                const b64 = cv.fabricCanvas.toDataURL({
-                    format: 'jpeg',
-                    quality: 0.9,
-                    multiplier: 2
-                });
-
-                // --- Restore Guide Visibility ---
-                if (guide) {
-                    guide.set('visible', true);
-                    cv.fabricCanvas.renderAll();
-                }
+                if (guide) { guide.set('visible', false); cv.fabricCanvas.renderAll(); }
+                const b64 = cv.fabricCanvas.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 2 });
+                if (guide) { guide.set('visible', true); cv.fabricCanvas.renderAll(); }
                 const res = await fetch('<?php echo route("flow-pc.upload_composite"); ?>', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>'
-                    },
-                    body: JSON.stringify({
-                        image_data: b64,
-                        canvas_key: key
-                    }),
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>' },
+                    body: JSON.stringify({ image_data: b64, canvas_key: key }),
                 });
                 const dat = await res.json();
                 if (dat.success) ids[key] = dat.upload_id;
             });
-
             Promise.all(uploadPromises).then(() => {
                 document.getElementById('upload_ids_field').value = JSON.stringify(ids);
                 document.getElementById('checkout-form').submit();
             }).catch(err => {
-                console.error(err);
-                this.isSavingComposite = false;
-                btn.disabled = false;
+                console.error(err); this.isSavingComposite = false; btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="shopping-cart"></i> Confirm Design & Continue';
                 lucide.createIcons();
             });
         },
 
-        _debounce(fn, delay) {
-            let t;
-            return (...a) => {
-                clearTimeout(t);
-                t = setTimeout(() => fn.apply(this, a), delay);
-            };
-        },
+        _debounce(fn, delay) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), delay); }; },
 
-        // ── Mask Helper ───────────────────────────────────────────────────────
         _createMaskObject(m, sf, extraProps = {}) {
             if (!m) return null;
             const type = m.type || 'rectangle';
-            const base = {
-                left: m.left * sf,
-                top: m.top * sf,
-                scaleX: (m.scaleX || 1) * sf,
-                scaleY: (m.scaleY || 1) * sf,
-                angle: m.angle || 0,
-                ...extraProps
-            };
-
+            const base = { left: m.left * sf, top: m.top * sf, scaleX: (m.scaleX || 1) * sf, scaleY: (m.scaleY || 1) * sf, angle: m.angle || 0, ...extraProps };
             switch (type) {
-                case 'square':
-                case 'rectangle':
-                case 'diamond':
-                    return new fabric.Rect({
-                        ...base,
-                        width: m.width,
-                        height: m.height
-                    });
-                case 'circle':
-                    return new fabric.Circle({
-                        ...base,
-                        radius: m.radius
-                    });
-                case 'ellipse':
-                case 'oval':
-                    return new fabric.Ellipse({
-                        ...base,
-                        rx: m.rx,
-                        ry: m.ry
-                    });
-                case 'triangle':
-                    return new fabric.Triangle({
-                        ...base,
-                        width: m.width,
-                        height: m.height
-                    });
-                case 'pentagon':
-                    return new fabric.Polygon(this._getPolygonPoints(5, 55), base);
-                case 'hexagon':
-                    return new fabric.Polygon(this._getPolygonPoints(6, 55), base);
-                case 'star':
-                    return new fabric.Polygon(this._getStarPoints(5, 55, 25), base);
-                case 'heart':
-                    return new fabric.Path(this._getHeartPath(), base);
-                case 'arch':
-                    return new fabric.Path(this._getArchPath(), base);
-                case 'custom_polygon':
-                    return new fabric.Polygon(m.points || [], base);
-                case 'text':
-                    return new fabric.IText(m.text || 'Text', {
-                        ...base,
-                        fontSize: m.fontSize || 24,
-                        fontFamily: m.fontFamily || 'Arial',
-                        fontWeight: m.fontWeight || 'normal',
-                        fontStyle: m.fontStyle || 'normal',
-                    });
-                default:
-                    return new fabric.Rect({
-                        ...base,
-                        width: m.width || 100,
-                        height: m.height || 100
-                    });
+                case 'square': case 'rectangle': case 'diamond':
+                    return new fabric.Rect({ ...base, width: m.width, height: m.height });
+                case 'circle': return new fabric.Circle({ ...base, radius: m.radius });
+                case 'ellipse': case 'oval': return new fabric.Ellipse({ ...base, rx: m.rx, ry: m.ry });
+                case 'triangle': return new fabric.Triangle({ ...base, width: m.width, height: m.height });
+                case 'pentagon': return new fabric.Polygon(this._getPolygonPoints(5, 55), base);
+                case 'hexagon': return new fabric.Polygon(this._getPolygonPoints(6, 55), base);
+                case 'star': return new fabric.Polygon(this._getStarPoints(5, 55, 25), base);
+                case 'heart': return new fabric.Path(this._getHeartPath(), base);
+                case 'arch': return new fabric.Path(this._getArchPath(), base);
+                case 'custom_polygon': return new fabric.Polygon(m.points || [], base);
+                case 'text': return new fabric.IText(m.text || 'Text', { ...base, fontSize: m.fontSize || 24, fontFamily: m.fontFamily || 'Arial', fontWeight: m.fontWeight || 'normal', fontStyle: m.fontStyle || 'normal' });
+                default: return new fabric.Rect({ ...base, width: m.width || 100, height: m.height || 100 });
             }
         },
-
-        _getPolygonPoints(sides, r) {
-            return Array.from({ length: sides }, (_, i) => {
-                const a = (Math.PI * 2 * i / sides) - Math.PI / 2;
-                return { x: r + r * Math.cos(a), y: r + r * Math.sin(a) };
-            });
-        },
-        _getStarPoints(pts, outer, inner) {
-            return Array.from({ length: pts * 2 }, (_, i) => {
-                const r = i % 2 === 0 ? outer : inner;
-                const a = (Math.PI * i / pts) - Math.PI / 2;
-                return { x: outer + r * Math.cos(a), y: outer + r * Math.sin(a) };
-            });
-        },
-        _getHeartPath() {
-            return 'M 50 90 C 25 70 0 50 0 30 C 0 12 12 0 25 0 C 35 0 45 7 50 18 C 55 7 65 0 75 0 C 88 0 100 12 100 30 C 100 50 75 70 50 90 Z';
-        },
-        _getArchPath() {
-            return 'M 10 120 L 10 50 C 10 15 30 0 60 0 C 90 0 110 15 110 50 L 110 120 Z';
-        },
+        _getPolygonPoints(sides, r) { return Array.from({ length: sides }, (_, i) => { const a = (Math.PI * 2 * i / sides) - Math.PI / 2; return { x: r + r * Math.cos(a), y: r + r * Math.sin(a) }; }); },
+        _getStarPoints(pts, outer, inner) { return Array.from({ length: pts * 2 }, (_, i) => { const r = i % 2 === 0 ? outer : inner; const a = (Math.PI * i / pts) - Math.PI / 2; return { x: outer + r * Math.cos(a), y: outer + r * Math.sin(a) }; }); },
+        _getHeartPath() { return 'M 50 90 C 25 70 0 50 0 30 C 0 12 12 0 25 0 C 35 0 45 7 50 18 C 55 7 65 0 75 0 C 88 0 100 12 100 30 C 100 50 75 70 50 90 Z'; },
+        _getArchPath() { return 'M 10 120 L 10 50 C 10 15 30 0 60 0 C 90 0 110 15 110 50 L 110 120 Z'; },
 
         _resizeAllCanvases() {
-            const cont = document.getElementById('canvas-container');
-            if (!cont) return;
+            const cont = document.getElementById('canvas-container'); if (!cont) return;
             const newW = cont.offsetWidth;
             Object.keys(this.canvases).forEach(key => {
-                const cv = this.canvases[key];
-                if (!cv?.fabricCanvas) return;
-                const oldW = cv.fabricCanvas.width;
-                const ratio = newW / oldW;
+                const cv = this.canvases[key]; if (!cv?.fabricCanvas) return;
+                const oldW = cv.fabricCanvas.width; const ratio = newW / oldW;
                 const newH = Math.round(cv.adminH * (newW / cv.adminW));
-                cv.fabricCanvas.setDimensions({
-                    width: newW,
-                    height: newH
-                });
-
-                if (key === this.activeCanvas) {
-                    cont.style.height = newH + 'px';
-                }
+                cv.fabricCanvas.setDimensions({ width: newW, height: newH });
+                if (key === this.activeCanvas) { cont.style.height = newH + 'px'; }
                 const bg = cv.fabricCanvas.backgroundImage;
-                if (bg) {
-                    bg.scaleX = newW / bg.width;
-                    bg.scaleY = newH / bg.height;
-                }
+                if (bg) { bg.scaleX = newW / bg.width; bg.scaleY = newH / bg.height; }
                 cv.fabricCanvas.getObjects().forEach(o => {
-                    o.left *= ratio;
-                    o.top *= ratio;
-                    o.scaleX *= ratio;
-                    o.scaleY *= ratio;
-
-                    // Update Mask on Resize
+                    o.left *= ratio; o.top *= ratio; o.scaleX *= ratio; o.scaleY *= ratio;
                     const firstKey = Object.keys(this.imageTypes)[0];
                     const mData = this.allMaskData[key] || {};
                     const masks = mData.masks || this.allMaskData.masks;
                     if (key === firstKey && Array.isArray(masks) && masks.length > 0 && o.clipPath) {
-                        const m = masks[0];
-                        const newSf = cv.fabricCanvas.width / cv.adminW;
-                        
-                        // Recreate clipPath using new scale factor to perfectly scale custom polygons and other shapes!
-                        const newClip = this._createMaskObject(m, newSf, {
-                            absolutePositioned: true,
-                            strokeWidth: 0
-                        });
-                        if (newClip) {
-                            newClip.canvas = cv.fabricCanvas;
-                            o.set('clipPath', newClip);
-                        }
+                        const m = masks[0]; const newSf = cv.fabricCanvas.width / cv.adminW;
+                        const newClip = this._createMaskObject(m, newSf, { absolutePositioned: true, strokeWidth: 0 });
+                        if (newClip) { newClip.canvas = cv.fabricCanvas; o.set('clipPath', newClip); }
                     }
-
                     o.setCoords();
                 });
-
-                // Update Mask Guide on Resize
                 if (cv.maskGuide) {
                     const mData = this.allMaskData[key] || {};
                     const masks = mData.masks || this.allMaskData.masks;
-                    const m = masks[0];
-                    const newSf = cv.fabricCanvas.width / cv.adminW;
-                    
-                    // Recreate mask guide to perfectly scale custom polygons and other shapes!
+                    const m = masks[0]; const newSf = cv.fabricCanvas.width / cv.adminW;
                     cv.fabricCanvas.remove(cv.maskGuide);
                     const guide = this._createMaskObject(m, newSf, {
-                        fill: 'transparent',
-                        stroke: 'rgba(0, 80, 220, 0.5)',
-                        strokeWidth: 1,
-                        selectable: false,
-                        evented: false,
-                        name: 'mask_guide'
+                        fill: 'transparent', stroke: 'rgba(0, 80, 220, 0.5)', strokeWidth: 1,
+                        selectable: false, evented: false, name: 'mask_guide'
                     });
-                    if (guide) {
-                        cv.fabricCanvas.add(guide);
-                        cv.maskGuide = guide;
-                        guide.bringToFront();
-                    }
+                    if (guide) { cv.fabricCanvas.add(guide); cv.maskGuide = guide; guide.bringToFront(); }
                 }
-
                 cv.fabricCanvas.renderAll();
             });
         },
@@ -1613,30 +1225,65 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
         clearAll() {
             if (!confirm('Are you sure you want to clear all designs?')) return;
             Object.keys(this.canvases).forEach(key => {
-                const cv = this.canvases[key];
-                if (!cv?.fabricCanvas) return;
+                const cv = this.canvases[key]; if (!cv?.fabricCanvas) return;
                 const objects = cv.fabricCanvas.getObjects();
-                objects.forEach(o => {
-                    if (o._isUserImage || o._isUserText) {
-                        cv.fabricCanvas.remove(o);
-                    }
-                });
-                cv.fabricCanvas.renderAll();
-                this._saveCanvasState(key);
+                objects.forEach(o => { if (o._isUserImage || o._isUserText) { cv.fabricCanvas.remove(o); } });
+                cv.fabricCanvas.renderAll(); this._saveCanvasState(key);
             });
-            this.updateUI();
-            alert('All designs cleared!');
+            this.updateUI(); alert('All designs cleared!');
         }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
         customizer.init();
-        // Global mouseup to release Fabric drag state if user releases mouse outside canvas
         window.addEventListener('mouseup', () => {
             Object.values(customizer.canvases).forEach(cv => {
                 if (cv.fabricCanvas) cv.fabricCanvas.__onMouseUp(new Event('mouseup'));
             });
         });
     });
+</script>
+
+<script>
+    (function () {
+        const stage = document.getElementById('mockup-stage');
+        const imgEl = document.getElementById('mockup-image');
+        const frameEl = document.getElementById('mockup-frame');
+        const emptyEl = document.getElementById('mockup-empty');
+        const toggle = document.getElementById('preview-toggle');
+        if (!stage || !imgEl || !frameEl || !toggle) return;
+        let lastData = null;
+        function activeFabric() { try { const key = customizer.activeCanvas; const cv = customizer.canvases[key]; return cv ? cv.fabricCanvas : null; } catch (e) { return null; } }
+        function refresh() {
+            const fc = activeFabric(); if (!fc) return;
+            let guide = null;
+            try { guide = customizer.canvases[customizer.activeCanvas].maskGuide; } catch (e) {}
+            if (guide) { guide.set('visible', false); fc.renderAll(); }
+            let data = null;
+            try { data = fc.toDataURL({ format: 'jpeg', quality: 0.72, multiplier: 0.6 }); } catch (e) { data = null; }
+            if (guide) { guide.set('visible', true); fc.renderAll(); }
+            if (data && data !== lastData) { lastData = data; imgEl.src = data; frameEl.classList.add('has-preview'); emptyEl.style.display = 'none'; }
+        }
+        let dt;
+        function scheduleRefresh() { clearTimeout(dt); dt = setTimeout(refresh, 140); }
+        toggle.addEventListener('click', function (e) {
+            const btn = e.target.closest('.preview-toggle-btn'); if (!btn) return;
+            toggle.querySelectorAll('.preview-toggle-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+            const room = btn.dataset.mode === 'room';
+            stage.classList.toggle('room', room); stage.classList.toggle('flat', !room);
+        });
+        function install() {
+            if (typeof customizer === 'undefined' || !customizer.canvases) { setTimeout(install, 200); return; }
+            ['_saveCanvasState', 'switchCanvas', 'updateUI', 'updateImageScale', 'handleRemove', 'addText']
+                .forEach(function (name) {
+                    const orig = customizer[name];
+                    if (typeof orig !== 'function' || orig.__previewWrapped) return;
+                    const wrapped = function () { const r = orig.apply(this, arguments); scheduleRefresh(); return r; };
+                    wrapped.__previewWrapped = true; customizer[name] = wrapped;
+                });
+            setInterval(refresh, 800); refresh();
+        }
+        install();
+    })();
 </script>
 @endpush

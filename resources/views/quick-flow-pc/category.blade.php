@@ -1,162 +1,264 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Choose your size')
+@section('title', $type->name . ' — Choose Your Size')
 @section('header_title', $type->name)
 
-@section('content')
+@push('styles')
 <style>
-    .category-header {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin-bottom: 30px;
+    .size-card-premium {
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    .header-icon {
-        width: 70px;
-        height: 70px;
-        background: #f8fafc;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 15px;
+    .size-card-premium:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px -12px rgba(0,0,0,0.1), 0 0 0 1px rgba(99,102,241,0.15);
+        border-color: #6366f1;
     }
-
-    .header-icon svg {
+    .size-card-premium:hover .size-arrow {
+        background-color: #6366f1;
+        color: white;
+        transform: translateX(4px);
+    }
+    .size-card-premium:hover .size-icon-box {
+        transform: scale(1.08);
+        background-color: #e0e7ff;
+    }
+    .size-arrow {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .size-icon-box {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .size-icon-box svg {
         width: 100%;
         height: 100%;
-        fill: #0284c7 !important;
+        fill: #6366f1 !important;
     }
-
-    .size-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
+    .breadcrumb-link {
+        transition: color 0.2s ease;
     }
-
-    .size-card {
-        background: #ffffff;
-        border: 2px solid #f1f5f9;
-        border-radius: 35px;
-        padding: 25px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    .breadcrumb-link:hover {
+        color: #6366f1;
     }
-
-    .size-card:hover {
-        border-color: #0ea5e9;
-        box-shadow: 0 8px 25px rgba(14, 165, 233, 0.08);
-        transform: translateX(5px);
+    .hero-cat-gradient {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 40%, #faf5ff 100%);
     }
-
-    .size-info h3 {
-        font-family: 'Outfit', sans-serif;
-        font-size: 20px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+    .hero-cat-pattern {
+        background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.05) 1px, transparent 0);
+        background-size: 32px 32px;
     }
-
-    .size-dim {
-        background: #f1f5f9;
-        color: #64748b;
-        font-size: 10px;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
-        text-transform: uppercase;
+    .fade-up-cat {
+        animation: fadeUpCat 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
-
-    .size-title {
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        color: #94a3b8;
-        margin-top: 5px;
-    }
-
-    .size-price {
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .price-current {
-        color: #0ea5e9;
-        font-weight: 800;
-        font-size: 14px;
-    }
-
-    .price-old {
-        color: #cbd5e1;
-        text-decoration: line-through;
-        font-size: 12px;
-    }
-
-    .arrow-box {
-        width: 50px;
-        height: 50px;
-        background: #f0f9ff;
-        border-radius: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #0ea5e9;
+    @keyframes fadeUpCat {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
+@endpush
 
-<div class="category-header">
-    <a href="javascript:history.back()" class="w-12 h-12 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center hover:bg-slate-50 transition-colors shadow-sm shrink-0">
-        <i data-lucide="arrow-left" class="w-4 h-4 text-slate-600"></i>
-    </a>
-    <div class="header-icon">
-         @if($type->icon_svg)
-            {!! $type->icon_svg !!}
-        @else
-            <i data-lucide="package" style="width: 32px; height: 32px; color: #0ea5e9;"></i>
-        @endif
-    </div>
-    <div>
-        <h1 style="font-size: 28px; font-weight: 900; color: #0f172a; margin: 0;">{{ $type->name }}</h1>
-        <p style="font-size: 16px; color: #64748b; font-weight: 500; margin: 0;">Choose your size</p>
-    </div>
-</div>
+@section('content')
+<div class="pb-24">
 
-<div class="size-list">
-    @if(isset($subTypes))
-        @foreach($subTypes as $sub)
-        <a href="{{ route('flow-pc.category', $sub->slug) }}" class="size-card">
-            <div class="size-info">
-                <h3>
-                    {{ $sub->name }}
-                    @if($sub->width && $sub->height)
-                    <span class="size-dim">{{ $sub->width }}x{{ $sub->height }}{{ $sub->unit }}</span>
-                    @endif
-                </h3>
-                <p class="size-title">{{ $sub->title ?? 'Premium quality print' }}</p>
-                
-                @if($sub->price)
-                <div class="size-price">
-                    <span class="price-current">Starting at {{ \App\Services\CurrencyService::format($sub->price) }}</span>
-                    @if($sub->old_price)
-                    <span class="price-old">{{ \App\Services\CurrencyService::format($sub->old_price) }}</span>
+    {{-- ===== HERO / PAGE HEADER ===== --}}
+    <section class="hero-cat-gradient hero-cat-pattern -mx-10 -mt-4 px-10 pt-12 pb-14 relative overflow-hidden">
+        <div class="max-w-[1400px] mx-auto">
+            {{-- Breadcrumbs --}}
+            <nav class="flex items-center gap-2 text-sm mb-8 fade-up-cat" style="animation-delay:0s">
+                <a href="{{ route('flow-pc.index') }}" class="breadcrumb-link text-slate-400 font-medium hover:text-indigo-600 flex items-center gap-1.5">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+                </a>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                <span class="text-slate-700 font-semibold">{{ $type->name }}</span>
+            </nav>
+
+            <div class="grid grid-cols-12 gap-10 items-center">
+                {{-- Left: Content --}}
+                <div class="col-span-12 lg:col-span-7">
+                    <div class="flex items-start gap-6">
+                        <div class="size-icon-box w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center p-5 flex-shrink-0 fade-up-cat" style="animation-delay:0.05s">
+                            @if($type->icon_svg)
+                                {!! $type->icon_svg !!}
+                            @else
+                                <i data-lucide="package" class="w-10 h-10 text-indigo-500"></i>
+                            @endif
+                        </div>
+                        <div>
+                            <h1 class="text-4xl xl:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight fade-up-cat" style="animation-delay:0.1s">
+                                {{ $type->name }}
+                            </h1>
+                            <p class="text-lg text-slate-500 mt-2 max-w-xl fade-up-cat" style="animation-delay:0.15s">
+                                @if($type->title)
+                                    {{ $type->title }} &mdash;
+                                @endif
+                                Choose your preferred size to get started with your custom design.
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Quick info pills --}}
+                    <div class="flex flex-wrap items-center gap-3 mt-8 fade-up-cat" style="animation-delay:0.2s">
+                        <span class="inline-flex items-center gap-1.5 bg-white/80 border border-slate-200 text-slate-600 text-sm font-medium px-4 py-2 rounded-full">
+                            <i data-lucide="ruler" class="w-4 h-4 text-indigo-500"></i>
+                            {{ isset($subTypes) ? $subTypes->count() : 0 }} sizes available
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 bg-white/80 border border-slate-200 text-slate-600 text-sm font-medium px-4 py-2 rounded-full">
+                            <i data-lucide="award" class="w-4 h-4 text-indigo-500"></i>
+                            Premium quality
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 bg-white/80 border border-slate-200 text-slate-600 text-sm font-medium px-4 py-2 rounded-full">
+                            <i data-lucide="truck" class="w-4 h-4 text-indigo-500"></i>
+                            Fast delivery
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Right: Decorative --}}
+                <div class="col-span-12 lg:col-span-5 hidden lg:flex justify-end">
+                    <div class="grid grid-cols-2 gap-4 max-w-xs fade-up-cat" style="animation-delay:0.15s">
+                        <div class="bg-white rounded-2xl p-5 shadow-md shadow-slate-200/50 border border-slate-100 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
+                            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center mb-3">
+                                <i data-lucide="image" class="w-5 h-5 text-indigo-500"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-900">Upload Photos</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Drag & drop</p>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 shadow-md shadow-slate-200/50 border border-slate-100 transform rotate-[2deg] hover:rotate-0 transition-transform duration-500 mt-6">
+                            <div class="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center mb-3">
+                                <i data-lucide="palette" class="w-5 h-5 text-violet-500"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-900">Customize</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Design editor</p>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 shadow-md shadow-slate-200/50 border border-slate-100 transform rotate-[1deg] hover:rotate-0 transition-transform duration-500 -mt-2">
+                            <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-3">
+                                <i data-lucide="printer" class="w-5 h-5 text-emerald-500"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-900">Print</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Museum grade</p>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 shadow-md shadow-slate-200/50 border border-slate-100 transform rotate-[-1deg] hover:rotate-0 transition-transform duration-500 mt-4">
+                            <div class="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center mb-3">
+                                <i data-lucide="package-check" class="w-5 h-5 text-rose-500"></i>
+                            </div>
+                            <p class="text-sm font-bold text-slate-900">Collect</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Same-day pickup</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ===== SIZE SELECTION GRID ===== --}}
+    <section class="max-w-[1400px] mx-auto pt-16 pb-12">
+        <div class="flex items-end justify-between mb-8">
+            <div>
+                <h2 class="text-2xl xl:text-3xl font-extrabold text-slate-900 tracking-tight">Select a Size</h2>
+                <p class="text-base text-slate-500 mt-1">Pick the perfect dimensions for your {{ strtolower($type->name) }}.</p>
+            </div>
+            <a href="{{ route('flow-pc.index') }}" class="hidden lg:flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-indigo-600 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to categories
+            </a>
+        </div>
+
+        @if(isset($subTypes) && $subTypes->isNotEmpty())
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            @foreach($subTypes as $index => $sub)
+            <a href="{{ route('flow-pc.category', $sub->slug) }}"
+               class="size-card-premium bg-white border border-slate-200 rounded-2xl p-6 flex items-center gap-5 group"
+               style="animation: fadeUpCat 0.5s cubic-bezier(0.16,1,0.3,1) {{ $index * 0.06 }}s both;">
+
+                {{-- Left: Icon --}}
+                <div class="size-icon-box w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0 p-3">
+                    @if($type->icon_svg)
+                        {!! $type->icon_svg !!}
+                    @else
+                        <i data-lucide="maximize-2" class="w-6 h-6 text-indigo-500"></i>
                     @endif
                 </div>
-                @endif
+
+                {{-- Middle: Info --}}
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <h3 class="font-bold text-slate-900 text-lg leading-tight">{{ $sub->name }}</h3>
+                        @if($sub->width && $sub->height)
+                        <span class="inline-flex items-center bg-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-lg">
+                            {{ $sub->width }}&times;{{ $sub->height }}{{ $sub->unit }}
+                        </span>
+                        @endif
+                    </div>
+
+                    @if($sub->title)
+                    <p class="text-sm text-slate-400 mt-1 truncate">{{ $sub->title }}</p>
+                    @endif
+
+                    @if($sub->price)
+                    <div class="flex items-center gap-2.5 mt-2.5">
+                        <span class="text-indigo-600 font-bold text-[15px]">
+                            Starting at {{ \App\Services\CurrencyService::format($sub->price) }}
+                        </span>
+                        @if($sub->old_price)
+                        <span class="text-slate-300 line-through text-sm font-medium">
+                            {{ \App\Services\CurrencyService::format($sub->old_price) }}
+                        </span>
+                        @endif
+                    </div>
+                    @endif
+                </div>
+
+                {{-- Right: Arrow --}}
+                <div class="size-arrow w-11 h-11 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0 text-slate-400">
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </div>
+            </a>
+            @endforeach
+        </div>
+        @else
+        <div class="text-center py-20 bg-white rounded-3xl border border-slate-200">
+            <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
             </div>
-            <div class="arrow-box">
-                <i data-lucide="chevron-right" style="width: 24px; height: 24px;"></i>
+            <p class="text-xl font-bold text-slate-900">No sizes available</p>
+            <p class="text-slate-500 mt-2">This product doesn't have any sizes configured yet.</p>
+            <a href="{{ route('flow-pc.index') }}" class="inline-flex items-center gap-2 mt-6 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to categories
+            </a>
+        </div>
+        @endif
+    </section>
+
+    {{-- ===== WHY THIS PRODUCT ===== --}}
+    <section class="max-w-[1400px] mx-auto py-12 border-t border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 flex items-start gap-4">
+                <div class="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="award" class="w-5 h-5 text-indigo-600"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 mb-1">Premium Materials</h4>
+                    <p class="text-sm text-slate-500 leading-relaxed">Museum-grade paper and inks for vivid, long-lasting results.</p>
+                </div>
             </div>
-        </a>
-        @endforeach
-    @endif
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 flex items-start gap-4">
+                <div class="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="zap" class="w-5 h-5 text-emerald-600"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 mb-1">Fast Turnaround</h4>
+                    <p class="text-sm text-slate-500 leading-relaxed">Most orders ready within 48 hours. Same-day available at select stores.</p>
+                </div>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 flex items-start gap-4">
+                <div class="w-11 h-11 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-amber-600"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 mb-1">100% Satisfaction</h4>
+                    <p class="text-sm text-slate-500 leading-relaxed">Not happy with your order? We'll reprint or refund — no questions asked.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
 </div>
 @endsection
