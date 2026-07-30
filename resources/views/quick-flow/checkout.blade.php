@@ -490,6 +490,21 @@
             </div>
         </div>
 
+        <!-- Special Instructions -->
+        <div class="space-y-3">
+            <h3 class="text-base font-extrabold">Special Notes</h3>
+            <div class="relative group">
+                <div
+                    class="absolute left-5 top-4 text-slate-400 group-focus-within:text-brand-500 transition-colors">
+                    <i data-lucide="message-square-text" class="w-5 h-5"></i>
+                </div>
+                <textarea x-model="specialInstructions" rows="3"
+                    class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-brand-500 focus:ring-0 transition-all outline-none shadow-sm resize-none"
+                    placeholder="Rush requests, return address info, or other notes…" style="padding-left: 3rem;"></textarea>
+            </div>
+            <p class="text-xs text-slate-400 font-medium ml-1">Optional — add any special requests or notes for your order</p>
+        </div>
+
         <!-- Secure Payment Notice -->
         <div class="bg-brand-50 border-2 border-brand-100 p-4 rounded-2xl flex items-start gap-3">
             <div class="w-9 h-9 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600 flex-shrink-0">
@@ -572,7 +587,7 @@
                     I have read and accept the <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}"
                         target="_blank" class="text-brand-600 underline">Terms and Conditions</a>
                 </label>
-            </div>
+            </div> 
 
             <button type="button" @click="openPaypal()"
                 :disabled="!pickupName || !contactNumber || !pickupEmail || !acceptedTerms"
@@ -608,6 +623,7 @@
                 paymentSuccess: false,
                 paypalRendered: false,
                 acceptedTerms: false,
+                specialInstructions: '',
 
                 // Coupon State
                 couponInput: '',
@@ -695,7 +711,8 @@
                                 pickup_name: this.pickupName,
                                 pickup_email: this.pickupEmail,
                                 contact_number: this.contactNumber,
-                                coupon_code: this.appliedCoupon, // Send coupon code
+                                coupon_code: this.appliedCoupon,
+                                special_instructions: this.specialInstructions,
                             }),
                         })
                         .then(res => res.json())
@@ -714,7 +731,7 @@
                         .catch(err => {
                             console.error('Checkout error:', err);
                             this.isProcessing = false;
-                            alert('An error occurred. Please try again.',  );
+                            alert('An error occurred. Please try again.');
                         });
                 },
 
@@ -748,8 +765,8 @@
                                         pickup_name: self.pickupName,
                                         pickup_email: self.pickupEmail,
                                         contact_number: self.contactNumber,
-                                        coupon_code: self
-                                        .appliedCoupon, // Send coupon code for price validation
+                                        coupon_code: self.appliedCoupon,
+                                        special_instructions: self.specialInstructions,
                                     }),
                                 })
                                 .then(res => res.json())
@@ -784,7 +801,8 @@
                                         pickup_name: self.pickupName,
                                         pickup_email: self.pickupEmail,
                                         contact_number: self.contactNumber,
-                                        coupon_code: self.appliedCoupon, // Send coupon code
+                                        coupon_code: self.appliedCoupon,
+                                        special_instructions: self.specialInstructions,
                                     }),
                                 })
                                 .then(res => res.json())

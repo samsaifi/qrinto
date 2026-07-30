@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderConfirmationMail;
 use App\Mail\AdminOrderAlertMail;
 use App\Mail\StoreOrderAlertMail;
-use App\Mail\QuickFlowOrderMail; 
+use App\Mail\QuickFlowOrderMail;
+use App\Models\Event;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\File;
 
@@ -60,37 +61,60 @@ class QuickFlowController extends Controller
     /**
      * Step 2: Size Selection (within a product type)
      */
+
+    public function findEventCategoryIds($storeId)
+    {
+        $today = now()->format('Y-m-d');
+
+        $eventIds = Event::whereHas('stores', fn($q) => $q->where('stores.id', $storeId))
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->where('is_active',   '1')
+            ->pluck('id');
+
+        if ($eventIds->isEmpty()) {
+            return ['eventIds' => [], 'categoryIds' => []];
+        }
+
+        $categoryIds = \DB::table('category_event')
+            ->whereIn('event_id', $eventIds)
+            ->pluck('category_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return [
+            'eventIds' => $eventIds->toArray(),
+            'categoryIds' => $categoryIds,
+        ];
+    }
     public function category(ProductType $type)
     {
-       
-
-        // Save progress in session
         $flowData = session('quick_flow_data', []);
         $active_store_id = session('active_store_id', null);
-        
-        // If this is a parent type, reset/start fresh with the new type
+
+        $eventData = $this->findEventCategoryIds($active_store_id);
+        $eventIds = $eventData['eventIds'];
+        $eventCategoryIds = $eventData['categoryIds'];
+
         if (!$type->parent_id) {
-            
             $flowData = [
-                'type_id' => $type->id,
-                'type_name' => $type->name,
-                'type_slug' => $type->slug,
-                
-                'category_name' => $type->name, // Legacy support
-                'category_slug' => $type->slug  // Legacy support
+                'type_id'       => $type->id,
+                'type_name'     => $type->name,
+                'type_slug'     => $type->slug,
+                'category_name' => $type->name,
+                'category_slug' => $type->slug,
             ];
         } else {
-            // This is a subType (Size)
-            $flowData['size_id'] = $type->id;
-            $flowData['size_name'] = $type->name;
-            $flowData['size_slug'] = $type->slug;
-            $flowData['size_width'] = $type->width;
-            $flowData['size_height'] = $type->height;
-            $flowData['size_unit'] = $type->unit;
-            $flowData['size_price'] = $type->price;
-            $flowData['size_title']    = $type->title;
+            $flowData['size_id']        = $type->id;
+            $flowData['size_name']      = $type->name;
+            $flowData['size_slug']      = $type->slug;
+            $flowData['size_width']     = $type->width;
+            $flowData['size_height']    = $type->height;
+            $flowData['size_unit']      = $type->unit;
+            $flowData['size_price']     = $type->price;
+            $flowData['size_title']     = $type->title;
             $flowData['size_old_price'] = $type->old_price;
-            
         }
 
         session(['quick_flow_data' => $flowData]);
@@ -114,24 +138,58 @@ class QuickFlowController extends Controller
                     ->orWhereNull('store_id');
             });
 
-        if ($flowData['size_title'] === 'Flat') {
-            $q->where('no_of_pages', 1);
+        switch ($flowData['size_title'] ?? '') {
+            case 'Flat':
+                $q->where('no_of_pages', 1);
+                break;
+            case 'Flat - double':
+                $q->where('no_of_pages', 2);
+                break;
+            case 'Folded':
+                $q->where('no_of_pages', 4);
+                break;
         }
 
-        if ($flowData['size_title'] === 'Flat - double') {
-            $q->where('no_of_pages', 2);
-        }
-        // dd($q->toRawSql());
-
-        $templates = $q->orderBy('sort_order')->get();
-
-
-        // $templates = $query->get();
-        $categories = Category::parents()->orderBy('sort_order')->get();
+        // Priority 1: Event Templates
          
-        // die($flowData['size_title'] );
-        return view($this->getViewPath('templates'), compact('type', 'templates', 'categories'));
-    }
+
+        // Priority 2: Store Templates
+        $productStoreTemplates = collect();
+        if (!empty($active_store_id)) {
+            $productStoreTemplates = (clone $q)
+                ->where('product_store', $active_store_id)
+                ->when(!empty($eventCategoryIds), function ($query) use ($eventCategoryIds) {
+                    $query->whereNotIn('category_id', $eventCategoryIds);
+                })
+                ->orderBy('sort_order')
+                ->get();
+        }
+
+        // Priority 3: Remaining Templates
+        $otherTemplates = (clone $q) 
+            ->when(!empty($active_store_id), function ($query) use ($active_store_id) {
+                $query->where(function ($q) use ($active_store_id) {
+                    $q->where('product_store', '!=', $active_store_id)
+                        ->orWhereNull('product_store');
+                });
+            })
+            ->orderBy('sort_order')
+            ->get();
+
+        $templates = $productStoreTemplates 
+            ->concat($otherTemplates)
+            ->unique('id')
+            ->values();
+
+        $categories = Category::parents()
+            ->orderBy('sort_order')
+            ->get();
+
+        return view(
+            $this->getViewPath('templates'),
+            compact('type', 'templates', 'categories', 'eventCategoryIds', 'eventIds')
+        );
+    } 
 
     /**
      * Step 3: Template Selection
@@ -471,6 +529,7 @@ class QuickFlowController extends Controller
             'pickup_email' => 'required|email|max:255',
             'contact_number' => 'required|string|max:20',
             'coupon_code' => 'nullable|string',
+            'special_instructions' => 'nullable|string|max:2000',
         ]);
 
         $accessToken = $this->getPaypalAccessToken();
@@ -558,6 +617,7 @@ class QuickFlowController extends Controller
             'guest_email' => $request->pickup_email,
             'guest_phone' => $request->contact_number,
             'notes' => 'Pickup: ' . $request->pickup_name . ' | Phone: ' . $request->contact_number,
+            'special_instructions' => $request->special_instructions,
             'flow_data' => session('quick_flow_data'),
         ]);
 
@@ -611,6 +671,7 @@ class QuickFlowController extends Controller
             'pickup_email' => 'required|email|max:255',
             'contact_number' => 'required|string|max:20',
             'coupon_code' => 'nullable|string',
+            'special_instructions' => 'nullable|string|max:2000',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -666,6 +727,7 @@ class QuickFlowController extends Controller
             'guest_email' => $request->pickup_email,
             'guest_phone' => $request->contact_number,
             'notes' => 'Pickup: ' . $request->pickup_name . ' | Phone: ' . $request->contact_number,
+            'special_instructions' => $request->special_instructions,
             'flow_data' => session('quick_flow_data'),
         ]);
 
@@ -1269,16 +1331,41 @@ class QuickFlowController extends Controller
             'amount' => 'required|numeric|min:0'
         ]);
 
-        $coupon = \App\Models\Coupon::where('code', strtoupper($request->code))
-            ->where('is_active', true)
-            ->first();
+        $coupon = \App\Models\Coupon::where('code', strtoupper($request->code))->first();
 
         if (!$coupon) {
             return response()->json(['success' => false, 'message' => 'Invalid coupon code.']);
         }
 
-        if (!$coupon->isValid($request->amount)) {
-            return response()->json(['success' => false, 'message' => 'This coupon is not valid for this order or has expired.']);
+        if (!$coupon->is_active) {
+            return response()->json(['success' => false, 'message' => 'This coupon is no longer active.']);
+        }
+
+        if ($coupon->store_id) {
+            $activeStoreId = session('active_store_id');
+            if ($activeStoreId && $coupon->store_id != $activeStoreId) {
+                $storeName = $coupon->store->store_name ?? 'another store';
+                return response()->json(['success' => false, 'message' => "This coupon is only valid for {$storeName}."]);
+            }
+        }
+
+        if ($coupon->starts_at && now()->lt($coupon->starts_at)) {
+            return response()->json(['success' => false, 'message' => 'This coupon is not active yet. It starts on ' . $coupon->starts_at->format('M d, Y') . '.']);
+        }
+
+        if ($coupon->expires_at && now()->gt($coupon->expires_at)) {
+            return response()->json(['success' => false, 'message' => 'This coupon has expired.']);
+        }
+
+        if ($coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit) {
+            return response()->json(['success' => false, 'message' => 'This coupon has reached its usage limit.']);
+        }
+
+        if ($coupon->min_order_amount) {
+            $minAmount = \App\Services\CurrencyService::convert((float) $coupon->min_order_amount);
+            if ($request->amount < $minAmount) {
+                return response()->json(['success' => false, 'message' => 'Minimum order amount of ' . \App\Services\CurrencyService::format($minAmount) . ' required for this coupon.']);
+            }
         }
 
         $discount = $coupon->calculateDiscount($request->amount);
@@ -1491,6 +1578,7 @@ class QuickFlowController extends Controller
             'guest_email' => $request->pickup_email,
             'guest_phone' => $request->contact_number,
             'notes' => 'Custom Print Checkout | ' . $fullLabel,
+            'special_instructions' => $request->special_instructions,
             'flow_data' => [
                 'type' => 'custom_print',
                 'product_type_id' => $type->parent_id ?? $type->id,

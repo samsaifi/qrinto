@@ -13,7 +13,7 @@ class Category extends Model
     use HasSlug;
 
     protected $fillable = [
-        'parent_id', 'name', 'slug', 'description', 'image',
+        'parent_id', 'user_id', 'name', 'slug', 'description', 'image',
         'meta_title', 'meta_description', 'sort_order', 'is_active',
     ];
 
@@ -27,6 +27,11 @@ class Category extends Model
     public function getSlugOptions(): SlugOptions
     {
         return SlugOptions::create()->generateSlugsFrom('name')->saveSlugsTo('slug');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function parent(): BelongsTo

@@ -7,10 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 class Coupon extends Model
 {
     protected $fillable = [
-        'code', 'name', 'description', 'type', 'value',
+        'user_id', 'store_id', 'code', 'name', 'description', 'type', 'value',
         'min_order_amount', 'max_discount', 'usage_limit',
         'usage_per_user', 'used_count', 'starts_at', 'expires_at', 'is_active',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(\App\Models\Store::class);
+    }
 
     protected function casts(): array
     {

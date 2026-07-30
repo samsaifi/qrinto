@@ -17,9 +17,9 @@ class Order extends Model
         'currency',
         'coupon_code', 'shipping_address', 'billing_address',
         'payment_gateway', 'payment_id', 'payment_status', 'paid_at',
-        'notes', 'tracking_number', 'tracking_url',
+        'notes', 'special_instructions', 'tracking_number', 'tracking_url',
         'fulfillment_type', 'store_id', 'estimated_delivery_date', 'print_job_id',
-        'guest_email', 'guest_phone', 'admin_notes', 'flow_data',
+        'guest_email', 'guest_phone', 'admin_notes', 'flow_data', 
     ];
 
     protected function casts(): array

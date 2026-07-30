@@ -7,7 +7,7 @@
 @section('content')
 <div class="mb-8">
     <div class="flex items-center gap-3">
-         @if($isAdmin)
+        @if($isAdmin)
         <a href="{{ route('admin.stores.index') }}" class="p-2 rounded-xl hover:bg-surface-100 text-surface-500 transition">
             <i data-lucide="arrow-left" class="w-5 h-5"></i>
         </a>
@@ -30,7 +30,7 @@
 
     @php
     $isStaff = auth()->user()->isStaff() && !auth()->user()->isStoreAdmin() && !auth()->user()->isAdmin();
-    $readonlyAtts = $isStaff ? 'readonly disabled' : '';
+    $readonlyAtts = $isStaff ? 'readonly disabled' : ''; 
     @endphp
 
     <div class="grid lg:grid-cols-3 gap-6">
@@ -224,7 +224,7 @@
                         <div class="border-2 border-dashed border-surface-200 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer"
                             onclick="document.getElementById('logo_input').click()">
                             @if(isset($store) && $store->logo)
-                            <img src="{{ Storage::url($store->logo) }}" class="mx-auto max-h-20 rounded-lg mb-2">
+                            <img src="{{  asset('storage/' . $store->logo) }}" class="mx-auto max-h-20 rounded-lg mb-2">
                             <p class="text-xs text-surface-500">Click to replace</p>
                             @else
                             <div class="py-2">

@@ -68,17 +68,17 @@
                                 value="{{ old('base_price', $product->base_price ?? '') }}" required
                                 class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 mb-1">Compare Price ($)</label>
-                            <input type="number" name="compare_price" step="0.01"
-                                value="{{ old('compare_price', $product->compare_price ?? '') }}"
-                                class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 mb-1">SKU</label>
-                            <input type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}"
-                                class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
-                        </div>
+                        <!--<div>-->
+                        <!--    <label class="block text-sm font-medium text-surface-700 mb-1">Compare Price ($)</label>-->
+                        <!--    <input type="number" name="compare_price" step="0.01"-->
+                        <!--        value="{{ old('compare_price', $product->compare_price ?? '') }}"-->
+                        <!--        class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">-->
+                        <!--</div>-->
+                        <!--<div>-->
+                        <!--    <label class="block text-sm font-medium text-surface-700 mb-1">SKU</label>-->
+                        <!--    <input type="text" name="sku" value="{{ old('sku', $product->sku ?? '') }}"-->
+                        <!--        class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">-->
+                        <!--</div>-->
                     </div>
                 </div>
 
@@ -155,7 +155,7 @@
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-
+                       @if(isset($product) && ($product->no_of_pages ==2  || $product->no_of_pages == 4)) 
                         <!-- Sample Image -->
                         <div>
                             <label class="block text-sm font-medium text-surface-700 mb-1">Inside Left Image</label>
@@ -199,6 +199,8 @@
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
+                      @endif
+                      @if(isset($product) &&  $product->no_of_pages == 4) 
                         <!-- Background Image -->
                         <div class="mt-4">
                             <label class="block text-sm font-medium text-surface-700 mb-1">Inside Right Image</label>
@@ -282,27 +284,154 @@
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
+                        @endif
+                    @if(!isset($product))
+                        <div>
+                            <label class="block text-sm font-medium text-surface-700 mb-1">Inside Left Image</label>
+                            <p class="text-xs text-surface-400 mb-3">Upload frame with a Inside Left Image   (preview)</p>
+                            <div class="relative group" id="sampleDropZone">
+                                <div class="border-2 border-dashed border-surface-200 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer {{ isset($product) && $product->sample_image ? 'border-brand-300 bg-brand-50/30' : '' }}"
+                                    onclick="document.getElementById('sample_image_input').click()">
+                                    @if (isset($product) && $product->sample_image)
+                                        <div class="mb-3">
+                                            <img src="{{ $product->sample_image_url }}" alt="Sample"
+                                                class="mx-auto max-h-40 rounded-lg object-contain shadow-sm">
+                                        </div>
+                                        <p class="text-xs text-surface-500">Click or drag to replace</p>
+                                    @else
+                                        <div class="py-4">
+                                            <div
+                                                class="w-12 h-12 mx-auto mb-2 rounded-xl bg-surface-100 flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-surface-400" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-surface-600">Click to upload sample</p>
+                                            <p class="text-xs text-surface-400 mt-1">Frame + photo preview</p>
+                                        </div>
+                                    @endif
+                                </div>
+                                <input type="file" name="sample_image" id="sample_image_input" accept="image/*"
+                                    class="hidden" onchange="previewImage(this, 'samplePreview')">
+                                <div id="samplePreview" class="hidden mt-3">
+                                    <img src="" alt="Sample preview"
+                                        class="mx-auto max-h-40 rounded-lg object-contain shadow-sm">
+                                    <p class="text-xs text-center text-accent-600 mt-1 font-medium">✓ New sample selected
+                                    </p>
+                                </div>
+                            </div>
+                            @error('sample_image')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-surface-700 mb-1">Inside Right Image</label>
+                            <p class="text-xs text-surface-400 mb-3">Upload a inside right image for the canvas (e.g. bg.jpg)</p>
+                            <div class="relative group" id="backgroundDropZone">
+                                <div class="border-2 border-dashed border-surface-200 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer {{ isset($product) && $product->background_image ? 'border-brand-300 bg-brand-50/30' : '' }}"
+                                    onclick="document.getElementById('background_image_input').click()">
+                                    @if (isset($product) && $product->background_image)
+                                        <div class="mb-3">
+                                            <img src="{{ $product->background_image_url }}" alt="Background"
+                                                class="mx-auto max-h-40 rounded-lg object-contain shadow-sm">
+                                        </div>
+                                        <p class="text-xs text-surface-500">Click or drag to replace</p>
+                                    @else
+                                        <div class="py-4">
+                                            <div
+                                                class="w-12 h-12 mx-auto mb-2 rounded-xl bg-surface-100 flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-surface-400" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-surface-600">Click to upload background</p>
+                                            <p class="text-xs text-surface-400 mt-1">PNG, JPG up to 5MB</p>
+                                        </div>
+                                    @endif
+                                </div>
+                                <input type="file" name="background_image" id="background_image_input"
+                                    accept="image/*" class="hidden" onchange="previewImage(this, 'backgroundPreview')">
+                                <div id="backgroundPreview" class="hidden mt-3">
+                                    <img src="" alt="Background preview"
+                                        class="mx-auto max-h-40 rounded-lg object-contain shadow-sm">
+                                    <p class="text-xs text-center text-accent-600 mt-1 font-medium">✓ New background
+                                        selected</p>
+                                </div>
+                            </div>
+                            @error('background_image')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Overlay Image -->
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-surface-700 mb-1">Back Cover Image</label>
+                            <p class="text-xs text-surface-400 mb-3">Upload an optional Back Cover layer</p>
+                            <div class="relative group" id="overlayDropZone">
+                                <div class="border-2 border-dashed border-surface-200 rounded-xl p-4 text-center hover:border-brand-400 transition cursor-pointer {{ isset($product) && $product->overlay_image ? 'border-brand-300 bg-brand-50/30' : '' }}"
+                                    onclick="document.getElementById('overlay_image_input').click()">
+                                    @if (isset($product) && $product->overlay_image)
+                                        <div class="mb-3">
+                                            <img src="{{ $product->overlay_image_url }}" alt="Overlay"
+                                                class="mx-auto max-h-40 rounded-lg object-contain shadow-sm">
+                                        </div>
+                                        <p class="text-xs text-surface-500">Click or drag to replace</p>
+                                    @else
+                                        <div class="py-4">
+                                            <div
+                                                class="w-12 h-12 mx-auto mb-2 rounded-xl bg-surface-100 flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-surface-400" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-sm font-medium text-surface-600">Click to upload overlay</p>
+                                            <p class="text-xs text-surface-400 mt-1">PNG (transparent), JPG</p>
+                                        </div>
+                                    @endif
+                                </div>
+                                <input type="file" name="overlay_image" id="overlay_image_input" accept="image/*"
+                                    class="hidden" onchange="previewImage(this, 'overlayPreview')">
+                                <div id="overlayPreview" class="hidden mt-3">
+                                    <img src="" alt="Overlay preview"
+                                        class="mx-auto max-h-40 rounded-lg object-contain shadow-sm">
+                                    <p class="text-xs text-center text-accent-600 mt-1 font-medium">✓ New overlay selected
+                                    </p>
+                                </div>
+                            </div>
+                            @error('overlay_image')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
                     </div>
                 </div>
 
                 <!-- Customization Settings -->
-                <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-                    <h2 class="font-display font-semibold text-lg mb-5">Customization Settings</h2>
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 mb-1">Min Photos Required</label>
-                            <input type="number" name="min_images" min="0"
-                                value="{{ old('min_images', $product->min_images ?? 1) }}"
-                                class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-surface-700 mb-1">Max Photos Allowed</label>
-                            <input type="number" name="max_images" min="1"
-                                value="{{ old('max_images', $product->max_images ?? 10) }}"
-                                class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
-                        </div>
-                    </div>
-                </div>
+                <!--<div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">-->
+                <!--    <h2 class="font-display font-semibold text-lg mb-5">Customization Settings</h2>-->
+                <!--    <div class="grid sm:grid-cols-2 gap-4">-->
+                <!--        <div>-->
+                <!--            <label class="block text-sm font-medium text-surface-700 mb-1">Min Photos Required</label>-->
+                <!--            <input type="number" name="min_images" min="0"-->
+                <!--                value="{{ old('min_images', $product->min_images ?? 1) }}"-->
+                <!--                class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">-->
+                <!--        </div>-->
+                <!--        <div>-->
+                <!--            <label class="block text-sm font-medium text-surface-700 mb-1">Max Photos Allowed</label>-->
+                <!--            <input type="number" name="max_images" min="1"-->
+                <!--                value="{{ old('max_images', $product->max_images ?? 10) }}"-->
+                <!--                class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">-->
+                <!--        </div>-->
+                <!--    </div>-->
+                <!--</div>-->
 
                 <!-- SEO -->
                 <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
@@ -335,12 +464,12 @@
                                 class="rounded text-brand-600 focus:ring-brand-500">
                             <span class="text-sm text-surface-700">Active (visible to customers)</span>
                         </label>
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" name="is_featured" value="1"
-                                {{ old('is_featured', $product->is_featured ?? false) ? 'checked' : '' }}
-                                class="rounded text-brand-600 focus:ring-brand-500">
-                            <span class="text-sm text-surface-700">Featured Product</span>
-                        </label>
+                        <!--<label class="flex items-center gap-3 cursor-pointer">-->
+                        <!--    <input type="checkbox" name="is_featured" value="1"-->
+                        <!--        {{ old('is_featured', $product->is_featured ?? false) ? 'checked' : '' }}-->
+                        <!--        class="rounded text-brand-600 focus:ring-brand-500">-->
+                        <!--    <span class="text-sm text-surface-700">Featured Product</span>-->
+                        <!--</label>-->
                     </div>
                     <button type="submit"
                         class="w-full mt-6 px-5 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
@@ -351,7 +480,7 @@
                 <!-- Category -->
                 <!-- Category -->
                 <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-                    <h2 class="font-display font-semibold text-lg mb-5">Number of Pages</h2>
+                     
                     <div class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Number of
@@ -373,14 +502,41 @@
                             @enderror
                         </div>
                     </div>
-                </div>
-                <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-                    <h2 class="font-display font-semibold text-lg mb-5">Store Product Visibility </h2>
-                    <div class="space-y-4">
+                    <div class="space-y-4 mt-5">
+                        <div x-data="searchSelect({
+                            items: [
+                                { value: '', label: 'No event' },
+                                @foreach ($events as $event)
+                                    { value: '{{ $event->id }}', label: '{{ addslashes($event->title) }}' },
+                                @endforeach
+                            ],
+                            selected: '{{ old('event_id', $product->event_id ?? '') }}'
+                        })">
+                            <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Event</label>
+                            <div class="relative">
+                                <input type="text" x-model="search" @focus="open = true" @click="open = true"
+                                    @keydown.escape="open = false" @keydown.arrow-down.prevent="highlightNext()"
+                                    @keydown.arrow-up.prevent="highlightPrev()" @keydown.enter.prevent="selectHighlighted()"
+                                    :placeholder="selectedLabel || 'Search events...'"
+                                    class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
+                                <div x-show="open && filteredItems.length > 0" @click.outside="open = false" x-cloak
+                                    class="absolute z-50 mt-1 w-full bg-white border border-surface-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                    <template x-for="(item, idx) in filteredItems" :key="item.value">
+                                        <div @click="selectItem(item)" :class="idx === highlighted ? 'bg-brand-50 text-brand-700' : 'hover:bg-surface-50'"
+                                            class="px-3 py-2 cursor-pointer text-sm" x-text="item.label"></div>
+                                    </template>
+                                </div>
+                            </div>
+                            <input type="hidden" name="event_id" :value="selectedValue">
+                            @error('event_id')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="space-y-4 mt-5">
                         <div>
 
-                            <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Store
-                                Selection <span class="text-red-500">*</span></label>
+                            <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Store Product Visibility <span class="text-red-500">*</span></label>
                             <select name="store_id"
                                 class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
                                 @if ($isNotAdmin)
@@ -408,73 +564,111 @@
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-                    <h2 class="font-display font-semibold text-lg mb-5">Category</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Category
-                                Selection <span class="text-red-500">*</span></label>
-                            <select name="category_id" required
-                                class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
-                                <option value="">Select a category...</option>
+                    </div> 
+                    <div class="space-y-4 mt-5">
+                        <div x-data="searchSelect({
+                            items: [
+                                { value: '', label: 'Select a category...' },
                                 @foreach ($categories->whereNull('parent_id') as $cat)
-                                    <option value="{{ $cat->id }}"
-                                        {{ old('category_id', $product->category_id ?? '') == $cat->id ? 'selected' : '' }}
-                                        class="font-bold">
-                                        {{ $cat->name }}
-                                    </option>
+                                    { value: '{{ $cat->id }}', label: '{{ addslashes($cat->name) }}', bold: true },
                                     @foreach ($categories->where('parent_id', $cat->id) as $sub)
-                                        <option value="{{ $sub->id }}"
-                                            {{ old('category_id', $product->category_id ?? '') == $sub->id ? 'selected' : '' }}>
-                                            &nbsp;&nbsp;&nbsp;- {{ $sub->name }} 
-                                        </option>
+                                        { value: '{{ $sub->id }}', label: '   - {{ addslashes($sub->name) }}' },
                                     @endforeach
                                 @endforeach
-                            </select>
+                            ],
+                            selected: '{{ old('category_id', $product->category_id ?? '') }}',
+                            required: true
+                        })">
+                            <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Category
+                                Selection <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" x-model="search" @focus="open = true" @click="open = true"
+                                    @keydown.escape="open = false" @keydown.arrow-down.prevent="highlightNext()"
+                                    @keydown.arrow-up.prevent="highlightPrev()" @keydown.enter.prevent="selectHighlighted()"
+                                    :placeholder="selectedLabel || 'Search categories...'"
+                                    class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
+                                <div x-show="open && filteredItems.length > 0" @click.outside="open = false" x-cloak
+                                    class="absolute z-50 mt-1 w-full bg-white border border-surface-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                    <template x-for="(item, idx) in filteredItems" :key="item.value">
+                                        <div @click="selectItem(item)" :class="[idx === highlighted ? 'bg-brand-50 text-brand-700' : 'hover:bg-surface-50', item.bold ? 'font-bold' : '']"
+                                            class="px-3 py-2 cursor-pointer text-sm" x-text="item.label"></div>
+                                    </template>
+                                </div>
+                            </div>
+                            <input type="hidden" name="category_id" :value="selectedValue" x-bind:required="required">
                             @error('category_id')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                    </div>
-                </div>
-                <!-- Product Type (Size) -->
-                <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-                    <h2 class="font-display font-semibold text-lg mb-5">Product Size</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Size
-                                Selection</label>
-                            <select name="product_type_id"
-                                class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
-                                <option value="">Select a size...</option>
+                    </div>  
+                    <div class="space-y-4 mt-5">
+                        <div x-data="searchSelect({
+                            items: [
+                                { value: '', label: 'Select a size...' },
                                 @foreach ($productTypes->whereNull('parent_id') as $type)
-                                    <option value="{{ $type->id }}"
-                                        {{ old('product_type_id', $product->product_type_id ?? '') == $type->id ? 'selected' : '' }}
-                                        class="font-bold">
-                                        {{ $type->name }}
-                                    </option>
+                                    { value: '{{ $type->id }}', label: '{{ addslashes($type->name) }}', bold: true },
                                     @foreach ($productTypes->where('parent_id', $type->id) as $sub)
-                                        <option value="{{ $sub->id }}"
-                                            {{ old('product_type_id', $product->product_type_id ?? '') == $sub->id ? 'selected' : '' }}>
-                                            &nbsp;&nbsp;&nbsp;- {{ $sub->name }} {{ $sub->title }} - {{ $sub->width }} x  {{ $sub->height }} {{ $sub->unit }}
-                                        </option>
+                                        { value: '{{ $sub->id }}', label: '   - {{ addslashes($sub->name) }} {{ addslashes($sub->title) }} - {{ $sub->width }} x {{ $sub->height }} {{ $sub->unit }}' },
                                     @endforeach
                                 @endforeach
-                            </select>
+                            ],
+                            selected: '{{ old('product_type_id', $product->product_type_id ?? '') }}'
+                        })">
+                            <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Size
+                                Selection</label>
+                            <div class="relative">
+                                <input type="text" x-model="search" @focus="open = true" @click="open = true"
+                                    @keydown.escape="open = false" @keydown.arrow-down.prevent="highlightNext()"
+                                    @keydown.arrow-up.prevent="highlightPrev()" @keydown.enter.prevent="selectHighlighted()"
+                                    :placeholder="selectedLabel || 'Search sizes...'"
+                                    class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
+                                <div x-show="open && filteredItems.length > 0" @click.outside="open = false" x-cloak
+                                    class="absolute z-50 mt-1 w-full bg-white border border-surface-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                    <template x-for="(item, idx) in filteredItems" :key="item.value">
+                                        <div @click="selectItem(item)" :class="[idx === highlighted ? 'bg-brand-50 text-brand-700' : 'hover:bg-surface-50', item.bold ? 'font-bold' : '']"
+                                            class="px-3 py-2 cursor-pointer text-sm" x-text="item.label"></div>
+                                    </template>
+                                </div>
+                            </div>
+                            <input type="hidden" name="product_type_id" :value="selectedValue">
                             @error('product_type_id')
                                 <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                    </div>
-                </div>
-
-                <!-- Tags -->
-                <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6" x-data="tagInput(@js(old('tags', $product->tags ?? [])), @js($allTags ?? []))">
-                    <h2 class="font-display font-semibold text-lg mb-5">Tags</h2>
-                    <div>
-                        <div class="flex flex-wrap gap-2 mb-3">
+                    </div> 
+                    <div class="space-y-4 mt-5">
+                        <div x-data="searchSelect({
+                            items: [
+                                { value: '', label: 'Select a paper type...' },
+                                @foreach ($paperTypes as $paperType)
+                                    { value: '{{ $paperType->id }}', label: '{{ addslashes($paperType->title) }}' },
+                                @endforeach
+                            ],
+                            selected: '{{ old('paper_type_id', $product->paper_type_id ?? '') }}'
+                        })">
+                            <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Paper Type Selection</label>
+                            <div class="relative">
+                                <input type="text" x-model="search" @focus="open = true" @click="open = true"
+                                    @keydown.escape="open = false" @keydown.arrow-down.prevent="highlightNext()"
+                                    @keydown.arrow-up.prevent="highlightPrev()" @keydown.enter.prevent="selectHighlighted()"
+                                    :placeholder="selectedLabel || 'Search paper types...'"
+                                    class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
+                                <div x-show="open && filteredItems.length > 0" @click.outside="open = false" x-cloak
+                                    class="absolute z-50 mt-1 w-full bg-white border border-surface-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                    <template x-for="(item, idx) in filteredItems" :key="item.value">
+                                        <div @click="selectItem(item)" :class="idx === highlighted ? 'bg-brand-50 text-brand-700' : 'hover:bg-surface-50'"
+                                            class="px-3 py-2 cursor-pointer text-sm" x-text="item.label"></div>
+                                    </template>
+                                </div>
+                            </div>
+                            <input type="hidden" name="paper_type_id" :value="selectedValue">
+                            @error('paper_type_id')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div> 
+                    <div x-data="tagInput({{ json_encode(old('tags', $product->tags ?? [])) }}, {{ json_encode($allTags) }})">
+                        <div class="flex flex-wrap gap-2 mb-3 mt-5">
                             <template x-for="(tag, index) in tags" :key="index">
                                 <span
                                     class="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-100 text-brand-800 rounded-lg text-sm font-medium shadow-sm">
@@ -489,7 +683,7 @@
                                 </span>
                             </template>
                         </div>
-
+                       <label class="block text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Add Tags</label>
                         <input type="text" list="existingTags"
                             @keydown.enter.prevent="addTag($event.target.value); $event.target.value = ''"
                             placeholder="Type a tag and press Enter"
@@ -500,19 +694,7 @@
                             <template x-for="sugg in availableSuggestions" :key="sugg">
                                 <option :value="sugg"></option>
                             </template>
-                        </datalist>
-
-                        <!-- <div x-show="availableSuggestions.length > 0" class="mt-4" x-cloak>
-                                                                                                                                                                                                                                                                                                                                                                                                    <p class="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-2">Suggestions</p>
-                                                                                                                                                                                                                                                                                                                                                                                                    <div class="flex flex-wrap gap-2">
-                                                                                                                                                                                                                                                                                                                                                                                                        <template x-for="sugg in availableSuggestions" :key="sugg">
-                                                                                                                                                                                                                                                                                                                                                                                                            <button type="button" @click="addTag(sugg)" class="px-2.5 py-1 bg-surface-50 text-surface-600 rounded-lg text-xs font-medium border border-surface-200 hover:border-brand-300 hover:text-brand-600 hover:bg-brand-50 transition shadow-sm">
-                                                                                                                                                                                                                                                                                                                                                                                                                + <span x-text="sugg"></span>
-                                                                                                                                                                                                                                                                                                                                                                                                            </button>
-                                                                                                                                                                                                                                                                                                                                                                                                        </template>
-                                                                                                                                                                                                                                                                                                                                                                                                    </div>
-                                                                                                                                                                                                                                                                                                                                                                                                </div> -->
-
+                        </datalist> 
                         <template x-for="(tag, index) in tags" :key="'input-' + index">
                             <input type="hidden" name="tags[]" :value="tag">
                         </template>
@@ -536,100 +718,82 @@
                     </div>
                 </div>
 
-                <!-- Sort Order -->
-                <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-                    <h2 class="font-display font-semibold text-lg mb-5">Display Order</h2>
-                
-                    @php
-                        $nextId = (\App\Models\Product::max('id') ?? 0) + 1;
-                    @endphp
-                
-                    <input
-                        type="number"
-                        name="sort_order"
-                        value="{{ old('sort_order', $product->sort_order ?? $nextId) }}"
-                        class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500"
-                    >
-                
-                    <p class="text-xs text-surface-400 mt-1">
-                        Lower number = higher priority
-                    </p>
-                </div>
+                 
             </div>
         </div>
     </form>
 
-    @if (isset($product))
+    <!--@if (isset($product))-->
         <!-- Option Groups Management -->
-        <div class="mt-8 bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-            <div class="flex items-center justify-between mb-5">
-                <h2 class="font-display font-semibold text-lg">Option Groups</h2>
-            </div>
+    <!--    <div class="mt-8 bg-white rounded-2xl border border-surface-100 shadow-card p-6">-->
+    <!--        <div class="flex items-center justify-between mb-5">-->
+    <!--            <h2 class="font-display font-semibold text-lg">Option Groups</h2>-->
+    <!--        </div>-->
 
             <!-- Existing option groups -->
-            @foreach ($product->optionGroups as $group)
-                <div class="mb-6 p-4 bg-surface-50 rounded-xl">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-semibold text-surface-800">{{ $group->name }} <span
-                                class="text-xs text-surface-400">({{ $group->display_type }})</span></h3>
-                        <form action="{{ route('admin.options.destroy', $group) }}" method="POST"
-                            onsubmit="return confirm('Delete this group?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-xs text-red-500 hover:text-red-700">Delete Group</button>
-                        </form>
-                    </div>
+    <!--        @foreach ($product->optionGroups as $group)-->
+    <!--            <div class="mb-6 p-4 bg-surface-50 rounded-xl">-->
+    <!--                <div class="flex items-center justify-between mb-3">-->
+    <!--                    <h3 class="font-semibold text-surface-800">{{ $group->name }} <span-->
+    <!--                            class="text-xs text-surface-400">({{ $group->display_type }})</span></h3>-->
+    <!--                    <form action="{{ route('admin.options.destroy', $group) }}" method="POST"-->
+    <!--                        onsubmit="return confirm('Delete this group?')">-->
+    <!--                        @csrf @method('DELETE')-->
+    <!--                        <button type="submit" class="text-xs text-red-500 hover:text-red-700">Delete Group</button>-->
+    <!--                    </form>-->
+    <!--                </div>-->
                     <!-- Values -->
-                    <div class="space-y-2 mb-3">
-                        @foreach ($group->values as $value)
-                            <div class="flex items-center justify-between px-3 py-2 bg-white rounded-lg text-sm">
-                                <span>{{ $value->label }} — <span
-                                        class="text-brand-600">{{ $value->formatted_price_modifier }}</span></span>
-                                <form action="{{ route('admin.optionValues.destroy', $value) }}" method="POST">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-xs text-red-500 hover:text-red-700">Remove</button>
-                                </form>
-                            </div>
-                        @endforeach
-                    </div>
+    <!--                <div class="space-y-2 mb-3">-->
+    <!--                    @foreach ($group->values as $value)-->
+    <!--                        <div class="flex items-center justify-between px-3 py-2 bg-white rounded-lg text-sm">-->
+    <!--                            <span>{{ $value->label }} — <span-->
+    <!--                                    class="text-brand-600">{{ $value->formatted_price_modifier }}</span></span>-->
+    <!--                            <form action="{{ route('admin.optionValues.destroy', $value) }}" method="POST">-->
+    <!--                                @csrf @method('DELETE')-->
+    <!--                                <button type="submit" class="text-xs text-red-500 hover:text-red-700">Remove</button>-->
+    <!--                            </form>-->
+    <!--                        </div>-->
+    <!--                    @endforeach-->
+    <!--                </div>-->
                     <!-- Add Value -->
-                    <form action="{{ route('admin.options.values.store', $group) }}" method="POST"
-                        class="flex gap-2 mt-2">
-                        @csrf
-                        <input type="text" name="label" placeholder="Value label" required
-                            class="flex-1 rounded-lg border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
-                        <input type="number" name="price_modifier" step="0.01" placeholder="Price ±"
-                            class="w-24 rounded-lg border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
-                        <button type="submit"
-                            class="px-3 py-2 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition">Add</button>
-                    </form>
-                </div>
-            @endforeach
+    <!--                <form action="{{ route('admin.options.values.store', $group) }}" method="POST"-->
+    <!--                    class="flex gap-2 mt-2">-->
+    <!--                    @csrf-->
+    <!--                    <input type="text" name="label" placeholder="Value label" required-->
+    <!--                        class="flex-1 rounded-lg border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">-->
+    <!--                    <input type="number" name="price_modifier" step="0.01" placeholder="Price ±"-->
+    <!--                        class="w-24 rounded-lg border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">-->
+    <!--                    <button type="submit"-->
+    <!--                        class="px-3 py-2 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition">Add</button>-->
+    <!--                </form>-->
+    <!--            </div>-->
+    <!--        @endforeach-->
 
             <!-- Add New Option Group -->
-            <form action="{{ route('admin.products.options.store', $product) }}" method="POST"
-                class="pt-4 border-t border-surface-200">
-                @csrf
-                <h3 class="font-semibold text-surface-700 mb-3">Add Option Group</h3>
-                <div class="grid sm:grid-cols-3 gap-3">
-                    <input type="text" name="name" placeholder="Group name (e.g. Size)" required
-                        class="rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
-                    <select name="display_type"
-                        class="rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
-                        <option value="buttons">Buttons</option>
-                        <option value="cards">Cards</option>
-                        <option value="dropdown">Dropdown</option>
-                    </select>
-                    <div class="flex gap-2">
-                        <label class="flex items-center gap-1 text-sm"><input type="checkbox" name="is_required"
-                                value="1" checked class="rounded text-brand-600"> Required</label>
-                        <button type="submit"
-                            class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition">Add
-                            Group</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    @endif
+    <!--        <form action="{{ route('admin.products.options.store', $product) }}" method="POST"-->
+    <!--            class="pt-4 border-t border-surface-200">-->
+    <!--            @csrf-->
+    <!--            <h3 class="font-semibold text-surface-700 mb-3">Add Option Group</h3>-->
+    <!--            <div class="grid sm:grid-cols-3 gap-3">-->
+    <!--                <input type="text" name="name" placeholder="Group name (e.g. Size)" required-->
+    <!--                    class="rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">-->
+    <!--                <select name="display_type"-->
+    <!--                    class="rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">-->
+    <!--                    <option value="buttons">Buttons</option>-->
+    <!--                    <option value="cards">Cards</option>-->
+    <!--                    <option value="dropdown">Dropdown</option>-->
+    <!--                </select>-->
+    <!--                <div class="flex gap-2">-->
+    <!--                    <label class="flex items-center gap-1 text-sm"><input type="checkbox" name="is_required"-->
+    <!--                            value="1" checked class="rounded text-brand-600"> Required</label>-->
+    <!--                    <button type="submit"-->
+    <!--                        class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition">Add-->
+    <!--                        Group</button>-->
+    <!--                </div>-->
+    <!--            </div>-->
+    <!--        </form>-->
+    <!--    </div>-->
+    <!--@endif-->
 @endsection
 
 @push('scripts')
@@ -650,6 +814,43 @@
                 };
                 reader.readAsDataURL(input.files[0]);
             }
+        }
+
+        function searchSelect({ items = [], selected = '', required = false } = {}) {
+            return {
+                items,
+                search: '',
+                open: false,
+                highlighted: -1,
+                selectedValue: selected,
+                required,
+                get selectedLabel() {
+                    const found = this.items.find(i => String(i.value) === String(this.selectedValue));
+                    return found && found.value !== '' ? found.label.trim() : '';
+                },
+                get filteredItems() {
+                    if (!this.search) return this.items;
+                    const q = this.search.toLowerCase();
+                    return this.items.filter(i => i.label.toLowerCase().includes(q));
+                },
+                selectItem(item) {
+                    this.selectedValue = item.value;
+                    this.search = '';
+                    this.open = false;
+                    this.highlighted = -1;
+                },
+                highlightNext() {
+                    if (this.highlighted < this.filteredItems.length - 1) this.highlighted++;
+                },
+                highlightPrev() {
+                    if (this.highlighted > 0) this.highlighted--;
+                },
+                selectHighlighted() {
+                    if (this.highlighted >= 0 && this.filteredItems[this.highlighted]) {
+                        this.selectItem(this.filteredItems[this.highlighted]);
+                    }
+                }
+            };
         }
 
         function tagInput(initialTags, allAvailableTags) {

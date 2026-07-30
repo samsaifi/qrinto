@@ -61,11 +61,58 @@
             @forelse($templates as $tpl)
                 <a href="{{ route('flow.customize', $tpl->slug) }}" data-tpl-id="{{ $tpl->id }}"
                     x-show="activeCategory === 'all' || activeCategory === {{ $tpl->category_id }}"
-                    class="group relative bg-slate-50   overflow-hidden border-2 border-transparent hover:border-brand-500 transition-all duration-300 shadow-sm hover:shadow-premium"
+                    class="group relative bg-slate-50     border-2 border-transparent hover:border-brand-500 transition-all duration-300 shadow-sm hover:shadow-premium"
                     style="aspect-ratio: {{ $tpl->aspect_ratio }};">
-                    @if ($loop->index == 0 || $loop->index == 1)
-                    <div
-                            class="absolute top-0 text-gray-400 left-0 w-full h-full bg-white   flex items-center justify-center shadow-lg">
+                    
+                    @if(in_array($tpl->category_id, $eventCategoryIds))
+                        <div class="absolute z-20 top-4  left-4 w-8 h-8   flex items-center justify-center  ">
+                            @foreach(\App\Models\Event::getSvgsForCategory($tpl->category_id, $eventIds) as $event)
+                                <div class="relative group/event">
+                                    @if(!empty($event['icon_svg']))
+                                        <span
+                                            class="w-8 h-8 flex justify-center items-center rounded-full"
+                                            style="color: {{ $event['color'] }}; background-color: {{ $event['color'] }}3d;">
+                                            {!! @App\Models\Event::getIcon($event['icon_svg']) !!}
+                                        </span>
+
+                                    @else 
+                                        <span
+                                            class="w-8 h-8 flex justify-center items-center rounded-full text-xs font-semibold   text-white"
+                                            style="background: {{ $event['color'] }};"
+                                            >
+                                            {{ strtoupper(substr($event['title'], 0, 1)) }}
+                                        </span> 
+                                    @endif
+
+                                    <!-- Tooltip -->
+                                    <div class="absolute   left-1/2  -translate-x-12 -top-full mt-2
+                                                whitespace-nowrap rounded-md bg-gray-900 px-2 py-1
+                                                text-xs text-white shadow-lg
+                                                opacity-0 invisible transition-all duration-200
+                                                group-hover/event:opacity-100 group-hover:visible z-[999]">
+                                        {{ $event['title'] }} Event's
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div> 
+                    @elseif($tpl->product_store != '')
+                        <div class="absolute z-20 top-4 left-4 rounded-full w-8 h-8 flex items-center justify-center">
+                            @if($tpl->product_store && $store = \App\Models\Store::find($tpl->product_store))
+                                <img src="{{ asset('storage/' . $store->logo) }}" alt="" class="rounded-full">
+                            @endif
+                             <div class="absolute group/store left-1/2 -translate-x-12 -top-full mt-2
+                                                whitespace-nowrap rounded-md bg-gray-900 px-2 py-1
+                                                text-xs text-white shadow-lg
+                                                opacity-0 invisible transition-all duration-200
+                                                group-hover/store:opacity-100 group-hover:visible z-[999]">
+                                {{ $store->store_name }} templates
+                            </div>
+                        </div>
+                    @endif
+                    
+                    
+                    @if ($tpl->category_id == 21)
+                    <div class="absolute  z-20 top-0 text-gray-400 left-0 w-full h-full bg-white   flex items-center justify-center shadow-lg">
                             Add your stuff 
                     </div>
                     @endif
@@ -75,14 +122,29 @@
                     @if ($tpl->pdf_orientation == 'portrait')
                         <!-- display fixed rectangle-vertical icon in div -->
                         <div
-                            class="absolute top-4 right-4 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg">
+                            class="absolute group/port z-20 top-4 right-4 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg">
                             <i data-lucide="rectangle-vertical" class="w-5 h-5 text-white"></i>
+                            <div class="absolute left-1/2 -translate-x-12 -top-full mt-2
+                                        whitespace-nowrap rounded-md bg-gray-900 px-2 py-1
+                                        text-xs text-white shadow-lg
+                                        opacity-0 invisible transition-all duration-200
+                                        group-hover/port:opacity-100 group-hover:visible z-[999]">
+                                Portrait templates
+                            </div>
                         </div>
+                       
                     @else
                         <!-- display fixed rectangle-horizontal icon in div -->
                         <div
-                            class="absolute top-4 right-4 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg">
+                            class="absolute group/land z-20 top-4 right-4 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg">
                             <i data-lucide="rectangle-horizontal" class="w-5 h-5 text-white"></i>
+                            <div class="absolute left-1/2 -translate-x-12 -top-full mt-2
+                                        whitespace-nowrap rounded-md bg-gray-900 px-2 py-1
+                                        text-xs text-white shadow-lg
+                                        opacity-0 invisible transition-all duration-200
+                                        group-hover/land:opacity-100 group-hover:visible z-[999]">
+                                Landscape templates
+                            </div>
                         </div>
                     @endif
                     <img src="{{ $tpl->frame_image_thumbnail ?? 'https://placehold.co/300x400/eee/999?text=' . urlencode($tpl->name) }}"
@@ -100,7 +162,7 @@
                         </div>
                     @endif
                     <!-- Bookmark button -->
-                    <button type="button" @click.prevent.stop="toggleBookmark($el)" data-tpl-id="{{ $tpl->id }}"
+                    <!-- <button type="button" @click.prevent.stop="toggleBookmark($el)" data-tpl-id="{{ $tpl->id }}"
                         data-tpl-slug="{{ $tpl->slug }}" data-tpl-name="{{ $tpl->name }}"
                         data-tpl-thumbnail="{{ $tpl->frame_image_thumbnail ?? '' }}"
                         class="absolute top-14 right-4 z-10 w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg"
@@ -112,7 +174,7 @@
                             class="transition-all duration-200">
                             <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
                         </svg>
-                    </button>
+                    </button> -->
 
                     @if (request()->is('*/' . $tpl->slug))
                         <div

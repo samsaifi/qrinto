@@ -15,7 +15,9 @@ class Product extends Model
     use HasSlug, SoftDeletes;
 
     protected $fillable = [
-        'category_id', 'product_type_id', 'store_id','product_store', 'name', 'slug', 'short_description', 'description',
+        'category_id', 'product_type_id', 'paper_type_id', 'store_id', 'product_store',
+        'created_by', 'event_id',
+        'name', 'slug', 'short_description', 'description',
         'base_price', 'compare_price', 'base_price_cad', 'compare_price_cad',
         'sku', 'frame_image', 'sample_image',
         'background_image', 'overlay_image',
@@ -28,9 +30,9 @@ class Product extends Model
     ];
     public $no_of_pages_array = [
         // 1 => 'Megnet category without marking area', 
-        1 => 'Single Page with marking area', 
-        2 => 'Double Page with marking area', 
-        4 => 'Four Pages with marking area', 
+        1 => 'Flat Single ', 
+        2 => 'Flat Double ', 
+        4 => 'Folded ', 
     ];
     protected function casts(): array
     {
@@ -68,9 +70,24 @@ class Product extends Model
         return $this->belongsTo(ProductType::class);
     }
 
+    public function paperType(): BelongsTo
+    {
+        return $this->belongsTo(PaperType::class);
+    }
+
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
     }
 
     public function images(): HasMany

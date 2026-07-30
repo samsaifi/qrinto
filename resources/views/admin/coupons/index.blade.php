@@ -21,6 +21,8 @@
                     <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Discount</th>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Usage</th>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Valid Until</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Store</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Created By</th>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Status</th>
                     <th class="px-6 py-3 text-right text-xs font-semibold text-surface-500 uppercase">Actions</th>
                 </tr>
@@ -38,6 +40,8 @@
                     </td>
                     <td class="px-6 py-4 text-sm text-surface-600">{{ $coupon->used_count ?? 0 }} / {{ $coupon->usage_limit ?? '∞' }}</td>
                     <td class="px-6 py-4 text-sm text-surface-500">{{ $coupon->expires_at ? $coupon->expires_at->format('M d, Y') : '—' }}</td>
+                    <td class="px-6 py-4 text-sm text-surface-600">{{ $coupon->store->store_name ?? 'All Stores' }}</td>
+                    <td class="px-6 py-4 text-sm text-surface-600">{{ $coupon->user->name ?? '—' }}</td>
                     <td class="px-6 py-4">
                         <span class="px-2.5 py-1 text-xs font-semibold rounded-lg {{ $coupon->is_active ? 'bg-accent-100 text-accent-700' : 'bg-surface-200 text-surface-500' }}">
                             {{ $coupon->is_active ? 'Active' : 'Inactive' }}
@@ -58,7 +62,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="px-6 py-12 text-center text-surface-400">No coupons yet.</td></tr>
+                <tr><td colspan="8" class="px-6 py-12 text-center text-surface-400">No coupons yet.</td></tr>
                 @endforelse
             </tbody>
         </table>

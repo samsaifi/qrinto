@@ -1585,14 +1585,14 @@
             submitAllCanvases() {
                 if (this.isSavingComposite) return;
 
-                // Check if user has made any edits (image upload or text)
-                const hasAnyEdit = Object.keys(this.canvases).some(k => {
+                const hasAnyContent = Object.keys(this.canvases).some(k => {
                     const cv = this.canvases[k];
                     if (!cv) return false;
-                    return cv.fabricCanvas.getObjects().some(o => o._isUserImage || o._isUserText);
+                    return cv.fabricCanvas.backgroundImage ||
+                        cv.fabricCanvas.getObjects().some(o => o._isUserImage || o._isUserText);
                 });
 
-                if (!hasAnyEdit) {
+                if (!hasAnyContent) {
                     // Show alert - user must add at least one image or text
                     const btn = document.getElementById('submit-btn');
                     btn.classList.add('!bg-red-500');
@@ -1618,8 +1618,9 @@
                 const uploadPromises = Object.keys(this.canvases).map(async key => {
                     const cv = this.canvases[key];
                     if (!cv) return;
-                    const hasEdit = cv.fabricCanvas.getObjects().some(o => o._isUserImage || o._isUserText);
-                    if (!hasEdit) return;
+                    const hasCanvasContent = cv.fabricCanvas.backgroundImage ||
+                        cv.fabricCanvas.getObjects().some(o => o._isUserImage || o._isUserText);
+                    if (!hasCanvasContent) return;
 
                     cv.fabricCanvas.discardActiveObject();
                     cv.fabricCanvas.renderAll();

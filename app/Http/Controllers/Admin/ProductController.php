@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Event;
 use App\Models\ProductType;
+use App\Models\PaperType;
 use App\Models\ProductOptionGroup;
 use App\Models\ProductOptionValue;
 use Illuminate\Http\Request;
@@ -15,12 +17,16 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category', 'productType', 'images');
+        $query = Product::with('category', 'productType', 'images', 'creator', 'event');
+        $no_of_pages_array = (new Product())->no_of_pages_array;
 
         // Store Isolation: store admins see only their own products
         if (auth()->user()->isStoreAdmin() && auth()->user()->store_id) {
-            $query->where('store_id', auth()->user()->store_id);
-            $query->orWhere('product_store', auth()->user()->store_id);
+            $query->where(function ($q) {
+                $q->where('store_id', auth()->user()->store_id)
+                  ->orWhere('product_store', auth()->user()->store_id)
+                  ->orWhere('created_by', auth()->id());
+            });
         }
 
         if ($request->filled('search')) {
@@ -30,25 +36,30 @@ class ProductController extends Controller
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
+        if ($request->filled('no_of_pages_array')) {
+            $query->where('no_of_pages', $request->no_of_pages_array);
+        }
 
         if ($request->filled('status')) {
             $query->where('is_active', $request->status === 'active');
         }
 
         $products = $query->latest()->paginate(15)->withQueryString();
-        $categories = Category::orderBy('name')->get();
+        $categories = $this->scopedCategories();
 
-        return view('admin.products.index', compact('products', 'categories'));
+        return view('admin.products.index', compact('products', 'categories','no_of_pages_array'));
     }
 
     public function create()
-    {   
+    {
         $no_of_pages_array = (new Product())->no_of_pages_array;
-         
-        $categories = Category::orderBy('name')->get();
+
+        $categories = $this->scopedCategories();
         $productTypes = ProductType::orderBy('name')->where('is_active',1)->get();
+        $paperTypes = $this->scopedPaperTypes();
+        $events = $this->scopedEvents();
         $allTags = Product::pluck('tags')->flatten()->filter()->unique()->values()->all();
-        return view('admin.products.form', compact('categories', 'productTypes', 'allTags','no_of_pages_array'));
+        return view('admin.products.form', compact('categories', 'productTypes', 'paperTypes', 'events', 'allTags','no_of_pages_array'));
     }
 
     public function store(Request $request)
@@ -57,6 +68,8 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'product_type_id' => 'nullable|exists:product_types,id',
+            'paper_type_id' => 'nullable|exists:paper_types,id',
+            'event_id' => 'nullable|exists:events,id',
             'no_of_pages' => 'nullable|integer|in:' . implode(',', array_keys((new Product())->no_of_pages_array)),
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
@@ -110,9 +123,10 @@ class ProductController extends Controller
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_active'] = $request->boolean('is_active');
 
-        // Auto-assign store_id for store admins
+        // Auto-assign store_id and created_by for store admins
         if (auth()->user()->isStoreAdmin() && auth()->user()->store_id) {
             $validated['store_id'] = auth()->user()->store_id;
+            $validated['created_by'] = auth()->id();
         }
 
         $product = Product::create($validated);
@@ -122,12 +136,14 @@ class ProductController extends Controller
     }
     public function authrised_check($product)
     {
-        if (
-            auth()->user()->isStoreAdmin() &&
-            $product->store_id != auth()->user()->store_id &&
-            $product->product_store != auth()->user()->store_id
-        ) {
-            abort(403, 'Unauthorized access to this product.');
+        if (auth()->user()->isStoreAdmin()) {
+            $ownsProduct = $product->created_by === auth()->id()
+                || $product->store_id == auth()->user()->store_id
+                || $product->product_store == auth()->user()->store_id;
+
+            if (!$ownsProduct) {
+                abort(403, 'Unauthorized access to this product.');
+            }
         }
     }
     public function edit(Product $product)
@@ -135,13 +151,15 @@ class ProductController extends Controller
         // Store Isolation: store admins can only edit their own products
         $this->authrised_check($product);
 
-        $no_of_pages_array = (new Product())->no_of_pages_array; 
+        $no_of_pages_array = (new Product())->no_of_pages_array;
         $product->load('images', 'optionGroups.values', 'category', 'productType');
-        $categories = Category::orderBy('name')->get();
+        $categories = $this->scopedCategories();
         $productTypes = ProductType::orderBy('name')->where('is_active',1)->get();
+        $paperTypes = $this->scopedPaperTypes();
+        $events = $this->scopedEvents();
         $allTags = Product::pluck('tags')->flatten()->filter()->unique()->values()->all();
 
-        return view('admin.products.form', compact('product', 'categories', 'productTypes', 'allTags', 'no_of_pages_array'));
+        return view('admin.products.form', compact('product', 'categories', 'productTypes', 'paperTypes', 'events', 'allTags', 'no_of_pages_array'));
     }
 
     public function update(Request $request, Product $product)
@@ -153,6 +171,8 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'product_type_id' => 'nullable|exists:product_types,id',
+            'paper_type_id' => 'nullable|exists:paper_types,id',
+            'event_id' => 'nullable|exists:events,id',
             'no_of_pages' => 'nullable|integer|in:' . implode(',', array_keys((new Product())->no_of_pages_array)),
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
@@ -342,5 +362,49 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.mask', $product)
             ->with('success', 'All mask data saved successfully!');
+    }
+
+    private function scopedCategories()
+    {
+        $query = Category::active()->orderBy('name');
+
+        if (auth()->user()->isStoreAdmin()) {
+            $query->where(function ($q) {
+                $q->whereNull('user_id')
+                  ->orWhere('user_id', auth()->id());
+            });
+        }
+
+        return $query->get();
+    }
+
+    private function scopedEvents()
+    {
+        $query = Event::active()->orderBy('title');
+
+        if (auth()->user()->isStoreAdmin()) {
+            $query->where(function ($q) {
+                $q->whereNull('created_by')
+                  ->orWhere('created_by', auth()->id())
+                  ->orWhereHas('creator', fn($c) => $c->where('role', 'admin'))
+                  ->orWhereHas('stores', fn($s) => $s->where('stores.id', auth()->user()->store_id));
+            });
+        }
+
+        return $query->get();
+    }
+
+    private function scopedPaperTypes()
+    {
+        $query = PaperType::active()->orderBy('title');
+
+        if (auth()->user()->isStoreAdmin()) {
+            $query->where(function ($q) {
+                $q->whereNull('user_id')
+                  ->orWhere('user_id', auth()->id());
+            });
+        }
+
+        return $query->get();
     }
 }

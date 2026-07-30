@@ -53,40 +53,73 @@
             <!-- Nav -->
             <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 @php
-                $navItems = [
-                ['route' => 'admin.dashboard', 'icon' => 'layout-dashboard', 'label' => 'Dashboard', 'match' => 'admin.dashboard'],
-                ['route' => 'admin.orders.index', 'icon' => 'package', 'label' => 'Orders', 'match' => 'admin.orders*'],
+                $topItems = [
+                    ['route' => 'admin.dashboard', 'icon' => 'layout-dashboard', 'label' => 'Dashboard', 'match' => 'admin.dashboard'],
+                    ['route' => 'admin.orders.index', 'icon' => 'package', 'label' => 'Orders', 'match' => 'admin.orders*'],
                 ];
+
+                $catalogItems = [];
+                $bottomItems = [];
 
                 if (auth()->user()->isAdmin()) {
-                $navItems = array_merge($navItems, [
-                ['route' => 'admin.products.index', 'icon' => 'box', 'label' => 'Products', 'match' => 'admin.products*'],
-                ['route' => 'admin.categories.index', 'icon' => 'grid-2x2', 'label' => 'Categories', 'match' => 'admin.categories*'],
-                ['route' => 'admin.product-types.index', 'icon' => 'layers', 'label' => 'Product Types', 'match' => 'admin.product-types*'],
-                ['route' => 'admin.templates.index', 'icon' => 'layout-template', 'label' => 'Templates', 'match' => 'admin.templates*'],
-                ['route' => 'admin.coupons.index', 'icon' => 'tag', 'label' => 'Coupons', 'match' => 'admin.coupons*'],
-                ['route' => 'admin.stores.index', 'icon' => 'store', 'label' => 'Stores', 'match' => 'admin.stores*'],
-                ['route' => 'admin.users.index', 'icon' => 'users', 'label' => 'Users', 'match' => 'admin.users*'],
-
-                ]);
-                } elseif (auth()->user()->isStoreAdmin() && auth()->user()->store_id) {
-                $navItems[] = [
-                'route' => 'admin.products.index',
-                'icon' => 'box',
-                'label' => 'Products',
-                'match' => 'admin.products*'
-                ];
-                $navItems[] = [
-                'route' => 'admin.stores.edit',
-                'params' => [auth()->user()->store_id],
-                'icon' => 'store',
-                'label' => 'Store Details',
-                'match' => 'admin.stores.edit'
-                ];
+                    $catalogItems = [
+                        ['route' => 'admin.products.index', 'icon' => 'box', 'label' => 'Products', 'match' => 'admin.products*'],
+                        ['route' => 'admin.categories.index', 'icon' => 'grid-2x2', 'label' => 'Categories', 'match' => 'admin.categories*'],
+                        ['route' => 'admin.product-types.index', 'icon' => 'layers', 'label' => 'Card Types/Sizes', 'match' => 'admin.product-types*'],
+                        ['route' => 'admin.templates.index', 'icon' => 'layout-template', 'label' => 'Templates', 'match' => 'admin.templates*'],
+                        ['route' => 'admin.coupons.index', 'icon' => 'tag', 'label' => 'Coupons', 'match' => 'admin.coupons*'],
+                        ['route' => 'admin.events.index', 'icon' => 'calendar', 'label' => 'Events', 'match' => 'admin.events*'],
+                        ['route' => 'admin.paper-types.index', 'icon' => 'scroll-text', 'label' => 'Paper Types', 'match' => 'admin.paper-types*'],
+                        ];
+                        $bottomItems = [
+                        ['route' => 'admin.stores.index', 'icon' => 'store', 'label' => 'Stores', 'match' => 'admin.stores*'],
+                        ['route' => 'admin.users.index', 'icon' => 'users', 'label' => 'Users', 'match' => 'admin.users*'],
+                        ];
+                    } elseif (auth()->user()->isStoreAdmin() && auth()->user()->store_id) {
+                    $catalogItems = [
+                        ['route' => 'admin.products.index', 'icon' => 'box', 'label' => 'Products', 'match' => 'admin.products*'],
+                        ['route' => 'admin.categories.index', 'icon' => 'grid-2x2', 'label' => 'Categories', 'match' => 'admin.categories*'],
+                        ['route' => 'admin.coupons.index', 'icon' => 'tag', 'label' => 'Coupons', 'match' => 'admin.coupons*'],
+                        ['route' => 'admin.events.index', 'icon' => 'calendar', 'label' => 'Events', 'match' => 'admin.events*'],
+                        ['route' => 'admin.paper-types.index', 'icon' => 'scroll-text', 'label' => 'Paper Types', 'match' => 'admin.paper-types*'],
+                    ];
+                    $bottomItems = [
+                        ['route' => 'admin.stores.edit', 'params' => [auth()->user()->store_id], 'icon' => 'store', 'label' => 'Store Details', 'match' => 'admin.stores.edit'],
+                    ];
                 }
+
+                $catalogOpen = collect($catalogItems)->contains(fn($item) => request()->routeIs($item['match']));
                 @endphp
 
-                @foreach($navItems as $item)
+                @foreach($topItems as $item)
+                <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {{ request()->routeIs($item['match']) ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                    <i data-lucide="{{ $item['icon'] }}" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">{{ $item['label'] }}</span>
+                </a>
+                @endforeach
+
+                @if(count($catalogItems))
+                <div x-data="{ open: {{ $catalogOpen ? 'true' : 'false' }} }">
+                    <button @click="open = !open"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {{ $catalogOpen ? 'text-white' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                        <i data-lucide="shopping-bag" class="w-5 h-5 flex-shrink-0"></i>
+                        <span x-show="sidebarOpen" x-transition class="whitespace-nowrap flex-1 text-left">Catalog</span>
+                        <i x-show="sidebarOpen" data-lucide="chevron-down" class="w-4 h-4 flex-shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1" class="ml-3 pl-3 border-l border-surface-700 space-y-0.5 mt-0.5">
+                        @foreach($catalogItems as $item)
+                        <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all {{ request()->routeIs($item['match']) ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                            <i data-lucide="{{ $item['icon'] }}" class="w-4 h-4 flex-shrink-0"></i>
+                            <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">{{ $item['label'] }}</span>
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                @foreach($bottomItems as $item)
                 <a href="{{ route($item['route'], $item['params'] ?? []) }}"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {{ request()->routeIs($item['match']) ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
                     <i data-lucide="{{ $item['icon'] }}" class="w-5 h-5 flex-shrink-0"></i>

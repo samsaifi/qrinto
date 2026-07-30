@@ -19,6 +19,43 @@
         </a>
     </div>
 </div>
+<div class="bg-white rounded-2xl border border-surface-100 shadow-card p-5 mb-6">
+    <form action="{{ route('admin.products.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-xs font-semibold text-surface-500 mb-1">Search</label>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Name #, customer..."
+                   class="rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-surface-500 mb-1">Category</label>
+            <select name="category_id" class="rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
+                <option value="">All</option>
+                @foreach($categories as $category)
+                <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-surface-500 mb-1">Number of Pages</label>
+            <select name="no_of_pages_array" class="rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
+                <option value="">All</option>
+                @foreach($no_of_pages_array as $key => $val)
+                <option value="{{ $key }}" {{ request('no_of_pages_array') == $key ? 'selected' : '' }}>{{ $val }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-surface-500 mb-1">Status</label>
+            <select name="status" class="rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
+                <option value="">All</option>
+                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Draft</option>
+            </select>
+        </div>
+        <button type="submit" class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition">Filter</button>
+        <a href="{{ route('admin.products.index') }}" class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
+    </form>
+</div>
 
 <form id="bulkDeleteForm" action="{{ route('admin.products.bulkDelete') }}" method="POST" class="hidden">@csrf</form>
 
@@ -35,6 +72,8 @@
                     <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">Number of pages</th>
                     <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider hidden md:table-cell">Category</th>
                     <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider w-28">Price</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider hidden md:table-cell">Event</th>
+                    <th class="px-3 py-3 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider hidden md:table-cell">Created By</th>
                     <th class="px-3 py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider w-20 hidden sm:table-cell">Status</th>
                     <th class="px-3 py-3 text-center text-xs font-semibold text-surface-500 uppercase tracking-wider w-24">Actions</th>
                 </tr>
@@ -58,7 +97,7 @@
                             </div>
                             <div class="min-w-0">
                                 <a href="{{ route('admin.products.edit', $product) }}" class="font-semibold text-sm text-surface-800 hover:text-brand-600 transition block">{{ $product->name }}</a>
-                                <p class="text-xs text-surface-400">{{ $product->sku ?: '—' }}</p>
+                               
                             </div>
                         </div>
                     </td>
@@ -72,13 +111,13 @@
                         <span class="text-sm text-surface-600"> 
                             @switch($product->no_of_pages)
                                 @case(4)
-                                    Four pages
+                                    Folded
                                     @break
                                 @case(2)
-                                    Double pages 
+                                    Flat Double 
                                     @break 
                                 @case(1)
-                                    Single Page  
+                                    Flat Single  
                                 @break 
                             @endswitch
                         </span>
@@ -88,9 +127,19 @@
                     </td>
                     <td class="px-3 py-3">
                         <span class="font-semibold text-sm text-surface-800">${{ number_format($product->base_price, 0) }}</span>
-                        @if($product->compare_price)
-                        <span class="text-[11px] text-surface-400 line-through ml-0.5">${{ number_format($product->compare_price, 0) }}</span>
-                        @endif
+                       
+                    </td>
+                    <td class="px-3 py-3 hidden md:table-cell">
+                        <span class="text-sm text-surface-600">{{ $product->event->title ?? '-' }}</span>
+                    </td>
+                    <td class="px-3 py-3 hidden md:table-cell">
+                        <span class="text-sm text-surface-600">
+                            @if($product->creator)
+                                {{ $product->creator->isAdmin() ? '-' : $product->creator->name }}
+                            @else
+                                -
+                            @endif
+                        </span>
                     </td>
                     <td class="px-3 py-3 text-center hidden sm:table-cell">
                         <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-md {{ $product->is_active ? 'bg-accent-100 text-accent-700' : 'bg-surface-200 text-surface-500' }}">
@@ -109,7 +158,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="px-6 py-12 text-center text-surface-400">No products yet. <a href="{{ route('admin.products.create') }}" class="text-brand-600 font-medium">Add your first product</a>.</td></tr>
+                <tr><td colspan="10" class="px-6 py-12 text-center text-surface-400">No products yet. <a href="{{ route('admin.products.create') }}" class="text-brand-600 font-medium">Add your first product</a>.</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -8,12 +8,22 @@ use Illuminate\Http\Request;
 
 class ProductTypeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $productTypes = ProductType::with('children')
-            ->parents()
-            ->orderBy('sort_order')
-            ->get();
+        $query = ProductType::with('children')->parents();
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('children', fn ($c) => $c->where('name', 'like', '%' . $request->search . '%'));
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
+        }
+
+        $productTypes = $query->orderBy('sort_order')->paginate(20)->withQueryString();
 
         return view('admin.product-types.index', compact('productTypes'));
     }

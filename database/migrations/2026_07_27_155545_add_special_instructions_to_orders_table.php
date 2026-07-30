@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            // $table->integer('no_of_pages')->nullable()->after('product_type_id');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->text('special_instructions')->nullable()->after('notes');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            // $table->dropColumn('no_of_pages');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->dropColumn('special_instructions');
         });
     }
 };

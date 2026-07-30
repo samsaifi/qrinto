@@ -1418,17 +1418,9 @@
 
             // ── Shared mask-clip helper (Page 1 only, unless the spec opts out) ──────
             _maybeClip(obj, spec, sf, key) {
-                const firstKey = Object.keys(this.imageTypes)[0];
-                const mData = this.allMaskData[key] || {};
-                const masks = mData.masks || this.allMaskData.masks;
-                if (key === firstKey && !spec.ignoreMask && Array.isArray(masks) && masks.length > 0) {
-                    const clip = this._createMaskObject(masks[0], sf, {
-                        absolutePositioned: true,
-                        strokeWidth: 1,
-                        stroke: 'black'
-                    });
-                    if (clip) obj.set('clipPath', clip);
-                }
+                if (spec.ignoreMask) return;
+                const clipGroup = this._createCombinedClipPath(key, sf);
+                if (clipGroup) obj.set('clipPath', clipGroup);
             },
 
             updateUI() {
@@ -1621,24 +1613,26 @@
                         });
                     }
 
-                    // --- Add Mask Guide (Visual Only) ---
+                    // --- Add Mask Guides (Visual Only) ---
                     const firstKey = Object.keys(this.imageTypes)[0];
                     const mData = this.allMaskData[key] || {};
                     const masks = mData.masks || this.allMaskData.masks;
                     if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
-                        const m = masks[0];
-                        const guide = this._createMaskObject(m, scaleFactor, {
-                            fill: 'transparent',
-                            stroke: 'rgba(0, 80, 220, 0.5)', // Solid border color
-                            strokeWidth: 1,
-                            selectable: false,
-                            evented: false,
-                            name: 'mask_guide'
+                        this.canvases[key].maskGuides = [];
+                        masks.forEach((m, idx) => {
+                            const guide = this._createMaskObject(m, scaleFactor, {
+                                fill: 'transparent',
+                                stroke: 'rgba(0, 80, 220, 0.5)',
+                                strokeWidth: 1,
+                                selectable: false,
+                                evented: false,
+                                name: 'mask_guide_' + idx
+                            });
+                            if (guide) {
+                                fc.add(guide);
+                                this.canvases[key].maskGuides.push(guide);
+                            }
                         });
-                        if (guide) {
-                            fc.add(guide);
-                            this.canvases[key].maskGuide = guide;
-                        }
                     }
 
                     fc.on('mouse:down', () => {
@@ -1836,19 +1830,11 @@
                                     });
                                 }
 
-                                // --- Apply Mask to First Canvas Only ---
+                                // --- Apply Mask Clip ---
                                 const firstKey = Object.keys(this.imageTypes)[0];
-                                const mData = this.allMaskData[key] || {};
-                                const masks = mData.masks || this.allMaskData.masks;
-                                if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
-                                    const m = masks[0];
-                                    const sf = cv.scaleFactor;
-                                    const clipPath = this._createMaskObject(m, sf, {
-                                        absolutePositioned: true,
-                                        strokeWidth: 1, // Include border in clipping area
-                                        stroke: 'black'
-                                    });
-                                    if (clipPath) obj.set('clipPath', clipPath);
+                                if (key === firstKey) {
+                                    const clipGroup = this._createCombinedClipPath(key, cv.scaleFactor);
+                                    if (clipGroup) obj.set('clipPath', clipGroup);
                                 }
 
                                 fc.add(obj);
@@ -2059,19 +2045,11 @@
                             centeredScaling: false
                         });
 
-                        // --- Apply Mask to First Canvas Only ---
+                        // --- Apply Mask Clip ---
                         const firstKey = Object.keys(this.imageTypes)[0];
-                        const mData = this.allMaskData[key] || {};
-                        const masks = mData.masks || this.allMaskData.masks;
-                        if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
-                            const m = masks[0];
-                            const sf = cv.scaleFactor;
-                            const clipPath = this._createMaskObject(m, sf, {
-                                absolutePositioned: true,
-                                strokeWidth: 1, // Include border in clipping area
-                                stroke: 'black'
-                            });
-                            if (clipPath) img.set('clipPath', clipPath);
+                        if (key === firstKey) {
+                            const clipGroup = this._createCombinedClipPath(key, cv.scaleFactor);
+                            if (clipGroup) img.set('clipPath', clipGroup);
                         }
 
                         cv.fabricCanvas.add(img);
@@ -2220,19 +2198,11 @@
                 // 2. Set as selected immediately! This prevents the "new layer on every character" bug.
                 this.selectedObject = t;
 
-                // --- Apply Mask to First Canvas Only ---
+                // --- Apply Mask Clip ---
                 const firstKey = Object.keys(this.imageTypes)[0];
-                const mData = this.allMaskData[key] || {};
-                const masks = mData.masks || this.allMaskData.masks;
-                if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
-                    const m = masks[0];
-                    const sf = cv.scaleFactor;
-                    const clipPath = this._createMaskObject(m, sf, {
-                        absolutePositioned: true,
-                        strokeWidth: 1, // Include border in clipping area
-                        stroke: 'black'
-                    });
-                    if (clipPath) t.set('clipPath', clipPath);
+                if (key === firstKey) {
+                    const clipGroup = this._createCombinedClipPath(key, cv.scaleFactor);
+                    if (clipGroup) t.set('clipPath', clipGroup);
                 }
 
                 cv.fabricCanvas.add(t);
@@ -2295,11 +2265,12 @@
 
             submitAllCanvases() {
                 if (this.isSavingComposite) return;
-                const hasUpload = Object.values(this.uploadIds).some(id => id !== null) ||
-                    Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.getObjects().some(o =>
+                const hasContent = Object.values(this.uploadIds).some(id => id !== null) ||
+                    Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.backgroundImage ||
+                        this.canvases[k].fabricCanvas.getObjects().some(o =>
                         o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg));
 
-                if (!hasUpload) {
+                if (!hasContent) {
                     document.getElementById('upload_ids_field').value = JSON.stringify({});
                     document.getElementById('checkout-form').submit();
                     return;
@@ -2315,19 +2286,17 @@
                 const uploadPromises = Object.keys(this.canvases).map(async key => {
                     const cv = this.canvases[key];
                     if (!cv || !this.canvasEnabled[key]) return;
-                    const hasEdit = this.canvasImages[key] !== null || cv.fabricCanvas.getObjects().some(
+                    const hasCanvasContent = this.canvasImages[key] !== null || cv.fabricCanvas.backgroundImage ||
+                        cv.fabricCanvas.getObjects().some(
                         o => o._isUserText || o._isTemplateText || o._isTemplateImage || o
                         ._isTemplateSvg);
-                    if (!hasEdit) return;
+                    if (!hasCanvasContent) return;
 
                     cv.fabricCanvas.discardActiveObject();
 
-                    // Hide guide
-                    const guide = cv.maskGuide;
-                    if (guide) {
-                        guide.set('visible', false);
-                        cv.fabricCanvas.renderAll();
-                    }
+                    // Hide all guides
+                    if (cv.maskGuides) cv.maskGuides.forEach(g => g.set('visible', false));
+                    cv.fabricCanvas.renderAll();
 
                     const b64 = cv.fabricCanvas.toDataURL({
                         format: 'jpeg',
@@ -2336,10 +2305,8 @@
                     });
 
                     // Restore Guide Visibility
-                    if (guide) {
-                        guide.set('visible', true);
-                        cv.fabricCanvas.renderAll();
-                    }
+                    if (cv.maskGuides) cv.maskGuides.forEach(g => g.set('visible', true));
+                    cv.fabricCanvas.renderAll();
 
                     const res = await fetch('<?php echo route('flow.upload_composite'); ?>', {
                         method: 'POST',
@@ -2494,6 +2461,28 @@
                 return 'M 10 120 L 10 50 C 10 15 30 0 60 0 C 90 0 110 15 110 50 L 110 120 Z';
             },
 
+            _createCombinedClipPath(key, sf) {
+                const mData = this.allMaskData[key] || {};
+                const masks = mData.masks || this.allMaskData.masks;
+                if (!Array.isArray(masks) || masks.length === 0) return null;
+
+                const clipObjects = masks.map(m => this._createMaskObject(m, sf, {
+                    absolutePositioned: true,
+                    strokeWidth: 0
+                })).filter(Boolean);
+
+                if (clipObjects.length === 0) return null;
+                if (clipObjects.length === 1) {
+                    clipObjects[0].set({ absolutePositioned: true });
+                    return clipObjects[0];
+                }
+
+                const group = new fabric.Group(clipObjects, {
+                    absolutePositioned: true
+                });
+                return group;
+            },
+
             _resizeAllCanvases() {
                 const cont = document.getElementById('canvas-container');
                 if (!cont) return;
@@ -2515,6 +2504,7 @@
                         bg.scaleX = (newW + 2) / bg.width;
                         bg.scaleY = (newH + 2) / bg.height;
                     }
+                    const newSf = cv.fabricCanvas.width / cv.adminW;
                     cv.fabricCanvas.getObjects().forEach(o => {
                         o.left *= ratio;
                         o.top *= ratio;
@@ -2522,19 +2512,8 @@
                         o.scaleY *= ratio;
 
                         // Update Mask on Resize
-                        const firstKey = Object.keys(this.imageTypes)[0];
-                        const mData = this.allMaskData[key] || {};
-                        const masks = mData.masks || this.allMaskData.masks;
-                        if (key === firstKey && Array.isArray(masks) && masks.length > 0 && o
-                            .clipPath) {
-                            const m = masks[0];
-                            const newSf = cv.fabricCanvas.width / cv.adminW;
-
-                            // Recreate clipPath using new scale factor to perfectly scale custom polygons and other shapes!
-                            const newClip = this._createMaskObject(m, newSf, {
-                                absolutePositioned: true,
-                                strokeWidth: 0
-                            });
+                        if (o.clipPath) {
+                            const newClip = this._createCombinedClipPath(key, newSf);
                             if (newClip) {
                                 newClip.canvas = cv.fabricCanvas;
                                 o.set('clipPath', newClip);
@@ -2544,27 +2523,28 @@
                         o.setCoords();
                     });
 
-                    // Update Mask Guide on Resize
-                    if (cv.maskGuide) {
+                    // Update Mask Guides on Resize
+                    if (cv.maskGuides && cv.maskGuides.length > 0) {
+                        cv.maskGuides.forEach(g => cv.fabricCanvas.remove(g));
+                        cv.maskGuides = [];
                         const mData = this.allMaskData[key] || {};
                         const masks = mData.masks || this.allMaskData.masks;
-                        const m = masks[0];
-                        const newSf = cv.fabricCanvas.width / cv.adminW;
-
-                        // Recreate mask guide to perfectly scale custom polygons and other shapes!
-                        cv.fabricCanvas.remove(cv.maskGuide);
-                        const guide = this._createMaskObject(m, newSf, {
-                            fill: 'transparent',
-                            stroke: 'rgba(0, 80, 220, 0.5)',
-                            strokeWidth: 1,
-                            selectable: false,
-                            evented: false,
-                            name: 'mask_guide'
-                        });
-                        if (guide) {
-                            cv.fabricCanvas.add(guide);
-                            cv.maskGuide = guide;
-                            guide.bringToFront();
+                        if (Array.isArray(masks)) {
+                            masks.forEach((m, idx) => {
+                                const guide = this._createMaskObject(m, newSf, {
+                                    fill: 'transparent',
+                                    stroke: 'rgba(0, 80, 220, 0.5)',
+                                    strokeWidth: 1,
+                                    selectable: false,
+                                    evented: false,
+                                    name: 'mask_guide_' + idx
+                                });
+                                if (guide) {
+                                    cv.fabricCanvas.add(guide);
+                                    cv.maskGuides.push(guide);
+                                    guide.bringToFront();
+                                }
+                            });
                         }
                     }
 
@@ -2697,7 +2677,7 @@
                     o => o._isTemplateText, // template text
                     o => o._isUserText, // user-typed text — topmost content
                 ].forEach(pred => fc.getObjects().filter(pred).forEach(o => o.bringToFront()));
-                if (cv.maskGuide) cv.maskGuide.bringToFront();
+                if (cv.maskGuides) cv.maskGuides.forEach(g => g.bringToFront());
                 fc.renderAll();
             }
         };

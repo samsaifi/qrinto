@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            // $table->integer('no_of_pages')->nullable()->after('product_type_id');
+            $table->foreignId('paper_type_id')->nullable()->after('product_type_id')->constrained()->nullOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            // $table->dropColumn('no_of_pages');
+            $table->dropConstrainedForeignId('paper_type_id');
         });
     }
 };

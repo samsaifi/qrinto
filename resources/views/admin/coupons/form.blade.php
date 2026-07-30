@@ -11,6 +11,20 @@
         @if(isset($coupon)) @method('PUT') @endif
 
         <div class="space-y-4">
+            @if(Auth::user()->isAdmin())
+                <div>
+                    <label class="block text-sm font-medium text-surface-700 mb-1">Store</label>
+                    <select name="store_id" class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500">
+                        <option value="">— No Store (Global) —</option>
+                        @foreach($stores as $store)
+                            <option value="{{ $store->id }}" {{ old('store_id', $coupon->store_id ?? '') == $store->id ? 'selected' : '' }}>{{ $store->store_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @else
+                <input type="hidden" name="store_id" value="{{ Auth::user()->store_id }}">
+            @endif
+
             <div class="grid sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-surface-700 mb-1">Coupon Code *</label>
@@ -57,6 +71,13 @@
                 <input type="checkbox" name="is_active" value="1" {{ old('is_active', $coupon->is_active ?? true) ? 'checked' : '' }}
                        class="rounded text-brand-600 focus:ring-brand-500"> Active
             </label>
+
+            @if(isset($coupon) && $coupon->user)
+            <div>
+                <label class="block text-sm font-medium text-surface-700 mb-1">Created By</label>
+                <p class="text-sm text-surface-600">{{ $coupon->user->name }}</p>
+            </div>
+            @endif
         </div>
 
         <div class="flex gap-3 mt-6">

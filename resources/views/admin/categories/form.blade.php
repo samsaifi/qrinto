@@ -49,6 +49,13 @@
                 <input type="checkbox" name="is_active" value="1" {{ old('is_active', $category->is_active ?? true) ? 'checked' : '' }}
                        class="rounded text-brand-600 focus:ring-brand-500"> Active
             </label>
+
+            @if(isset($category) && $category->user)
+            <div>
+                <label class="block text-sm font-medium text-surface-700 mb-1">Created By</label>
+                <p class="text-sm text-surface-600">{{ $category->user->name }}</p>
+            </div>
+            @endif
         </div>
 
         <div class="flex gap-3 mt-6">

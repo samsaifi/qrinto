@@ -7,9 +7,9 @@
 
 @section('content')
 <div class="flex items-center justify-between mb-8">
-    <div>
+    <div> @php $addr = $order->shipping_address; @endphp
         <h1 class="font-display font-bold text-2xl text-surface-900">Order {{ $order->order_number }}</h1>
-        <p class="text-sm text-surface-500">Placed {{ $order->created_at->format('M d, Y h:i A') }} by {{ $order->user->name ?? 'N/A' }}</p>
+        <p class="text-sm text-surface-500">Placed {{ $order->created_at->format('M d, Y h:i A') }} by {{ $addr['name'] ?? $order->user->name ?? 'N/A' }}</p> 
     </div>
     <div class="flex items-center gap-3">
         @if($order->store)
@@ -218,6 +218,17 @@
                 @if(!empty($addr['phone'])) Phone: {{ $addr['phone'] }} @endif
             </p>
             @endif
+        </div>
+        @endif
+
+        <!-- Customer Special Instructions -->
+        @if($order->special_instructions)
+        <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6 border-l-4 border-l-amber-500">
+            <h2 class="font-display font-semibold text-lg mb-4 flex items-center gap-2 text-amber-700">
+                <i data-lucide="message-square-text" class="w-5 h-5"></i>
+                Customer Special Instructions
+            </h2>
+            <p class="text-sm text-surface-600 leading-relaxed whitespace-pre-wrap">{{ $order->special_instructions }}</p>
         </div>
         @endif
 

@@ -31,18 +31,33 @@
             {{ session('success') }}
         </div>
     @endif
-
+     
     @php
+    
+        if($product->no_of_pages ==4){
         $imageTypes = [
-            'frame_image' => ['label' => 'Frame Image', 'icon' => 'frame', 'url' => $product->frame_image_url],
-            'sample_image' => ['label' => 'Sample Image', 'icon' => 'image', 'url' => $product->sample_image_url],
+            'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url], 
+            'sample_image' => ['label' => 'Inside Left Image', 'icon' => 'image', 'url' => $product->sample_image_url],
             'background_image' => [
-                'label' => 'Background',
+                'label' => 'Inside Right Image',
                 'icon' => 'layers',
                 'url' => $product->background_image_url,
             ],
-            'overlay_image' => ['label' => 'Overlay', 'icon' => 'sparkles', 'url' => $product->overlay_image_url],
+            'overlay_image' => ['label' => 'Back Cover Image', 'icon' => 'sparkles', 'url' => $product->overlay_image_url],
         ];
+        }elseif($product->no_of_pages ==2){
+             $imageTypes = [
+                'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url], 
+                'sample_image' => ['label' => 'Inside Left Image', 'icon' => 'image', 'url' => $product->sample_image_url],
+                 
+            ];
+        }else{
+            $imageTypes = [
+                'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url],   
+            ];
+        }
+        
+        
         $savedMaskData = $product->mask_data ?? [];
         if (is_string($savedMaskData)) {
             $savedMaskData = json_decode($savedMaskData, true) ?? [];
@@ -156,7 +171,7 @@
                 <button type="button" onclick="addShape('rectangle')" class="shape-btn group">
                     <div class="w-10 h-7 bg-blue-500/40 border-2 border-blue-500 rounded-sm"></div><span>Rectangle</span>
                 </button>
-                <!--<button type="button" onclick="addShape('circle')" class="shape-btn group">
+                <button type="button" onclick="addShape('circle')" class="shape-btn group">
                                     <div class="w-8 h-8 bg-blue-500/40 border-2 border-blue-500 rounded-full"></div><span>Circle</span>
                                 </button>
                                 <button type="button" onclick="addShape('ellipse')" class="shape-btn group">
@@ -196,7 +211,7 @@
                                 <button type="button" onclick="addShape('oval')" class="shape-btn group">
                                     <div class="w-6 h-9 bg-blue-500/40 border-2 border-blue-500 rounded-full"></div><span>Oval</span>
                                 </button>
-                                <!-- Freehand polygon — full width -->
+ 
                 <button type="button" onclick="startPolygonDraw()" class="shape-btn group col-span-2 bg-blue-50/50">
                     <svg class="w-8 h-8" viewBox="0 0 40 40">
                         <path d="M 10,30 L 5,10 L 25,5 L 35,20 L 25,35 Z" fill="rgba(59,130,246,0.4)"

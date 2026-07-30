@@ -6,23 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            // $table->integer('no_of_pages')->nullable()->after('product_type_id');
+            $table->foreignId('created_by')->nullable()->after('store_id')->constrained('users')->nullOnDelete();
+            $table->foreignId('event_id')->nullable()->after('created_by')->constrained('events')->nullOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            // $table->dropColumn('no_of_pages');
+            $table->dropConstrainedForeignId('event_id');
+            $table->dropConstrainedForeignId('created_by');
         });
     }
 };

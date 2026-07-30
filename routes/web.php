@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\StoreController as AdminStoreController;
 use App\Http\Controllers\Admin\OrderPrintController;
 use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
+use App\Http\Controllers\Admin\EventController as AdminEventController;
+use App\Http\Controllers\Admin\PaperTypeController as AdminPaperTypeController;
 use App\Http\Controllers\NoritsuController;
 use App\Http\Controllers\QuickFlowController;
 use App\Http\Controllers\QuickFlowPcController;
@@ -222,6 +224,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Product Types & Sizes
     Route::resource('product-types', \App\Http\Controllers\Admin\ProductTypeController::class);
+
+    // Events
+    Route::resource('events', AdminEventController::class);
+
+    // Paper Types
+    Route::resource('paper-types', AdminPaperTypeController::class)->except(['show']);
 
     // Design Templates
     Route::resource('templates', AdminTemplateController::class);
