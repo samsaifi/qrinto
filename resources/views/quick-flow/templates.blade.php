@@ -61,18 +61,23 @@
             @forelse($templates as $tpl)
                 <a href="{{ route('flow.customize', $tpl->slug) }}" data-tpl-id="{{ $tpl->id }}"
                     x-show="activeCategory === 'all' || activeCategory === {{ $tpl->category_id }}"
-                    class="group relative bg-slate-50     border-2 border-transparent hover:border-brand-500 transition-all duration-300 shadow-sm hover:shadow-premium"
+                    class="group relative bg-slate-50 aspect-[5/7] max-h-[145px] w-full overflow-hidden    border-2 border-transparent hover:border-brand-500 transition-all duration-300 shadow-sm hover:shadow-premium"
                     style="aspect-ratio: {{ $tpl->aspect_ratio }};">
-                    
-                    @if(in_array($tpl->category_id, $eventCategoryIds))
+                    @php
+                    $event = '';
+                    @endphp
+                    @if($tpl->event_id != '')
                         <div class="absolute z-20 top-4  left-4 w-8 h-8   flex items-center justify-center  ">
-                            @foreach(\App\Models\Event::getSvgsForCategory($tpl->category_id, $eventIds) as $event)
+                            
                                 <div class="relative group/event">
+                                    @php
+                                        $event = \App\Models\Event::find($tpl->event_id);     
+                                    @endphp
                                     @if(!empty($event['icon_svg']))
                                         <span
                                             class="w-8 h-8 flex justify-center items-center rounded-full"
                                             style="color: {{ $event['color'] }}; background-color: {{ $event['color'] }}3d;">
-                                            {!! @App\Models\Event::getIcon($event['icon_svg']) !!}
+                                            {!! $event->icon($event['icon_svg']) !!}
                                         </span>
 
                                     @else 
@@ -92,8 +97,7 @@
                                                 group-hover/event:opacity-100 group-hover:visible z-[999]">
                                         {{ $event['title'] }} Event's
                                     </div>
-                                </div>
-                            @endforeach
+                                </div> 
                         </div> 
                     @elseif($tpl->product_store != '')
                         <div class="absolute z-20 top-4 left-4 rounded-full w-8 h-8 flex items-center justify-center">
@@ -122,7 +126,7 @@
                     @if ($tpl->pdf_orientation == 'portrait')
                         <!-- display fixed rectangle-vertical icon in div -->
                         <div
-                            class="absolute group/port z-20 top-4 right-4 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg">
+                            class="absolute group/port z-20 bottom-4 right-4 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg">
                             <i data-lucide="rectangle-vertical" class="w-5 h-5 text-white"></i>
                             <div class="absolute left-1/2 -translate-x-12 -top-full mt-2
                                         whitespace-nowrap rounded-md bg-gray-900 px-2 py-1
@@ -136,7 +140,7 @@
                     @else
                         <!-- display fixed rectangle-horizontal icon in div -->
                         <div
-                            class="absolute group/land z-20 top-4 right-4 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg">
+                            class="absolute group/land z-20 bottom-4 right-4 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg">
                             <i data-lucide="rectangle-horizontal" class="w-5 h-5 text-white"></i>
                             <div class="absolute left-1/2 -translate-x-12 -top-full mt-2
                                         whitespace-nowrap rounded-md bg-gray-900 px-2 py-1
@@ -155,8 +159,13 @@
                         <p class="text-white text-xs font-bold uppercase tracking-wider">
                             {{ \Illuminate\Support\Str::words($tpl->name, 2, '..') }}</p>
                     </div>
-                    @if ($tpl->store_id)
-                        <div class="absolute bg-black/50 inset-x-0 top-0 px-4 py-2 ">
+                    @if(!empty($event) && !empty($event['title']))
+                        <div class="absolute bg-black/50 inset-x-0 pl-14 pt-4 top-0 px-4 py-2 ">
+                            <p class="text-white text-xs font-bold uppercase tracking-wider">
+                                {{ $event['title'] }} Event's </p>
+                        </div>
+                    @elseif($tpl->store_id)
+                        <div class="absolute bg-black/50 inset-x-0 pl-14 pt-4 top-0 px-4 py-2 ">
                             <p class="text-white text-xs font-bold uppercase tracking-wider">
                                 ${{ $tpl->base_price }} Store-exclusive </p>
                         </div>

@@ -93,9 +93,7 @@ class QuickFlowController extends Controller
         $flowData = session('quick_flow_data', []);
         $active_store_id = session('active_store_id', null);
 
-        $eventData = $this->findEventCategoryIds($active_store_id);
-        $eventIds = $eventData['eventIds'];
-        $eventCategoryIds = $eventData['categoryIds'];
+         
 
         if (!$type->parent_id) {
             $flowData = [
@@ -151,16 +149,21 @@ class QuickFlowController extends Controller
         }
 
         // Priority 1: Event Templates
-         
+         $eventTemplates = collect();
+        if (!empty($active_store_id)) {
+            $eventTemplates = (clone $q)
+                ->whereNotNull('event_id')
+                ->where('product_store', $active_store_id)
+                ->orderBy('sort_order')
+                ->get();
+        }
 
         // Priority 2: Store Templates
         $productStoreTemplates = collect();
         if (!empty($active_store_id)) {
             $productStoreTemplates = (clone $q)
                 ->where('product_store', $active_store_id)
-                ->when(!empty($eventCategoryIds), function ($query) use ($eventCategoryIds) {
-                    $query->whereNotIn('category_id', $eventCategoryIds);
-                })
+                ->whereNull('event_id')
                 ->orderBy('sort_order')
                 ->get();
         }
@@ -176,7 +179,8 @@ class QuickFlowController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $templates = $productStoreTemplates 
+        $templates = $eventTemplates
+            ->concat($productStoreTemplates)
             ->concat($otherTemplates)
             ->unique('id')
             ->values();
@@ -187,7 +191,7 @@ class QuickFlowController extends Controller
 
         return view(
             $this->getViewPath('templates'),
-            compact('type', 'templates', 'categories', 'eventCategoryIds', 'eventIds')
+            compact('type', 'templates', 'categories')
         );
     } 
 

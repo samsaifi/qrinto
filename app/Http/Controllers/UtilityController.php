@@ -43,7 +43,7 @@ class UtilityController extends Controller
                 try {
                     // Create thumbnail using Intervention Image
                     $img = $manager->read($fullSourcePath);
-                    $img->scale(width: 300); // Scale to 300px width, maintaining aspect ratio
+                    $img->cover(200, 140);
                     $img->save($fullThumbPath);
                 } catch (\Exception $e) {
                     \Log::error("Thumbnail creation failed for {$file}: " . $e->getMessage());

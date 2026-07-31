@@ -64,6 +64,10 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->paper_type_id === 'none') {
+            $request->merge(['paper_type_id' => null]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
@@ -166,6 +170,10 @@ class ProductController extends Controller
     {
         // Store Isolation: store admins can only update their own products
         $this->authrised_check($product);
+
+        if ($request->paper_type_id === 'none') {
+            $request->merge(['paper_type_id' => null]);
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',

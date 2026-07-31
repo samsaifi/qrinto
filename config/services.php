@@ -66,5 +66,9 @@ return [
         'secret' => env('PAYPAL_SECRET'),
         'mode' => env('PAYPAL_MODE', 'sandbox'), // 'sandbox' or 'live'
     ],
-
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'model' => env('OPENROUTER_MODEL', 'openrouter/free'),
+        'base_url' => 'https://openrouter.ai/api/v1',
+    ],
 ];

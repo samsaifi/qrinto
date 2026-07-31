@@ -119,7 +119,8 @@ class Product extends Model
     }
 
     public function getFrameImageThumbnailAttribute(): ?string
-    {
+    {   
+        
         if (!$this->frame_image) return null;
         
         $thumbPath = 'thumbnails/products/' . $this->frame_image;
@@ -165,7 +166,35 @@ class Product extends Model
         $primary = $this->images()->where('is_primary', true)->first();
         return $primary ? asset('storage/' . $primary->image_path) : null;
     }
+    private function thumbnailUrl(?string $path, int $width = 190, int $height = 140): ?string
+{
+    if (!$path) {
+        return null;
+    }
 
+    $disk = Storage::disk('public');
+
+    if (!$disk->exists($path)) {
+        return null;
+    }
+
+    $thumbPath = "thumbnails/{$width}x{$height}/{$path}";
+
+    if (!$disk->exists($thumbPath)) {
+
+        $disk->makeDirectory(dirname($thumbPath));
+
+        $manager = new ImageManager(new Driver());
+
+        $image = $manager->read($disk->path($path));
+
+        $image
+            ->cover($width, $height)
+            ->save($disk->path($thumbPath));
+    }
+
+    return asset('storage/' . $thumbPath);
+}
     /**
      * Always return a thumbnail URL for the given storage-relative image path.
      * If the thumbnail does not exist yet it is created first, then returned.

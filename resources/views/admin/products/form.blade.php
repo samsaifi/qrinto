@@ -35,7 +35,14 @@
             <div class="lg:col-span-2 space-y-6">
                 <!-- Basic Info -->
                 <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-                    <h2 class="font-display font-semibold text-lg mb-5">Basic Information</h2>
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="font-display font-semibold text-lg">Basic Information</h2>
+                        <button type="button" id="ai-generate-btn" onclick="aiGenerate()"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-violet-600 hover:to-purple-700 transition shadow-lg shadow-purple-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="ai-btn-icon">&#10024;</span>
+                            <span id="ai-btn-text">AI Generate</span>
+                        </button>
+                    </div>
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-surface-700 mb-1">Product Name *</label>
@@ -640,6 +647,7 @@
                         <div x-data="searchSelect({
                             items: [
                                 { value: '', label: 'Select a paper type...' },
+                                { value: 'none', label: 'None' },
                                 @foreach ($paperTypes as $paperType)
                                     { value: '{{ $paperType->id }}', label: '{{ addslashes($paperType->title) }}' },
                                 @endforeach
@@ -870,6 +878,235 @@
                     this.tags.splice(index, 1);
                 }
             }
+        }
+
+        function aiGenerate() {
+            const nameInput = document.querySelector('input[name="name"]');
+            const name = nameInput ? nameInput.value.trim() : '';
+
+            if (!name) {
+                showAiNotification('Please enter a Product Name first.', 'error');
+                nameInput && nameInput.focus();
+                return;
+            }
+
+            const btn = document.getElementById('ai-generate-btn');
+            const btnIcon = document.getElementById('ai-btn-icon');
+            const btnText = document.getElementById('ai-btn-text');
+
+            btn.disabled = true;
+            btnIcon.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>';
+            btnText.textContent = 'Generating...';
+
+            const context = {};
+            const shortDesc = document.querySelector('textarea[name="short_description"]');
+            if (shortDesc && shortDesc.value.trim()) context.short_description = shortDesc.value.trim();
+            const desc = document.querySelector('textarea[name="description"]');
+            if (desc && desc.value.trim()) context.description = desc.value.trim();
+            const basePrice = document.querySelector('input[name="base_price"]');
+            if (basePrice && basePrice.value.trim()) context.base_price = basePrice.value.trim();
+
+            const dropdownOptions = {};
+
+            const pagesSelect = document.querySelector('select[name="no_of_pages"]');
+            if (pagesSelect) {
+                dropdownOptions.number_of_pages = Array.from(pagesSelect.options)
+                    .filter(o => o.value).map(o => o.text.trim());
+            }
+
+            const storeSelect = document.querySelector('select[name="store_id"]');
+            if (storeSelect) {
+                dropdownOptions.store_visibility = Array.from(storeSelect.options)
+                    .map(o => o.text.trim());
+            }
+
+            const pdfSelect = document.querySelector('select[name="pdf_orientation"]');
+            if (pdfSelect) {
+                dropdownOptions.pdf_type = Array.from(pdfSelect.options)
+                    .map(o => o.text.trim());
+            }
+
+            // Alpine-powered searchSelect dropdowns — extract from x-data items
+            document.querySelectorAll('[x-data]').forEach(el => {
+                const hidden = el.querySelector('input[type="hidden"]');
+                if (!hidden) return;
+                const fieldName = hidden.getAttribute('name');
+                const textInput = el.querySelector('input[type="text"]');
+                if (!textInput) return;
+
+                const xData = el.getAttribute('x-data');
+                if (!xData || !xData.includes('searchSelect')) return;
+
+                const labelMatches = xData.match(/label:\s*'([^']*?)'/g);
+                if (labelMatches) {
+                    const labels = labelMatches.map(m => m.replace(/label:\s*'/, '').replace(/'$/, '').trim())
+                        .filter(l => l && !l.startsWith('Select') && !l.startsWith('Search') && l !== 'No event' && l !== 'None');
+
+                    const keyMap = {
+                        'event_id': 'event',
+                        'category_id': 'category',
+                        'product_type_id': 'size',
+                        'paper_type_id': 'paper_type'
+                    };
+                    const key = keyMap[fieldName] || fieldName;
+                    if (labels.length > 0) dropdownOptions[key] = labels;
+                }
+            });
+
+            fetch("{{ route('admin.products.ai-generate') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ name, context, dropdown_options: dropdownOptions }),
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (!res.success) {
+                    showAiNotification(res.message || 'AI generation failed.', 'error');
+                    return;
+                }
+                applyAiData(res.data);
+                showAiNotification('Product content generated successfully!', 'success');
+            })
+            .catch(err => {
+                console.error('AI Generate Error:', err);
+                showAiNotification('Failed to generate content. Please try again.', 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btnIcon.innerHTML = '&#10024;';
+                btnText.textContent = 'AI Generate';
+            });
+        }
+
+        function applyAiData(data) {
+            if (data.short_description) {
+                const el = document.querySelector('textarea[name="short_description"]');
+                if (el) el.value = data.short_description;
+            }
+            if (data.description) {
+                const el = document.querySelector('textarea[name="description"]');
+                if (el) el.value = data.description;
+            }
+            if (data.meta_title) {
+                const el = document.querySelector('input[name="meta_title"]');
+                if (el) el.value = data.meta_title;
+            }
+            if (data.meta_description) {
+                const el = document.querySelector('textarea[name="meta_description"]');
+                if (el) el.value = data.meta_description;
+            }
+            if (data.base_price !== undefined && data.base_price !== null) {
+                const el = document.querySelector('input[name="base_price"]');
+                if (el && !el.value.trim()) el.value = data.base_price;
+            }
+
+            if (data.number_of_pages) {
+                matchSelect('no_of_pages', data.number_of_pages);
+            }
+            if (data.pdf_type) {
+                matchSelect('pdf_orientation', data.pdf_type);
+            }
+            if (data.store_visibility) {
+                matchSelect('store_id', data.store_visibility);
+            }
+
+            if (data.event) matchAlpineSelect('event_id', data.event);
+            if (data.category) matchAlpineSelect('category_id', data.category);
+            if (data.size) matchAlpineSelect('product_type_id', data.size);
+            if (data.paper_type) matchAlpineSelect('paper_type_id', data.paper_type);
+
+            if (data.tags && Array.isArray(data.tags)) {
+                const tagContainer = document.querySelector('[x-data*="tagInput"]');
+                if (tagContainer && tagContainer.__x) {
+                    const alpineData = tagContainer.__x.$data;
+                    data.tags.forEach(tag => {
+                        if (!alpineData.tags.includes(tag)) {
+                            alpineData.tags.push(tag);
+                        }
+                    });
+                } else if (tagContainer) {
+                    const xData = Alpine.$data(tagContainer);
+                    if (xData) {
+                        data.tags.forEach(tag => {
+                            if (!xData.tags.includes(tag)) {
+                                xData.tags.push(tag);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        function matchSelect(name, value) {
+            const select = document.querySelector(`select[name="${name}"]`);
+            if (!select) return;
+            const val = String(value).toLowerCase().trim();
+            let bestMatch = null;
+            Array.from(select.options).forEach(opt => {
+                const optText = opt.text.toLowerCase().trim();
+                const optVal = opt.value.toLowerCase().trim();
+                if (optVal === val || optText === val || optText.includes(val) || val.includes(optText)) {
+                    bestMatch = opt.value;
+                }
+            });
+            if (bestMatch !== null) select.value = bestMatch;
+        }
+
+        function matchAlpineSelect(hiddenName, value) {
+            const hidden = document.querySelector(`input[type="hidden"][name="${hiddenName}"]`);
+            if (!hidden) return;
+            const container = hidden.closest('[x-data]');
+            if (!container) return;
+
+            const val = String(value).toLowerCase().trim();
+            const xDataStr = container.getAttribute('x-data');
+            const itemMatches = xDataStr.match(/\{[^}]*value:\s*'([^']*)'[^}]*label:\s*'([^']*)'[^}]*\}/g);
+            if (!itemMatches) return;
+
+            let bestValue = '';
+            itemMatches.forEach(m => {
+                const vMatch = m.match(/value:\s*'([^']*)'/);
+                const lMatch = m.match(/label:\s*'([^']*)'/);
+                if (vMatch && lMatch) {
+                    const label = lMatch[1].replace(/^\s*-\s*/, '').trim().toLowerCase();
+                    if (label === val || label.includes(val) || val.includes(label)) {
+                        bestValue = vMatch[1];
+                    }
+                }
+            });
+
+            if (bestValue) {
+                const alpineData = Alpine.$data(container);
+                if (alpineData) {
+                    alpineData.selectedValue = bestValue;
+                    alpineData.search = '';
+                    alpineData.open = false;
+                }
+            }
+        }
+
+        function showAiNotification(message, type) {
+            const existing = document.getElementById('ai-notification');
+            if (existing) existing.remove();
+
+            const colors = type === 'success'
+                ? 'bg-green-50 border-green-200 text-green-800'
+                : 'bg-red-50 border-red-200 text-red-800';
+
+            const div = document.createElement('div');
+            div.id = 'ai-notification';
+            div.className = `fixed top-4 right-4 z-50 px-5 py-3 rounded-xl border shadow-lg ${colors} transition-all duration-300`;
+            div.textContent = message;
+            document.body.appendChild(div);
+
+            setTimeout(() => {
+                div.style.opacity = '0';
+                setTimeout(() => div.remove(), 300);
+            }, 4000);
         }
     </script>
 @endpush

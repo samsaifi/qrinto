@@ -241,6 +241,10 @@
                     'frame_image' => 'Page 1',
                     'sample_image' => 'Page 2',
                 ];
+            }elseif (($product->no_of_pages ?? null) == 1) {
+                $types = [
+                    'frame_image' => 'Page 1', 
+                ];
             } else {
                 $types = [
                     'frame_image' => 'Frame',

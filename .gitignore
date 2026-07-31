@@ -6,7 +6,9 @@
 .phpactor.json
 .phpunit.result.cache
 /.fleet
-/.idea
+/doc
+/docs/openroute/key.md
+/.idea 
 /.nova
 /.phpunit.cache
 /.vscode
@@ -22,3 +24,5 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/public/agent/QrintoPrintAgent/bin/
+/public/agent/QrintoPrintAgent/obj/

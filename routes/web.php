@@ -14,11 +14,12 @@ use App\Http\Controllers\Admin\OrderPrintController;
 use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\PaperTypeController as AdminPaperTypeController;
+use App\Http\Controllers\Admin\AIProductController;
 use App\Http\Controllers\NoritsuController;
 use App\Http\Controllers\QuickFlowController;
 use App\Http\Controllers\QuickFlowPcController;
 use Illuminate\Support\Facades\Artisan;
-
+use App\Http\Controllers\AIController;
 Route::get('/storage-link', function () {
     $link = public_path('storage');
     $target = storage_path('app/public');
@@ -48,6 +49,8 @@ Route::get('/store/{storeCode}', function ($storeCode) {
     return app(\App\Http\Controllers\StoreQrController::class)->scan($storeCode);
 })->name('store.scan');
 
+
+Route::post('/chat', [AIController::class, 'chat']);
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -176,6 +179,10 @@ Route::get('/stores-search', [AdminStoreController::class, 'searchStores'])->nam
 */
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/stores-summary', [AdminDashboardController::class, 'storesSummary'])->name('stores.summary');
+    Route::get('/stores-summary/export', [AdminDashboardController::class, 'exportStoresSummary'])->name('stores.summary.export');
+    Route::get('/store-statistics', [AdminDashboardController::class, 'storeStatistics'])->name('stores.statistics');
+    Route::get('/store-statistics/export', [AdminDashboardController::class, 'exportStoreStatistics'])->name('stores.statistics.export');
 
     // Products
     Route::resource('products', AdminProductController::class);
@@ -230,6 +237,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Paper Types
     Route::resource('paper-types', AdminPaperTypeController::class)->except(['show']);
+
+    // AI Product Generation
+    Route::post('products/ai-generate', [AIProductController::class, 'generate'])->name('products.ai-generate');
 
     // Design Templates
     Route::resource('templates', AdminTemplateController::class);

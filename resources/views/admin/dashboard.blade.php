@@ -265,51 +265,132 @@
 </div>
 @endif
 
-<!-- Recent Orders -->
+<!-- Stores Summary -->
 <div class="bg-white rounded-2xl border border-surface-100 shadow-card">
-    <div class="flex items-center justify-between p-6 border-b border-surface-100">
-        <h2 class="font-display font-semibold text-lg text-surface-900">Recent Orders</h2>
-        <a href="{{ route('admin.orders.index') }}" class="text-sm text-brand-600 hover:text-brand-700 font-medium">View All →</a>
+    <div class="p-6 border-b border-surface-100">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-display font-semibold text-lg text-surface-900">Stores Summary</h2>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-3">
+            <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" data-preset="all" class="store-preset-btn active px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-600 text-white transition">All Time</button>
+                <button type="button" data-preset="today" class="store-preset-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-100 text-surface-600 hover:bg-surface-200 transition">Today</button>
+                <button type="button" data-preset="week" class="store-preset-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-100 text-surface-600 hover:bg-surface-200 transition">This Week</button>
+                <button type="button" data-preset="month" class="store-preset-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-100 text-surface-600 hover:bg-surface-200 transition">This Month</button>
+                <button type="button" data-preset="year" class="store-preset-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-100 text-surface-600 hover:bg-surface-200 transition">This Year</button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <input type="date" id="store-date-start" class="px-3 py-1.5 text-xs border border-surface-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                <span class="text-xs text-surface-400">to</span>
+                <input type="date" id="store-date-end" class="px-3 py-1.5 text-xs border border-surface-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                <button type="button" id="store-date-apply" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-100 text-brand-700 hover:bg-brand-200 transition">Apply</button>
+            </div>
+
+            <select id="store-filter-select" class="px-3 py-1.5 text-xs border border-surface-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none min-w-[160px]">
+                <option value="">All Stores</option>
+                @foreach($stores as $s)
+                <option value="{{ $s->id }}">{{ $s->store_name }}</option>
+                @endforeach
+            </select>
+
+            <button type="button" id="store-export-excel" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-accent-600 text-white hover:bg-accent-700 transition">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                Download Excel
+            </button>
+        </div>
     </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-surface-50">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-surface-500 uppercase">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col" data-col="store_name">Store <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col" data-col="total_orders">Total Orders <span class="sort-arrow">&#9662;</span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col" data-col="online_amount">Online Payment <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col" data-col="cash_amount">Cash Payment <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col" data-col="pending_orders">Pending Orders <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col" data-col="pending_amount">Pending Amt <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col" data-col="paid_orders">Paid Orders <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col" data-col="paid_amount">Paid Amt <span class="sort-arrow"></span></th>
+                </tr>
+            </thead>
+            <tbody id="stores-summary-body" class="divide-y divide-surface-100">
+                <tr><td colspan="9" class="px-6 py-12 text-center text-surface-400">Loading...</td></tr>
+            </tbody>
+            <tfoot id="stores-summary-totals" class="border-t-2 border-surface-200">
+            </tfoot>
+        </table>
+    </div>
+
+    <div id="stores-summary-pagination" class="flex items-center justify-between px-6 py-4 border-t border-surface-100">
+    </div>
+</div>
+
+<!-- Store Statistics -->
+<div class="bg-white rounded-2xl border border-surface-100 shadow-card mt-8">
+    <div class="p-6 border-b border-surface-100">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-display font-semibold text-lg text-surface-900">Store Statistics</h2>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-3">
+            <div class="flex items-center gap-1.5">
+                <button type="button" data-preset="all" class="stats-preset-btn active px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-600 text-white transition">All Time</button>
+                <button type="button" data-preset="today" class="stats-preset-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-100 text-surface-600 hover:bg-surface-200 transition">Today</button>
+                <button type="button" data-preset="week" class="stats-preset-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-100 text-surface-600 hover:bg-surface-200 transition">This Week</button>
+                <button type="button" data-preset="month" class="stats-preset-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-100 text-surface-600 hover:bg-surface-200 transition">This Month</button>
+                <button type="button" data-preset="year" class="stats-preset-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-100 text-surface-600 hover:bg-surface-200 transition">This Year</button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <input type="date" id="stats-date-start" class="px-3 py-1.5 text-xs border border-surface-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                <span class="text-xs text-surface-400">to</span>
+                <input type="date" id="stats-date-end" class="px-3 py-1.5 text-xs border border-surface-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                <button type="button" id="stats-date-apply" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-100 text-brand-700 hover:bg-brand-200 transition">Apply</button>
+            </div>
+
+            <select id="stats-store-select" class="px-3 py-1.5 text-xs border border-surface-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none min-w-[160px]">
+                <option value="">All Stores</option>
+                <option value="admin">Admin (Global)</option>
+                @foreach($stores as $s)
+                <option value="{{ $s->id }}">{{ $s->store_name }}</option>
+                @endforeach
+            </select>
+
+            <button type="button" id="stats-export-excel" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-accent-600 text-white hover:bg-accent-700 transition">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                Download Excel
+            </button>
+        </div>
+    </div>
+
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead>
                 <tr class="bg-surface-50">
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Order</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Customer</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Payment</th>
-                    <th class="px-6 py-3 text-right text-xs font-semibold text-surface-500 uppercase">Total</th>
-                    <th class="px-6 py-3 text-right text-xs font-semibold text-surface-500 uppercase">Date</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-surface-500 uppercase">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-surface-500 uppercase">Store</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none stats-sort-col" data-col="products">Products <span class="sort-arrow">&#9662;</span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none stats-sort-col" data-col="categories">Categories <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none stats-sort-col" data-col="card_types">Card Types <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none stats-sort-col" data-col="templates">Templates <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none stats-sort-col" data-col="coupons">Coupons <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none stats-sort-col" data-col="events">Events <span class="sort-arrow"></span></th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none stats-sort-col" data-col="paper_types">Paper Types <span class="sort-arrow"></span></th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-surface-100">
-                @forelse($recentOrders as $order)
-                <tr class="hover:bg-surface-50 transition">
-                    <td class="px-6 py-4">
-                        <a href="{{ route('admin.orders.show', $order) }}" class="font-mono font-semibold text-brand-600 hover:text-brand-700">{{ $order->order_number }}</a>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-surface-600">{{ $order->shipping_address['name'] ?? ($order->user->name ?? 'Guest') }}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2.5 py-1 text-xs font-semibold rounded-lg" style="background: {{ ($order->status_color ?? '#6b7280') }}15; color: {{ $order->status_color ?? '#6b7280' }}">
-                            {{ ucfirst($order->status) }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-0.5 text-xs font-semibold rounded {{ $order->payment_status === 'paid' ? 'bg-accent-100 text-accent-700' : 'bg-yellow-100 text-yellow-700' }}">
-                            {{ ucfirst($order->payment_status) }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right font-semibold text-surface-800">{{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency, 0) }}</td>
-                    <td class="px-6 py-4 text-right text-sm text-surface-500">{{ $order->created_at->format('M d, Y') }}</td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-surface-400">No orders yet.</td>
-                </tr>
-                @endforelse
+            <tbody id="stats-body" class="divide-y divide-surface-100">
+                <tr><td colspan="9" class="px-6 py-12 text-center text-surface-400">Loading...</td></tr>
             </tbody>
+            <tfoot id="stats-totals" class="border-t-2 border-surface-200">
+            </tfoot>
         </table>
+    </div>
+
+    <div id="stats-pagination" class="flex items-center justify-between px-6 py-4 border-t border-surface-100">
     </div>
 </div>
 @endsection
@@ -345,3 +426,305 @@ function downloadDashboardQr() {
 </script>
 @endpush
 @endif
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const summaryUrl = @json(route('admin.stores.summary'));
+    let currentPreset = 'all';
+    let summarySortBy = 'total_orders';
+    let summarySortDir = 'desc';
+    let currentPage = 1;
+
+    function escHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    function fmtNum(v) { return Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+
+    function buildSummaryParams() {
+        const params = new URLSearchParams();
+        const storeId = document.getElementById('store-filter-select').value;
+        if (storeId) params.set('store_id', storeId);
+        const ds = document.getElementById('store-date-start').value;
+        const de = document.getElementById('store-date-end').value;
+        if (currentPreset === 'custom' && ds && de) {
+            params.set('date_start', ds);
+            params.set('date_end', de);
+        } else if (currentPreset && currentPreset !== 'all') {
+            params.set('preset', currentPreset);
+        }
+        return params;
+    }
+
+    function fetchStores(page) {
+        currentPage = page || 1;
+        const params = buildSummaryParams();
+        params.set('page', currentPage);
+        params.set('sort_by', summarySortBy);
+        params.set('sort_dir', summarySortDir);
+
+        fetch(summaryUrl + '?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.getElementById('stores-summary-body');
+            if (!data.data.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-surface-400">No stores found.</td></tr>';
+            } else {
+                const si = (data.current_page - 1) * 10;
+                tbody.innerHTML = data.data.map((s, i) => `
+                    <tr class="hover:bg-surface-50 transition">
+                        <td class="px-4 py-3 text-sm text-surface-400">${si + i + 1}</td>
+                        <td class="px-4 py-3 text-sm font-semibold text-surface-800">${escHtml(s.store_name)}</td>
+                        <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.total_orders > 0 ? 'bg-brand-100 text-brand-700' : 'bg-surface-100 text-surface-400'}">${s.total_orders}</span></td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-blue-700">${fmtNum(s.online_amount)}</td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-emerald-700">${fmtNum(s.cash_amount)}</td>
+                        <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.pending_orders > 0 ? 'bg-amber-100 text-amber-700' : 'bg-surface-100 text-surface-400'}">${s.pending_orders}</span></td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-amber-700">${fmtNum(s.pending_amount)}</td>
+                        <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.paid_orders > 0 ? 'bg-accent-100 text-accent-700' : 'bg-surface-100 text-surface-400'}">${s.paid_orders}</span></td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-accent-700">${fmtNum(s.paid_amount)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            // Grand totals
+            const t = data.totals;
+            document.getElementById('stores-summary-totals').innerHTML = `
+                <tr class="bg-surface-50 font-bold">
+                    <td class="px-4 py-3"></td>
+                    <td class="px-4 py-3 text-sm text-surface-900">Grand Total</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.total_orders}</td>
+                    <td class="px-4 py-3 text-right text-sm text-blue-800">${fmtNum(t.online_amount)}</td>
+                    <td class="px-4 py-3 text-right text-sm text-emerald-800">${fmtNum(t.cash_amount)}</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.pending_orders}</td>
+                    <td class="px-4 py-3 text-right text-sm text-amber-800">${fmtNum(t.pending_amount)}</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.paid_orders}</td>
+                    <td class="px-4 py-3 text-right text-sm text-accent-800">${fmtNum(t.paid_amount)}</td>
+                </tr>`;
+
+            const pag = document.getElementById('stores-summary-pagination');
+            if (data.last_page <= 1) {
+                pag.innerHTML = `<span class="text-xs text-surface-400">${data.total} store${data.total !== 1 ? 's' : ''}</span><span></span>`;
+            } else {
+                let btns = '';
+                for (let p = 1; p <= data.last_page; p++) {
+                    btns += `<button data-page="${p}" class="px-3 py-1 text-xs rounded-lg font-semibold ${p === data.current_page ? 'bg-brand-600 text-white' : 'bg-surface-100 text-surface-600 hover:bg-surface-200'} transition">${p}</button>`;
+                }
+                pag.innerHTML = `<span class="text-xs text-surface-400">Page ${data.current_page} of ${data.last_page} (${data.total} stores)</span><div class="flex gap-1">${btns}</div>`;
+                pag.querySelectorAll('[data-page]').forEach(btn => {
+                    btn.addEventListener('click', () => fetchStores(parseInt(btn.dataset.page)));
+                });
+            }
+        });
+    }
+
+    // Preset buttons
+    document.querySelectorAll('.store-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.store-preset-btn').forEach(b => {
+                b.classList.remove('active', 'bg-brand-600', 'text-white');
+                b.classList.add('bg-surface-100', 'text-surface-600');
+            });
+            btn.classList.add('active', 'bg-brand-600', 'text-white');
+            btn.classList.remove('bg-surface-100', 'text-surface-600');
+            currentPreset = btn.dataset.preset;
+            document.getElementById('store-date-start').value = '';
+            document.getElementById('store-date-end').value = '';
+            fetchStores(1);
+        });
+    });
+
+    document.getElementById('store-date-apply').addEventListener('click', () => {
+        if (document.getElementById('store-date-start').value && document.getElementById('store-date-end').value) {
+            document.querySelectorAll('.store-preset-btn').forEach(b => {
+                b.classList.remove('active', 'bg-brand-600', 'text-white');
+                b.classList.add('bg-surface-100', 'text-surface-600');
+            });
+            currentPreset = 'custom';
+            fetchStores(1);
+        }
+    });
+
+    document.getElementById('store-filter-select').addEventListener('change', () => fetchStores(1));
+
+    // Sortable columns
+    document.querySelectorAll('.summary-sort-col').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            if (summarySortBy === col) {
+                summarySortDir = summarySortDir === 'desc' ? 'asc' : 'desc';
+            } else {
+                summarySortBy = col;
+                summarySortDir = 'desc';
+            }
+            document.querySelectorAll('.summary-sort-col .sort-arrow').forEach(a => a.innerHTML = '');
+            th.querySelector('.sort-arrow').innerHTML = summarySortDir === 'desc' ? '&#9662;' : '&#9652;';
+            fetchStores(currentPage);
+        });
+    });
+
+    // Export
+    const exportUrl = @json(route('admin.stores.summary.export'));
+    document.getElementById('store-export-excel').addEventListener('click', () => {
+        const params = buildSummaryParams();
+        window.location.href = exportUrl + '?' + params.toString();
+    });
+
+    fetchStores(1);
+
+    // ── Store Statistics ──
+    const statsUrl = @json(route('admin.stores.statistics'));
+    const statsExportUrl = @json(route('admin.stores.statistics.export'));
+    let statsPreset = 'all';
+    let statsSortBy = 'products';
+    let statsSortDir = 'desc';
+    let statsPage = 1;
+
+    function fetchStats(page) {
+        statsPage = page || 1;
+        const params = new URLSearchParams();
+        params.set('page', statsPage);
+        params.set('sort_by', statsSortBy);
+        params.set('sort_dir', statsSortDir);
+
+        const storeId = document.getElementById('stats-store-select').value;
+        if (storeId) params.set('store_id', storeId);
+
+        const ds = document.getElementById('stats-date-start').value;
+        const de = document.getElementById('stats-date-end').value;
+        if (statsPreset === 'custom' && ds && de) {
+            params.set('date_start', ds);
+            params.set('date_end', de);
+        } else if (statsPreset && statsPreset !== 'all') {
+            params.set('preset', statsPreset);
+        }
+
+        fetch(statsUrl + '?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.getElementById('stats-body');
+            if (!data.data.length) {
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-surface-400">No data found.</td></tr>';
+            } else {
+                const si = (data.current_page - 1) * 10;
+                tbody.innerHTML = data.data.map((s, i) => `
+                    <tr class="hover:bg-surface-50 transition">
+                        <td class="px-4 py-3 text-sm text-surface-400">${si + i + 1}</td>
+                        <td class="px-4 py-3 text-sm font-semibold text-surface-800">${escHtml(s.store_name)}</td>
+                        <td class="px-4 py-3 text-right">${statsBadge(s.products)}</td>
+                        <td class="px-4 py-3 text-right">${statsBadge(s.categories)}</td>
+                        <td class="px-4 py-3 text-right">${statsBadge(s.card_types)}</td>
+                        <td class="px-4 py-3 text-right">${statsBadge(s.templates)}</td>
+                        <td class="px-4 py-3 text-right">${statsBadge(s.coupons)}</td>
+                        <td class="px-4 py-3 text-right">${statsBadge(s.events)}</td>
+                        <td class="px-4 py-3 text-right">${statsBadge(s.paper_types)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            const t = data.totals;
+            document.getElementById('stats-totals').innerHTML = `
+                <tr class="bg-surface-50 font-bold">
+                    <td class="px-4 py-3"></td>
+                    <td class="px-4 py-3 text-sm text-surface-900">Grand Total</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.products}</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.categories}</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.card_types}</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.templates}</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.coupons}</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.events}</td>
+                    <td class="px-4 py-3 text-right text-sm text-surface-900">${t.paper_types}</td>
+                </tr>`;
+
+            const pag = document.getElementById('stats-pagination');
+            if (data.last_page <= 1) {
+                pag.innerHTML = `<span class="text-xs text-surface-400">${data.total} row${data.total !== 1 ? 's' : ''}</span><span></span>`;
+            } else {
+                let btns = '';
+                for (let p = 1; p <= data.last_page; p++) {
+                    btns += `<button data-spage="${p}" class="px-3 py-1 text-xs rounded-lg font-semibold ${p === data.current_page ? 'bg-brand-600 text-white' : 'bg-surface-100 text-surface-600 hover:bg-surface-200'} transition">${p}</button>`;
+                }
+                pag.innerHTML = `<span class="text-xs text-surface-400">Page ${data.current_page} of ${data.last_page} (${data.total} rows)</span><div class="flex gap-1">${btns}</div>`;
+                pag.querySelectorAll('[data-spage]').forEach(btn => {
+                    btn.addEventListener('click', () => fetchStats(parseInt(btn.dataset.spage)));
+                });
+            }
+        });
+    }
+
+    function statsBadge(val) {
+        const cls = val > 0 ? 'bg-brand-100 text-brand-700' : 'bg-surface-100 text-surface-400';
+        return `<span class="inline-flex items-center justify-center min-w-[2.5rem] px-2.5 py-1 text-sm font-bold rounded-lg ${cls}">${val}</span>`;
+    }
+
+    // Stats preset buttons
+    document.querySelectorAll('.stats-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.stats-preset-btn').forEach(b => {
+                b.classList.remove('active', 'bg-brand-600', 'text-white');
+                b.classList.add('bg-surface-100', 'text-surface-600');
+            });
+            btn.classList.add('active', 'bg-brand-600', 'text-white');
+            btn.classList.remove('bg-surface-100', 'text-surface-600');
+            statsPreset = btn.dataset.preset;
+            document.getElementById('stats-date-start').value = '';
+            document.getElementById('stats-date-end').value = '';
+            fetchStats(1);
+        });
+    });
+
+    document.getElementById('stats-date-apply').addEventListener('click', () => {
+        if (document.getElementById('stats-date-start').value && document.getElementById('stats-date-end').value) {
+            document.querySelectorAll('.stats-preset-btn').forEach(b => {
+                b.classList.remove('active', 'bg-brand-600', 'text-white');
+                b.classList.add('bg-surface-100', 'text-surface-600');
+            });
+            statsPreset = 'custom';
+            fetchStats(1);
+        }
+    });
+
+    document.getElementById('stats-store-select').addEventListener('change', () => fetchStats(1));
+
+    // Sortable columns
+    document.querySelectorAll('.stats-sort-col').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            if (statsSortBy === col) {
+                statsSortDir = statsSortDir === 'desc' ? 'asc' : 'desc';
+            } else {
+                statsSortBy = col;
+                statsSortDir = 'desc';
+            }
+            document.querySelectorAll('.stats-sort-col .sort-arrow').forEach(a => a.innerHTML = '');
+            th.querySelector('.sort-arrow').innerHTML = statsSortDir === 'desc' ? '&#9662;' : '&#9652;';
+            fetchStats(statsPage);
+        });
+    });
+
+    // Stats export
+    document.getElementById('stats-export-excel').addEventListener('click', () => {
+        const params = new URLSearchParams();
+        const storeId = document.getElementById('stats-store-select').value;
+        if (storeId) params.set('store_id', storeId);
+        const ds = document.getElementById('stats-date-start').value;
+        const de = document.getElementById('stats-date-end').value;
+        if (statsPreset === 'custom' && ds && de) {
+            params.set('date_start', ds);
+            params.set('date_end', de);
+        } else if (statsPreset && statsPreset !== 'all') {
+            params.set('preset', statsPreset);
+        }
+        window.location.href = statsExportUrl + '?' + params.toString();
+    });
+
+    fetchStats(1);
+});
+</script>
+@endpush
