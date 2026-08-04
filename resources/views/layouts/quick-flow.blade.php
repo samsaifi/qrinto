@@ -24,9 +24,10 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Onboarding Tour (Driver.js) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.css">
-    <link rel="stylesheet" href="{{ asset('css/qrinto-tour.css') }}">
+    <!-- Onboarding Tour CSS (loaded only when tour is active) -->
+    <script>
+        (function(){var d='qrinto_tour_completed_v1';try{if(localStorage.getItem(d)==='1'&&localStorage.getItem('qrinto_tour_active_v1')!=='1')return}catch(e){}var h=document.head;var a=document.createElement('link');a.rel='stylesheet';a.href='https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.css';h.appendChild(a);var b=document.createElement('link');b.rel='stylesheet';b.href='{{ asset("css/qrinto-tour.css") }}';h.appendChild(b);window.__qrintoTourCSS=true})();
+    </script>
 
     <style>
         body {
@@ -465,12 +466,24 @@
                         $currentRoute = Route::currentRouteName();
                         $pcRoute = $currentRoute ? str_replace('flow.', 'flow-pc.', $currentRoute) : null;
                         $params = Route::current() ? Route::current()->parameters() : [];
+                        $cartCount = 0;
+                        try {
+                            $cartCount = app(\App\Services\CartService::class)->getCart()->item_count;
+                        } catch (\Exception $e) {}
                     @endphp
                     @if ($pcRoute && Route::has($pcRoute))
                         <!-- <a href="{{ route($pcRoute, $params) }}" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-brand-100 hover:text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95" title="Switch to PC View">
                         <i data-lucide="monitor" class="w-5 h-5"></i>
                     </a> -->
                     @endif
+
+                    <a href="{{ route('flow.cart.index') }}" id="cart-btn"
+                        class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95 relative">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                        @if($cartCount > 0)
+                            <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg">{{ $cartCount }}</span>
+                        @endif
+                    </a>
 
                     <button @click="mobileMenu = true; $nextTick(() => lucide.createIcons())"
                         class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95">
@@ -547,9 +560,10 @@
     </script>
     @stack('scripts')
 
-    <!-- Onboarding Tour (Driver.js) -->
-    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.js.iife.js"></script>
-    <script src="{{ asset('js/qrinto-tour.js') }}" defer></script>
+    <!-- Onboarding Tour JS (loaded only when tour is active) -->
+    <script>
+        (function(){try{if(localStorage.getItem('qrinto_tour_completed_v1')==='1'&&localStorage.getItem('qrinto_tour_active_v1')!=='1')return}catch(e){}var a=document.createElement('script');a.src='https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.js.iife.js';a.onload=function(){var b=document.createElement('script');b.src='{{ asset("js/qrinto-tour.js") }}';document.body.appendChild(b)};document.body.appendChild(a)})();
+    </script>
 
     <!-- PWA Service Worker -->
     <script>

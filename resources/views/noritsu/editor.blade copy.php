@@ -743,7 +743,7 @@
                 
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 
-                fetch('{{ route('cart.add') }}', {
+                fetch('{{ route('flow.cart.add') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -766,7 +766,7 @@
                     this.isSubmitting = false;
                     if(data.success) {
                         this.closeModal();
-                        window.location.href = '{{ route('cart.index') }}';
+                        window.location.href = '{{ route('flow.cart.index') }}';
                     } else {
                         const errorMsg = data.message || (data.errors ? Object.values(data.errors).join('\n') : 'Error adding to cart.');
                         alert(errorMsg);

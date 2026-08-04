@@ -16,11 +16,30 @@
     }
 
     .confirm-hero {
-        background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 40%, #f0fdf4 100%);
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
     }
     .confirm-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.04) 1px, transparent 0);
+        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
         background-size: 32px 32px;
+    }
+    .hero-blob-1 {
+        position: absolute; top: -60px; right: 15%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(40px); pointer-events: none;
+    }
+    .hero-blob-2 {
+        position: absolute; bottom: -40px; right: 5%; width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(30px); pointer-events: none;
+    }
+    .hero-blob-3 {
+        position: absolute; top: 20%; right: 35%; width: 80px; height: 80px;
+        background: rgba(236, 72, 153, 0.15); border-radius: 50%; filter: blur(10px); pointer-events: none;
+    }
+    .hero-dots {
+        position: absolute; top: 10%; right: 3%; width: 80px; height: 80px;
+        background-image: radial-gradient(circle, rgba(236,72,153,0.2) 2px, transparent 2px);
+        background-size: 10px 10px; border-radius: 50%; pointer-events: none;
     }
 
     .success-ring {
@@ -143,7 +162,12 @@
 
     {{-- ── Hero ── --}}
     <section class="confirm-hero confirm-pattern -mx-10 -mt-4 px-10 pt-14 pb-16 relative overflow-hidden">
-        <div class="max-w-3xl mx-auto text-center">
+        <div class="hero-blob-1"></div>
+        <div class="hero-blob-2"></div>
+        <div class="hero-blob-3"></div>
+        <div class="hero-dots"></div>
+
+        <div class="max-w-3xl mx-auto text-center relative z-10">
             <div class="flex justify-center mb-6 fade-up">
                 <div class="success-ring">
                     <i data-lucide="check" class="w-10 h-10 text-white"></i>
@@ -151,20 +175,20 @@
             </div>
 
             <h1 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight fade-up" style="animation-delay: 0.05s">
-                Order Placed Successfully!
+                Order Placed <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">Successfully!</span>
             </h1>
             <p class="text-lg text-slate-500 mt-2 fade-up" style="animation-delay: 0.1s">
                 Your custom print is being prepared. We'll notify you when it's ready.
             </p>
 
             <div class="flex items-center justify-center gap-3 mt-6 fade-up" style="animation-delay: 0.15s">
-                <span class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-5 py-2.5 shadow-sm">
-                    <i data-lucide="hash" class="w-4 h-4 text-indigo-500"></i>
+                <span class="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-xl px-5 py-2.5 shadow-sm">
+                    <i data-lucide="hash" class="w-4 h-4 text-brand-500"></i>
                     <span class="font-extrabold text-slate-900 text-sm">{{ $order->order_number }}</span>
                 </span>
                 @if($order->store)
-                <span class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-5 py-2.5 shadow-sm">
-                    <i data-lucide="store" class="w-4 h-4 text-indigo-500"></i>
+                <span class="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-xl px-5 py-2.5 shadow-sm">
+                    <i data-lucide="store" class="w-4 h-4 text-brand-500"></i>
                     <span class="font-bold text-slate-700 text-sm">{{ $order->store->store_name }}</span>
                 </span>
                 @endif
@@ -182,7 +206,7 @@
             {{-- 3D Flipbook --}}
             <div class="bg-white border border-slate-200 rounded-2xl p-6 fade-up" style="animation-delay: 0.15s">
                 <div class="flex items-center gap-2 mb-2">
-                    <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                    <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Design</h2>
                 </div>
 
@@ -217,7 +241,7 @@
             {{-- Order Progress --}}
             <div class="bg-white border border-slate-200 rounded-2xl p-6 fade-up" style="animation-delay: 0.2s">
                 <div class="flex items-center gap-2 mb-6">
-                    <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                    <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Progress</h2>
                 </div>
 
@@ -232,7 +256,7 @@
             <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden fade-up" style="animation-delay: 0.15s">
                 <div class="p-5 border-b border-slate-100">
                     <div class="flex items-center gap-2">
-                        <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                        <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
                         <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Details</h2>
                     </div>
                 </div>
@@ -262,7 +286,7 @@
                     </div>
                     <div class="px-5 py-4 flex justify-between items-center">
                         <span class="text-sm text-slate-500 font-medium">Status</span>
-                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-100">
                             <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                             {{ ucfirst($order->status) }}
                         </span>
@@ -272,7 +296,7 @@
                 <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50">
                     <div class="flex justify-between items-center">
                         <span class="text-base font-bold text-slate-900">{{ $order->payment_status === 'paid' ? 'Total Paid' : 'Total Due' }}</span>
-                        <span class="text-2xl font-extrabold text-indigo-600">{{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }}</span>
+                        <span class="text-2xl font-extrabold text-brand-600">{{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }}</span>
                     </div>
                 </div>
             </div>
@@ -295,14 +319,14 @@
             {{-- What's Next --}}
             <div class="bg-white border border-slate-200 rounded-2xl p-5 fade-up" style="animation-delay: 0.25s">
                 <div class="flex items-center gap-2 mb-4">
-                    <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                    <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">What's Next</h2>
                 </div>
 
                 <div class="space-y-4">
                     <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i data-lucide="bell" class="w-4 h-4 text-indigo-500"></i>
+                        <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i data-lucide="bell" class="w-4 h-4 text-brand-500"></i>
                         </div>
                         <div>
                             <p class="text-sm font-semibold text-slate-700">Order Confirmation</p>

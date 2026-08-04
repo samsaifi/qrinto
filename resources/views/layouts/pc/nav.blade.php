@@ -1,40 +1,110 @@
 @php
-    $menus = [
-        [
-            'title' => 'Home',
-            'url' =>  url('/pc/'), 
-        ], 
-        [
-            'title' => 'Templates',
-            'url' => url('templates'), 
-        ],
-        [
-            'title' => 'Custom Print',
-            'url' => url('custom-print'), 
-        ],
-        [
-            'title' => 'Pricing',
-            'url' => url('pricing'), 
-        ],
-    ];
+    $currentRoute = Route::currentRouteName();
 @endphp
 
-<nav aria-label="Primary" class="hidden lg:flex flex-1 items-center justify-center">
-    <ul class="flex items-center gap-1">
-        @foreach($menus as $menu)
-            <li>
-                <a
-                    href="{{ $menu['url'] }}"
-                    
-                    @class([
-                        'relative px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600'
-                    ])
-                >
-                    {{ $menu['title'] }}
+<nav aria-label="Primary Navigation" class="hidden lg:flex items-center gap-1">
+    {{-- Home --}}
+    <a href="{{ route('flow-pc.index') }}"
+        class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 {{ request()->routeIs('flow-pc.index') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+        <i data-lucide="home" class="w-4 h-4 text-slate-400 {{ request()->routeIs('flow-pc.index') ? 'text-brand-600' : '' }}"></i>
+        Home
+    </a>
 
-                     
+    {{-- Categories Megamenu Dropdown --}}
+    <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+        <button type="button" @click="open = !open"
+            class="px-4 py-2 rounded-xl text-sm font-bold text-slate-700 hover:text-brand-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-1.5 cursor-pointer">
+            <span>Products & Services</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200 text-slate-400" :class="{ 'rotate-180 text-brand-600': open }"></i>
+        </button>
+
+        {{-- Dropdown Megamenu Panel --}}
+        <div x-show="open"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+            class="absolute left-0 top-full mt-2 w-[540px] bg-white rounded-3xl shadow-2xl border border-slate-200/80 p-6 z-50 overflow-hidden"
+            x-cloak>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <span class="text-xs font-black text-brand-600 uppercase tracking-widest flex items-center gap-2">
+                    <i data-lucide="layers" class="w-3.5 h-3.5"></i> Printing Categories
+                </span>
+                <a href="{{ route('flow-pc.find-store') }}" class="text-xs font-bold text-slate-400 hover:text-brand-600 transition-colors flex items-center gap-1">
+                    Find Stores <i data-lucide="arrow-right" class="w-3 h-3"></i>
                 </a>
-            </li>
-        @endforeach
-    </ul>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <a href="{{ route('flow-pc.qrinto') }}" class="p-3.5 rounded-2xl bg-slate-50/80 hover:bg-brand-50/60 border border-slate-100 hover:border-brand-200 transition-all group flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-brand-100/80 text-brand-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                        <i data-lucide="image" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors">Photo Prints</h4>
+                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">High glossy & matte prints</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('flow-pc.find-store') }}" class="p-3.5 rounded-2xl bg-slate-50/80 hover:bg-violet-50/60 border border-slate-100 hover:border-violet-200 transition-all group flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-violet-100/80 text-violet-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                        <i data-lucide="frame" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-extrabold text-slate-900 group-hover:text-violet-600 transition-colors">Canvas Art</h4>
+                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Museum quality stretched canvas</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('flow-pc.find-store') }}" class="p-3.5 rounded-2xl bg-slate-50/80 hover:bg-rose-50/60 border border-slate-100 hover:border-rose-200 transition-all group flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-rose-100/80 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors">Photo Books</h4>
+                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Hardcover & softcover albums</p>
+                    </div>
+                </a>
+
+                <a href="{{ route('flow-pc.find-store') }}" class="p-3.5 rounded-2xl bg-slate-50/80 hover:bg-emerald-50/60 border border-slate-100 hover:border-emerald-200 transition-all group flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                        <i data-lucide="gift" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-extrabold text-slate-900 group-hover:text-emerald-600 transition-colors">Custom Gifts</h4>
+                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Personalized mugs & items</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500">
+                <span class="flex items-center gap-1.5 text-slate-600"><i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i> Fast 24-48hr turnaround</span>
+                <a href="{{ route('flow-pc.index') }}" class="text-brand-600 font-bold hover:underline">Start New Custom Print &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Direct Upload / Custom Print CTA --}}
+    <a href="{{ route('flow-pc.qrinto') }}"
+        class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 relative group {{ request()->routeIs('flow-pc.qrinto') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+        <i data-lucide="upload-cloud" class="w-4 h-4 text-slate-400 group-hover:text-brand-600 transition-colors"></i>
+        <span>Custom Print</span>
+        <span class="text-[10px] font-extrabold bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full uppercase tracking-wider">Upload</span>
+    </a>
+
+    {{-- Find Stores --}}
+    <a href="{{ route('flow-pc.find-store') }}"
+        class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 {{ request()->routeIs('flow-pc.find-store') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+        <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 {{ request()->routeIs('flow-pc.find-store') ? 'text-brand-600' : '' }}"></i>
+        Find Stores
+    </a>
+
+    {{-- Track Order --}}
+    <a href="{{ route('flow-pc.track.form') }}"
+        class="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 {{ request()->routeIs('flow-pc.track.form') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+        <i data-lucide="package" class="w-4 h-4 text-slate-400 {{ request()->routeIs('flow-pc.track.form') ? 'text-brand-600' : '' }}"></i>
+        Track Order
+    </a>
 </nav>

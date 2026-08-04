@@ -441,7 +441,7 @@ function customizer() {
             };
 
             try {
-                const res = await fetch('{{ route("cart.add") }}', {
+                const res = await fetch('{{ route("flow.cart.add") }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -452,7 +452,7 @@ function customizer() {
                 });
                 const data = await res.json();
                 if (data.success) {
-                    window.location.href = '{{ route("cart.index") }}';
+                    window.location.href = '{{ route("flow.cart.index") }}';
                 }
             } catch (e) {
                 console.error('Add to cart error:', e);

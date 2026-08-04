@@ -1,11 +1,35 @@
-<div class="hidden lg:flex items-center gap-3 shrink-0">  
-    <!-- Store selector -->
-    <button type="button"
-    class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-brand-300 hover:text-brand-700 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600">
-        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-        </svg>
-        Select Store
-    </button> 
+@php
+    $activeStore = session()->has('active_store_id')
+        ? \App\Models\Store::find(session('active_store_id'))
+        : null;
+@endphp
+
+<div class="hidden lg:flex items-center shrink-0">  
+    @if($activeStore)
+        <a href="{{ route('flow-pc.find-store') }}"
+            class="flex items-center gap-3 bg-slate-50 hover:bg-brand-50/70 border border-slate-200 hover:border-brand-300 rounded-2xl px-3.5 py-2 transition-all duration-200 group shadow-xs">
+            <div class="relative flex items-center justify-center">
+                <div class="w-8 h-8 rounded-xl bg-white shadow-xs border border-slate-200 flex items-center justify-center text-brand-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                    <i data-lucide="store" class="w-4 h-4"></i>
+                </div>
+                <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white animate-pulse"></span>
+            </div>
+            <div class="flex flex-col text-left">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none flex items-center gap-1">
+                    Active Branch
+                </span>
+                <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition-colors truncate max-w-[160px] mt-0.5">
+                    {{ $activeStore->store_name }}
+                </span>
+            </div>
+            <i data-lucide="arrow-right-left" class="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600 transition-colors ml-1"></i>
+        </a>
+    @else
+        <a href="{{ route('flow-pc.find-store') }}"
+            class="flex items-center gap-2.5 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/80 rounded-2xl px-3.5 py-2 transition-all duration-200 text-amber-800 font-bold text-xs shadow-xs">
+            <i data-lucide="map-pin" class="w-4 h-4 text-amber-600"></i>
+            <span>Select Store</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-amber-500"></i>
+        </a>
+    @endif
 </div>

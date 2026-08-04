@@ -19,6 +19,8 @@ use App\Http\Controllers\NoritsuController;
 use App\Http\Controllers\QuickFlowController;
 use App\Http\Controllers\QuickFlowPcController;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CartPcController;
 use App\Http\Controllers\AIController;
 Route::get('/storage-link', function () {
     $link = public_path('storage');
@@ -67,8 +69,8 @@ Route::get('/clear-cache', function () {
 |--------------------------------------------------------------------------
 */
 
-$registerFlowRoutes = function (string $controller, string $namePrefix) {
-    Route::name("$namePrefix.")->group(function () use ($controller, $namePrefix) {
+$registerFlowRoutes = function (string $controller, string $namePrefix, string $cartController = CartController::class) {
+    Route::name("$namePrefix.")->group(function () use ($controller, $namePrefix, $cartController) {
         Route::get('/type/{type:slug}', [$controller, 'category'])->name('category');
         Route::get('/product/{product:slug}', [$controller, 'product'])->name('product');
         Route::get('/customize/{product:slug}', [$controller, 'customize'])->name('customize');
@@ -93,6 +95,19 @@ $registerFlowRoutes = function (string $controller, string $namePrefix) {
         Route::post('/set-store', [$controller, 'setStore'])->name('set-store');
         Route::post('/apply-coupon', [$controller, 'applyCoupon'])->name('apply-coupon');
 
+        Route::get('/cart-checkout', [$controller, 'cartCheckout'])->name('cart-checkout');
+        Route::post('/cart-checkout/cash', [$controller, 'cartCheckoutCash'])->name('cart-checkout.cash');
+        Route::post('/cart-checkout/paypal/create', [$controller, 'cartPaypalCreate'])->name('cart-checkout.paypal.create');
+        Route::post('/cart-checkout/paypal/capture', [$controller, 'cartPaypalCapture'])->name('cart-checkout.paypal.capture');
+
+        Route::get('/cart', [$cartController, 'index'])->name('cart.index');
+        Route::post('/cart/add', [$cartController, 'add'])->name('cart.add');
+        Route::post('/cart/update/{itemId}', [$cartController, 'update'])->name('cart.update');
+        Route::delete('/cart/remove/{itemId}', [$cartController, 'remove'])->name('cart.remove');
+        Route::post('/cart/apply-coupon', [$cartController, 'applyCoupon'])->name('cart.apply-coupon');
+        Route::post('/cart/remove-coupon', [$cartController, 'removeCoupon'])->name('cart.remove-coupon');
+        Route::get('/cart/count', [$cartController, 'count'])->name('cart.count');
+
         Route::get('/track', [$controller, 'trackForm'])->name('track.form');
         Route::post('/track', [$controller, 'track'])->name('track');
         Route::get('/track/{orderNumber}', [$controller, 'trackOrder'])->name('track.order');
@@ -106,7 +121,7 @@ $registerFlowRoutes(QuickFlowController::class, 'flow');
 
 Route::prefix('pc')->group(function () use ($registerFlowRoutes) {
     Route::get('/', [QuickFlowPcController::class, 'index'])->name('flow-pc.index');
-    $registerFlowRoutes(QuickFlowPcController::class, 'flow-pc');
+    $registerFlowRoutes(QuickFlowPcController::class, 'flow-pc', CartPcController::class);
 });
 
 // Alias for homepage
@@ -139,11 +154,7 @@ Route::prefix('noritsu')->name('noritsu.')->group(function () {
 
 Route::get('/store/{storeCode}/qr', [\App\Http\Controllers\StoreQrController::class, 'show'])->name('store.qr');
 
-/*
-|--------------------------------------------------------------------------
-| Cart Routes (Guest + Auth)
-|--------------------------------------------------------------------------
-*/
+
 /*
 |--------------------------------------------------------------------------
 | Auth & Account Routes

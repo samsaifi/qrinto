@@ -311,7 +311,7 @@
                        class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-surface-100 text-surface-700 font-semibold rounded-xl hover:bg-surface-200 transition-all">
                         <i data-lucide="arrow-left" class="w-5 h-5"></i> Continue Shopping
                     </a>
-                    <a href="{{ route('cart.index') }}"
+                    <a href="{{ route('flow.cart.index') }}"
                        class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-brand-600 to-brand-700 text-white font-bold rounded-xl hover:from-brand-700 hover:to-brand-800 shadow-lg shadow-brand-200 transition-all transform hover:-translate-y-0.5">
                         <i data-lucide="shopping-bag" class="w-5 h-5"></i> View Cart
                     </a>

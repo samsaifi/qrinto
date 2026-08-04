@@ -12,6 +12,34 @@
 
 @push('styles')
 <style>
+    /* ── Hero Header ── */
+    .hero-cust-gradient {
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
+    }
+    .hero-cust-pattern {
+        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
+        background-size: 32px 32px;
+    }
+    .hero-blob-1 {
+        position: absolute; top: -60px; right: 15%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(40px); pointer-events: none;
+    }
+    .hero-blob-2 {
+        position: absolute; bottom: -40px; right: 5%; width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(30px); pointer-events: none;
+    }
+    .hero-blob-3 {
+        position: absolute; top: 20%; right: 35%; width: 80px; height: 80px;
+        background: rgba(236, 72, 153, 0.15); border-radius: 50%; filter: blur(10px); pointer-events: none;
+    }
+    .hero-dots {
+        position: absolute; top: 10%; right: 3%; width: 80px; height: 80px;
+        background-image: radial-gradient(circle, rgba(236,72,153,0.2) 2px, transparent 2px);
+        background-size: 10px 10px; border-radius: 50%; pointer-events: none;
+    }
+
     /* ── Page Layout ── */
     .cust-page {
         display: grid;
@@ -258,53 +286,66 @@ if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
 $flowData = session('quick_flow_data', []);
 @endphp
 
-<div id="customizer-app" class="max-w-[1400px] mx-auto pb-16">
+<div id="customizer-app" class="pb-16">
 
-    {{-- ── Header ── --}}
-    <div class="mb-6">
-        {{-- Breadcrumbs --}}
-        <nav class="cust-breadcrumb flex items-center gap-2 text-sm mb-4">
-            <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium flex items-center gap-1.5">
-                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
-            </a>
-            @if(isset($flowData['type_slug']))
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-            <a href="{{ route('flow-pc.category', $flowData['type_slug']) }}" class="text-slate-400 font-medium">{{ $flowData['type_name'] ?? 'Category' }}</a>
-            @endif
-            @if(isset($flowData['size_slug']))
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-            <a href="{{ route('flow-pc.category', $flowData['size_slug']) }}" class="text-slate-400 font-medium">{{ $flowData['size_name'] ?? 'Size' }}</a>
-            @endif
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-            <span class="text-slate-700 font-semibold">Customize</span>
-        </nav>
+    {{-- ── Hero Header ── --}}
+    <section class="hero-cust-gradient hero-cust-pattern -mx-10 -mt-4 px-10 pt-8 pb-10 mb-8 relative overflow-hidden">
+        <div class="hero-blob-1"></div>
+        <div class="hero-blob-2"></div>
+        <div class="hero-blob-3"></div>
+        <div class="hero-dots"></div>
 
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="javascript:history.back()"
-                    class="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center hover:bg-slate-50 hover:border-indigo-200 transition-all text-slate-500 hover:text-indigo-600">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        <div class="max-w-[1400px] mx-auto relative z-10">
+            {{-- Breadcrumbs --}}
+            <nav class="cust-breadcrumb flex items-center gap-2 text-sm mb-4">
+                <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
                 </a>
-                <div>
-                    <h1 class="text-2xl xl:text-3xl font-extrabold text-slate-900 tracking-tight">{{ $product->name }}</h1>
-                    <p class="text-sm text-slate-500 mt-0.5">Customize each page by uploading photos and adding text.</p>
+                @if(isset($flowData['type_slug']))
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                <a href="{{ route('flow-pc.category', $flowData['type_slug']) }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors">{{ $flowData['type_name'] ?? 'Category' }}</a>
+                @endif
+                @if(isset($flowData['size_slug']))
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                <a href="{{ route('flow-pc.category', $flowData['size_slug']) }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors">{{ $flowData['size_name'] ?? 'Size' }}</a>
+                @endif
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                <span class="text-slate-700 font-semibold">Customize</span>
+            </nav>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="javascript:history.back()"
+                        class="w-11 h-11 bg-white/90 shadow-sm border border-slate-200/80 rounded-2xl flex items-center justify-center hover:bg-white hover:border-brand-200 transition-all text-slate-500 hover:text-brand-600 shrink-0">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </a>
+                    <div>
+                        <div class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-xs font-semibold px-3 py-0.5 rounded-full mb-1 shadow-sm backdrop-blur-sm">
+                            <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                            Interactive Design Studio
+                        </div>
+                        <h1 class="text-2xl xl:text-3xl font-extrabold text-slate-900 tracking-tight">Customize <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span></h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Personalize each page by uploading your photos and adding custom text.</p>
+                    </div>
                 </div>
-            </div>
-            @if(isset($flowData['size_width']) && isset($flowData['size_height']))
-            <div class="hidden lg:flex items-center gap-3">
-                <span class="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-100">
-                    <i data-lucide="ruler" class="w-3.5 h-3.5"></i>
-                    {{ $flowData['size_width'] }}&times;{{ $flowData['size_height'] }}{{ $flowData['size_unit'] ?? '' }}
-                </span>
-                @if(isset($flowData['size_price']))
-                <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-100">
-                    {{ \App\Services\CurrencyService::format($flowData['size_price']) }}
-                </span>
+                @if(isset($flowData['size_width']) && isset($flowData['size_height']))
+                <div class="hidden lg:flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-brand-700 text-xs font-semibold px-3.5 py-2 rounded-xl border border-brand-100 shadow-sm">
+                        <i data-lucide="ruler" class="w-3.5 h-3.5 text-brand-500"></i>
+                        {{ $flowData['size_width'] }}&times;{{ $flowData['size_height'] }}{{ $flowData['size_unit'] ?? '' }}
+                    </span>
+                    @if(isset($flowData['size_price']))
+                    <span class="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-emerald-700 text-xs font-bold px-3.5 py-2 rounded-xl border border-emerald-100 shadow-sm">
+                        {{ \App\Services\CurrencyService::format($flowData['size_price']) }}
+                    </span>
+                    @endif
+                </div>
                 @endif
             </div>
-            @endif
         </div>
-    </div>
+    </section>
+
+    <div class="max-w-[1400px] mx-auto px-4">
 
     {{-- ── Main 2-Column Layout ── --}}
     <div class="cust-page">
@@ -366,7 +407,7 @@ $flowData = session('quick_flow_data', []);
             <div id="mockup-preview-card" class="bg-white border border-slate-200 rounded-2xl p-5">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
-                        <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                        <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">See it real</span>
                     </div>
                     <div class="flex items-center gap-1 bg-slate-100 rounded-full p-1" id="preview-toggle">
@@ -486,10 +527,10 @@ $flowData = session('quick_flow_data', []);
                             </div>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <button id="add-text-btn" onclick="customizer.addText()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-2 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95">
+                            <button id="add-text-btn" onclick="customizer.addText()" class="w-full bg-brand-600 hover:bg-brand-700 text-white h-10 px-2 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95">
                                 + Add
                             </button>
-                            <div id="editing-badge" class="hidden w-full flex items-center justify-center gap-1 h-10 px-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100">
+                            <div id="editing-badge" class="hidden w-full flex items-center justify-center gap-1 h-10 px-2 bg-brand-50 text-brand-600 rounded-xl border border-brand-100">
                                 <i data-lucide="type" class="w-4 h-4 shrink-0"></i>
                                 <span class="text-[10px] md:text-xs font-extrabold uppercase tracking-widest truncate">Editing</span>
                             </div>
@@ -507,14 +548,14 @@ $flowData = session('quick_flow_data', []);
 
             {{-- Checkout --}}
             <div class="pt-2 border-t border-slate-100">
-                <form action="{{ route('flow-pc.checkout') }}" method="POST" id="checkout-form">
+                <form action="{{ route('flow-pc.cart.add') }}" method="POST" id="checkout-form">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                     <input type="hidden" name="upload_ids" id="upload_ids_field">
                     <button type="button" id="submit-btn" onclick="customizer.submitAllCanvases()"
                         class="w-full bg-slate-900 hover:bg-black text-white font-extrabold py-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-lg">
                         <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-                        Confirm Design & Continue
+                        Add to Cart
                     </button>
                 </form>
             </div>
@@ -645,11 +686,11 @@ $flowData = session('quick_flow_data', []);
             const statusLabel = document.getElementById('status-label');
 
             if (enabled) {
-                statusCard.className = 'border rounded-xl p-4 flex items-center h-full bg-gradient-to-r from-indigo-50 to-violet-50 border-indigo-100';
-                statusIconBg.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-indigo-500';
-                statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-indigo-700';
+                statusCard.className = 'border rounded-xl p-4 flex items-center h-full bg-gradient-to-r from-brand-50 to-violet-50 border-brand-100';
+                statusIconBg.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-brand-500';
+                statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-brand-700';
                 statusBadge.textContent = 'Editing';
-                statusLabel.className = 'text-xs font-extrabold truncate text-indigo-900';
+                statusLabel.className = 'text-xs font-extrabold truncate text-brand-900';
             } else {
                 statusCard.className = 'border rounded-xl p-4 flex items-center h-full bg-slate-50 border-slate-200';
                 statusIconBg.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-300';

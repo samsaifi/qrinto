@@ -16,7 +16,7 @@
 <div x-data="cartPage()" class="space-y-5 pb-48">
     <div class="space-y-1">
         <h1 class="text-2xl font-extrabold flex items-center gap-3">
-            <a href="{{ route('flow.index') }}"
+            <a href="{{ route($routePrefix . 'index') }}"
                 class="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors shrink-0">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
             </a>
@@ -46,7 +46,6 @@
                      x-data="cartItem({{ $item->id }}, {{ $item->quantity }}, {{ $item->unit_price }})"
                      x-show="!removed" x-transition>
                     <div class="p-4 flex gap-4">
-                        {{-- Thumbnail --}}
                         <div class="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-100">
                             @if($thumbUrl)
                                 <img src="{{ $thumbUrl }}" alt="{{ $item->product->name ?? 'Design' }}" class="w-full h-full object-cover">
@@ -56,8 +55,6 @@
                                 </div>
                             @endif
                         </div>
-
-                        {{-- Info --}}
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
@@ -81,9 +78,7 @@
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 </button>
                             </div>
-
                             <div class="flex items-center justify-between mt-3">
-                                {{-- Quantity --}}
                                 <div class="flex items-center gap-1 bg-slate-50 p-0.5 rounded-xl border border-slate-100">
                                     <button @click="changeQty(qty - 1)" :disabled="qty <= 1 || loading"
                                         class="w-8 h-8 rounded-lg bg-white hover:bg-brand-50 text-slate-600 hover:text-brand-600 flex items-center justify-center transition-all active:scale-90 disabled:opacity-40 shadow-sm text-sm font-bold">
@@ -95,7 +90,6 @@
                                         +
                                     </button>
                                 </div>
-                                {{-- Price --}}
                                 <span class="font-extrabold text-slate-900 text-sm" x-text="__price(price * qty)"></span>
                             </div>
                         </div>
@@ -147,16 +141,14 @@
             </div>
         </div>
 
-        {{-- Continue Shopping --}}
-        <a href="{{ route('flow.index') }}"
+        <a href="{{ route($routePrefix . 'index') }}"
             class="flex items-center justify-center gap-2 text-sm font-bold text-slate-500 hover:text-brand-600 transition-colors py-2">
             <i data-lucide="arrow-left" class="w-4 h-4"></i>
             Add More Items
         </a>
 
-        {{-- Sticky Bottom --}}
         <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 glass border-t border-slate-100 safe-bottom z-50">
-            <a href="{{ route('flow.cart-checkout') }}"
+            <a href="{{ route($routePrefix . 'cart-checkout') }}"
                 class="w-full bg-brand-500 hover:bg-brand-600 text-white font-extrabold py-3.5 rounded-2xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 text-base">
                 <i data-lucide="credit-card" class="w-5 h-5"></i>
                 <span>Proceed to Checkout — <span x-text="__price(total)"></span></span>
@@ -164,14 +156,13 @@
         </div>
 
     @else
-        {{-- Empty Cart --}}
         <div class="text-center py-16 bg-white rounded-[2rem] border-2 border-slate-50 shadow-premium">
             <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-5">
                 <i data-lucide="shopping-bag" class="w-8 h-8 text-slate-300"></i>
             </div>
             <h2 class="font-extrabold text-lg text-slate-700 mb-2">Your cart is empty</h2>
             <p class="text-slate-400 text-sm font-medium mb-6">Start creating your custom prints!</p>
-            <a href="{{ route('flow.index') }}"
+            <a href="{{ route($routePrefix . 'index') }}"
                 class="inline-flex items-center gap-2 px-8 py-3 bg-brand-600 text-white font-extrabold rounded-2xl hover:bg-brand-700 transition shadow-lg shadow-brand-100 active:scale-[0.97]">
                 <i data-lucide="sparkles" class="w-4 h-4"></i> Start Creating
             </a>
@@ -205,7 +196,7 @@ function cartPage() {
         async applyCoupon() {
             if (!this.couponInput || this.appliedCoupon) return;
             try {
-                const res = await fetch('{{ route((str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow-pc' : 'flow') . '.cart.apply-coupon') }}', {
+                const res = await fetch('{{ route($routePrefix . "cart.apply-coupon") }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ code: this.couponInput })
@@ -224,7 +215,7 @@ function cartPage() {
 
         async removeCoupon() {
             try {
-                await fetch('{{ route((str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow-pc' : 'flow') . '.cart.remove-coupon') }}', {
+                await fetch('{{ route($routePrefix . "cart.remove-coupon") }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 });
@@ -250,7 +241,7 @@ function cartItem(id, initialQty, unitPrice) {
             if (newQty < 1 || this.loading) return;
             this.loading = true;
             try {
-                const res = await fetch(`{{ url(str_contains(Route::currentRouteName(), 'flow-pc') ? 'pc/cart/update' : 'cart/update') }}/${this.id}`, {
+                const res = await fetch(`{{ url(str_starts_with($routePrefix, 'flow-pc') ? 'pc/cart/update' : 'cart/update') }}/${this.id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ quantity: newQty })
@@ -258,10 +249,6 @@ function cartItem(id, initialQty, unitPrice) {
                 const data = await res.json();
                 if (data.success) {
                     this.qty = newQty;
-                    this.$root.closest('[x-data]').__x.$data.updateFromResponse
-                        ? this.$dispatch('cart-updated', data)
-                        : null;
-                    // Update parent cart page data
                     const page = document.querySelector('[x-data^="cartPage"]');
                     if (page && page.__x) {
                         page.__x.$data.subtotal = data.subtotal;
@@ -277,7 +264,7 @@ function cartItem(id, initialQty, unitPrice) {
         async removeItem() {
             this.loading = true;
             try {
-                const res = await fetch(`{{ url(str_contains(Route::currentRouteName(), 'flow-pc') ? 'pc/cart/remove' : 'cart/remove') }}/${this.id}`, {
+                const res = await fetch(`{{ url(str_starts_with($routePrefix, 'flow-pc') ? 'pc/cart/remove' : 'cart/remove') }}/${this.id}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 });

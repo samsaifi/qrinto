@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QrintoPrintAgent")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8416b19cccb94a50e4095aec907b4376b53a267b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+48ba64879ccb9b593dfb82fd9e5424c29528786c")]
 [assembly: System.Reflection.AssemblyProductAttribute("QrintoPrintAgent")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QrintoPrintAgent")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

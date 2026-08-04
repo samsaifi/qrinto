@@ -6,18 +6,37 @@
 @push('styles')
 <style>
     .hero-gradient {
-        background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 40%, #faf5ff 100%);
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
     }
     .hero-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.05) 1px, transparent 0);
+        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
         background-size: 32px 32px;
+    }
+    .hero-blob-1 {
+        position: absolute; top: -60px; right: 15%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(40px); pointer-events: none;
+    }
+    .hero-blob-2 {
+        position: absolute; bottom: -40px; right: 5%; width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(30px); pointer-events: none;
+    }
+    .hero-blob-3 {
+        position: absolute; top: 20%; right: 35%; width: 80px; height: 80px;
+        background: rgba(236, 72, 153, 0.15); border-radius: 50%; filter: blur(10px); pointer-events: none;
+    }
+    .hero-dots {
+        position: absolute; top: 10%; right: 3%; width: 80px; height: 80px;
+        background-image: radial-gradient(circle, rgba(236,72,153,0.2) 2px, transparent 2px);
+        background-size: 10px 10px; border-radius: 50%; pointer-events: none;
     }
     .store-card {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .store-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 20px 40px -12px rgba(0,0,0,0.08), 0 0 0 1px rgba(99,102,241,0.12);
+        box-shadow: 0 20px 40px -12px rgba(0,0,0,0.08), 0 0 0 1px rgba(236,72,153,0.12);
     }
     .category-card {
         transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -37,8 +56,8 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .search-input-hero:focus-within {
-        box-shadow: 0 0 0 4px rgba(99,102,241,0.12), 0 20px 40px -12px rgba(0,0,0,0.08);
-        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(236,72,153,0.12), 0 20px 40px -12px rgba(0,0,0,0.08);
+        border-color: var(--color-brand-500, #ec4899);
     }
     .fade-up {
         animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -55,7 +74,7 @@
         transition: all 0.2s ease;
     }
     .tag-pill:hover {
-        background-color: #6366f1;
+        background-color: var(--color-brand-600, #db2777);
         color: white;
         transform: scale(1.05);
     }
@@ -88,12 +107,17 @@
 
     {{-- ===== SECTION 1: HERO ===== --}}
     <section class="hero-gradient hero-pattern -mx-10 -mt-4 px-10 pt-16 pb-20 relative overflow-hidden">
-        <div class="max-w-[1400px] mx-auto">
+        <div class="hero-blob-1"></div>
+        <div class="hero-blob-2"></div>
+        <div class="hero-blob-3"></div>
+        <div class="hero-dots"></div>
+
+        <div class="max-w-[1400px] mx-auto relative z-10">
             <div class="grid grid-cols-12 gap-12 items-center">
                 {{-- Left: Content --}}
                 <div class="col-span-12 lg:col-span-6 xl:col-span-5">
                     <div class="fade-up">
-                        <span class="inline-flex items-center gap-2 bg-white/80 border border-indigo-100 text-indigo-600 text-sm font-semibold px-4 py-2 rounded-full mb-6">
+                        <span class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-sm font-semibold px-4 py-2 rounded-full mb-6 shadow-sm backdrop-blur-sm">
                             <i data-lucide="map-pin" class="w-4 h-4"></i>
                             Discover local stores near you
                         </span>
@@ -101,7 +125,7 @@
 
                     <h1 class="text-5xl xl:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight fade-up fade-up-delay-1">
                         Shop local,<br>
-                        <span class="text-indigo-600">print beautifully.</span>
+                        <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">print beautifully.</span>
                     </h1>
 
                     <p class="text-lg xl:text-xl text-slate-500 mt-6 leading-relaxed max-w-lg fade-up fade-up-delay-2">
@@ -119,7 +143,7 @@
                                     class="w-full py-4 text-base text-slate-900 placeholder-slate-400 bg-transparent border-0 outline-none focus:ring-0">
                             </div>
                             <button @click="fetchStores(); $nextTick(() => { document.getElementById('store-results')?.scrollIntoView({behavior:'smooth', block:'start'}) })"
-                                class="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 active:scale-95 flex items-center gap-2">
+                                class="flex-shrink-0 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 active:scale-95 flex items-center gap-2">
                                 <i data-lucide="search" class="w-4 h-4"></i>
                                 Find Stores
                             </button>
@@ -160,8 +184,8 @@
                         {{-- Decorative store cards --}}
                         <div class="grid grid-cols-2 gap-5 max-w-lg ml-auto">
                             <div class="bg-white rounded-3xl p-6 shadow-lg shadow-slate-200/60 border border-slate-100 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
-                                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4">
-                                    <i data-lucide="printer" class="w-7 h-7 text-indigo-600"></i>
+                                <div class="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center mb-4">
+                                    <i data-lucide="printer" class="w-7 h-7 text-brand-600"></i>
                                 </div>
                                 <h4 class="font-bold text-slate-900 text-base">Photo Prints</h4>
                                 <p class="text-sm text-slate-400 mt-1">Premium quality</p>
@@ -217,7 +241,7 @@
                             </div>
                         </div>
                         {{-- Floating accent dots --}}
-                        <div class="absolute -top-4 -left-4 w-20 h-20 bg-indigo-200/30 rounded-full blur-2xl"></div>
+                        <div class="absolute -top-4 -left-4 w-20 h-20 bg-brand-200/30 rounded-full blur-2xl"></div>
                         <div class="absolute -bottom-8 -right-8 w-32 h-32 bg-violet-200/30 rounded-full blur-3xl"></div>
                     </div>
                 </div>
@@ -269,23 +293,23 @@
                     x-model="query" @input.debounce.300ms="fetchStores" autocomplete="off"
                     class="w-full text-base text-slate-900 placeholder-slate-400 bg-transparent border-0 outline-none focus:ring-0">
                 <div x-show="isLoading" class="flex-shrink-0">
-                    <div class="w-5 h-5 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <div class="w-5 h-5 border-2 border-slate-200 border-t-brand-500 rounded-full animate-spin"></div>
                 </div>
             </div>
             <div class="h-8 w-px bg-slate-200 hidden lg:block"></div>
             <div class="flex items-center gap-3">
-                <button @click="detectLocation()" class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 px-4 py-2.5 rounded-xl transition-all">
+                <button @click="detectLocation()" class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-200 px-4 py-2.5 rounded-xl transition-all">
                     <i data-lucide="crosshair" class="w-4 h-4"></i>
                     Near Me
                 </button>
-                <select class="text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all cursor-pointer">
+                <select class="text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-brand-100 focus:border-brand-300 transition-all cursor-pointer">
                     <option>All Categories</option>
                     <option>Photo Prints</option>
                     <option>Canvas Art</option>
                     <option>Photo Books</option>
                     <option>Gifts & Mugs</option>
                 </select>
-                <select class="text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 transition-all cursor-pointer">
+                <select class="text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-brand-100 focus:border-brand-300 transition-all cursor-pointer">
                     <option>Sort: Nearest</option>
                     <option>Sort: Rating</option>
                     <option>Sort: Name A–Z</option>
@@ -296,7 +320,7 @@
         {{-- Nearby Stores Section --}}
         <div x-show="geolocationChecked && nearbyStores.length > 0 && !hasSearched" x-cloak class="mb-10">
             <h3 class="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2">
-                <i data-lucide="navigation" class="w-5 h-5 text-indigo-500"></i>
+                <i data-lucide="navigation" class="w-5 h-5 text-brand-500"></i>
                 Stores near you
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -306,8 +330,8 @@
                         <input type="hidden" name="store_id" :value="store.id">
                         <button type="submit" class="store-card w-full text-left bg-white border border-slate-200 rounded-2xl p-6 group cursor-pointer">
                             <div class="flex items-start gap-4">
-                                <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
-                                    <i data-lucide="store" class="w-6 h-6 text-indigo-500"></i>
+                                <div class="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-brand-100 transition-colors">
+                                    <i data-lucide="store" class="w-6 h-6 text-brand-500"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h4 class="font-bold text-slate-900 truncate" x-text="store.store_name"></h4>
@@ -319,7 +343,7 @@
                             </div>
                             <div class="mt-4 flex items-center justify-between">
                                 <span class="badge-open text-xs font-semibold px-2.5 py-1 rounded-full">Open Now</span>
-                                <span class="text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 flex items-center gap-1 transition-colors">
+                                <span class="text-sm font-semibold text-brand-600 group-hover:text-brand-700 flex items-center gap-1 transition-colors">
                                     Visit <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                                 </span>
                             </div>
@@ -331,7 +355,7 @@
 
         {{-- Geolocation Loading --}}
         <div x-show="nearbyLoading" x-cloak class="mb-10 text-center py-10">
-            <div class="w-10 h-10 border-2 border-slate-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <div class="w-10 h-10 border-2 border-slate-200 border-t-brand-500 rounded-full animate-spin mx-auto mb-4"></div>
             <p class="text-slate-500 font-medium">Detecting your location...</p>
         </div>
 
@@ -348,10 +372,10 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
                     <div class="text-center group">
-                        <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-indigo-100 group-hover:scale-110 transition-all duration-300">
-                            <i data-lucide="search" class="w-7 h-7 text-indigo-600"></i>
+                        <div class="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-brand-100 group-hover:scale-110 transition-all duration-300">
+                            <i data-lucide="search" class="w-7 h-7 text-brand-600"></i>
                         </div>
-                        <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">Step 1</div>
+                        <div class="text-xs font-bold text-brand-600 uppercase tracking-wider mb-2">Step 1</div>
                         <h4 class="font-bold text-slate-900 text-lg mb-2">Select a Store</h4>
                         <p class="text-sm text-slate-500 leading-relaxed">Search and pick the nearest Qrinto branch to see available services.</p>
                     </div>
@@ -412,8 +436,8 @@
                         <button type="submit" class="store-card w-full h-full text-left bg-white border border-slate-200 rounded-2xl p-6 group cursor-pointer flex flex-col">
                             {{-- Store header --}}
                             <div class="flex items-start gap-4 mb-4">
-                                <div class="w-12 h-12 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                    <i data-lucide="store" class="w-6 h-6 text-indigo-500"></i>
+                                <div class="w-12 h-12 bg-gradient-to-br from-brand-50 to-brand-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                    <i data-lucide="store" class="w-6 h-6 text-brand-500"></i>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h4 class="font-bold text-slate-900 line-clamp-2 leading-snug" x-text="store.store_name"></h4>
@@ -445,7 +469,7 @@
                                         <i data-lucide="truck" class="w-3 h-3"></i> Pickup
                                     </span>
                                 </div>
-                                <span class="text-sm font-semibold text-indigo-600 group-hover:text-indigo-700 flex items-center gap-1 transition-colors">
+                                <span class="text-sm font-semibold text-brand-600 group-hover:text-brand-700 flex items-center gap-1 transition-colors">
                                     Visit <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"></i>
                                 </span>
                             </div>
@@ -463,7 +487,7 @@
                 <h2 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight">Browse Categories</h2>
                 <p class="text-lg text-slate-500 mt-2">Explore our most popular printing categories.</p>
             </div>
-            <a href="#" class="hidden lg:flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+            <a href="#" class="hidden lg:flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors">
                 View all categories <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </a>
         </div>
@@ -471,7 +495,7 @@
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-5">
             @php
                 $categories = [
-                    ['name' => 'Photo Prints', 'icon' => 'image', 'count' => 340, 'color' => 'indigo'],
+                    ['name' => 'Photo Prints', 'icon' => 'image', 'count' => 340, 'color' => 'brand'],
                     ['name' => 'Canvas Art', 'icon' => 'frame', 'count' => 185, 'color' => 'violet'],
                     ['name' => 'Photo Books', 'icon' => 'book-open', 'count' => 220, 'color' => 'rose'],
                     ['name' => 'Mugs & Gifts', 'icon' => 'gift', 'count' => 156, 'color' => 'emerald'],
@@ -537,7 +561,7 @@
                             [
                                 'name' => 'Sarah Mitchell',
                                 'initials' => 'SM',
-                                'color' => 'indigo',
+                                'color' => 'brand',
                                 'rating' => 5,
                                 'text' => 'The canvas print quality blew me away. Colors are vibrant and true to the original photo. Arrived in perfect condition within two days. Already ordered three more for the living room.',
                                 'store' => 'Qrinto NYC - Manhattan',
@@ -598,7 +622,7 @@
                 </div>
 
                 <div class="mt-6 text-center">
-                    <a href="#" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+                    <a href="#" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors">
                         Read all reviews <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     </a>
                 </div>

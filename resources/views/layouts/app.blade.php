@@ -77,7 +77,7 @@
                 <!-- Actions -->
                 <div class="flex items-center gap-3">
                     <!-- Cart Button -->
-                    <a href="{{ route('cart.index') }}" class="relative p-2.5 rounded-xl bg-surface-100 hover:bg-brand-50 text-surface-600 hover:text-brand-600 transition-all group" id="cart-btn">
+                    <a href="{{ route('flow.cart.index') }}" class="relative p-2.5 rounded-xl bg-surface-100 hover:bg-brand-50 text-surface-600 hover:text-brand-600 transition-all group" id="cart-btn">
                         <i data-lucide="shopping-bag" class="w-5 h-5"></i>
                         @php $cartCount = app(\App\Services\CartService::class)->getCart()->item_count; @endphp
                         @if($cartCount > 0)
@@ -140,7 +140,7 @@
                 <nav class="flex flex-col gap-1">
                     <a href="{{ route('home') }}" class="px-4 py-3 rounded-xl text-sm font-medium text-surface-600 hover:bg-brand-50 hover:text-brand-600">Home</a>
                     <a href="{{ route('products.index') }}" class="px-4 py-3 rounded-xl text-sm font-medium text-surface-600 hover:bg-brand-50 hover:text-brand-600">Products</a>
-                    <a href="{{ route('cart.index') }}" class="px-4 py-3 rounded-xl text-sm font-medium text-surface-600 hover:bg-brand-50 hover:text-brand-600">Cart</a>
+                    <a href="{{ route('flow.cart.index') }}" class="px-4 py-3 rounded-xl text-sm font-medium text-surface-600 hover:bg-brand-50 hover:text-brand-600">Cart</a>
                     @guest
                     <a href="{{ route('login') }}" class="px-4 py-3 rounded-xl text-sm font-medium text-brand-600 bg-brand-50">Login / Register</a>
                     @endguest
@@ -205,7 +205,7 @@
                     <h4 class="font-display font-semibold text-white mb-5">Quick Links</h4>
                     <ul class="space-y-3">
                         <li><a href="{{ route('products.index') }}" class="text-sm hover:text-brand-400 transition">All Products</a></li>
-                        <li><a href="{{ route('cart.index') }}" class="text-sm hover:text-brand-400 transition">Cart</a></li>
+                        <li><a href="{{ route('flow.cart.index') }}" class="text-sm hover:text-brand-400 transition">Cart</a></li>
                         @auth
                         <li><a href="{{ route('customer.orders') }}" class="text-sm hover:text-brand-400 transition">Track Order</a></li>
                         @endauth

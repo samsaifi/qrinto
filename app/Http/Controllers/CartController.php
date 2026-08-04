@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\CartService;
 use App\Models\Product;
+use App\Models\CustomerUpload;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -15,43 +16,84 @@ class CartController extends Controller
         $this->cartService = $cartService;
     }
 
+    protected function getViewPath($viewName)
+    {
+        return "quick-flow.{$viewName}";
+    }
+
+    protected function getRoutePrefix()
+    {
+        return 'flow.';
+    }
+
     public function index()
     {
         $cart = $this->cartService->getCart();
-        return view('cart.index', compact('cart'));
+
+        $allUploadIds = [];
+        foreach ($cart->items as $item) {
+            $customization = $item->customization_data ?? [];
+            if (!empty($customization['upload_ids'])) {
+                foreach ($customization['upload_ids'] as $id) {
+                    if ($id) $allUploadIds[] = $id;
+                }
+            }
+        }
+        $uploads = $allUploadIds
+            ? CustomerUpload::whereIn('id', $allUploadIds)->get()->keyBy('id')
+            : collect();
+
+        $routePrefix = $this->getRoutePrefix();
+
+        return view($this->getViewPath('cart'), compact('cart', 'uploads', 'routePrefix'));
     }
 
     public function add(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1|max:100',
-            'selected_options' => 'nullable|array',
-            'customization_data' => 'nullable|array',
+            'quantity' => 'integer|min:1|max:100',
+            'upload_ids' => 'nullable|string',
         ]);
 
         $product = Product::findOrFail($request->product_id);
-        $selectedOptions = $request->input('selected_options', []);
-        $unitPrice = $product->calculatePrice(array_values($selectedOptions));
+        $quantity = $request->input('quantity', 1);
+        $uploadIds = $request->input('upload_ids')
+            ? json_decode($request->input('upload_ids'), true)
+            : [];
+
+        $flowData = session('quick_flow_data', []);
+
+        if ($product->store_id) {
+            $unitPrice = (float) $product->base_price;
+        } else {
+            $unitPrice = isset($flowData['size_price'])
+                ? (float) $flowData['size_price']
+                : (float) $product->base_price;
+        }
+
+        $customizationData = [
+            'upload_ids' => $uploadIds,
+            'size_name' => $flowData['size_name'] ?? null,
+            'size_width' => $flowData['size_width'] ?? null,
+            'size_height' => $flowData['size_height'] ?? null,
+            'size_unit' => $flowData['size_unit'] ?? null,
+            'type_name' => $flowData['type_name'] ?? null,
+        ];
+
+        $selectedOptions = !empty($uploadIds)
+            ? ['design_key' => md5(json_encode($uploadIds))]
+            : null;
 
         $this->cartService->addItem(
-            $request->product_id,
-            $request->quantity,
+            $product->id,
+            $quantity,
             $unitPrice,
-            $request->customization_data,
+            $customizationData,
             $selectedOptions,
         );
 
-        if ($request->expectsJson()) {
-            $cart = $this->cartService->getCart();
-            return response()->json([
-                'success' => true,
-                'message' => 'Product added to cart!',
-                'cart_count' => $cart->item_count,
-            ]);
-        }
-
-        return redirect()->route('cart.index')->with('success', 'Product added to cart!');
+        return redirect()->route($this->getRoutePrefix() . 'cart.index')->with('success', 'Design added to cart!');
     }
 
     public function update(Request $request, int $itemId)
@@ -75,7 +117,7 @@ class CartController extends Controller
             ]);
         }
 
-        return redirect()->route('cart.index')->with('success', 'Cart updated!');
+        return redirect()->route($this->getRoutePrefix() . 'cart.index');
     }
 
     public function remove(int $itemId)
@@ -93,20 +135,19 @@ class CartController extends Controller
             ]);
         }
 
-        return redirect()->route('cart.index')->with('success', 'Item removed from cart!');
+        return redirect()->route($this->getRoutePrefix() . 'cart.index');
     }
 
     public function applyCoupon(Request $request)
     {
         $request->validate(['code' => 'required|string']);
-
         $result = $this->cartService->applyCoupon($request->code);
 
         if ($request->expectsJson()) {
             return response()->json($result);
         }
 
-        return redirect()->route('cart.index')
+        return redirect()->route($this->getRoutePrefix() . 'cart.index')
             ->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
@@ -118,6 +159,12 @@ class CartController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('cart.index')->with('success', 'Coupon removed.');
+        return redirect()->route($this->getRoutePrefix() . 'cart.index');
+    }
+
+    public function count()
+    {
+        $cart = $this->cartService->getCart();
+        return response()->json(['count' => $cart->item_count]);
     }
 }

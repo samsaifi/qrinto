@@ -105,6 +105,33 @@
         box-shadow: 0 12px 24px -8px rgba(0,0,0,0.1);
     }
 
+    .hero-checkout-gradient {
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
+    }
+    .hero-checkout-pattern {
+        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
+        background-size: 32px 32px;
+    }
+    .hero-blob-1 {
+        position: absolute; top: -60px; right: 15%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(40px); pointer-events: none;
+    }
+    .hero-blob-2 {
+        position: absolute; bottom: -40px; right: 5%; width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(30px); pointer-events: none;
+    }
+    .hero-blob-3 {
+        position: absolute; top: 20%; right: 35%; width: 80px; height: 80px;
+        background: rgba(236, 72, 153, 0.15); border-radius: 50%; filter: blur(10px); pointer-events: none;
+    }
+    .hero-dots {
+        position: absolute; top: 10%; right: 3%; width: 80px; height: 80px;
+        background-image: radial-gradient(circle, rgba(236,72,153,0.2) 2px, transparent 2px);
+        background-size: 10px 10px; border-radius: 50%; pointer-events: none;
+    }
+
     .fade-up {
         animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
@@ -116,29 +143,51 @@
 @endpush
 
 @section('content')
-<div x-data="checkoutFlow()" class="max-w-[1400px] mx-auto pb-32">
+<div x-data="checkoutFlow()" class="pb-32">
 
-    {{-- ── Header ── --}}
-    <div class="mb-8 fade-up">
-        <nav class="flex items-center gap-2 text-sm mb-4">
-            <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-indigo-600 transition-colors flex items-center gap-1.5">
-                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
-            </a>
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-            <span class="text-slate-700 font-semibold">Checkout</span>
-        </nav>
+    {{-- ── Hero Header ── --}}
+    <section class="hero-checkout-gradient hero-checkout-pattern -mx-10 -mt-4 px-10 pt-10 pb-12 mb-10 relative overflow-hidden">
+        <div class="hero-blob-1"></div>
+        <div class="hero-blob-2"></div>
+        <div class="hero-blob-3"></div>
+        <div class="hero-dots"></div>
 
-        <div class="flex items-center gap-4">
-            <a href="javascript:history.back()"
-                class="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center hover:bg-slate-50 hover:border-indigo-200 transition-all text-slate-500 hover:text-indigo-600">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i>
-            </a>
-            <div>
-                <h1 class="text-2xl xl:text-3xl font-extrabold text-slate-900 tracking-tight">Review & Pay</h1>
-                <p class="text-sm text-slate-500 mt-0.5">Review your custom design before payment.</p>
+        <div class="max-w-[1400px] mx-auto relative z-10">
+            <nav class="flex items-center gap-2 text-sm mb-6 fade-up">
+                <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+                </a>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                <span class="text-slate-700 font-semibold">Checkout</span>
+            </nav>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-5 fade-up" style="animation-delay: 0.05s">
+                    <a href="javascript:history.back()"
+                        class="w-12 h-12 bg-white/90 shadow-sm border border-slate-200/80 rounded-2xl flex items-center justify-center hover:bg-white hover:border-brand-200 transition-all text-slate-500 hover:text-brand-600 shrink-0">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </a>
+                    <div>
+                        <div class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-xs font-semibold px-3.5 py-1 rounded-full mb-2 shadow-sm backdrop-blur-sm">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                            Final Step &bull; Secure Checkout
+                        </div>
+                        <h1 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight">Review &amp; <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">Pay</span></h1>
+                        <p class="text-sm text-slate-500 mt-1">Review your order details and select your preferred payment method.</p>
+                    </div>
+                </div>
+
+                <div class="hidden lg:flex items-center gap-3 fade-up" style="animation-delay: 0.1s">
+                    <div class="flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-2xl px-5 py-3 shadow-sm">
+                        <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span class="text-xs font-bold text-slate-700">SSL Encrypted Checkout</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <div class="max-w-[1400px] mx-auto">
 
     {{-- ── Two-Column Layout ── --}}
     <div class="checkout-grid">
@@ -149,7 +198,7 @@
             {{-- Design Preview --}}
             <div class="fade-up" style="animation-delay: 0.05s">
                 <div class="flex items-center gap-2 mb-4">
-                    <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                    <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Design Preview</h2>
                 </div>
 
@@ -202,10 +251,10 @@
                 <div class="p-6">
                     <div class="flex items-start justify-between mb-5">
                         <div>
-                            <p class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-1">{{ session('quick_flow_data.type_name', 'Custom Product') }}</p>
+                            <p class="text-[10px] font-bold text-brand-600 uppercase tracking-widest mb-1">{{ session('quick_flow_data.type_name', 'Custom Product') }}</p>
                             <h3 class="text-xl font-extrabold text-slate-900 leading-tight">{{ $product->name }}</h3>
                         </div>
-                        <span class="inline-flex items-center bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-indigo-100">
+                        <span class="inline-flex items-center bg-brand-50 text-brand-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-brand-100">
                             <span x-text="quantity"></span>&nbsp;Units
                         </span>
                     </div>
@@ -242,12 +291,12 @@
                     </div>
                     <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1">
                         <button type="button" @click="quantity > 1 ? quantity-- : null"
-                            class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 transition-all active:scale-90 flex items-center justify-center">
+                            class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-brand-50 text-slate-500 hover:text-brand-600 transition-all active:scale-90 flex items-center justify-center">
                             <i data-lucide="minus" class="w-4 h-4"></i>
                         </button>
                         <div class="w-10 text-center font-extrabold text-slate-900 text-lg" x-text="quantity"></div>
                         <button type="button" @click="quantity++"
-                            class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600 transition-all active:scale-90 flex items-center justify-center">
+                            class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-brand-50 text-slate-500 hover:text-brand-600 transition-all active:scale-90 flex items-center justify-center">
                             <i data-lucide="plus" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -257,7 +306,7 @@
             {{-- Pickup Information --}}
             <div class="fade-up" style="animation-delay: 0.15s">
                 <div class="flex items-center gap-2 mb-4">
-                    <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                    <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
                     <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pickup Information</h2>
                 </div>
 
@@ -286,7 +335,7 @@
             {{-- Security Notice --}}
             <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 fade-up" style="animation-delay: 0.2s">
                 <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-200 flex-shrink-0">
-                    <i data-lucide="shield-check" class="w-5 h-5 text-indigo-500"></i>
+                    <i data-lucide="shield-check" class="w-5 h-5 text-brand-500"></i>
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-slate-700">Secure Payment</p>
@@ -302,7 +351,7 @@
             <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden fade-up" style="animation-delay: 0.1s">
                 <div class="p-5 border-b border-slate-100">
                     <div class="flex items-center gap-2">
-                        <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                        <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
                         <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Summary</h2>
                     </div>
                 </div>
@@ -320,11 +369,11 @@
                             <i data-lucide="ticket" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
                             <input type="text" x-model="couponInput" :disabled="appliedCoupon"
                                 placeholder="Enter code"
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-3 text-sm font-bold uppercase transition-all outline-none focus:border-indigo-500 focus:ring-0"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-3 text-sm font-bold uppercase transition-all outline-none focus:border-brand-500 focus:ring-0"
                                 @keydown.enter.prevent="applyCoupon()">
                         </div>
                         <button type="button" @click="applyCoupon()" :disabled="appliedCoupon || !couponInput"
-                            class="px-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-600 disabled:opacity-40 transition-all active:scale-95">
+                            class="px-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-brand-600 disabled:opacity-40 transition-all active:scale-95">
                             Apply
                         </button>
                     </div>
@@ -349,25 +398,25 @@
 
                     <div class="border-t border-slate-100 pt-4 flex justify-between items-center">
                         <span class="text-lg font-extrabold text-slate-900">Total</span>
-                        <span class="text-2xl font-extrabold text-indigo-600" x-text="__price(calculateTotal())"></span>
+                        <span class="text-2xl font-extrabold text-brand-600" x-text="__price(calculateTotal())"></span>
                     </div>
                 </div>
             </div>
 
             {{-- Terms & Payment Buttons --}}
             <div class="space-y-4 fade-up" style="animation-delay: 0.15s">
-                <label class="flex items-start gap-3 cursor-pointer select-none p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                <label class="flex items-start gap-3 cursor-pointer select-none p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-brand-200 transition-colors">
                     <input type="checkbox" x-model="acceptedTerms" id="terms-checkbox"
-                        class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mt-0.5 cursor-pointer flex-shrink-0">
+                        class="w-5 h-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 mt-0.5 cursor-pointer flex-shrink-0">
                     <span class="text-xs font-medium text-slate-600 leading-relaxed">
-                        I have read and accept the <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank" class="text-indigo-600 font-semibold underline underline-offset-2">Terms and Conditions</a>
+                        I have read and accept the <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank" class="text-brand-600 font-semibold underline underline-offset-2">Terms and Conditions</a>
                     </span>
                 </label>
 
                 <button type="button"
                     @click="openPaypal()"
                     :disabled="!pickupName || !contactNumber || !pickupEmail || !acceptedTerms"
-                    class="w-full bg-indigo-600 disabled:bg-slate-200 disabled:text-slate-400 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-indigo-600/20 disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-[15px]">
+                    class="w-full bg-brand-600 disabled:bg-slate-200 disabled:text-slate-400 hover:bg-brand-700 text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-brand-600/20 disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-[15px]">
                     <i data-lucide="credit-card" class="w-5 h-5"></i>
                     <span x-text="pickupName && contactNumber && pickupEmail && acceptedTerms ? 'Pay Now — ' + __price(calculateTotal()) : (acceptedTerms ? 'Complete All Fields' : 'Accept Terms to Continue')"></span>
                 </button>
@@ -406,8 +455,8 @@
                 <div class="paypal-sheet" @click.stop>
                     <div class="flex items-center justify-between mb-5">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                                <i data-lucide="credit-card" class="w-5 h-5 text-indigo-600"></i>
+                            <div class="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
+                                <i data-lucide="credit-card" class="w-5 h-5 text-brand-600"></i>
                             </div>
                             <div>
                                 <h3 class="text-lg font-extrabold text-slate-900">Pay with PayPal</h3>

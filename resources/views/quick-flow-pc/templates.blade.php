@@ -6,11 +6,30 @@
 @push('styles')
 <style>
     .tpl-hero-gradient {
-        background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 40%, #faf5ff 100%);
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
     }
     .tpl-hero-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(99,102,241,0.05) 1px, transparent 0);
+        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
         background-size: 32px 32px;
+    }
+    .hero-blob-1 {
+        position: absolute; top: -60px; right: 15%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(40px); pointer-events: none;
+    }
+    .hero-blob-2 {
+        position: absolute; bottom: -40px; right: 5%; width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(30px); pointer-events: none;
+    }
+    .hero-blob-3 {
+        position: absolute; top: 20%; right: 35%; width: 80px; height: 80px;
+        background: rgba(236, 72, 153, 0.15); border-radius: 50%; filter: blur(10px); pointer-events: none;
+    }
+    .hero-dots {
+        position: absolute; top: 10%; right: 3%; width: 80px; height: 80px;
+        background-image: radial-gradient(circle, rgba(236,72,153,0.2) 2px, transparent 2px);
+        background-size: 10px 10px; border-radius: 50%; pointer-events: none;
     }
     .filter-pill {
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -54,16 +73,21 @@
 <div x-data="{ activeCategory: 'all' }" class="pb-24">
 
     {{-- ===== HERO HEADER ===== --}}
-    <section class="tpl-hero-gradient tpl-hero-pattern -mx-10 -mt-4 px-10 pt-12 pb-14 relative overflow-hidden">
-        <div class="max-w-[1400px] mx-auto">
+    <section class="tpl-hero-gradient tpl-hero-pattern -mx-10 -mt-4 px-10 pt-12 pb-16 relative overflow-hidden">
+        <div class="hero-blob-1"></div>
+        <div class="hero-blob-2"></div>
+        <div class="hero-blob-3"></div>
+        <div class="hero-dots"></div>
+
+        <div class="max-w-[1400px] mx-auto relative z-10">
             {{-- Breadcrumbs --}}
             <nav class="flex items-center gap-2 text-sm mb-8 tpl-fade" style="animation-delay:0s">
-                <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+                <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
                     <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
                 </a>
                 <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
                 @if($type->parent)
-                <a href="{{ route('flow-pc.category', $type->parent->slug) }}" class="text-slate-400 font-medium hover:text-indigo-600 transition-colors">
+                <a href="{{ route('flow-pc.category', $type->parent->slug) }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors">
                     {{ $type->parent->name }}
                 </a>
                 <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
@@ -73,32 +97,38 @@
 
             <div class="flex items-start justify-between gap-8">
                 {{-- Left --}}
-                <div class="flex items-start gap-5">
-                    <div class="w-16 h-16 bg-white/80 border border-indigo-100 rounded-2xl flex items-center justify-center flex-shrink-0 tpl-fade" style="animation-delay:0.05s">
-                        <i data-lucide="layout-template" class="w-8 h-8 text-indigo-500"></i>
+                <div class="flex items-start gap-6">
+                    <div class="w-16 h-16 bg-white/90 shadow-lg shadow-brand-500/10 border border-brand-100 rounded-2xl flex items-center justify-center flex-shrink-0 tpl-fade" style="animation-delay:0.05s">
+                        <i data-lucide="layout-template" class="w-8 h-8 text-brand-500"></i>
                     </div>
                     <div>
+                        <div class="tpl-fade" style="animation-delay:0.08s">
+                            <span class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-3 shadow-sm backdrop-blur-sm">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                Ready-Made Designs
+                            </span>
+                        </div>
                         <h1 class="text-4xl xl:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight tpl-fade" style="animation-delay:0.1s">
-                            {{ $type->name }}
+                            {{ $type->name }} <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">Templates</span>
                         </h1>
-                        <p class="text-lg text-slate-500 mt-2 max-w-xl tpl-fade" style="animation-delay:0.15s">
+                        <p class="text-lg text-slate-500 mt-2 max-w-xl tpl-fade leading-relaxed" style="animation-delay:0.15s">
                             Choose a template to start designing your {{ strtolower($type->parent->name ?? $type->name) }}.
                         </p>
                         {{-- Info pills --}}
                         <div class="flex flex-wrap items-center gap-3 mt-5 tpl-fade" style="animation-delay:0.2s">
                             @if($type->width && $type->height)
-                            <span class="inline-flex items-center gap-1.5 bg-white/80 border border-slate-200 text-slate-600 text-sm font-medium px-3.5 py-1.5 rounded-full">
-                                <i data-lucide="ruler" class="w-4 h-4 text-indigo-500"></i>
+                            <span class="inline-flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-slate-200/80 text-slate-700 text-sm font-medium px-3.5 py-1.5 rounded-full shadow-sm">
+                                <i data-lucide="ruler" class="w-4 h-4 text-brand-500"></i>
                                 {{ $type->width }}&times;{{ $type->height }}{{ $type->unit }}
                             </span>
                             @endif
-                            <span class="inline-flex items-center gap-1.5 bg-white/80 border border-slate-200 text-slate-600 text-sm font-medium px-3.5 py-1.5 rounded-full">
-                                <i data-lucide="layers" class="w-4 h-4 text-indigo-500"></i>
+                            <span class="inline-flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-slate-200/80 text-slate-700 text-sm font-medium px-3.5 py-1.5 rounded-full shadow-sm">
+                                <i data-lucide="layers" class="w-4 h-4 text-brand-500"></i>
                                 {{ $templates->count() }} templates
                             </span>
                             @if($type->title)
-                            <span class="inline-flex items-center gap-1.5 bg-white/80 border border-slate-200 text-slate-600 text-sm font-medium px-3.5 py-1.5 rounded-full">
-                                <i data-lucide="file-text" class="w-4 h-4 text-indigo-500"></i>
+                            <span class="inline-flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-slate-200/80 text-slate-700 text-sm font-medium px-3.5 py-1.5 rounded-full shadow-sm">
+                                <i data-lucide="file-text" class="w-4 h-4 text-brand-500"></i>
                                 {{ $type->title }}
                             </span>
                             @endif
@@ -109,14 +139,14 @@
                 {{-- Right: Price --}}
                 @if($type->price)
                 <div class="hidden lg:block text-right flex-shrink-0 tpl-fade" style="animation-delay:0.15s">
-                    <div class="bg-white/80 border border-slate-200 rounded-2xl px-6 py-4">
+                    <div class="bg-white/90 backdrop-blur-sm border border-slate-100 shadow-xl shadow-brand-500/5 rounded-2xl px-6 py-4">
                         <div class="flex items-center gap-3 justify-end">
                             @if($type->old_price && $type->old_price > $type->price)
                             <span class="text-slate-400 line-through text-lg">{{ \App\Services\CurrencyService::format($type->old_price) }}</span>
                             @endif
                             <span class="text-3xl font-extrabold text-slate-900">{{ \App\Services\CurrencyService::format($type->price) }}</span>
                         </div>
-                        <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wider mt-1">Starting price</p>
+                        <p class="text-xs font-semibold text-brand-600 uppercase tracking-wider mt-1">Starting price</p>
                     </div>
                 </div>
                 @endif
@@ -133,7 +163,7 @@
             <div class="flex flex-wrap items-center gap-2">
                 <button
                     @click="activeCategory = 'all'"
-                    :class="activeCategory === 'all' ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/20' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'"
+                    :class="activeCategory === 'all' ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20' : 'bg-white text-slate-600 border-slate-200 hover:border-brand-300 hover:text-brand-600'"
                     class="filter-pill px-4 py-2 rounded-xl border text-sm font-semibold transition-all">
                     All
                 </button>
@@ -142,7 +172,7 @@
                     @if($catCount > 0)
                     <button
                         @click="activeCategory = {{ $cat->id }}"
-                        :class="activeCategory === {{ $cat->id }} ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/20' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'"
+                        :class="activeCategory === {{ $cat->id }} ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20' : 'bg-white text-slate-600 border-slate-200 hover:border-brand-300 hover:text-brand-600'"
                         class="filter-pill px-4 py-2 rounded-xl border text-sm font-semibold transition-all">
                         {{ $cat->name }}
                         <span class="ml-1 opacity-60">{{ $catCount }}</span>
@@ -205,7 +235,7 @@
                 </div>
                 <p class="text-xl font-bold text-slate-900">No templates found</p>
                 <p class="text-slate-500 mt-2">Please select a different size or category.</p>
-                <a href="{{ route('flow-pc.index') }}" class="inline-flex items-center gap-2 mt-6 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+                <a href="{{ route('flow-pc.index') }}" class="inline-flex items-center gap-2 mt-6 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to categories
                 </a>
             </div>
@@ -217,8 +247,8 @@
     <section class="max-w-[1400px] mx-auto pt-4 pb-4 border-t border-slate-100">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 py-8">
             <div class="flex items-center gap-4">
-                <div class="w-11 h-11 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="palette" class="w-5 h-5 text-indigo-600"></i>
+                <div class="w-11 h-11 bg-brand-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="palette" class="w-5 h-5 text-brand-600"></i>
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 text-sm">Fully Customizable</h4>

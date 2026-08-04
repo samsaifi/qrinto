@@ -769,6 +769,390 @@ class QuickFlowController extends Controller
     }
 
     /**
+     * Cart Checkout: Show checkout page from cart
+     */
+    public function cartCheckout()
+    {
+        $cartService = app(\App\Services\CartService::class);
+        $cart = $cartService->getCart();
+
+        if ($cart->items->isEmpty()) {
+            return redirect()->route($this->getRoutePrefix() . 'cart.index');
+        }
+
+        $allUploadIds = [];
+        foreach ($cart->items as $item) {
+            $customization = $item->customization_data ?? [];
+            if (!empty($customization['upload_ids'])) {
+                foreach ($customization['upload_ids'] as $id) {
+                    if ($id) $allUploadIds[] = $id;
+                }
+            }
+        }
+        $uploads = $allUploadIds
+            ? CustomerUpload::whereIn('id', $allUploadIds)->get()->keyBy('id')
+            : collect();
+
+        $paypalClientId = config('services.paypal.client_id', env('PAYPAL_CLIENT_ID'));
+
+        return view($this->getViewPath('cart-checkout'), compact('cart', 'uploads', 'paypalClientId'));
+    }
+
+    /**
+     * Cart Checkout: Cash payment
+     */
+    public function cartCheckoutCash(Request $request)
+    {
+        $request->validate([
+            'pickup_name' => 'required|string|max:255',
+            'pickup_email' => 'required|email|max:255',
+            'contact_number' => 'required|string|max:20',
+            'coupon_code' => 'nullable|string',
+            'special_instructions' => 'nullable|string|max:2000',
+        ]);
+
+        $cartService = app(\App\Services\CartService::class);
+        $cart = $cartService->getCart();
+
+        if ($cart->items->isEmpty()) {
+            return response()->json(['success' => false, 'error' => 'Cart is empty.']);
+        }
+
+        $subtotal = 0;
+        foreach ($cart->items as $item) {
+            $subtotal += CurrencyService::convert((float) $item->unit_price) * $item->quantity;
+        }
+
+        $discountAmount = 0;
+        if ($request->coupon_code) {
+            $coupon = \App\Models\Coupon::where('code', strtoupper($request->coupon_code))
+                ->where('is_active', true)->first();
+            if ($coupon && $coupon->isValid($subtotal)) {
+                $discountAmount = $coupon->calculateDiscount($subtotal);
+                $coupon->increment('used_count');
+            }
+        }
+
+        $total = $subtotal - $discountAmount;
+        $storeId = session('active_store_id');
+
+        $order = Order::create([
+            'user_id' => auth()->id(),
+            'order_number' => Order::generateOrderNumber(),
+            'invoice_number' => Order::generateInvoiceNumber(),
+            'status' => 'pending',
+            'subtotal' => $subtotal,
+            'discount_amount' => $discountAmount,
+            'coupon_code' => $request->coupon_code,
+            'tax_amount' => 0,
+            'shipping_amount' => 0,
+            'total' => $total,
+            'currency' => CurrencyService::getCode(),
+            'shipping_address' => [
+                'type' => 'store_pickup',
+                'name' => $request->pickup_name,
+                'email' => $request->pickup_email,
+                'phone' => $request->contact_number,
+            ],
+            'payment_gateway' => 'cash',
+            'payment_status' => 'pending',
+            'fulfillment_type' => 'store_pickup',
+            'store_id' => $storeId,
+            'guest_email' => $request->pickup_email,
+            'guest_phone' => $request->contact_number,
+            'notes' => 'Pickup: ' . $request->pickup_name . ' | Phone: ' . $request->contact_number,
+            'special_instructions' => $request->special_instructions,
+            'flow_data' => session('quick_flow_data'),
+        ]);
+
+        $firstProduct = null;
+        $firstUploadIds = [];
+
+        foreach ($cart->items as $item) {
+            $customization = $item->customization_data ?? [];
+            $uploadIds = $customization['upload_ids'] ?? [];
+
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product->name ?? 'Custom Print',
+                'quantity' => $item->quantity,
+                'unit_price' => CurrencyService::convert((float) $item->unit_price),
+                'total_price' => CurrencyService::convert((float) $item->unit_price) * $item->quantity,
+                'customization_data' => [
+                    'message' => null,
+                    'style' => null,
+                    'canvas_mapped_ids' => $uploadIds,
+                    'dimensions' => ($customization['size_width'] ?? '') . ' x ' . ($customization['size_height'] ?? ''),
+                    'unit' => $customization['size_unit'] ?? '',
+                    'size_label' => $customization['size_name'] ?? '',
+                ],
+            ]);
+
+            if (!$firstProduct && $item->product) {
+                $firstProduct = $item->product;
+                $firstUploadIds = $uploadIds;
+            }
+        }
+
+        if ($firstProduct) {
+            $this->processOrderAndNotify($order, $firstUploadIds, $firstProduct);
+        }
+
+        $cartService->clearCart();
+
+        return response()->json([
+            'success' => true,
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'redirect_url' => route($this->getRoutePrefix() . 'confirmation', $order->id),
+        ]);
+    }
+
+    /**
+     * Cart Checkout: Create PayPal order
+     */
+    public function cartPaypalCreate(Request $request)
+    {
+        $request->validate([
+            'pickup_name' => 'required|string|max:255',
+            'pickup_email' => 'required|email|max:255',
+            'contact_number' => 'required|string|max:20',
+            'coupon_code' => 'nullable|string',
+            'special_instructions' => 'nullable|string|max:2000',
+        ]);
+
+        $cartService = app(\App\Services\CartService::class);
+        $cart = $cartService->getCart();
+
+        if ($cart->items->isEmpty()) {
+            return response()->json(['error' => 'Cart is empty.'], 400);
+        }
+
+        $subtotal = 0;
+        foreach ($cart->items as $item) {
+            $subtotal += CurrencyService::convert((float) $item->unit_price) * $item->quantity;
+        }
+
+        $discountAmount = 0;
+        if ($request->coupon_code) {
+            $coupon = \App\Models\Coupon::where('code', strtoupper($request->coupon_code))
+                ->where('is_active', true)->first();
+            if ($coupon && $coupon->isValid($subtotal)) {
+                $discountAmount = $coupon->calculateDiscount($subtotal);
+            }
+        }
+
+        $total = max(0, $subtotal - $discountAmount);
+        $currencyCode = CurrencyService::getCode();
+
+        $paypalClientId = config('services.paypal.client_id', env('PAYPAL_CLIENT_ID'));
+        $paypalSecret = config('services.paypal.secret', env('PAYPAL_SECRET'));
+        $paypalMode = config('services.paypal.mode', env('PAYPAL_MODE', 'sandbox'));
+        $baseUrl = $paypalMode === 'live'
+            ? 'https://api-m.paypal.com'
+            : 'https://api-m.sandbox.paypal.com';
+
+        $authResponse = Http::withBasicAuth($paypalClientId, $paypalSecret)
+            ->asForm()
+            ->post("{$baseUrl}/v1/oauth2/token", ['grant_type' => 'client_credentials']);
+
+        if (!$authResponse->successful()) {
+            return response()->json(['error' => 'PayPal authentication failed.'], 500);
+        }
+
+        $accessToken = $authResponse->json('access_token');
+
+        $items = [];
+        foreach ($cart->items as $item) {
+            $itemPrice = number_format(CurrencyService::convert((float) $item->unit_price), 2, '.', '');
+            $items[] = [
+                'name' => $item->product->name ?? 'Custom Print',
+                'quantity' => (string) $item->quantity,
+                'unit_amount' => [
+                    'currency_code' => $currencyCode,
+                    'value' => $itemPrice,
+                ],
+            ];
+        }
+
+        $itemTotal = number_format($subtotal, 2, '.', '');
+        $discountFormatted = number_format($discountAmount, 2, '.', '');
+        $totalFormatted = number_format($total, 2, '.', '');
+
+        $breakdown = [
+            'item_total' => ['currency_code' => $currencyCode, 'value' => $itemTotal],
+        ];
+        if ($discountAmount > 0) {
+            $breakdown['discount'] = ['currency_code' => $currencyCode, 'value' => $discountFormatted];
+        }
+
+        $orderData = [
+            'intent' => 'CAPTURE',
+            'purchase_units' => [[
+                'amount' => [
+                    'currency_code' => $currencyCode,
+                    'value' => $totalFormatted,
+                    'breakdown' => $breakdown,
+                ],
+                'items' => $items,
+            ]],
+        ];
+
+        $orderResponse = Http::withToken($accessToken)
+            ->post("{$baseUrl}/v2/checkout/orders", $orderData);
+
+        if (!$orderResponse->successful()) {
+            \Log::error('PayPal Create Order Error', $orderResponse->json());
+            return response()->json(['error' => 'Failed to create PayPal order.'], 500);
+        }
+
+        return response()->json($orderResponse->json());
+    }
+
+    /**
+     * Cart Checkout: Capture PayPal payment
+     */
+    public function cartPaypalCapture(Request $request)
+    {
+        $request->validate([
+            'paypal_order_id' => 'required|string',
+            'pickup_name' => 'required|string|max:255',
+            'pickup_email' => 'required|email|max:255',
+            'contact_number' => 'required|string|max:20',
+            'coupon_code' => 'nullable|string',
+            'special_instructions' => 'nullable|string|max:2000',
+        ]);
+
+        $paypalClientId = config('services.paypal.client_id', env('PAYPAL_CLIENT_ID'));
+        $paypalSecret = config('services.paypal.secret', env('PAYPAL_SECRET'));
+        $paypalMode = config('services.paypal.mode', env('PAYPAL_MODE', 'sandbox'));
+        $baseUrl = $paypalMode === 'live'
+            ? 'https://api-m.paypal.com'
+            : 'https://api-m.sandbox.paypal.com';
+
+        $authResponse = Http::withBasicAuth($paypalClientId, $paypalSecret)
+            ->asForm()
+            ->post("{$baseUrl}/v1/oauth2/token", ['grant_type' => 'client_credentials']);
+
+        if (!$authResponse->successful()) {
+            return response()->json(['success' => false, 'error' => 'PayPal authentication failed.'], 500);
+        }
+
+        $accessToken = $authResponse->json('access_token');
+
+        $captureResponse = Http::withToken($accessToken)
+            ->withHeaders(['Content-Type' => 'application/json'])
+            ->post("{$baseUrl}/v2/checkout/orders/{$request->paypal_order_id}/capture", []);
+
+        if (!$captureResponse->successful()) {
+            \Log::error('PayPal Capture Error', $captureResponse->json());
+            return response()->json(['success' => false, 'error' => 'Payment capture failed.'], 500);
+        }
+
+        $captureData = $captureResponse->json();
+        $paypalTransactionId = $captureData['purchase_units'][0]['payments']['captures'][0]['id'] ?? null;
+
+        $cartService = app(\App\Services\CartService::class);
+        $cart = $cartService->getCart();
+
+        if ($cart->items->isEmpty()) {
+            return response()->json(['success' => false, 'error' => 'Cart is empty.']);
+        }
+
+        $subtotal = 0;
+        foreach ($cart->items as $item) {
+            $subtotal += CurrencyService::convert((float) $item->unit_price) * $item->quantity;
+        }
+
+        $discountAmount = 0;
+        if ($request->coupon_code) {
+            $coupon = \App\Models\Coupon::where('code', strtoupper($request->coupon_code))
+                ->where('is_active', true)->first();
+            if ($coupon && $coupon->isValid($subtotal)) {
+                $discountAmount = $coupon->calculateDiscount($subtotal);
+                $coupon->increment('used_count');
+            }
+        }
+
+        $total = $subtotal - $discountAmount;
+        $storeId = session('active_store_id');
+
+        $order = Order::create([
+            'user_id' => auth()->id(),
+            'order_number' => Order::generateOrderNumber(),
+            'invoice_number' => Order::generateInvoiceNumber(),
+            'status' => 'confirmed',
+            'subtotal' => $subtotal,
+            'discount_amount' => $discountAmount,
+            'coupon_code' => $request->coupon_code,
+            'tax_amount' => 0,
+            'shipping_amount' => 0,
+            'total' => $total,
+            'currency' => CurrencyService::getCode(),
+            'shipping_address' => [
+                'type' => 'store_pickup',
+                'name' => $request->pickup_name,
+                'email' => $request->pickup_email,
+                'phone' => $request->contact_number,
+            ],
+            'payment_gateway' => 'paypal',
+            'payment_status' => 'paid',
+            'payment_id' => $paypalTransactionId,
+            'fulfillment_type' => 'store_pickup',
+            'store_id' => $storeId,
+            'guest_email' => $request->pickup_email,
+            'guest_phone' => $request->contact_number,
+            'notes' => 'Pickup: ' . $request->pickup_name . ' | Phone: ' . $request->contact_number,
+            'special_instructions' => $request->special_instructions,
+            'flow_data' => session('quick_flow_data'),
+        ]);
+
+        $firstProduct = null;
+        $firstUploadIds = [];
+
+        foreach ($cart->items as $item) {
+            $customization = $item->customization_data ?? [];
+            $uploadIds = $customization['upload_ids'] ?? [];
+
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product->name ?? 'Custom Print',
+                'quantity' => $item->quantity,
+                'unit_price' => CurrencyService::convert((float) $item->unit_price),
+                'total_price' => CurrencyService::convert((float) $item->unit_price) * $item->quantity,
+                'customization_data' => [
+                    'message' => null,
+                    'style' => null,
+                    'canvas_mapped_ids' => $uploadIds,
+                    'dimensions' => ($customization['size_width'] ?? '') . ' x ' . ($customization['size_height'] ?? ''),
+                    'unit' => $customization['size_unit'] ?? '',
+                    'size_label' => $customization['size_name'] ?? '',
+                ],
+            ]);
+
+            if (!$firstProduct && $item->product) {
+                $firstProduct = $item->product;
+                $firstUploadIds = $uploadIds;
+            }
+        }
+
+        if ($firstProduct) {
+            $this->processOrderAndNotify($order, $firstUploadIds, $firstProduct);
+        }
+
+        $cartService->clearCart();
+
+        return response()->json([
+            'success' => true,
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+            'redirect_url' => route($this->getRoutePrefix() . 'confirmation', $order->id),
+        ]);
+    }
+
+    /**
      * Step 6: Order Confirmation
      */
     public function confirmation(Order $order)
