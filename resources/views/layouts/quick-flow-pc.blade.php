@@ -186,8 +186,12 @@
                             <div class="flex flex-col text-left">
                                 <span class="text-xs font-black text-brand-600 uppercase tracking-widest mb-1">Already
                                     Have a Design?</span>
+<<<<<<< HEAD
                                 <span class="text-lg font-black text-slate-900 leading-tight">Custom Upload &
                                     Print</span>
+=======
+                                <span class="text-lg font-black text-slate-900 leading-tight">Custom Upload & Print</span>
+>>>>>>> theme/2
                             </div>
                         </div>
                         <div
