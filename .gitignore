@@ -1,3 +1,11 @@
+docs/Qrinto_Developer_Onboarding.pptx
+
+# .NET build artifacts
+public/agent/QrintoPrintAgent/obj/
+
+# (Recommended)
+**/obj/
+**/bin/
 *.log
 .DS_Store
 .env
