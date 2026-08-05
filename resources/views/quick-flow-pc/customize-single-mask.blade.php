@@ -4,6 +4,7 @@
      - Single canvas (frame_image only, no page tabs)
      - Mask guide & clip paths from product mask_data
      - Canvas dimensions from admin mask_data (canvasWidth / canvasHeight)
+     - Full parity with customize-single.blade.php (Ready-Made Templates, Layers Panel, Floating Docks)
      ═══════════════════════════════════════════════════════════════════════ --}}
 
 @extends('layouts.quick-flow-pc')
@@ -11,7 +12,7 @@
 
 @push('styles')
 <style>
-    /* ── Hero Header ── */
+    /* ── Hero Header & Workspace ── */
     .hero-cust-gradient {
         background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
     }
@@ -55,13 +56,88 @@
     .upload-zone:hover { border-color: var(--color-brand-500, #ec4899); background: #fdf2f8; transform: translateY(-1px); }
     .upload-zone.has-image { border-style: solid; border-color: #10b981; background: #f0fdf4; }
 
-    /* Text Toolbar */
-    .text-toolbar { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-    .text-toolbar input[type="text"], .text-toolbar textarea { border: 1px solid #e2e8f0; border-radius: 0.625rem; padding: 10px 14px; font-size: 14px; background: #f8fafc; transition: all 0.2s; width: 100%; resize: none; min-height: 44px; }
-    .text-toolbar input[type="text"]:focus, .text-toolbar textarea:focus { border-color: var(--color-brand-500, #ec4899); box-shadow: 0 0 0 3px rgba(236,72,153,0.1); outline: none; background: #fff; }
-    .text-toolbar select { border: 1px solid #e2e8f0; border-radius: 0.625rem; padding: 8px 12px; font-size: 13px; font-weight: 600; background: #f8fafc; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; transition: border-color 0.2s; }
-    .text-toolbar select:focus { border-color: var(--color-brand-500, #ec4899); }
-    .text-toolbar button { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+    /* Ready-made Template Strip & Category Filter */
+    .template-strip {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 6px 4px 2px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: wrap;
+    }
+
+    .template-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .template-chip {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 9999px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        font-size: 12px;
+        font-weight: 700;
+        color: #334155;
+        cursor: pointer;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+
+    .template-chip:hover {
+        background: #e2e8f0;
+    }
+
+    .template-chip:active {
+        transform: scale(.95);
+    }
+
+    .template-chip i {
+        width: 14px;
+        height: 14px;
+        color: #0ea5e9;
+    }
+
+    .template-cat-filter {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 4px 4px 2px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .template-cat-filter::-webkit-scrollbar {
+        display: none;
+    }
+
+    .template-cat-chip {
+        flex: 0 0 auto;
+        padding: 5px 13px;
+        border-radius: 9999px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+        color: #64748b;
+        cursor: pointer;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+
+    .template-cat-chip:hover {
+        background: #e2e8f0;
+    }
+
+    .template-cat-chip.active {
+        background: #0ea5e9;
+        border-color: #0ea5e9;
+        color: #fff;
+    }
 
     /* Mockup Preview */
     .preview-toggle-btn { color: #64748b; transition: all 0.2s ease; cursor: pointer; border: none; background: transparent; }
@@ -187,198 +263,348 @@ $flowData = session('quick_flow_data', []);
         </div>
     </section>
 
-    <div class="max-w-[1400px] mx-auto px-4">
+    {{-- ── 1. STUDIO EDITOR WORKSPACE (TOP FULL-SCREEN FOCUS WITH DOTTED BACKGROUND) ── --}}
+    <section class="w-full relative py-8 px-4 sm:px-6 lg:px-10 border-b border-slate-200/80"
+        style="background-color: #f8fafc; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
 
-    {{-- ── Main 2-Column Layout ── --}}
-    <div class="cust-page">
+        <div class="max-w-[1400px] mx-auto">
 
-        {{-- ═══ LEFT: Canvas ═══ --}}
-        <div class="min-w-0 w-full space-y-5">
+            {{-- Studio Independent Floating Layout (Centered Canvas + Absolute Floating Tools Docks) --}}
+            <div class="relative w-full min-h-[80vh] flex items-center justify-center">
 
-            {{-- Mask info notice --}}
-            @php $hasMask = !empty($maskData['frame_image']['masks'] ?? $maskData['masks'] ?? []); @endphp
-            @if($hasMask)
-            <div class="mask-info-badge">
-                <i data-lucide="crop" class="w-3.5 h-3.5"></i>
-                Shape guide active &mdash; your photo will be clipped to the dashed outline
-            </div>
-            @endif
+                {{-- ═══ LEFT: ABSOLUTE FLOATING VERTICAL TOOL DOCK (Bottom baseline aligned with Right Dock) ═══ --}}
+                <div class="absolute left-2 lg:left-6 top-1/2 -translate-y-1/2 h-[488px] flex flex-col justify-end gap-6 shrink-0 z-30 py-4 px-2">
+                    
+                    {{-- 1. Ready-Made Templates Button --}}
+                    <button type="button" onclick="toggleTemplatesDrawer()"
+                        class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Ready-Made Templates">
+                        <div id="templates-dock-btn"
+                            class="w-14 h-14 rounded-full bg-white shadow-xl shadow-slate-300/40 border border-slate-200/90 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
+                            <i data-lucide="layout-template" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-indigo-600 transition-colors">Templates</span>
+                    </button>
 
-            {{-- Canvas --}}
-            <div class="canvas-wrapper w-full bg-white" id="canvas-container">
-                @foreach($imageTypes as $key => $img)
-                @php $config = $maskData[$key] ?? []; $enabled = ($config['enabled'] ?? true) !== false; @endphp
-                <div id="canvas-wrapper-{{ $key }}" class="canvas-layer" style="position:absolute;top:0;left:0;width:100%;visibility:hidden;pointer-events:none;z-index:-1;">
-                    <canvas id="canvas-{{ $key }}"></canvas>
-                    @if(!$enabled)
-                    <div class="canvas-disabled-overlay"></div>
-                    @endif
+                    {{-- 2. Layers Button --}}
+                    <button type="button" onclick="toggleLayersDrawer()"
+                        class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Layers Panel">
+                        <div id="layers-dock-btn"
+                            class="w-14 h-14 rounded-full bg-white shadow-xl shadow-slate-300/40 border border-slate-200/90 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
+                            <i data-lucide="layers" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-xs font-black text-slate-900">Layers</span>
+                    </button>
                 </div>
-                @endforeach
-            </div>
 
-            {{-- Zoom --}}
-            <div id="zoom-control" class="hidden flex items-center gap-4 px-5 bg-white border border-slate-200 rounded-xl py-3">
-                <div class="p-2 bg-slate-50 rounded-lg"><i data-lucide="image" class="w-4 h-4 text-slate-400"></i></div>
-                <input type="range" id="zoom-slider" oninput="customizer.updateImageScale(this.value)"
-                    min="0.1" max="3" step="0.01" value="1"
-                    class="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-500">
-                <div class="p-2 bg-slate-50 rounded-lg"><i data-lucide="zoom-in" class="w-5 h-5 text-slate-400"></i></div>
-            </div>
-        </div>
-
-        {{-- ═══ RIGHT: Tools Panel ═══ --}}
-        <div class="space-y-5 w-full lg:sticky lg:top-20">
-
-            {{-- Live Preview --}}
-            <div class="bg-white border border-slate-200 rounded-2xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">See it real</span>
+                {{-- ═══ FLYOUT READY-MADE TEMPLATES STUDIO DRAWER ═══ --}}
+                <div id="templates-studio-drawer"
+                    class="hidden absolute left-24 top-1/2 -translate-y-1/2 w-84 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-[28px] p-5 shadow-2xl z-40 space-y-4 transition-all duration-300">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                <i data-lucide="layout-template" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Ready-Made Templates</span>
+                        </div>
+                        <button type="button" onclick="toggleTemplatesDrawer()" class="text-slate-400 hover:text-slate-600 p-1">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
                     </div>
-                    <div class="flex items-center gap-1 bg-slate-100 rounded-full p-1" id="preview-toggle">
-                        <button type="button" data-mode="flat" class="preview-toggle-btn active px-3 py-1 rounded-full text-[11px] font-bold">Flat</button>
-                        <button type="button" data-mode="room" class="preview-toggle-btn px-3 py-1 rounded-full text-[11px] font-bold">In the room</button>
+
+                    <p class="text-[11px] font-medium text-slate-400">Click any template to load designs onto your canvas.</p>
+
+                    {{-- Category Filter --}}
+                    <div id="template-cat-filter" class="template-cat-filter flex flex-wrap gap-1.5 pb-1"></div>
+
+                    {{-- Template Chips / Grid Container --}}
+                    <div id="template-strip" class="template-strip flex flex-wrap gap-2 max-h-[360px] overflow-y-auto pr-1"></div>
+                </div>
+
+                {{-- ═══ FLYOUT LAYERS STUDIO DRAWER (Left Side Floating Drawer) ═══ --}}
+                <div id="layers-studio-drawer"
+                    class="hidden absolute left-24 top-1/2 -translate-y-1/2 w-84 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-[28px] p-5 shadow-2xl z-40 space-y-4 transition-all duration-300">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                <i data-lucide="layers" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Layers Panel</span>
+                        </div>
+                        <button type="button" onclick="toggleLayersDrawer()" class="text-slate-400 hover:text-slate-600 p-1">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <p class="text-[11px] font-medium text-slate-400">Drag items to reorder stacking order. Top layer sits on front.</p>
+
+                    <div id="layers-list" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+                        {{-- Populated dynamically via JS --}}
                     </div>
                 </div>
-                <div id="mockup-stage" class="mockup-stage flat">
-                    <div class="mockup-scene">
-                        <div id="mockup-frame" class="mockup-frame">
-                            <img id="mockup-image" alt="Live preview of your design">
-                            <div id="mockup-empty" class="mockup-empty">
-                                <i data-lucide="image" class="w-6 h-6"></i>
-                                <span>Upload a photo to preview</span>
+
+                {{-- ═══ CENTER: ROCK-SOLID CENTERED CANVAS WORKSPACE ═══ --}}
+                <div class="w-full flex flex-col items-center justify-center min-w-0 space-y-6">
+
+                    {{-- Centered Canvas Stage (80% Viewport Height Editor Stage) --}}
+                    <div class="w-full flex items-center justify-center min-h-[80vh] py-6 relative" id="canvas-stage">
+                        {{-- Canvas Wrapper (Centered 80vh Canvas) --}}
+                        <div class="canvas-wrapper bg-white shadow-2xl rounded-2xl overflow-hidden relative mx-auto flex items-center justify-center transition-all duration-200"
+                            id="canvas-container">
+                            <div id="canvas-loading-overlay"
+                                class="hidden absolute inset-0 bg-white/80 backdrop-blur-xs z-50 flex flex-col items-center justify-center space-y-3 rounded-2xl transition-all duration-300">
+                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-lg shadow-indigo-500/10">
+                                    <i data-lucide="loader-2" class="w-6 h-6 text-indigo-600 animate-spin"></i>
+                                </div>
+                                <span class="text-xs font-black text-slate-800 tracking-wider uppercase">Loading Template...</span>
+                            </div>
+                            @foreach ($imageTypes as $key => $img)
+                                <div id="canvas-wrapper-{{ $key }}" class="canvas-layer"
+                                    style="position:absolute;top:0;left:0;width:100%;height:100%;visibility:hidden;pointer-events:none;z-index:-1;">
+                                    <canvas id="canvas-{{ $key }}"></canvas>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Hidden JS Utility Elements --}}
+                    <div style="display: none !important;">
+                        <div id="zoom-control">
+                            <input type="range" id="zoom-slider" min="0.1" max="3" step="0.01" value="1">
+                        </div>
+                        <div id="mockup-preview-card">
+                            <div id="mockup-stage" class="mockup-stage flat">
+                                <div class="mockup-scene">
+                                    <div id="mockup-frame" class="mockup-frame">
+                                        <img id="mockup-image" alt="Live preview">
+                                        <div id="mockup-empty" class="mockup-empty"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <p class="text-[11px] text-slate-400 font-medium text-center mt-3">Live preview &middot; updates as you design</p>
-            </div>
 
-            {{-- Status + Upload --}}
-            <div class="grid grid-cols-2 gap-3">
-                <div id="status-card" class="border rounded-xl p-4 flex items-center h-full bg-slate-50 border-slate-200">
-                    <div class="flex items-center gap-3">
-                        <div id="status-icon-bg" class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-300">
-                            <i id="status-icon" data-lucide="lock" class="w-4 h-4 text-white"></i>
+                {{-- ═══ RIGHT: ABSOLUTE FLOATING VERTICAL STUDIO DOCK (Fixed Position - Never Shifts Canvas) ═══ --}}
+                <div class="absolute right-2 lg:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-6 shrink-0 z-30 py-4 px-2">
+
+                    {{-- 1. Photo Tool --}}
+                    <label for="photo-upload-input" class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Upload Photo">
+                        <div id="upload-icon-bg"
+                            class="w-14 h-14 rounded-full bg-white shadow-xl shadow-slate-300/40 border border-slate-200/90 flex items-center justify-center text-pink-500 group-hover:bg-pink-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
+                            <i id="upload-icon" data-lucide="image-plus" class="w-6 h-6"></i>
                         </div>
-                        <div class="min-w-0 overflow-hidden">
-                            <p id="status-badge" class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Ready</p>
-                            <p id="status-label" class="text-xs font-extrabold truncate text-slate-600">Page 1</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="upload-area" class="relative">
-                    <label class="block cursor-pointer h-full">
-                        <div id="upload-zone" class="upload-zone !p-3 h-full flex items-center">
-                            <div class="flex items-center gap-3 w-full">
-                                <div id="upload-icon-bg" class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0 bg-white text-slate-400">
-                                    <i id="upload-icon" data-lucide="camera" class="w-5 h-5"></i>
-                                </div>
-                                <div class="flex-1 min-w-0 overflow-hidden">
-                                    <h4 id="upload-text" class="font-bold text-xs text-slate-800 leading-tight truncate">Upload Photo</h4>
-                                    <p class="text-[9px] font-medium text-slate-400 mt-0.5 truncate">Tap to pick</p>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="file" onchange="customizer.handleFileUpload(this)"
-                            class="absolute opacity-0 w-0 h-0 pointer-events-none"
-                            id="photo-upload-input" accept="image/*">
+                        <span id="upload-text" class="text-xs font-bold text-slate-600 group-hover:text-pink-600 transition-colors">Photo</span>
                     </label>
-                </div>
-            </div>
+                    <input type="file" onchange="customizer.handleFileUpload(this)" class="hidden"
+                        id="photo-upload-input" accept="image/*" multiple>
 
-            {{-- Text Toolbar --}}
-            <div id="text-toolbar" class="text-toolbar flex flex-wrap items-center gap-3">
-                <div class="relative flex-1 min-w-[140px]">
-                    <textarea id="text-input" placeholder="Add text..."
-                        class="w-full" oninput="customizer.onTextInputChange(this.value)" rows="1"></textarea>
-                    <button id="clear-text-btn" onclick="customizer.clearSelection()"
-                        class="hidden absolute right-3 top-3 text-slate-300 hover:text-slate-500 transition-colors">
-                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+                    {{-- 2. + Text Tool --}}
+                    <button type="button" onclick="toggleTextDrawer()"
+                        class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Add Custom Text">
+                        <div id="text-dock-btn"
+                            class="w-14 h-14 rounded-full bg-purple-100/90 border border-purple-200/90 shadow-xl shadow-purple-500/10 flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
+                            <i data-lucide="type" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-xs font-bold text-purple-600 group-hover:text-purple-700 transition-colors">+ Text</span>
                     </button>
-                </div>
-                <div class="flex flex-col gap-2 w-full md:flex-1">
-                    <div class="flex items-center gap-2 w-full">
-                        <select id="font-family-select" onchange="customizer._updateSelectedStyle('fontFamily', this.value)" class="flex-1 bg-transparent min-w-0">
-                            <option>Inter</option><option>Roboto</option><option>Open Sans</option>
-                            <option>Poppins</option><option>Lato</option><option>Oswald</option>
-                            <option>Bebas Neue</option><option>Anton</option><option>Playfair Display</option>
-                            <option>Dancing Script</option><option>Great Vibes</option><option>Pacifico</option>
-                            <option>Satisfy</option><option>Caveat</option><option>Lobster</option>
-                            <option>Bangers</option><option>Permanent Marker</option>
-                        </select>
-                        <select id="text-align-select" onchange="customizer._updateSelectedStyle('textAlign', this.value)" class="flex-1 bg-transparent min-w-0">
-                            <option value="left">Left</option><option value="center">Center</option>
-                            <option value="right">Right</option><option value="justify">Justify</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center gap-2 w-full">
-                        <select id="font-size-select" onchange="customizer._updateSelectedStyle('fontSize', parseInt(this.value))" class="flex-1 bg-transparent min-w-0">
-                            @for($i=8; $i<=96; $i+=2)
-                            <option value="{{ $i }}" {{ $i == 24 ? 'selected' : '' }}>{{ $i }}</option>
-                            @endfor
-                        </select>
-                        <div class="relative w-10 h-10 shrink-0">
+
+                    {{-- 3. Color Tool --}}
+                    <div class="group flex flex-col items-center gap-1.5 cursor-pointer relative" title="Text Color">
+                        <div
+                            class="w-14 h-14 rounded-full bg-white shadow-xl shadow-slate-300/40 border border-slate-200/90 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 transition-all duration-200 relative overflow-hidden">
+                            <i data-lucide="palette" class="w-6 h-6"></i>
                             <input type="color" id="text-color-input" oninput="customizer._updateSelectedStyle('fill', this.value)"
-                                class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10">
-                            <div id="text-color-preview" class="w-full h-full rounded-xl border-2 border-white shadow-sm flex items-center justify-center overflow-hidden" style="background: #000000">
-                                <i data-lucide="palette" class="w-4 h-4 text-white mix-blend-difference opacity-50"></i>
-                            </div>
+                                class="absolute inset-0 opacity-0 w-full h-full cursor-pointer">
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <button id="add-text-btn" onclick="customizer.addText()" class="w-full bg-brand-600 hover:bg-brand-700 text-white h-10 px-2 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95">
-                                + Add
-                            </button>
-                            <div id="editing-badge" class="hidden w-full flex items-center justify-center gap-1 h-10 px-2 bg-brand-50 text-brand-600 rounded-xl border border-brand-100">
-                                <i data-lucide="type" class="w-4 h-4 shrink-0"></i>
-                                <span class="text-[10px] font-extrabold uppercase tracking-widest truncate">Editing</span>
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-indigo-600 transition-colors">Color</span>
+                    </div>
+
+                    {{-- 4. Fonts Tool --}}
+                    <button type="button" onclick="toggleTextDrawer('font')"
+                        class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Select Font">
+                        <div
+                            class="w-14 h-14 rounded-full bg-white shadow-xl shadow-slate-300/40 border border-slate-200/90 flex items-center justify-center text-sky-500 group-hover:bg-sky-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
+                            <i data-lucide="whole-word" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-xs font-bold text-slate-600 group-hover:text-sky-600 transition-colors">Fonts</span>
+                    </button>
+
+                    {{-- 5. Delete Tool (Hidden when no selection) --}}
+                    <button type="button" id="remove-btn" onclick="customizer.handleRemove()"
+                        class="hidden group flex flex-col items-center gap-1.5 cursor-pointer" title="Remove Item">
+                        <div
+                            class="w-14 h-14 rounded-full bg-red-50 border border-red-200 shadow-xl shadow-red-500/10 flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
+                            <i data-lucide="trash-2" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-xs font-bold text-red-600" id="remove-btn-text">Remove</span>
+                    </button>
+
+                    {{-- 6. Add to Cart Button --}}
+                    <form action="{{ route('flow-pc.cart.add') }}" method="POST" id="checkout-form">
+                        @csrf
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <input type="hidden" name="upload_ids" id="upload_ids_field">
+                        <button type="button" id="submit-btn" onclick="customizer.submitAllCanvases()"
+                            class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Add To Cart">
+                            <div
+                                class="w-14 h-14 rounded-full bg-white text-pink-500 shadow-2xl shadow-slate-900/40 flex items-center justify-center group-hover:bg-pink-100">
+                                <i data-lucide="save" class="w-6 h-6 text-pink-500"></i>
                             </div>
+                            <span class="text-xs font-black text-slate-900">Add to cart</span>
+                        </button>
+                    </form>
+                </div>
+
+                {{-- ═══ FLYOUT TYPOGRAPHY STUDIO DRAWER ═══ --}}
+                <div id="text-studio-drawer"
+                    class="hidden absolute right-24 top-1/2 -translate-y-1/2 w-80 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-[28px] p-5 shadow-2xl z-40 space-y-4 transition-all duration-300">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                                <i data-lucide="type" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-xs font-black text-slate-800 uppercase tracking-wider">Typography Studio</span>
+                        </div>
+                        <button type="button" onclick="toggleTextDrawer()" class="text-slate-400 hover:text-slate-600 p-1">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    {{-- Text Content Input --}}
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Text Message</label>
+                        <div class="relative">
+                            <textarea id="text-input" placeholder="Type your text here..." rows="2"
+                                oninput="customizer.onTextInputChange(this.value)"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:bg-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all resize-none"></textarea>
+                            <button id="clear-text-btn" type="button" onclick="customizer.clearSelection()"
+                                class="hidden absolute right-2.5 top-2.5 text-slate-300 hover:text-slate-500">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Font Family Selector --}}
+                    <div>
+                        <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Font Style</label>
+                        <select id="font-family-select" onchange="customizer._updateSelectedStyle('fontFamily', this.value)"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:bg-white focus:border-purple-500 outline-none cursor-pointer">
+                            <option value="Inter" style="font-family: 'Inter'">Inter (Clean Sans)</option>
+                            <option value="Playfair Display" style="font-family: 'Playfair Display'">Playfair Display (Luxury Serif)</option>
+                            <option value="Dancing Script" style="font-family: 'Dancing Script'">Dancing Script (Cursive)</option>
+                            <option value="Great Vibes" style="font-family: 'Great Vibes'">Great Vibes (Elegant Script)</option>
+                            <option value="Pacifico" style="font-family: 'Pacifico'">Pacifico (Fun Brush)</option>
+                            <option value="Permanent Marker" style="font-family: 'Permanent Marker'">Permanent Marker (Bold Marker)</option>
+                            <option value="Roboto" style="font-family: 'Roboto'">Roboto (Modern)</option>
+                            <option value="Open Sans" style="font-family: 'Open Sans'">Open Sans (Minimal)</option>
+                            <option value="Poppins" style="font-family: 'Poppins'">Poppins (Geometric)</option>
+                            <option value="Lato" style="font-family: 'Lato'">Lato (Warm Sans)</option>
+                            <option value="Oswald" style="font-family: 'Oswald'">Oswald (Condensed)</option>
+                            <option value="Bebas Neue" style="font-family: 'Bebas Neue'">Bebas Neue (Headline)</option>
+                            <option value="Anton" style="font-family: 'Anton'">Anton (Impact)</option>
+                            <option value="Satisfy" style="font-family: 'Satisfy'">Satisfy (Signature)</option>
+                            <option value="Caveat" style="font-family: 'Caveat'">Caveat (Handwritten)</option>
+                            <option value="Lobster" style="font-family: 'Lobster'">Lobster (Vintage)</option>
+                            <option value="Bangers" style="font-family: 'Bangers'">Bangers (Comic)</option>
+                        </select>
+                    </div>
+
+                    {{-- Font Size & Alignment Row --}}
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Size</label>
+                            <select id="font-size-select" onchange="customizer._updateSelectedStyle('fontSize', parseInt(this.value))"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:bg-white focus:border-purple-500 outline-none cursor-pointer">
+                                @for ($i = 10; $i <= 120; $i += 2)
+                                    <option value="{{ $i }}" {{ $i == 28 ? 'selected' : '' }}>{{ $i }}px</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Alignment</label>
+                            <select id="text-align-select" onchange="customizer._updateSelectedStyle('textAlign', this.value)"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:bg-white focus:border-purple-500 outline-none cursor-pointer">
+                                <option value="center">Center</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Action Button --}}
+                    <div class="pt-2">
+                        <button type="button" id="add-text-btn" onclick="customizer.addText()"
+                            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs py-3 rounded-xl shadow-lg shadow-purple-500/20 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Text to Canvas
+                        </button>
+                        <div id="editing-badge" class="hidden w-full bg-purple-50 border border-purple-200 text-purple-700 font-extrabold text-xs py-2.5 rounded-xl text-center">
+                            Editing Selected Text
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Remove Button --}}
-            <button id="remove-btn" onclick="customizer.handleRemove()"
-                class="hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 font-semibold text-sm hover:bg-red-100 transition-all">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                <span id="remove-btn-text">Remove Photo</span>
-            </button>
-
-            {{-- Checkout --}}
-            <div class="pt-2 border-t border-slate-100">
-                <form action="{{ route('flow-pc.cart.add') }}" method="POST" id="checkout-form">
-                    @csrf
-                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <input type="hidden" name="upload_ids" id="upload_ids_field">
-                    <button type="button" id="submit-btn" onclick="customizer.submitAllCanvases()"
-                        class="w-full bg-slate-900 hover:bg-black text-white font-extrabold py-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-lg">
-                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-                        Add to Cart
-                    </button>
-                </form>
-            </div>
-
-            {{-- Help --}}
-            <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <div class="w-9 h-9 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-slate-200">
-                    <i data-lucide="help-circle" class="w-4 h-4 text-slate-400"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-600">How to use the shape guide</p>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Upload a photo — it will be clipped to the dashed shape outline shown on the canvas.</p>
-                </div>
             </div>
         </div>
-    </div>
+    </section>
+
 </div>
 @endsection
 
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
+    function toggleTextDrawer(focusTarget) {
+        const textDrawer = document.getElementById('text-studio-drawer');
+        const layersDrawer = document.getElementById('layers-studio-drawer');
+        const templatesDrawer = document.getElementById('templates-studio-drawer');
+        if (layersDrawer) layersDrawer.classList.add('hidden');
+        if (templatesDrawer) templatesDrawer.classList.add('hidden');
+        if (!textDrawer) return;
+
+        if (textDrawer.classList.contains('hidden')) {
+            textDrawer.classList.remove('hidden');
+            if (focusTarget === 'font') {
+                document.getElementById('font-family-select')?.focus();
+            } else {
+                document.getElementById('text-input')?.focus();
+            }
+        } else {
+            textDrawer.classList.add('hidden');
+        }
+    }
+
+    function toggleLayersDrawer() {
+        const layersDrawer = document.getElementById('layers-studio-drawer');
+        const textDrawer = document.getElementById('text-studio-drawer');
+        const templatesDrawer = document.getElementById('templates-studio-drawer');
+        if (textDrawer) textDrawer.classList.add('hidden');
+        if (templatesDrawer) templatesDrawer.classList.add('hidden');
+        if (!layersDrawer) return;
+
+        if (layersDrawer.classList.contains('hidden')) {
+            layersDrawer.classList.remove('hidden');
+            customizer.renderLayersPanel();
+        } else {
+            layersDrawer.classList.add('hidden');
+        }
+    }
+
+    function toggleTemplatesDrawer() {
+        const templatesDrawer = document.getElementById('templates-studio-drawer');
+        const layersDrawer = document.getElementById('layers-studio-drawer');
+        const textDrawer = document.getElementById('text-studio-drawer');
+        if (layersDrawer) layersDrawer.classList.add('hidden');
+        if (textDrawer) textDrawer.classList.add('hidden');
+        if (!templatesDrawer) return;
+
+        if (templatesDrawer.classList.contains('hidden')) {
+            templatesDrawer.classList.remove('hidden');
+            customizer._initTemplates();
+        } else {
+            templatesDrawer.classList.add('hidden');
+        }
+    }
+
     const customizer = {
         activeCanvas: 'frame_image',
         canvases: {},
@@ -390,14 +616,313 @@ $flowData = session('quick_flow_data', []);
         isSavingComposite: false,
         selectedObject: null,
 
+        // Default Text Styles
+        textFontSize: '28',
+        textFontFamily: 'Inter',
+        textColor: '#000000',
+        textAlign: 'center',
+
+        // Ready-made Templates
+        templates: @json($activeTemplates ?? ($product->templates ?? [])),
+        templateCategories: @json($templateCategories ?? []),
+        activeTplCategory: null,
+
+        // Injected from PHP
         imageTypes: <?php echo json_encode($imageTypes); ?>,
         allMaskData: <?php echo json_encode($maskData); ?>,
         productId: <?php echo $product->id; ?>,
 
+        _initTemplates() {
+            this.renderCategoryFilter();
+            this.renderTemplateChips();
+        },
+
+        renderCategoryFilter() {
+            const filter = document.getElementById('template-cat-filter');
+            if (!filter) return;
+            filter.innerHTML = '';
+
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.className = 'template-cat-chip' + (this.activeTplCategory === null ? ' active' : '');
+            allBtn.dataset.cat = '';
+            allBtn.textContent = 'All';
+            allBtn.onclick = () => this.filterTemplates(null);
+            filter.appendChild(allBtn);
+
+            const rawCategories = Array.isArray(this.templateCategories)
+                ? this.templateCategories
+                : Object.values(this.templateCategories || {});
+
+            rawCategories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const catId = cat.id !== undefined ? cat.id : cat;
+                const catName = cat.name !== undefined ? cat.name : cat;
+                const isActive = (this.activeTplCategory !== null && String(this.activeTplCategory) == String(catId));
+                btn.className = 'template-cat-chip' + (isActive ? ' active' : '');
+                btn.dataset.cat = String(catId);
+                btn.textContent = catName;
+                btn.onclick = () => this.filterTemplates(catId);
+                filter.appendChild(btn);
+            });
+        },
+
+        filterTemplates(catId) {
+            this.activeTplCategory = catId;
+            document.querySelectorAll('.template-cat-chip').forEach(el => {
+                const isMatch = el.dataset.cat === (catId === null ? '' : String(catId));
+                el.classList.toggle('active', isMatch);
+            });
+            this.renderTemplateChips();
+        },
+
+        renderTemplateChips() {
+            const strip = document.getElementById('template-strip');
+            if (!strip) return;
+
+            strip.querySelectorAll('.template-chip').forEach(el => el.remove());
+
+            const tplMap = this.templates || {};
+            const tplKeys = Object.keys(tplMap);
+
+            if (tplKeys.length === 0) {
+                strip.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-6 text-slate-400 space-y-1.5 w-full text-center">
+                        <i data-lucide="layout-template" class="w-8 h-8 opacity-40"></i>
+                        <p class="text-xs font-semibold">No templates available</p>
+                    </div>
+                `;
+                if (window.lucide) window.lucide.createIcons();
+                return;
+            }
+
+            tplKeys.forEach(id => {
+                const tpl = tplMap[id];
+                if (!tpl) return;
+
+                const tplCatId = tpl.categoryId !== undefined ? tpl.categoryId : tpl.category_id;
+                if (this.activeTplCategory !== null && tplCatId != this.activeTplCategory) return;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'template-chip';
+                btn.setAttribute('data-template', id);
+                btn.onclick = () => this.applyTemplate(id);
+
+                const iconHtml = tpl.iconUrl ?
+                    `<img src="${tpl.iconUrl}" alt="" style="width:1em;height:1em;object-fit:contain;">` :
+                    `<i data-lucide="${tpl.icon || 'layout-template'}"></i>`;
+
+                btn.innerHTML = `${iconHtml}<span>${tpl.label || tpl.name || id}</span>`;
+                strip.appendChild(btn);
+            });
+
+            if (window.lucide) window.lucide.createIcons();
+        },
+
+        async applyTemplate(id) {
+            const tpl = this.templates[id];
+            if (!tpl) return;
+
+            const cv = this.canvases[this.activeCanvas];
+            if (!cv || !cv.fabricCanvas) return;
+            const fc = cv.fabricCanvas;
+            const W = fc.width, H = fc.height;
+
+            this.showCanvasLoading('Loading Template...');
+
+            try {
+                if (tpl.replace !== false) {
+                    fc.getObjects().filter(o => o._isTemplateText || o._isTemplateImage || o._isTemplateSvg)
+                        .forEach(o => fc.remove(o));
+                }
+
+                for (const spec of (tpl.images || [])) {
+                    await this._addTemplateImage(fc, spec);
+                }
+
+                for (const spec of (tpl.svgs || [])) {
+                    await this._addTemplateSvg(fc, spec);
+                }
+
+                (tpl.texts || tpl.layers || []).forEach(spec => {
+                    const align = spec.textAlign || 'center';
+                    const textStr = spec.text || (spec.type === 'textbox' ? 'Text' : '');
+                    const t = new fabric.Textbox(textStr, {
+                        left: W * (spec.xFrac ?? spec.left ?? 0.1),
+                        top: H * (spec.yFrac ?? spec.top ?? 0.3),
+                        originX: align === 'right' ? 'right' : (align === 'left' ? 'left' : 'center'),
+                        originY: 'top',
+                        width: W * (spec.widthFrac ?? spec.width ?? 0.8),
+                        fontSize: spec.fontSize || 24,
+                        fontFamily: spec.fontFamily || 'Inter',
+                        fill: spec.fill || '#000000',
+                        textAlign: align,
+                        _isTemplateText: true,
+                        objectCaching: false,
+                        cornerSize: 12,
+                        transparentCorners: false,
+                        borderColor: '#378ADD',
+                        cornerColor: '#378ADD',
+                        cornerStyle: 'circle',
+                        lockScalingFlip: true,
+                        hasRotatingPoint: true
+                    });
+
+                    // Mask clipping
+                    const masks = (this.allMaskData[this.activeCanvas] || {}).masks || this.allMaskData.masks;
+                    if (Array.isArray(masks) && masks.length > 0) {
+                        const clip = this._createMaskObject(masks[0], cv.scaleFactor, { absolutePositioned: true });
+                        if (clip) t.set('clipPath', clip);
+                    }
+
+                    fc.add(t);
+                });
+
+                if (cv.maskGuide) cv.maskGuide.bringToFront();
+                fc.renderAll();
+                this._saveCanvasState(this.activeCanvas);
+                this.updateUI();
+            } catch (err) {
+                console.error('Template loading error:', err);
+            } finally {
+                setTimeout(() => {
+                    this.hideCanvasLoading();
+                }, 300);
+            }
+        },
+
+        showCanvasLoading(msg = 'Loading Template...') {
+            const overlay = document.getElementById('canvas-loading-overlay');
+            if (overlay) {
+                const txt = overlay.querySelector('span');
+                if (txt) txt.textContent = msg;
+                overlay.classList.remove('hidden');
+                if (window.lucide) window.lucide.createIcons();
+            }
+        },
+
+        hideCanvasLoading() {
+            const overlay = document.getElementById('canvas-loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+        },
+
+        _addTemplateImage(fc, spec) {
+            return new Promise((resolve) => {
+                const imgUrl = spec.url || spec.src || spec.image_url || spec.image;
+                if (!imgUrl) return resolve(null);
+
+                const loadImage = (url, useCors) => {
+                    const opts = useCors ? { crossOrigin: 'anonymous' } : {};
+                    fabric.Image.fromURL(url, img => {
+                        if (!img || !img.width) {
+                            if (useCors) return loadImage(url, false);
+                            return resolve(null);
+                        }
+                        const W = fc.width, H = fc.height;
+                        const scale = (W * (spec.widthFrac || spec.width_frac || 0.3)) / img.width;
+                        img.set({
+                            originX: 'center',
+                            originY: 'center',
+                            left: W * (spec.xFrac ?? spec.left ?? 0.5),
+                            top: H * (spec.yFrac ?? spec.top ?? 0.5),
+                            scaleX: scale,
+                            scaleY: scale,
+                            angle: spec.angle || 0,
+                            label: spec.label || 'Template Image',
+                            _isTemplateImage: true,
+                            selectable: !spec.locked,
+                            evented: !spec.locked,
+                            hasControls: !spec.locked,
+                            cornerStyle: 'circle',
+                            cornerSize: 12,
+                            transparentCorners: false,
+                            borderColor: '#378ADD',
+                            cornerColor: '#378ADD',
+                            lockScalingFlip: true,
+                            uniformScaling: true,
+                            objectCaching: true
+                        });
+
+                        // Apply mask clip
+                        const masks = (this.allMaskData[this.activeCanvas] || {}).masks || this.allMaskData.masks;
+                        if (Array.isArray(masks) && masks.length > 0) {
+                            const cv = this.canvases[this.activeCanvas];
+                            const clip = this._createMaskObject(masks[0], cv ? cv.scaleFactor : 1, { absolutePositioned: true });
+                            if (clip) img.set('clipPath', clip);
+                        }
+
+                        fc.add(img);
+                        resolve(img);
+                    }, opts);
+                };
+
+                loadImage(imgUrl, true);
+            });
+        },
+
+        _addTemplateSvg(fc, spec) {
+            return new Promise((resolve) => {
+                const onLoaded = (objects, options) => {
+                    if (!objects || !objects.length) return resolve(null);
+                    const obj = fabric.util.groupSVGElements(objects, options);
+                    const W = fc.width;
+                    const baseW = obj.width || 100;
+                    const scale = (W * (spec.widthFrac || 0.15)) / baseW;
+                    if (spec.fill) {
+                        if (obj._objects) obj._objects.forEach(o => o.set('fill', spec.fill));
+                        else obj.set('fill', spec.fill);
+                    }
+                    obj.set({
+                        originX: 'center',
+                        originY: 'center',
+                        left: W * (spec.xFrac ?? 0.5),
+                        top: fc.height * (spec.yFrac ?? 0.5),
+                        scaleX: scale,
+                        scaleY: scale,
+                        angle: spec.angle || 0,
+                        _isTemplateSvg: true,
+                        selectable: !spec.locked,
+                        evented: !spec.locked,
+                        hasControls: !spec.locked,
+                        cornerStyle: 'circle',
+                        cornerSize: 12,
+                        transparentCorners: false,
+                        borderColor: '#378ADD',
+                        cornerColor: '#378ADD',
+                        lockScalingFlip: true,
+                        uniformScaling: true
+                    });
+
+                    // Apply mask clip
+                    const masks = (this.allMaskData[this.activeCanvas] || {}).masks || this.allMaskData.masks;
+                    if (Array.isArray(masks) && masks.length > 0) {
+                        const cv = this.canvases[this.activeCanvas];
+                        const clip = this._createMaskObject(masks[0], cv ? cv.scaleFactor : 1, { absolutePositioned: true });
+                        if (clip) obj.set('clipPath', clip);
+                    }
+
+                    fc.add(obj);
+                    resolve(obj);
+                };
+                if (spec.url) fabric.loadSVGFromURL(spec.url, onLoaded);
+                else if (spec.svg) fabric.loadSVGFromString(spec.svg, onLoaded);
+                else resolve(null);
+            });
+        },
+
         init() {
             if (typeof this.allMaskData === 'string') {
-                try { this.allMaskData = JSON.parse(this.allMaskData); } catch(e) { this.allMaskData = {}; }
+                try {
+                    this.allMaskData = JSON.parse(this.allMaskData);
+                } catch (e) {
+                    this.allMaskData = {};
+                }
             }
+
             Object.keys(this.imageTypes).forEach(key => {
                 const config = this.allMaskData[key];
                 this.canvasEnabled[key] = (config && config.enabled === false) ? false : true;
@@ -411,21 +936,21 @@ $flowData = session('quick_flow_data', []);
                 if (cont && cont.offsetWidth > 200) {
                     this._initAllCanvases();
                     this.updateUI();
-                } else { setTimeout(waitForLayout, 50); }
+                    this._initTemplates();
+                } else {
+                    setTimeout(waitForLayout, 50);
+                }
             };
             setTimeout(waitForLayout, 50);
             window.addEventListener('resize', this._debounce(() => this._resizeAllCanvases(), 150));
 
-            document.getElementById('preview-toggle')?.addEventListener('click', (e) => {
-                const btn = e.target.closest('[data-mode]'); if (!btn) return;
-                document.querySelectorAll('.preview-toggle-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById('mockup-stage').className = 'mockup-stage ' + btn.dataset.mode;
-            });
-
             window.addEventListener('keydown', (e) => {
-                if ((e.key === 'Delete' || e.key === 'Backspace') && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-                    if (this.selectedObject) { e.preventDefault(); this.handleRemove(); }
+                if ((e.key === 'Delete' || e.key === 'Backspace') && !['INPUT', 'TEXTAREA'].includes(
+                        document.activeElement.tagName)) {
+                    if (this.selectedObject) {
+                        e.preventDefault();
+                        this.handleRemove();
+                    }
                 }
             });
 
@@ -434,57 +959,55 @@ $flowData = session('quick_flow_data', []);
 
         updateUI() {
             const key = this.activeCanvas;
-            const enabled = this.canvasEnabled[key];
-            const hasImg = this.canvasImages[key] !== null;
+            const cv = this.canvases[key];
+            const userImagesCount = cv ? cv.fabricCanvas.getObjects().filter(o => o._isUserImage).length : 0;
+            const hasImg = userImagesCount > 0 || (this.canvasImages[key] !== null);
 
             // Canvas visibility
             const el = document.getElementById('canvas-wrapper-' + key);
-            if (el) { el.style.position = 'relative'; el.style.visibility = 'visible'; el.style.pointerEvents = 'auto'; el.style.zIndex = '1'; }
-
-            // Status card
-            const statusCard = document.getElementById('status-card');
-            const statusIconBg = document.getElementById('status-icon-bg');
-            const statusBadge = document.getElementById('status-badge');
-            const statusLabel = document.getElementById('status-label');
-            if (enabled) {
-                if (statusCard) statusCard.className = 'border rounded-xl p-4 flex items-center h-full bg-gradient-to-r from-brand-50 to-violet-50 border-brand-100';
-                if (statusIconBg) statusIconBg.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-brand-500';
-                if (statusBadge) { statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-brand-700'; statusBadge.textContent = 'Editing'; }
-            } else {
-                if (statusCard) statusCard.className = 'border rounded-xl p-4 flex items-center h-full bg-slate-50 border-slate-200';
-                if (statusIconBg) statusIconBg.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-300';
-                if (statusBadge) { statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-slate-500'; statusBadge.textContent = 'Locked'; }
+            if (el) {
+                el.style.position = 'relative';
+                el.style.visibility = 'visible';
+                el.style.pointerEvents = 'auto';
+                el.style.zIndex = '1';
             }
-            if (statusLabel) statusLabel.textContent = this.imageTypes[key]?.label || 'Layer';
 
-            // Upload zone
-            const uploadArea = document.getElementById('upload-area');
-            const uploadZone = document.getElementById('upload-zone');
+            // Upload icon badge & text
             const uploadIconBg = document.getElementById('upload-icon-bg');
             const uploadText = document.getElementById('upload-text');
-            if (uploadArea) uploadArea.classList.toggle('hidden', !enabled);
-            if (enabled) {
-                if (uploadZone) uploadZone.classList.toggle('has-image', hasImg);
-                if (hasImg) {
-                    if (uploadIconBg) uploadIconBg.className = 'w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0 bg-emerald-100 text-emerald-600';
-                    if (uploadText) uploadText.textContent = 'Uploaded';
-                } else {
-                    if (uploadIconBg) uploadIconBg.className = 'w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0 bg-white text-slate-400';
-                    if (uploadText) uploadText.textContent = 'Upload Photo';
-                }
+            if (hasImg) {
+                if (uploadIconBg) uploadIconBg.className =
+                    'w-14 h-14 rounded-full bg-emerald-500 text-white shadow-xl flex items-center justify-center border border-emerald-400';
+                if (uploadText) uploadText.textContent = userImagesCount > 1 ? `Photo (${userImagesCount})` :
+                    'Photo';
+            } else {
+                if (uploadIconBg) uploadIconBg.className =
+                    'w-14 h-14 rounded-full bg-white text-pink-500 shadow-xl flex items-center justify-center border border-slate-200';
+                if (uploadText) uploadText.textContent = 'Photo';
             }
 
-            // Toolbars
-            document.getElementById('zoom-control')?.classList.toggle('hidden', !enabled || !hasImg);
-            document.getElementById('text-toolbar')?.classList.toggle('hidden', !enabled);
+            // Zoom
+            document.getElementById('zoom-control')?.classList.toggle('hidden', !hasImg);
+
+            // Selection sync
             this._syncToolbarToSelection(this.selectedObject);
 
             // Remove button
-            const showRemove = enabled && (hasImg || !!this.selectedObject);
-            document.getElementById('remove-btn')?.classList.toggle('hidden', !showRemove);
+            const showRemove = hasImg || !!this.selectedObject;
+            const removeBtn = document.getElementById('remove-btn');
+            if (removeBtn) removeBtn.classList.toggle('hidden', !showRemove);
             const removeBtnText = document.getElementById('remove-btn-text');
-            if (showRemove && removeBtnText) removeBtnText.textContent = this.selectedObject ? 'Remove Selected Text' : 'Remove Photo';
+            if (showRemove && removeBtnText) {
+                if (this.selectedObject && (this.selectedObject._isUserText || this.selectedObject._isTemplateText)) {
+                    removeBtnText.textContent = 'Remove Text';
+                } else if (this.selectedObject && (this.selectedObject._isUserImage || this.selectedObject._isTemplateImage)) {
+                    removeBtnText.textContent = 'Remove Image';
+                } else {
+                    removeBtnText.textContent = 'Remove';
+                }
+            }
 
+            this.renderLayersPanel();
             if (window.lucide) window.lucide.createIcons();
         },
 
@@ -507,17 +1030,34 @@ $flowData = session('quick_flow_data', []);
                 containerEl.style.height = displayHeight + 'px';
 
                 const fc = new fabric.Canvas('canvas-' + key, {
-                    width: displayWidth, height: displayHeight,
-                    backgroundColor: '#ffffff', selection: false,
-                    preserveObjectStacking: true, allowTouchScrolling: true
+                    width: displayWidth,
+                    height: displayHeight,
+                    backgroundColor: '#ffffff',
+                    selection: false,
+                    preserveObjectStacking: true,
+                    allowTouchScrolling: true
                 });
 
-                this.canvases[key] = { fabricCanvas: fc, imgObj: null, maskGuide: null, scaleFactor, adminW, adminH };
+                this.canvases[key] = {
+                    fabricCanvas: fc,
+                    imgObj: null,
+                    maskGuide: null,
+                    scaleFactor,
+                    adminW,
+                    adminH
+                };
 
                 const url = this.imageTypes[key]?.url;
                 if (url) {
                     fabric.Image.fromURL(url, img => {
-                        img.set({ left: 0, top: 0, scaleX: displayWidth / img.width, scaleY: displayHeight / img.height, selectable: false, evented: false });
+                        img.set({
+                            left: 0,
+                            top: 0,
+                            scaleX: displayWidth / img.width,
+                            scaleY: displayHeight / img.height,
+                            selectable: false,
+                            evented: false
+                        });
                         fc.setBackgroundImage(img, fc.requestRenderAll.bind(fc));
                     }, { crossOrigin: 'anonymous' });
                 }
@@ -528,19 +1068,42 @@ $flowData = session('quick_flow_data', []);
                 if (Array.isArray(masks) && masks.length > 0) {
                     const m = masks[0];
                     const guide = this._createMaskObject(m, scaleFactor, {
-                        fill: 'transparent', stroke: '#3b82f6', strokeWidth: 2,
-                        strokeDashArray: [5, 5], selectable: false, evented: false, name: 'mask_guide'
+                        fill: 'transparent',
+                        stroke: '#3b82f6',
+                        strokeWidth: 2,
+                        strokeDashArray: [5, 5],
+                        selectable: false,
+                        evented: false,
+                        name: 'mask_guide'
                     });
-                    if (guide) { fc.add(guide); this.canvases[key].maskGuide = guide; }
+                    if (guide) {
+                        fc.add(guide);
+                        this.canvases[key].maskGuide = guide;
+                    }
                 }
 
-                fc.on('selection:created', (e) => { this.selectedObject = e.selected[0]; this.updateUI(); });
-                fc.on('selection:updated', (e) => { this.selectedObject = e.selected[0]; this.updateUI(); });
-                fc.on('selection:cleared', () => { this.selectedObject = null; this.updateUI(); });
+                fc.on('selection:created', (e) => {
+                    this.selectedObject = e.selected[0];
+                    this.updateUI();
+                });
+                fc.on('selection:updated', (e) => {
+                    this.selectedObject = e.selected[0];
+                    this.updateUI();
+                });
+                fc.on('selection:cleared', () => {
+                    this.selectedObject = null;
+                    this.updateUI();
+                });
                 fc.on('object:modified', () => this._saveCanvasState(key));
                 fc.on('object:added', () => this._saveCanvasState(key));
                 fc.on('object:removed', () => this._saveCanvasState(key));
-                fc.on('object:scaling', (e) => { if (e.target._isUserImage) { this.imgScales[key] = e.target.scaleX; const s = document.getElementById('zoom-slider'); if (s) s.value = e.target.scaleX; } });
+                fc.on('object:scaling', (e) => {
+                    if (e.target._isUserImage) {
+                        this.imgScales[key] = e.target.scaleX;
+                        const s = document.getElementById('zoom-slider');
+                        if (s) s.value = e.target.scaleX;
+                    }
+                });
 
                 this._loadCanvasState(key);
                 fc.renderAll();
@@ -552,23 +1115,36 @@ $flowData = session('quick_flow_data', []);
             if (!containerEl) return;
             const newWidth = containerEl.offsetWidth;
             Object.keys(this.canvases).forEach(key => {
-                const cv = this.canvases[key]; if (!cv) return;
+                const cv = this.canvases[key];
+                if (!cv) return;
                 const config = this.allMaskData[key] || {};
                 const isPortrait = <?php echo ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false'; ?>;
                 const adminW = config.canvasWidth || (isPortrait ? 400 : 560);
                 const adminH = config.canvasHeight || (isPortrait ? 560 : 400);
                 const newSF = newWidth / adminW;
                 const newH = Math.round(adminH * newSF);
-                cv.fabricCanvas.setWidth(newWidth); cv.fabricCanvas.setHeight(newH);
+                cv.fabricCanvas.setWidth(newWidth);
+                cv.fabricCanvas.setHeight(newH);
                 containerEl.style.height = newH + 'px';
                 cv.fabricCanvas.getObjects().forEach(o => {
-                    if (o._isUserImage || o._isUserText) {
+                    if (o._isUserImage || o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg) {
                         const ratio = newWidth / (cv.fabricCanvas.width || newWidth);
-                        o.set({ left: o.left * ratio, top: o.top * ratio, scaleX: o.scaleX * ratio, scaleY: o.scaleY * ratio });
+                        o.set({
+                            left: o.left * ratio,
+                            top: o.top * ratio,
+                            scaleX: o.scaleX * ratio,
+                            scaleY: o.scaleY * ratio
+                        });
                         const masks = (this.allMaskData[key] || {}).masks || this.allMaskData.masks;
                         if (o.clipPath && Array.isArray(masks) && masks.length > 0) {
-                            const clip = this._createMaskObject(masks[0], newSF, { absolutePositioned: true, strokeWidth: 0 });
-                            if (clip) { clip.canvas = cv.fabricCanvas; o.set('clipPath', clip); }
+                            const clip = this._createMaskObject(masks[0], newSF, {
+                                absolutePositioned: true,
+                                strokeWidth: 0
+                            });
+                            if (clip) {
+                                clip.canvas = cv.fabricCanvas;
+                                o.set('clipPath', clip);
+                            }
                         }
                         o.setCoords();
                     }
@@ -577,19 +1153,38 @@ $flowData = session('quick_flow_data', []);
                     const masks = (this.allMaskData[key] || {}).masks || this.allMaskData.masks;
                     if (Array.isArray(masks) && masks.length > 0) {
                         cv.fabricCanvas.remove(cv.maskGuide);
-                        const guide = this._createMaskObject(masks[0], newSF, { fill: 'transparent', stroke: '#3b82f6', strokeWidth: 2, strokeDashArray: [5, 5], selectable: false, evented: false, name: 'mask_guide' });
-                        if (guide) { cv.fabricCanvas.add(guide); cv.maskGuide = guide; guide.bringToFront(); }
+                        const guide = this._createMaskObject(masks[0], newSF, {
+                            fill: 'transparent',
+                            stroke: '#3b82f6',
+                            strokeWidth: 2,
+                            strokeDashArray: [5, 5],
+                            selectable: false,
+                            evented: false,
+                            name: 'mask_guide'
+                        });
+                        if (guide) {
+                            cv.fabricCanvas.add(guide);
+                            cv.maskGuide = guide;
+                            guide.bringToFront();
+                        }
                     }
                 }
-                cv.scaleFactor = newSF; cv.adminW = adminW; cv.adminH = adminH;
+                cv.scaleFactor = newSF;
+                cv.adminW = adminW;
+                cv.adminH = adminH;
                 cv.fabricCanvas.renderAll();
             });
         },
 
         _saveCanvasState(key) {
-            const cv = this.canvases[key]; if (!cv) return;
-            const objects = cv.fabricCanvas.getObjects().filter(o => o._isUserImage || o._isUserText);
-            const data = { objects: objects.map(o => o.toObject(['_isUserImage', '_isUserText', '_uploadId'])), imgScale: this.imgScales[key], uploadId: this.uploadIds[key] };
+            const cv = this.canvases[key];
+            if (!cv) return;
+            const objects = cv.fabricCanvas.getObjects().filter(o => o._isUserImage || o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg);
+            const data = {
+                objects: objects.map(o => o.toObject(['_isUserImage', '_isUserText', '_isTemplateText', '_isTemplateImage', '_isTemplateSvg', '_uploadId'])),
+                imgScale: this.imgScales[key],
+                uploadId: this.uploadIds[key]
+            };
             localStorage.setItem(`qrinto_mask_v1_${this.productId}_${key}`, JSON.stringify(data));
         },
 
@@ -598,35 +1193,44 @@ $flowData = session('quick_flow_data', []);
             if (!saved) return;
             try {
                 const data = JSON.parse(saved);
-                const cv = this.canvases[key]; const fc = cv.fabricCanvas;
+                const cv = this.canvases[key];
+                const fc = cv.fabricCanvas;
                 this.imgScales[key] = data.imgScale || 1;
                 this.uploadIds[key] = data.uploadId;
                 if (data.objects?.length > 0) {
                     fabric.util.enlivenObjects(data.objects, (objs) => {
                         objs.forEach(obj => {
-                            obj.set({ selectable: true, evented: true, hasControls: true, lockScalingFlip: true, uniformScaling: true, cornerSize: 12, transparentCorners: false, borderColor: '#378ADD', cornerColor: '#378ADD', cornerStyle: 'circle' });
-                            if (obj._isUserImage) {
-                                const masks = (this.allMaskData[key] || {}).masks || this.allMaskData.masks;
-                                if (Array.isArray(masks) && masks.length > 0) {
-                                    const clip = this._createMaskObject(masks[0], cv.scaleFactor, { absolutePositioned: true });
-                                    if (clip) obj.set('clipPath', clip);
-                                }
-                                cv.imgObj = obj; this.canvasImages[key] = true;
+                            obj.set({
+                                selectable: true,
+                                evented: true,
+                                hasControls: true,
+                                lockScalingFlip: true,
+                                uniformScaling: true,
+                                cornerSize: 12,
+                                transparentCorners: false,
+                                borderColor: '#378ADD',
+                                cornerColor: '#378ADD',
+                                cornerStyle: 'circle'
+                            });
+                            const masks = (this.allMaskData[key] || {}).masks || this.allMaskData.masks;
+                            if (Array.isArray(masks) && masks.length > 0) {
+                                const clip = this._createMaskObject(masks[0], cv.scaleFactor, { absolutePositioned: true });
+                                if (clip) obj.set('clipPath', clip);
                             }
-                            if (obj._isUserText) {
-                                const masks = (this.allMaskData[key] || {}).masks || this.allMaskData.masks;
-                                if (Array.isArray(masks) && masks.length > 0) {
-                                    const clip = this._createMaskObject(masks[0], cv.scaleFactor, { absolutePositioned: true });
-                                    if (clip) obj.set('clipPath', clip);
-                                }
+                            if (obj._isUserImage) {
+                                cv.imgObj = obj;
+                                this.canvasImages[key] = true;
                             }
                             fc.add(obj);
                         });
                         if (cv.maskGuide) cv.maskGuide.bringToFront();
-                        fc.renderAll(); this.updateUI();
+                        fc.renderAll();
+                        this.updateUI();
                     });
                 }
-            } catch (e) { console.error('Restore error:', e); }
+            } catch (e) {
+                console.error('Restore error:', e);
+            }
         },
 
         _syncToolbarToSelection(obj) {
@@ -634,24 +1238,45 @@ $flowData = session('quick_flow_data', []);
             const addBtn = document.getElementById('add-text-btn');
             const editBadge = document.getElementById('editing-badge');
             if (!obj || !['i-text', 'text', 'textbox'].includes(obj.type)) {
-                clearBtn?.classList.add('hidden'); addBtn?.classList.remove('hidden'); editBadge?.classList.add('hidden'); return;
+                clearBtn?.classList.add('hidden');
+                addBtn?.classList.remove('hidden');
+                editBadge?.classList.add('hidden');
+                return;
             }
-            const ti = document.getElementById('text-input'); if (ti && ti.value !== obj.text) ti.value = obj.text;
-            const ff = document.getElementById('font-family-select'); if (ff) ff.value = obj.fontFamily;
-            const fs = document.getElementById('font-size-select'); if (fs) fs.value = obj.fontSize.toString();
-            const tc = document.getElementById('text-color-input'); if (tc) tc.value = obj.fill;
-            const tp = document.getElementById('text-color-preview'); if (tp) tp.style.background = obj.fill;
-            const ta = document.getElementById('text-align-select'); if (ta) ta.value = obj.textAlign || 'center';
-            clearBtn?.classList.remove('hidden'); addBtn?.classList.add('hidden'); editBadge?.classList.remove('hidden');
+            const ti = document.getElementById('text-input');
+            if (ti && ti.value !== obj.text) ti.value = obj.text;
+            const ff = document.getElementById('font-family-select');
+            if (ff) ff.value = obj.fontFamily;
+            const fs = document.getElementById('font-size-select');
+            if (fs) fs.value = obj.fontSize.toString();
+            const tc = document.getElementById('text-color-input');
+            if (tc) tc.value = obj.fill;
+            const tp = document.getElementById('text-color-preview');
+            if (tp) tp.style.background = obj.fill;
+            const ta = document.getElementById('text-align-select');
+            if (ta) ta.value = obj.textAlign || 'center';
+            clearBtn?.classList.remove('hidden');
+            addBtn?.classList.add('hidden');
+            editBadge?.classList.remove('hidden');
         },
 
         async _updateSelectedStyle(property, value) {
-            if (property === 'fill') { const tp = document.getElementById('text-color-preview'); if (tp) tp.style.background = value; }
+            if (property === 'fill') {
+                const tp = document.getElementById('text-color-preview');
+                if (tp) tp.style.background = value;
+            }
             if (!this.selectedObject) return;
-            if (property === 'fontFamily') { try { await document.fonts.load(`1em "${value}"`); } catch(e) {} }
+            if (property === 'fontFamily') {
+                try {
+                    await document.fonts.load(`1em "${value}"`);
+                } catch (e) {}
+            }
             this.selectedObject.set(property, value);
             const cv = this.canvases[this.activeCanvas];
-            if (cv) { cv.fabricCanvas.requestRenderAll(); this._saveCanvasState(this.activeCanvas); }
+            if (cv) {
+                cv.fabricCanvas.requestRenderAll();
+                this._saveCanvasState(this.activeCanvas);
+            }
         },
 
         onTextInputChange(value) {
@@ -660,161 +1285,494 @@ $flowData = session('quick_flow_data', []);
                 this.canvases[this.activeCanvas]?.fabricCanvas?.requestRenderAll();
                 this._saveCanvasState(this.activeCanvas);
                 if (!value.trim()) this.handleRemove();
-            } else if (value.trim()) { this.addText(); }
+            } else if (value.trim()) {
+                this.addText();
+            }
         },
 
         clearSelection() {
             const cv = this.canvases[this.activeCanvas];
-            if (cv) { cv.fabricCanvas.discardActiveObject().renderAll(); this.selectedObject = null; const ti = document.getElementById('text-input'); if (ti) ti.value = ''; this.updateUI(); }
+            if (cv) {
+                cv.fabricCanvas.discardActiveObject().renderAll();
+                this.selectedObject = null;
+                const ti = document.getElementById('text-input');
+                if (ti) ti.value = '';
+                this.updateUI();
+            }
+        },
+
+        addText() {
+            const key = this.activeCanvas;
+            const cv = this.canvases[key];
+            if (!cv || !this.canvasEnabled[key]) return;
+            const ti = document.getElementById('text-input');
+            const str = (ti && ti.value.trim()) ? ti.value.trim() : 'Your Text Here';
+
+            const ffSelect = document.getElementById('font-family-select');
+            const fsSelect = document.getElementById('font-size-select');
+            const tcInput = document.getElementById('text-color-input');
+            const taSelect = document.getElementById('text-align-select');
+
+            const fontFamily = ffSelect ? ffSelect.value : this.textFontFamily;
+            const fontSize = fsSelect ? parseInt(fsSelect.value) : parseInt(this.textFontSize);
+            const fill = tcInput ? tcInput.value : this.textColor;
+            const align = taSelect ? taSelect.value : this.textAlign;
+
+            document.fonts.load(`1em "${fontFamily}"`).then(() => {
+                const W = cv.fabricCanvas.width;
+                const H = cv.fabricCanvas.height;
+
+                const t = new fabric.Textbox(str, {
+                    left: W / 2,
+                    top: H / 2,
+                    originX: 'center',
+                    originY: 'center',
+                    width: W * 0.7,
+                    fontSize: fontSize,
+                    fontFamily: fontFamily,
+                    fill: fill,
+                    textAlign: align,
+                    _isUserText: true,
+                    objectCaching: false,
+                    cornerSize: 12,
+                    transparentCorners: false,
+                    borderColor: '#378ADD',
+                    cornerColor: '#378ADD',
+                    cornerStyle: 'circle',
+                    lockScalingFlip: true,
+                    hasRotatingPoint: true
+                });
+
+                // Apply mask clip
+                const masks = (this.allMaskData[key] || {}).masks || this.allMaskData.masks;
+                if (Array.isArray(masks) && masks.length > 0) {
+                    const clip = this._createMaskObject(masks[0], cv.scaleFactor, { absolutePositioned: true });
+                    if (clip) t.set('clipPath', clip);
+                }
+
+                cv.fabricCanvas.add(t);
+                if (cv.maskGuide) cv.maskGuide.bringToFront();
+                cv.fabricCanvas.setActiveObject(t);
+                cv.fabricCanvas.renderAll();
+                this.selectedObject = t;
+                this.updateUI();
+                if (t.canvas) {
+                    t.set('fontFamily', fontFamily);
+                    t.setCoords();
+                    t.canvas.requestRenderAll();
+                }
+            }).catch(() => {});
+            this.updateUI();
         },
 
         _addImageToCanvas(key, url) {
-            const cv = this.canvases[key]; if (!cv || !this.canvasEnabled[key]) return;
-            if (cv.imgObj) cv.fabricCanvas.remove(cv.imgObj);
+            const cv = this.canvases[key];
+            if (!cv || !this.canvasEnabled[key]) return;
+
             fabric.Image.fromURL(url, img => {
-                const canvasW = cv.fabricCanvas.width; const canvasH = cv.fabricCanvas.height;
+                const fc = cv.fabricCanvas;
+                const canvasW = fc.width;
+                const canvasH = fc.height;
                 const s = Math.min(canvasW / img.width, canvasH / img.height) * 0.8;
-                img.set({ left: (canvasW - img.width * s) / 2, top: (canvasH - img.height * s) / 2, scaleX: s, scaleY: s, cornerStyle: 'circle', cornerSize: 12, transparentCorners: false, borderColor: '#378ADD', cornerColor: '#378ADD', hasControls: true, hasBorders: true, selectable: true, _isUserImage: true, objectCaching: true, lockScalingFlip: true, uniformScaling: true });
+
+                const userImages = fc.getObjects().filter(o => o._isUserImage);
+                const userImgCount = userImages.length;
+                const offset = (userImgCount % 8) * 22;
+
+                img.set({
+                    left: (canvasW - img.width * s) / 2 + offset,
+                    top: (canvasH - img.height * s) / 2 + offset,
+                    scaleX: s,
+                    scaleY: s,
+                    cornerStyle: 'circle',
+                    cornerSize: 12,
+                    transparentCorners: false,
+                    borderColor: '#378ADD',
+                    cornerColor: '#378ADD',
+                    hasControls: true,
+                    hasBorders: true,
+                    selectable: true,
+                    _isUserImage: true,
+                    objectCaching: true,
+                    lockScalingFlip: true,
+                    uniformScaling: true
+                });
+
                 // Apply mask clip
                 const masks = (this.allMaskData[key] || {}).masks || this.allMaskData.masks;
                 if (Array.isArray(masks) && masks.length > 0) {
                     const clip = this._createMaskObject(masks[0], cv.scaleFactor, { absolutePositioned: true });
                     if (clip) img.set('clipPath', clip);
                 }
-                cv.fabricCanvas.add(img);
+
+                fc.add(img);
                 if (cv.maskGuide) cv.maskGuide.bringToFront();
-                cv.fabricCanvas.setActiveObject(img); cv.fabricCanvas.renderAll();
-                img.setCoords(); cv.imgObj = img; this.imgScales[key] = s; this.updateUI();
+                fc.setActiveObject(img);
+                fc.renderAll();
+                img.setCoords();
+                cv.imgObj = img;
+                this.imgScales[key] = s;
+                this.updateUI();
             }, { crossOrigin: 'anonymous' });
         },
 
         async handleFileUpload(input) {
-            const file = input.files[0]; if (!file) return;
+            const files = Array.from(input.files);
+            if (!files.length) return;
             const key = this.activeCanvas;
             if (!this.canvasEnabled[key]) return;
-            this.isUploading = true; this.updateUI();
+
+            this.isUploading = true;
+            this.updateUI();
+
             try {
-                const optimized = await this._processImage(file);
-                this.canvasImages[key] = optimized.dataUrl;
-                this._addImageToCanvas(key, optimized.dataUrl);
-                const fd = new FormData();
-                fd.append('image', optimized.blob, 'upload.webp');
-                fd.append('_token', '<?php echo csrf_token(); ?>');
-                const res = await fetch('<?php echo route("flow-pc.upload"); ?>', { method: 'POST', body: fd });
-                const dat = await res.json();
-                if (dat.success) this.uploadIds[key] = dat.upload_id;
-            } catch(err) { console.error('Upload error:', err); }
-            finally { this.isUploading = false; input.value = ''; this.updateUI(); }
+                for (const file of files) {
+                    const optimized = await this._processImage(file);
+                    this.canvasImages[key] = optimized.dataUrl;
+                    this._addImageToCanvas(key, optimized.dataUrl);
+
+                    const fd = new FormData();
+                    fd.append('photo', file);
+                    fd.append('canvas_key', key);
+                    fd.append('_token', '<?php echo csrf_token(); ?>');
+
+                    const res = await fetch('<?php echo route('flow-pc.upload'); ?>', {
+                        method: 'POST',
+                        body: fd
+                    });
+                    const dat = await res.json();
+                    if (dat.success) {
+                        this.uploadIds[key] = dat.upload_id;
+                    }
+                }
+            } catch (e) {
+                console.error('Upload error:', e);
+            } finally {
+                this.isUploading = false;
+                input.value = '';
+                this.updateUI();
+            }
         },
 
         _processImage(file) {
             return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let w = img.width, h = img.height; const maxDim = 1200;
-                    if (w > maxDim || h > maxDim) { if (w > h) { h *= maxDim / w; w = maxDim; } else { w *= maxDim / h; h = maxDim; } }
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    const dataUrl = canvas.toDataURL('image/webp', 0.85);
-                    canvas.toBlob((blob) => resolve({ blob, dataUrl }), 'image/webp', 0.85);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const MAX = 1600;
+                        let w = img.width, h = img.height;
+                        if (w > MAX || h > MAX) {
+                            if (w > h) { h = Math.round((h * MAX) / w); w = MAX; }
+                            else { w = Math.round((w * MAX) / h); h = MAX; }
+                        }
+                        const c = document.createElement('canvas');
+                        c.width = w; c.height = h;
+                        const ctx = c.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve({ dataUrl: c.toDataURL('image/jpeg', 0.88), width: w, height: h });
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
                 };
-                img.onerror = reject;
-                img.src = URL.createObjectURL(file);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
             });
         },
 
-        updateImageScale(val) {
-            const cv = this.canvases[this.activeCanvas]; if (!cv?.imgObj) return;
-            this.imgScales[this.activeCanvas] = val;
-            cv.imgObj.set({ scaleX: parseFloat(val), scaleY: parseFloat(val) });
-            cv.imgObj.setCoords(); cv.fabricCanvas.requestRenderAll();
-        },
+        renderLayersPanel() {
+            const key = this.activeCanvas;
+            const cv = this.canvases[key];
+            const listEl = document.getElementById('layers-list');
+            if (!cv || !cv.fabricCanvas || !listEl) return;
 
-        addText() {
-            const key = this.activeCanvas; if (!this.canvasEnabled[key]) return;
-            const cv = this.canvases[key]; if (!cv) return;
-            const textVal = document.getElementById('text-input').value;
-            if (!textVal.trim()) return;
-            const fontSize = parseInt(document.getElementById('font-size-select').value);
-            const fontFamily = document.getElementById('font-family-select').value;
-            const color = document.getElementById('text-color-input').value;
-            const align = document.getElementById('text-align-select').value;
-            const t = new fabric.Textbox(textVal, {
-                left: cv.fabricCanvas.width * 0.1, top: cv.fabricCanvas.height / 3,
-                width: cv.fabricCanvas.width * 0.8, fontSize, fontFamily, fill: color, textAlign: align,
-                _isUserText: true, objectCaching: false, cornerSize: 12, transparentCorners: false,
-                borderColor: '#378ADD', cornerColor: '#378ADD', cornerStyle: 'circle', lockScalingFlip: true
-            });
-            // Apply mask clip to text too
-            const masks = (this.allMaskData[key] || {}).masks || this.allMaskData.masks;
-            if (Array.isArray(masks) && masks.length > 0) {
-                const clip = this._createMaskObject(masks[0], cv.scaleFactor, { absolutePositioned: true });
-                if (clip) t.set('clipPath', clip);
+            const objects = cv.fabricCanvas.getObjects().filter(o =>
+                o._isUserImage || o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg
+            );
+
+            if (objects.length === 0) {
+                listEl.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-8 text-slate-400 space-y-2">
+                        <i data-lucide="layers" class="w-8 h-8 opacity-40"></i>
+                        <p class="text-xs font-semibold">No layers added yet</p>
+                        <p class="text-[10px] text-slate-400">Add photos, text or templates to manage layers</p>
+                    </div>
+                `;
+                if (window.lucide) window.lucide.createIcons();
+                return;
             }
-            this.selectedObject = t;
-            cv.fabricCanvas.add(t);
+
+            const reversed = [...objects].reverse();
+
+            listEl.innerHTML = '';
+            reversed.forEach((obj, displayIndex) => {
+                const isSelected = this.selectedObject === obj;
+                const layerItem = document.createElement('div');
+                layerItem.className = `group flex items-center justify-between gap-2.5 p-3 rounded-2xl border transition-all duration-200 cursor-pointer ${
+                    isSelected ? 'bg-purple-50/90 border-purple-300 shadow-sm ring-2 ring-purple-500/20' : 'bg-slate-50/80 border-slate-200/80 hover:bg-slate-100/80'
+                }`;
+                layerItem.draggable = true;
+
+                let iconHtml = '';
+                let labelText = '';
+                let badgeText = 'Layer';
+                let badgeColorClass = 'text-purple-500';
+
+                if (obj._isUserImage || obj._isTemplateImage) {
+                    const src = obj._element ? obj._element.src : (obj.src || '');
+                    iconHtml = src ? `<img src="${src}" class="w-9 h-9 object-cover rounded-xl border border-slate-200/80 shrink-0 shadow-2xs">` : `<div class="w-9 h-9 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-xs shrink-0"><i data-lucide="image" class="w-4 h-4"></i></div>`;
+                    labelText = obj._isTemplateImage ? (obj.label || 'Template Photo') : 'Photo Layer';
+                    badgeText = 'Image';
+                    badgeColorClass = 'text-pink-500';
+                } else if (obj._isUserText || obj._isTemplateText) {
+                    iconHtml = `<div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs shrink-0"><i data-lucide="type" class="w-4 h-4"></i></div>`;
+                    labelText = obj.text ? (obj.text.length > 16 ? obj.text.substring(0, 16) + '...' : obj.text) : 'Text Layer';
+                    badgeText = 'Text';
+                    badgeColorClass = 'text-purple-500';
+                } else if (obj._isTemplateSvg) {
+                    iconHtml = `<div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0"><i data-lucide="sparkles" class="w-4 h-4"></i></div>`;
+                    labelText = obj.label || 'Design SVG';
+                    badgeText = 'Graphic';
+                    badgeColorClass = 'text-indigo-500';
+                }
+
+                layerItem.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                        <div class="cursor-grab active:cursor-grabbing text-slate-300 group-hover:text-slate-500 shrink-0 px-0.5" title="Drag to reorder">
+                            <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+                        </div>
+                        ${iconHtml}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold ${isSelected ? 'text-purple-900' : 'text-slate-700'} truncate">${labelText}</p>
+                            <span class="text-[10px] font-extrabold ${badgeColorClass} uppercase tracking-wider">${badgeText}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" class="move-up-btn p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-100/60 transition-colors" title="Bring Forward">
+                            <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" class="move-down-btn p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-100/60 transition-colors" title="Send Backward">
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" class="delete-layer-btn p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-100/60 transition-colors" title="Delete Layer">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+
+                layerItem.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    cv.fabricCanvas.setActiveObject(obj);
+                    cv.fabricCanvas.renderAll();
+                    this.selectedObject = obj;
+                    this.updateUI();
+                });
+
+                const upBtn = layerItem.querySelector('.move-up-btn');
+                const downBtn = layerItem.querySelector('.move-down-btn');
+                const deleteBtn = layerItem.querySelector('.delete-layer-btn');
+
+                if (upBtn) upBtn.onclick = (e) => { e.stopPropagation(); this.moveLayerUp(obj); };
+                if (downBtn) downBtn.onclick = (e) => { e.stopPropagation(); this.moveLayerDown(obj); };
+                if (deleteBtn) deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    cv.fabricCanvas.remove(obj);
+                    if (this.selectedObject === obj) this.selectedObject = null;
+                    cv.fabricCanvas.renderAll();
+                    this._saveCanvasState(key);
+                    this.updateUI();
+                };
+
+                layerItem.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', displayIndex.toString());
+                    layerItem.classList.add('opacity-40');
+                });
+                layerItem.addEventListener('dragend', () => {
+                    layerItem.classList.remove('opacity-40');
+                });
+                layerItem.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    layerItem.classList.add('border-purple-500', 'bg-purple-50/50');
+                });
+                layerItem.addEventListener('dragleave', () => {
+                    layerItem.classList.remove('border-purple-500', 'bg-purple-50/50');
+                });
+                layerItem.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    layerItem.classList.remove('border-purple-500', 'bg-purple-50/50');
+                    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                    const toIndex = displayIndex;
+                    if (!isNaN(fromIndex) && fromIndex !== toIndex) {
+                        this.reorderLayers(fromIndex, toIndex);
+                    }
+                });
+
+                listEl.appendChild(layerItem);
+            });
+
+            if (window.lucide) window.lucide.createIcons();
+        },
+
+        moveLayerUp(obj) {
+            const key = this.activeCanvas;
+            const cv = this.canvases[key];
+            if (!cv || !obj) return;
+            cv.fabricCanvas.bringForward(obj);
             if (cv.maskGuide) cv.maskGuide.bringToFront();
-            t.setCoords(); cv.fabricCanvas.setActiveObject(t); cv.fabricCanvas.renderAll();
-            document.fonts.load(`${fontSize}px "${fontFamily}"`).then(() => {
-                if (t.canvas) { t.set('fontFamily', fontFamily); t.setCoords(); t.canvas.requestRenderAll(); }
-            }).catch(() => {});
-            this.updateUI();
+            cv.fabricCanvas.renderAll();
+            this._saveCanvasState(key);
+            this.renderLayersPanel();
+        },
+
+        moveLayerDown(obj) {
+            const key = this.activeCanvas;
+            const cv = this.canvases[key];
+            if (!cv || !obj) return;
+            cv.fabricCanvas.sendBackwards(obj);
+            if (cv.maskGuide) cv.maskGuide.bringToFront();
+            cv.fabricCanvas.renderAll();
+            this._saveCanvasState(key);
+            this.renderLayersPanel();
+        },
+
+        reorderLayers(fromDisplayIndex, toDisplayIndex) {
+            const key = this.activeCanvas;
+            const cv = this.canvases[key];
+            if (!cv || !cv.fabricCanvas) return;
+
+            const allObjects = cv.fabricCanvas.getObjects();
+            const manageableObjects = allObjects.filter(o =>
+                o._isUserImage || o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg
+            );
+            if (manageableObjects.length === 0) return;
+
+            const reversed = [...manageableObjects].reverse();
+
+            if (fromDisplayIndex < 0 || fromDisplayIndex >= reversed.length) return;
+            if (toDisplayIndex < 0 || toDisplayIndex >= reversed.length) return;
+
+            const [movedObj] = reversed.splice(fromDisplayIndex, 1);
+            reversed.splice(toDisplayIndex, 0, movedObj);
+
+            const newCanvasOrder = [...reversed].reverse();
+
+            const originalIndices = manageableObjects.map(o => allObjects.indexOf(o)).sort((a, b) => a - b);
+
+            newCanvasOrder.forEach((obj, idx) => {
+                const targetFabricIndex = originalIndices[idx] !== undefined ? originalIndices[idx] : idx;
+                cv.fabricCanvas.moveTo(obj, targetFabricIndex);
+            });
+
+            if (cv.maskGuide) cv.maskGuide.bringToFront();
+            cv.fabricCanvas.renderAll();
+            this._saveCanvasState(key);
+            this.renderLayersPanel();
         },
 
         handleRemove() {
-            const cv = this.canvases[this.activeCanvas]; if (!cv) return;
+            const cv = this.canvases[this.activeCanvas];
+            if (!cv) return;
             if (this.selectedObject) {
-                cv.fabricCanvas.remove(this.selectedObject); cv.fabricCanvas.discardActiveObject();
-                this.selectedObject = null; const ti = document.getElementById('text-input'); if (ti) ti.value = '';
-            } else if (cv.imgObj) {
-                cv.fabricCanvas.remove(cv.imgObj);
-                cv.imgObj = null; this.canvasImages[this.activeCanvas] = null; this.uploadIds[this.activeCanvas] = null;
+                cv.fabricCanvas.remove(this.selectedObject);
+                cv.fabricCanvas.discardActiveObject();
+                this.selectedObject = null;
+                const ti = document.getElementById('text-input');
+                if (ti) ti.value = '';
+            } else {
+                const userImages = cv.fabricCanvas.getObjects().filter(o => o._isUserImage);
+                if (userImages.length > 0) {
+                    const lastImg = userImages[userImages.length - 1];
+                    cv.fabricCanvas.remove(lastImg);
+                }
             }
-            cv.fabricCanvas.renderAll(); this.updateUI();
+            const remainingImages = cv.fabricCanvas.getObjects().filter(o => o._isUserImage);
+            if (remainingImages.length === 0) {
+                this.canvasImages[this.activeCanvas] = null;
+                this.uploadIds[this.activeCanvas] = null;
+            }
+            if (cv.maskGuide) cv.maskGuide.bringToFront();
+            cv.fabricCanvas.renderAll();
+            this.updateUI();
         },
 
         submitAllCanvases() {
             if (this.isSavingComposite) return;
             const hasUpload = Object.values(this.uploadIds).some(id => id !== null) ||
-                Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.getObjects().some(o => o._isUserText));
+                Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.getObjects().some(o => o._isUserText || o._isTemplateText));
             if (!hasUpload) {
                 document.getElementById('upload_ids_field').value = JSON.stringify({});
-                document.getElementById('checkout-form').submit(); return;
+                document.getElementById('checkout-form').submit();
+                return;
             }
             this.isSavingComposite = true;
             const btn = document.getElementById('submit-btn');
-            btn.disabled = true; btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> Saving...'; lucide.createIcons();
+            btn.disabled = true;
+            btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> Saving...';
+            lucide.createIcons();
+
             const ids = {};
             const uploadPromises = Object.keys(this.canvases).map(async key => {
-                const cv = this.canvases[key]; if (!cv || !this.canvasEnabled[key]) return;
-                const hasEdit = this.canvasImages[key] !== null || cv.fabricCanvas.getObjects().some(o => o._isUserText);
+                const cv = this.canvases[key];
+                if (!cv || !this.canvasEnabled[key]) return;
+                const hasEdit = this.canvasImages[key] !== null || cv.fabricCanvas.getObjects().some(o => o._isUserText || o._isTemplateText);
                 if (!hasEdit) return;
+
                 cv.fabricCanvas.discardActiveObject();
-                const guide = cv.maskGuide; if (guide) { guide.set('visible', false); cv.fabricCanvas.renderAll(); }
-                const b64 = cv.fabricCanvas.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 2 });
-                if (guide) { guide.set('visible', true); cv.fabricCanvas.renderAll(); }
+                const guide = cv.maskGuide;
+                if (guide) {
+                    guide.set('visible', false);
+                    cv.fabricCanvas.renderAll();
+                }
+
+                const b64 = cv.fabricCanvas.toDataURL({
+                    format: 'jpeg',
+                    quality: 0.9,
+                    multiplier: 2
+                });
+
+                if (guide) {
+                    guide.set('visible', true);
+                    cv.fabricCanvas.renderAll();
+                }
+
                 const res = await fetch('<?php echo route("flow-pc.upload_composite"); ?>', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>' },
-                    body: JSON.stringify({ image_data: b64, canvas_key: key }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>'
+                    },
+                    body: JSON.stringify({
+                        image_data: b64,
+                        canvas_key: key
+                    }),
                 });
                 const dat = await res.json();
                 if (dat.success) ids[key] = dat.upload_id;
             });
+
             Promise.all(uploadPromises).then(() => {
                 document.getElementById('upload_ids_field').value = JSON.stringify(ids);
                 document.getElementById('checkout-form').submit();
             }).catch(err => {
-                console.error(err); this.isSavingComposite = false; btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="shopping-cart"></i> Add to Cart'; lucide.createIcons();
+                console.error(err);
+                this.isSavingComposite = false;
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="save"></i> Add to cart';
+                lucide.createIcons();
             });
         },
 
         _createMaskObject(m, sf, extraProps = {}) {
             if (!m) return null;
             const type = m.type || 'rectangle';
-            const base = { left: m.left * sf, top: m.top * sf, scaleX: (m.scaleX || 1) * sf, scaleY: (m.scaleY || 1) * sf, angle: m.angle || 0, ...extraProps };
+            const base = {
+                left: m.left * sf,
+                top: m.top * sf,
+                scaleX: (m.scaleX || 1) * sf,
+                scaleY: (m.scaleY || 1) * sf,
+                angle: m.angle || 0,
+                ...extraProps
+            };
             switch (type) {
                 case 'square': case 'rectangle': case 'diamond': return new fabric.Rect({ ...base, width: m.width, height: m.height });
                 case 'circle': return new fabric.Circle({ ...base, radius: m.radius });
@@ -827,7 +1785,13 @@ $flowData = session('quick_flow_data', []);
             }
         },
 
-        _debounce(fn, delay) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), delay); }; }
+        _debounce(fn, delay) {
+            let t;
+            return (...a) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn.apply(this, a), delay);
+            };
+        }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -837,11 +1801,23 @@ $flowData = session('quick_flow_data', []);
             let lastData = null;
             function refresh() {
                 try {
-                    const key = customizer.activeCanvas; const cv = customizer.canvases[key]; if (!cv) return;
+                    const key = customizer.activeCanvas;
+                    const cv = customizer.canvases[key];
+                    if (!cv) return;
                     const guide = cv.maskGuide;
-                    if (guide) { guide.set('visible', false); cv.fabricCanvas.renderAll(); }
-                    let data = cv.fabricCanvas.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.6 });
-                    if (guide) { guide.set('visible', true); cv.fabricCanvas.renderAll(); }
+                    if (guide) {
+                        guide.set('visible', false);
+                        cv.fabricCanvas.renderAll();
+                    }
+                    let data = cv.fabricCanvas.toDataURL({
+                        format: 'jpeg',
+                        quality: 0.6,
+                        multiplier: 0.6
+                    });
+                    if (guide) {
+                        guide.set('visible', true);
+                        cv.fabricCanvas.renderAll();
+                    }
                     if (data && data !== lastData) {
                         lastData = data;
                         const img = document.getElementById('mockup-image');

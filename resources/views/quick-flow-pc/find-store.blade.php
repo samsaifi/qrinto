@@ -1,640 +1,721 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Find a Store')
+@section('title', 'Find a Store Location')
 @section('header_title', 'Find Store')
 
 @push('styles')
+<!-- Swiper CSS CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
 <style>
-    .hero-gradient {
-        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
-    }
-    .hero-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
-        background-size: 32px 32px;
-    }
-    .hero-blob-1 {
-        position: absolute; top: -60px; right: 15%; width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
-        border-radius: 50%; filter: blur(40px); pointer-events: none;
-    }
-    .hero-blob-2 {
-        position: absolute; bottom: -40px; right: 5%; width: 200px; height: 200px;
-        background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
-        border-radius: 50%; filter: blur(30px); pointer-events: none;
-    }
-    .hero-blob-3 {
-        position: absolute; top: 20%; right: 35%; width: 80px; height: 80px;
-        background: rgba(236, 72, 153, 0.15); border-radius: 50%; filter: blur(10px); pointer-events: none;
-    }
-    .hero-dots {
-        position: absolute; top: 10%; right: 3%; width: 80px; height: 80px;
-        background-image: radial-gradient(circle, rgba(236,72,153,0.2) 2px, transparent 2px);
-        background-size: 10px 10px; border-radius: 50%; pointer-events: none;
-    }
-    .store-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .store-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 20px 40px -12px rgba(0,0,0,0.08), 0 0 0 1px rgba(236,72,153,0.12);
-    }
-    .category-card {
-        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .category-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 24px 48px -16px rgba(0,0,0,0.1);
-    }
-    .review-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .review-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 16px 32px -8px rgba(0,0,0,0.06);
-    }
-    .search-input-hero {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .search-input-hero:focus-within {
-        box-shadow: 0 0 0 4px rgba(236,72,153,0.12), 0 20px 40px -12px rgba(0,0,0,0.08);
-        border-color: var(--color-brand-500, #ec4899);
-    }
-    .fade-up {
-        animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-    .fade-up-delay-1 { animation-delay: 0.1s; }
-    .fade-up-delay-2 { animation-delay: 0.2s; }
-    .fade-up-delay-3 { animation-delay: 0.3s; }
-    .fade-up-delay-4 { animation-delay: 0.4s; }
-    @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(24px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .tag-pill {
-        transition: all 0.2s ease;
-    }
-    .tag-pill:hover {
-        background-color: var(--color-brand-600, #db2777);
-        color: white;
-        transform: scale(1.05);
-    }
-    .stat-item {
+    .hero-mesh-overlay {
         position: relative;
     }
-    .stat-item:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        height: 32px;
-        width: 1px;
-        background: #e2e8f0;
+    .hero-orb-1 {
+        position: absolute; top: -100px; right: -50px; width: 450px; height: 450px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.25) 0%, rgba(147, 51, 234, 0.15) 50%, transparent 70%);
+        border-radius: 50%; filter: blur(80px); pointer-events: none; animation: orbPulse 8s infinite alternate ease-in-out;
     }
-    .badge-open {
-        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-        color: #065f46;
+    .hero-orb-2 {
+        position: absolute; bottom: -120px; left: -80px; width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(168, 85, 247, 0.15) 50%, transparent 70%);
+        border-radius: 50%; filter: blur(90px); pointer-events: none; animation: orbPulse 10s infinite alternate-reverse ease-in-out;
     }
-    .badge-closed {
-        background: linear-gradient(135deg, #fef2f2, #fecaca);
-        color: #991b1b;
+    .hero-orb-3 {
+        position: absolute; top: 30%; left: 40%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(244, 63, 94, 0.18) 0%, transparent 70%);
+        border-radius: 50%; filter: blur(70px); pointer-events: none; animation: orbPulse 6s infinite alternate ease-in-out;
+    }
+    @keyframes orbPulse {
+        0% { transform: scale(1) translate(0, 0); }
+        50% { transform: scale(1.1) translate(20px, -15px); }
+        100% { transform: scale(0.95) translate(-15px, 20px); }
+    }
+    .store-card-premium {
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .store-card-premium:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.12), 0 0 0 2px rgba(236,72,153,0.2);
+    }
+    .category-card-premium {
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .category-card-premium:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.08);
+    }
+    .city-global-swiper {
+        height: 460px !important;
+        width: 310px !important;
+        max-width: 100%;
+        overflow: visible !important;
+    }
+    .city-global-swiper .swiper-wrapper {
+        height: 100% !important;
+        overflow: visible !important;
+    }
+    .city-global-swiper .swiper-slide {
+        height: 100% !important;
+        width: 310px !important;
+        border-radius: 32px !important;
+        overflow: hidden !important;
+        transform-origin: bottom left !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.25);
+    }
+    .search-input-hero-wrapper {
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .search-input-hero-wrapper:focus-within {
+        box-shadow: 0 0 0 4px rgba(236,72,153,0.25), 0 25px 50px -12px rgba(0,0,0,0.3);
+        border-color: #ec4899;
     }
 </style>
 @endpush
 
 @section('content')
-<div x-data="storeAutocomplete()" class="pb-24">
+<div x-data="storeAutocomplete()" class="w-full overflow-hidden">
 
-    {{-- ===== SECTION 1: HERO ===== --}}
-    <section class="hero-gradient hero-pattern -mx-10 -mt-4 px-10 pt-16 pb-20 relative overflow-hidden">
-        <div class="hero-blob-1"></div>
-        <div class="hero-blob-2"></div>
-        <div class="hero-blob-3"></div>
-        <div class="hero-dots"></div>
+    {{-- ===== SECTION 1: HERO SECTION (WITH COLORFUL GRADIENT, ANIMATED SVG & SEARCH) ===== --}}
+    <section class="hero-mesh-overlay w-full px-6 lg:px-12 pt-14 pb-20 relative overflow-hidden text-white shadow-xl"
+        style="background: linear-gradient(135deg, #0d061c 0%, #1c0836 35%, #2a074a 70%, #0d061c 100%) !important;">
+        <!-- Animated Ambient Gradient Blobs -->
+        <div class="hero-orb-1"></div>
+        <div class="hero-orb-2"></div>
+        <div class="hero-orb-3"></div>
 
         <div class="max-w-[1400px] mx-auto relative z-10">
-            <div class="grid grid-cols-12 gap-12 items-center">
-                {{-- Left: Content --}}
-                <div class="col-span-12 lg:col-span-6 xl:col-span-5">
-                    <div class="fade-up">
-                        <span class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-sm font-semibold px-4 py-2 rounded-full mb-6 shadow-sm backdrop-blur-sm">
-                            <i data-lucide="map-pin" class="w-4 h-4"></i>
-                            Discover local stores near you
+            <div class="grid grid-cols-12 gap-10 lg:gap-14 items-center">
+
+                {{-- Left Column: Search & Text Copy --}}
+                <div class="col-span-12 lg:col-span-6 xl:col-span-6">
+                    <!-- Badge Tag -->
+                    <div>
+                        <span class="inline-flex items-center gap-2 bg-white/5 backdrop-blur-md border border-pink-500/30 text-pink-300 text-[11px] font-black px-4 py-1.5 rounded-full mb-6 uppercase tracking-widest shadow-lg">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-pink-400"></i>
+                            LOCAL BRANCH LOCATOR ENGINE
                         </span>
                     </div>
 
-                    <h1 class="text-5xl xl:text-6xl font-extrabold text-slate-900 leading-[1.1] tracking-tight fade-up fade-up-delay-1">
+                    <!-- Heading -->
+                    <h1 class="text-4xl sm:text-5xl xl:text-6xl font-black text-white leading-[1.08] tracking-tight drop-shadow-md">
                         Shop local,<br>
-                        <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">print beautifully.</span>
+                        <span class="bg-gradient-to-r from-pink-300 via-purple-300 to-pink-400 bg-clip-text text-transparent italic"
+                            style="font-family: 'Playfair Display', serif;">print beautifully.</span>
                     </h1>
 
-                    <p class="text-lg xl:text-xl text-slate-500 mt-6 leading-relaxed max-w-lg fade-up fade-up-delay-2">
-                        Find the nearest Qrinto print studio and bring your memories to life with premium quality prints, fast turnaround, and expert service.
+                    <!-- Subtitle -->
+                    <p class="text-base sm:text-lg text-slate-200 font-medium mt-5 leading-relaxed max-w-xl">
+                        Find the nearest Qrinto print studio branch and experience museum-quality photo prints, express same-day pickup, and artisan craftsmanship.
                     </p>
 
-                    {{-- Hero Search --}}
-                    <div class="mt-8 fade-up fade-up-delay-3">
-                        <div class="search-input-hero bg-white rounded-2xl border-2 border-slate-200 flex items-center gap-3 pr-3" style="max-width:540px">
-                            <div class="flex items-center flex-1 gap-3 pl-5 py-1">
-                                <i data-lucide="search" class="w-5 h-5 text-slate-400 flex-shrink-0"></i>
+                    {{-- Hero Search Bar --}}
+                    <div class="mt-8">
+                        <div class="search-input-hero-wrapper bg-slate-950/80 backdrop-blur-xl rounded-2xl border border-white/20 p-2 flex flex-col sm:flex-row items-center gap-3 shadow-2xl max-w-xl">
+                            <div class="flex items-center flex-1 gap-3 pl-4 py-2 w-full">
+                                <i data-lucide="search" class="w-5 h-5 text-pink-400 shrink-0"></i>
                                 <input type="text" placeholder="Search by city, zip code, or store name..."
                                     x-model="query" @input.debounce.300ms="fetchStores" autocomplete="off"
                                     @keydown.enter.prevent="fetchStores(); $nextTick(() => { document.getElementById('store-results')?.scrollIntoView({behavior:'smooth', block:'start'}) })"
-                                    class="w-full py-4 text-base text-slate-900 placeholder-slate-400 bg-transparent border-0 outline-none focus:ring-0">
+                                    class="w-full text-sm sm:text-base text-white placeholder-slate-400 bg-transparent border-0 outline-none focus:ring-0">
                             </div>
                             <button @click="fetchStores(); $nextTick(() => { document.getElementById('store-results')?.scrollIntoView({behavior:'smooth', block:'start'}) })"
-                                class="flex-shrink-0 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 active:scale-95 flex items-center gap-2">
+                                class="w-full sm:w-auto bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-black px-7 py-3.5 rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 shadow-lg shrink-0 cursor-pointer">
                                 <i data-lucide="search" class="w-4 h-4"></i>
-                                Find Stores
+                                <span>Find Stores</span>
                             </button>
                         </div>
                     </div>
 
-                    {{-- Popular Searches --}}
-                    <div class="mt-6 fade-up fade-up-delay-4">
-                        <span class="text-sm text-slate-400 font-medium">Popular:</span>
-                        <div class="inline-flex flex-wrap gap-2 ml-2">
-                            <button @click="query = 'New York'; fetchStores()" class="tag-pill text-sm font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full">New York</button>
-                            <button @click="query = 'Los Angeles'; fetchStores()" class="tag-pill text-sm font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full">Los Angeles</button>
-                            <button @click="query = 'Chicago'; fetchStores()" class="tag-pill text-sm font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full">Chicago</button>
-                            <button @click="query = 'Houston'; fetchStores()" class="tag-pill text-sm font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full">Houston</button>
-                        </div>
+                    {{-- Popular Quick Search Tags --}}
+                    <div class="mt-5 flex items-center flex-wrap gap-2 text-xs font-bold text-slate-300">
+                        <span class="text-slate-400 font-medium">Popular:</span>
+                        <button @click="query = 'New York'; fetchStores()" class="bg-white/10 hover:bg-pink-600 text-white border border-white/15 px-3.5 py-1.5 rounded-full transition-all cursor-pointer">New York</button>
+                        <button @click="query = 'Los Angeles'; fetchStores()" class="bg-white/10 hover:bg-pink-600 text-white border border-white/15 px-3.5 py-1.5 rounded-full transition-all cursor-pointer">Los Angeles</button>
+                        <button @click="query = 'Chicago'; fetchStores()" class="bg-white/10 hover:bg-pink-600 text-white border border-white/15 px-3.5 py-1.5 rounded-full transition-all cursor-pointer">Chicago</button>
+                        <button @click="query = 'Houston'; fetchStores()" class="bg-white/10 hover:bg-pink-600 text-white border border-white/15 px-3.5 py-1.5 rounded-full transition-all cursor-pointer">Houston</button>
                     </div>
 
-                    {{-- Stats --}}
-                    <div class="mt-10 flex items-center gap-8 fade-up fade-up-delay-4">
-                        <div class="stat-item pr-8">
-                            <p class="text-3xl font-extrabold text-slate-900">500+</p>
-                            <p class="text-sm text-slate-500 mt-1">Store locations</p>
+                    {{-- Trust Stats Bar --}}
+                    <div class="mt-10 pt-8 border-t border-white/15 flex items-center gap-8 text-white">
+                        <div>
+                            <p class="text-3xl font-black bg-gradient-to-r from-pink-300 to-cyan-300 bg-clip-text text-transparent">500+</p>
+                            <p class="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-wider">Store Branches</p>
                         </div>
-                        <div class="stat-item pr-8">
-                            <p class="text-3xl font-extrabold text-slate-900">4.9</p>
-                            <p class="text-sm text-slate-500 mt-1">Average rating</p>
+                        <div class="h-8 w-px bg-white/15"></div>
+                        <div>
+                            <p class="text-3xl font-black bg-gradient-to-r from-amber-300 to-pink-300 bg-clip-text text-transparent">4.9★</p>
+                            <p class="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-wider">Verified Rating</p>
                         </div>
-                        <div class="stat-item">
-                            <p class="text-3xl font-extrabold text-slate-900">48hr</p>
-                            <p class="text-sm text-slate-500 mt-1">Fast delivery</p>
+                        <div class="h-8 w-px bg-white/15 hidden sm:block"></div>
+                        <div class="hidden sm:block">
+                            <p class="text-3xl font-black bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">Same-Day</p>
+                            <p class="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-wider">Local Pickup</p>
                         </div>
                     </div>
                 </div>
 
-                {{-- Right: Illustration / Visual --}}
-                <div class="col-span-12 lg:col-span-6 xl:col-span-7 hidden lg:block">
-                    <div class="relative fade-up fade-up-delay-2">
-                        {{-- Decorative store cards --}}
-                        <div class="grid grid-cols-2 gap-5 max-w-lg ml-auto">
-                            <div class="bg-white rounded-3xl p-6 shadow-lg shadow-slate-200/60 border border-slate-100 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
-                                <div class="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center mb-4">
-                                    <i data-lucide="printer" class="w-7 h-7 text-brand-600"></i>
+                {{-- Right Column: Authentic Playing Card Hand Fan Showcase --}}
+                <div class="col-span-12 lg:col-span-6 xl:col-span-6 hidden lg:block">
+                    <div x-data="cardFanSlider()" class="relative w-[480px] h-[480px] max-w-full ml-auto flex items-center justify-center pt-8 overflow-visible">
+                        
+                        <!-- Cards Fan Deck Container -->
+                        <div class="relative w-[300px] h-[420px] flex items-center justify-center overflow-visible">
+                            
+                            <template x-for="(card, index) in cards" :key="index">
+                                <div class="absolute inset-0 w-full h-full rounded-[36px] overflow-hidden shadow-2xl border-2 border-white/40 bg-slate-900 transition-all duration-700 ease-out cursor-pointer select-none"
+                                    :style="getCardStyle(index)"
+                                    @click="next()">
+                                    
+                                    <!-- Card Image Background -->
+                                    <img :src="card.img" :alt="card.title" class="w-full h-full object-cover opacity-80 transition-transform duration-700 hover:scale-105">
+                                    
+                                    <!-- Card Content Overlay -->
+                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent p-7 flex flex-col justify-between">
+                                        <div class="flex items-center justify-between">
+                                            <span class="inline-flex items-center gap-1.5 bg-slate-900/85 backdrop-blur-md border text-[11px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-lg"
+                                                :class="card.color === 'pink' ? 'border-pink-400/40 text-pink-300' : (card.color === 'purple' ? 'border-purple-400/40 text-purple-300' : (card.color === 'cyan' ? 'border-cyan-400/40 text-cyan-300' : (card.color === 'amber' ? 'border-amber-400/40 text-amber-300' : 'border-emerald-400/40 text-emerald-300')))">
+                                                <i data-lucide="globe" class="w-3.5 h-3.5 animate-spin"></i>
+                                                <span x-text="card.badge"></span>
+                                            </span>
+                                            <span class="text-xs font-black bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                                Card <span x-text="((currentIndex + (4 - index)) % 5) + 1"></span>/5
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <span class="text-xs font-bold uppercase tracking-widest block mb-1"
+                                                :class="card.color === 'pink' ? 'text-pink-300' : (card.color === 'purple' ? 'text-purple-300' : (card.color === 'cyan' ? 'text-cyan-300' : (card.color === 'amber' ? 'text-amber-300' : 'text-emerald-300')))"
+                                                x-text="card.city"></span>
+                                            <h3 class="text-2xl sm:text-3xl font-black text-white leading-tight drop-shadow-md" x-text="card.title"></h3>
+                                            <p class="text-xs text-slate-200 mt-2 font-medium leading-relaxed" x-text="card.subtitle"></p>
+                                            <div class="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-xs font-extrabold text-slate-300">
+                                                <span x-text="card.features"></span>
+                                                <span class="text-emerald-400 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Active</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
-                                <h4 class="font-bold text-slate-900 text-base">Photo Prints</h4>
-                                <p class="text-sm text-slate-400 mt-1">Premium quality</p>
-                                <div class="flex items-center gap-1 mt-3">
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-3xl p-6 shadow-lg shadow-slate-200/60 border border-slate-100 transform rotate-[2deg] hover:rotate-0 transition-transform duration-500 mt-8">
-                                <div class="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center mb-4">
-                                    <i data-lucide="frame" class="w-7 h-7 text-violet-600"></i>
-                                </div>
-                                <h4 class="font-bold text-slate-900 text-base">Canvas Art</h4>
-                                <p class="text-sm text-slate-400 mt-1">Museum quality</p>
-                                <div class="flex items-center gap-1 mt-3">
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-3xl p-6 shadow-lg shadow-slate-200/60 border border-slate-100 transform rotate-[1deg] hover:rotate-0 transition-transform duration-500">
-                                <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4">
-                                    <i data-lucide="gift" class="w-7 h-7 text-emerald-600"></i>
-                                </div>
-                                <h4 class="font-bold text-slate-900 text-base">Custom Gifts</h4>
-                                <p class="text-sm text-slate-400 mt-1">Personalized</p>
-                                <div class="flex items-center gap-1 mt-3">
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-3xl p-6 shadow-lg shadow-slate-200/60 border border-slate-100 transform rotate-[-1deg] hover:rotate-0 transition-transform duration-500 mt-[-16px]">
-                                <div class="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-4">
-                                    <i data-lucide="book-open" class="w-7 h-7 text-rose-600"></i>
-                                </div>
-                                <h4 class="font-bold text-slate-900 text-base">Photo Books</h4>
-                                <p class="text-sm text-slate-400 mt-1">Hardcover finish</p>
-                                <div class="flex items-center gap-1 mt-3">
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                                </div>
-                            </div>
+                            </template>
                         </div>
-                        {{-- Floating accent dots --}}
-                        <div class="absolute -top-4 -left-4 w-20 h-20 bg-brand-200/30 rounded-full blur-2xl"></div>
-                        <div class="absolute -bottom-8 -right-8 w-32 h-32 bg-violet-200/30 rounded-full blur-3xl"></div>
+
+                        <!-- Fan Navigation Controls -->
+                        <div class="absolute bottom-0 right-4 flex items-center gap-2 z-50">
+                            <button @click.stop="prev()" class="w-9 h-9 rounded-full bg-slate-900/90 hover:bg-pink-600 text-white flex items-center justify-center backdrop-blur-md border border-white/30 shadow-xl transition-all active:scale-95 cursor-pointer">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <button @click.stop="next()" class="w-9 h-9 rounded-full bg-slate-900/90 hover:bg-pink-600 text-white flex items-center justify-center backdrop-blur-md border border-white/30 shadow-xl transition-all active:scale-95 cursor-pointer">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
 
-    {{-- ===== SECTION 2: FIND A STORE ===== --}}
-    <section id="store-results" class="max-w-[1400px] mx-auto pt-20 pb-16 scroll-mt-20">
-        {{-- Section Header --}}
-        <div class="flex items-end justify-between mb-10">
-            <div>
-                <h2 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight">Find a Store</h2>
-                <p class="text-lg text-slate-500 mt-2">Browse our network of premium print studios near you.</p>
-            </div>
+    {{-- ===== SECTION 2: FIND A STORE RESULTS GRID ===== --}}
+    <section id="store-results" class="w-full bg-white py-16 px-6 sm:px-10 border-b border-slate-100/80 relative overflow-hidden">
+        <!-- Giant Background Watermark Text "Step 2" (Bottom Right) -->
+        <div class="absolute right-4 sm:right-10 bottom-2 sm:bottom-4 text-[140px] sm:text-[220px] lg:text-[300px] font-black text-slate-900/[0.035] select-none pointer-events-none tracking-tighter leading-none z-0">
+            Step 2
         </div>
 
-        {{-- Store Status Banner --}}
-        @if(!session()->has('active_store_id'))
-        <div class="mb-8 p-5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-4">
-            <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i data-lucide="alert-circle" class="w-5 h-5 text-amber-600"></i>
-            </div>
-            <div class="flex-1">
-                <p class="text-sm font-semibold text-amber-800">No store selected yet. Search and choose a branch to start ordering.</p>
-            </div>
-        </div>
-        @else
-            @php $selectedStore = \App\Models\Store::find(session('active_store_id')); @endphp
-            @if($selectedStore)
-            <div class="mb-8 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-4">
-                <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600"></i>
+        <div class="max-w-[1400px] mx-auto relative z-10">
+            <!-- Combined Single-Row Header Bar (Clean Borderless Layout) -->
+            <div class="mb-10 flex flex-col lg:flex-row items-center justify-between gap-5 sm:gap-6 w-full">
+                
+                {{-- Element 1 (Left): Title & Badge --}}
+                <div class="flex items-center gap-3 shrink-0">
+                    <div class="w-10 h-10 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="store" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-brand-600 block">Network Directory</span>
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight whitespace-nowrap">
+                            Select a <span class="bg-gradient-to-r from-brand-600 via-purple-600 to-pink-600 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">Store Branch</span>
+                        </h2>
+                    </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-0.5">Currently Selected</p>
-                    <p class="font-bold text-slate-900 truncate">{{ $selectedStore->store_name }} &middot; {{ $selectedStore->city }}, {{ $selectedStore->state }} {{ $selectedStore->zip_code }}</p>
-                </div>
-                <a href="#" class="text-sm font-semibold text-emerald-700 hover:text-emerald-800 flex-shrink-0">Change &rarr;</a>
-            </div>
-            @endif
-        @endif
 
-        {{-- Search + Filters Bar --}}
-        <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-8 flex flex-wrap items-center gap-4 shadow-sm">
-            <div class="flex items-center gap-3 flex-1 min-w-[300px]">
-                <i data-lucide="search" class="w-5 h-5 text-slate-400 flex-shrink-0"></i>
-                <input type="text" placeholder="Search stores by name, city, or zip code..."
-                    x-model="query" @input.debounce.300ms="fetchStores" autocomplete="off"
-                    class="w-full text-base text-slate-900 placeholder-slate-400 bg-transparent border-0 outline-none focus:ring-0">
-                <div x-show="isLoading" class="flex-shrink-0">
-                    <div class="w-5 h-5 border-2 border-slate-200 border-t-brand-500 rounded-full animate-spin"></div>
+                {{-- Element 2 (Center): Search Input & Near Me Filter Toolbar (Expanded Full Width) --}}
+                <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/90 rounded-2xl p-1.5 flex-1 w-full shadow-2xs">
+                    <div class="flex items-center gap-2 flex-1 pl-3">
+                        <i data-lucide="search" class="w-4.5 h-4.5 text-slate-400 shrink-0"></i>
+                        <input type="text" placeholder="Filter by city, zip, or name..."
+                            x-model="query" @input.debounce.300ms="fetchStores" autocomplete="off"
+                            class="w-full text-xs sm:text-sm text-slate-900 placeholder-slate-400 bg-transparent border-0 outline-none focus:ring-0 font-medium">
+                        <div x-show="isLoading" class="shrink-0" x-cloak>
+                            <div class="w-4 h-4 border-2 border-slate-300 border-t-brand-600 rounded-full animate-spin"></div>
+                        </div>
+                    </div>
+                    <button @click="detectLocation()" class="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-slate-700 hover:text-brand-600 bg-white hover:bg-brand-50 border border-slate-200/90 px-3.5 py-2 rounded-xl transition-all shadow-2xs cursor-pointer active:scale-95 shrink-0">
+                        <i data-lucide="crosshair" class="w-3.5 h-3.5 text-brand-600"></i>
+                        <span>Near Me</span>
+                    </button>
                 </div>
-            </div>
-            <div class="h-8 w-px bg-slate-200 hidden lg:block"></div>
-            <div class="flex items-center gap-3">
-                <button @click="detectLocation()" class="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-200 px-4 py-2.5 rounded-xl transition-all">
-                    <i data-lucide="crosshair" class="w-4 h-4"></i>
-                    Near Me
-                </button>
-                <select class="text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-brand-100 focus:border-brand-300 transition-all cursor-pointer">
-                    <option>All Categories</option>
-                    <option>Photo Prints</option>
-                    <option>Canvas Art</option>
-                    <option>Photo Books</option>
-                    <option>Gifts & Mugs</option>
-                </select>
-                <select class="text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-brand-100 focus:border-brand-300 transition-all cursor-pointer">
-                    <option>Sort: Nearest</option>
-                    <option>Sort: Rating</option>
-                    <option>Sort: Name A–Z</option>
-                </select>
-            </div>
-        </div>
 
-        {{-- Nearby Stores Section --}}
-        <div x-show="geolocationChecked && nearbyStores.length > 0 && !hasSearched" x-cloak class="mb-10">
-            <h3 class="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2">
-                <i data-lucide="navigation" class="w-5 h-5 text-brand-500"></i>
-                Stores near you
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                <template x-for="store in nearbyStores" :key="store.id">
-                    <form action="{{ route('flow-pc.set-store') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="store_id" :value="store.id">
-                        <button type="submit" class="store-card w-full text-left bg-white border border-slate-200 rounded-2xl p-6 group cursor-pointer">
-                            <div class="flex items-start gap-4">
-                                <div class="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-brand-100 transition-colors">
-                                    <i data-lucide="store" class="w-6 h-6 text-brand-500"></i>
+                {{-- Element 3 (Right): Currently Active Store Status Pill --}}
+                <div class="shrink-0">
+                    @if(!session()->has('active_store_id'))
+                        <div class="flex items-center gap-3 bg-amber-50 border border-amber-200/90 rounded-2xl px-4 py-2.5">
+                            <i data-lucide="alert-circle" class="w-4.5 h-4.5 text-amber-600 shrink-0"></i>
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-amber-700 block leading-none">Branch Notice</span>
+                                <span class="text-xs font-black text-amber-900 leading-tight">No Store Selected</span>
+                            </div>
+                        </div>
+                    @else
+                        @php $selectedStore = \App\Models\Store::find(session('active_store_id')); @endphp
+                        @if($selectedStore)
+                            <div class="flex items-center gap-3 bg-emerald-50/90 border border-emerald-200/90 rounded-2xl px-4 py-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                    <i data-lucide="check-circle-2" class="w-4.5 h-4.5"></i>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="font-bold text-slate-900 truncate" x-text="store.store_name"></h4>
-                                    <p class="text-sm text-slate-500 mt-1 flex items-center gap-1 truncate">
-                                        <i data-lucide="map-pin" class="w-3.5 h-3.5 flex-shrink-0"></i>
+                                <div class="min-w-0">
+                                    <span class="text-[9px] font-black uppercase tracking-wider text-emerald-700 block leading-none">Currently Active Branch</span>
+                                    <h4 class="text-xs font-black text-slate-900 truncate max-w-[140px] sm:max-w-[180px] mt-0.5">{{ $selectedStore->store_name }}</h4>
+                                </div>
+                                <span class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-white border border-emerald-200/80 px-2.5 py-1 rounded-full shrink-0 ml-1">
+                                    Active <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                </span>
+                            </div>
+                        @endif
+                    @endif
+                </div>
+
+            </div>
+
+            {{-- Nearby Detected Stores Grid --}}
+            <div x-show="geolocationChecked && nearbyStores.length > 0 && !hasSearched" x-cloak class="mb-12">
+                <h3 class="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                    <i data-lucide="navigation" class="w-5 h-5 text-brand-600"></i>
+                    Branches Nearest To Your Location
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <template x-for="store in nearbyStores" :key="store.id">
+                        <form action="{{ route('flow-pc.set-store') }}" method="POST" class="h-full">
+                            @csrf
+                            <input type="hidden" name="store_id" :value="store.id">
+                            <button type="submit" class="store-card-premium w-full h-full text-left bg-white border border-slate-200/90 rounded-[28px] p-6 group cursor-pointer flex flex-col justify-between shadow-xs">
+                                <div>
+                                    <!-- Store Logo & Badge Row -->
+                                    <div class="flex items-start justify-between gap-4 mb-5">
+                                        <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-sm p-1 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 group-hover:border-brand-300 transition-all">
+                                            <template x-if="store.logo">
+                                                <img 
+                                                    :src="'{{ asset('storage') }}/' + store.logo"
+                                                    :alt="store.store_name"
+                                                    class="w-full h-full object-cover rounded-xl"
+                                                >
+                                            </template>
+                                            <template x-if="!store.logo">
+                                                <div class="w-full h-full rounded-xl bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600 text-white flex items-center justify-center text-xl font-black">
+                                                    <span x-text="store.store_name ? store.store_name.charAt(0) : 'Q'"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Open Now
+                                        </span>
+                                    </div>
+
+                                    <!-- Store Title & Rating -->
+                                    <h4 class="font-black text-slate-900 text-lg group-hover:text-brand-600 transition-colors line-clamp-1" x-text="store.store_name"></h4>
+                                    
+                                    <div class="flex items-center gap-1 mt-2 text-xs font-bold text-slate-600">
+                                        <div class="flex items-center gap-0.5 text-amber-400">
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                        </div>
+                                        <span class="ml-1 text-slate-800">4.9</span>
+                                        <span class="text-slate-400 font-normal">(Verified Store)</span>
+                                    </div>
+
+                                    <!-- Location Info -->
+                                    <p class="text-xs text-slate-500 font-medium mt-3 flex items-start gap-1.5">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5"></i>
                                         <span x-text="`${store.city || ''}, ${store.state || ''} ${store.zip_code || ''}`"></span>
                                     </p>
                                 </div>
-                            </div>
-                            <div class="mt-4 flex items-center justify-between">
-                                <span class="badge-open text-xs font-semibold px-2.5 py-1 rounded-full">Open Now</span>
-                                <span class="text-sm font-semibold text-brand-600 group-hover:text-brand-700 flex items-center gap-1 transition-colors">
-                                    Visit <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
-                                </span>
-                            </div>
-                        </button>
-                    </form>
-                </template>
-            </div>
-        </div>
 
-        {{-- Geolocation Loading --}}
-        <div x-show="nearbyLoading" x-cloak class="mb-10 text-center py-10">
-            <div class="w-10 h-10 border-2 border-slate-200 border-t-brand-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-slate-500 font-medium">Detecting your location...</p>
-        </div>
-
-        {{-- How it Works (before search) --}}
-        <div x-show="!hasSearched && stores.length === 0"
-            x-transition:enter="transition ease-out duration-500"
-            x-transition:enter-start="opacity-0 translate-y-6"
-            x-transition:enter-end="opacity-100 translate-y-0">
-
-            <div class="bg-white border border-slate-200 rounded-3xl p-10 xl:p-12">
-                <div class="text-center mb-10">
-                    <h3 class="text-2xl font-extrabold text-slate-900">How it works</h3>
-                    <p class="text-slate-500 mt-2">Get started in four simple steps</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-                    <div class="text-center group">
-                        <div class="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-brand-100 group-hover:scale-110 transition-all duration-300">
-                            <i data-lucide="search" class="w-7 h-7 text-brand-600"></i>
-                        </div>
-                        <div class="text-xs font-bold text-brand-600 uppercase tracking-wider mb-2">Step 1</div>
-                        <h4 class="font-bold text-slate-900 text-lg mb-2">Select a Store</h4>
-                        <p class="text-sm text-slate-500 leading-relaxed">Search and pick the nearest Qrinto branch to see available services.</p>
-                    </div>
-                    <div class="text-center group">
-                        <div class="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-violet-100 group-hover:scale-110 transition-all duration-300">
-                            <i data-lucide="layers" class="w-7 h-7 text-violet-600"></i>
-                        </div>
-                        <div class="text-xs font-bold text-violet-600 uppercase tracking-wider mb-2">Step 2</div>
-                        <h4 class="font-bold text-slate-900 text-lg mb-2">Choose Products</h4>
-                        <p class="text-sm text-slate-500 leading-relaxed">Browse categories like Photo Prints, Canvas Art, or Custom Gifts.</p>
-                    </div>
-                    <div class="text-center group">
-                        <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-emerald-100 group-hover:scale-110 transition-all duration-300">
-                            <i data-lucide="image-plus" class="w-7 h-7 text-emerald-600"></i>
-                        </div>
-                        <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2">Step 3</div>
-                        <h4 class="font-bold text-slate-900 text-lg mb-2">Design & Upload</h4>
-                        <p class="text-sm text-slate-500 leading-relaxed">Upload your photos and use our editor to customize your design.</p>
-                    </div>
-                    <div class="text-center group">
-                        <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-rose-100 group-hover:scale-110 transition-all duration-300">
-                            <i data-lucide="package-check" class="w-7 h-7 text-rose-600"></i>
-                        </div>
-                        <div class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-2">Step 4</div>
-                        <h4 class="font-bold text-slate-900 text-lg mb-2">Order & Collect</h4>
-                        <p class="text-sm text-slate-500 leading-relaxed">Checkout securely and collect from your chosen store.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Search Results Grid --}}
-        <div x-show="hasSearched || stores.length > 0" x-cloak>
-            {{-- Results header --}}
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="list" class="w-5 h-5 text-slate-400"></i>
-                    Search Results
-                    <span x-show="stores.length > 0" class="text-sm font-medium text-slate-400" x-text="`(${stores.length} found)`"></span>
-                </h3>
-            </div>
-
-            {{-- Empty state --}}
-            <div x-show="!isLoading && stores.length === 0 && query.length > 0" class="text-center py-20 bg-white rounded-3xl border border-slate-200">
-                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                    <i data-lucide="map-pin-off" class="w-8 h-8 text-slate-400"></i>
-                </div>
-                <p class="text-xl font-bold text-slate-900">No stores found</p>
-                <p class="text-slate-500 mt-2">No results for "<span x-text="query" class="font-semibold text-slate-700"></span>". Try a different city or zip code.</p>
-            </div>
-
-            {{-- Store Cards Grid --}}
-            <div x-show="stores.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                <template x-for="store in stores" :key="store.id">
-                    <form action="{{ route('flow-pc.set-store') }}" method="POST" class="h-full">
-                        @csrf
-                        <input type="hidden" name="store_id" :value="store.id">
-                        <button type="submit" class="store-card w-full h-full text-left bg-white border border-slate-200 rounded-2xl p-6 group cursor-pointer flex flex-col">
-                            {{-- Store header --}}
-                            <div class="flex items-start gap-4 mb-4">
-                                <div class="w-12 h-12 bg-gradient-to-br from-brand-50 to-brand-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                    <i data-lucide="store" class="w-6 h-6 text-brand-500"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="font-bold text-slate-900 line-clamp-2 leading-snug" x-text="store.store_name"></h4>
-                                    <div class="flex items-center gap-1 mt-1.5">
-                                        <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
-                                        <span class="text-sm font-semibold text-slate-700">4.9</span>
-                                        <span class="text-xs text-slate-400">(128)</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Details --}}
-                            <div class="flex-1">
-                                <p class="text-sm text-slate-500 flex items-start gap-2 mb-2">
-                                    <i data-lucide="map-pin" class="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400"></i>
-                                    <span x-text="`${store.city || ''}, ${store.state || ''} ${store.zip_code || ''}`"></span>
-                                </p>
-                                <p class="text-sm text-slate-500 flex items-start gap-2" x-show="store.phone">
-                                    <i data-lucide="phone" class="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400"></i>
-                                    <span x-text="store.phone"></span>
-                                </p>
-                            </div>
-
-                            {{-- Footer --}}
-                            <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="badge-open text-xs font-semibold px-2.5 py-1 rounded-full">Open</span>
-                                    <span class="text-xs font-medium text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-                                        <i data-lucide="truck" class="w-3 h-3"></i> Pickup
+                                <!-- Card Action Footer -->
+                                <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold">
+                                    <span class="text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">Same-Day Pickup</span>
+                                    <span class="text-brand-600 group-hover:text-brand-700 flex items-center gap-1">
+                                        Select Store <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
                                     </span>
                                 </div>
-                                <span class="text-sm font-semibold text-brand-600 group-hover:text-brand-700 flex items-center gap-1 transition-colors">
-                                    Visit <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200"></i>
-                                </span>
-                            </div>
-                        </button>
-                    </form>
-                </template>
-            </div>
-        </div>
-    </section>
-
-    {{-- ===== SECTION 3: BROWSE CATEGORIES ===== --}}
-    <section class="max-w-[1400px] mx-auto py-16 border-t border-slate-100">
-        <div class="flex items-end justify-between mb-10">
-            <div>
-                <h2 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight">Browse Categories</h2>
-                <p class="text-lg text-slate-500 mt-2">Explore our most popular printing categories.</p>
-            </div>
-            <a href="#" class="hidden lg:flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors">
-                View all categories <i data-lucide="arrow-right" class="w-4 h-4"></i>
-            </a>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-5">
-            @php
-                $categories = [
-                    ['name' => 'Photo Prints', 'icon' => 'image', 'count' => 340, 'color' => 'brand'],
-                    ['name' => 'Canvas Art', 'icon' => 'frame', 'count' => 185, 'color' => 'violet'],
-                    ['name' => 'Photo Books', 'icon' => 'book-open', 'count' => 220, 'color' => 'rose'],
-                    ['name' => 'Mugs & Gifts', 'icon' => 'gift', 'count' => 156, 'color' => 'emerald'],
-                    ['name' => 'Calendars', 'icon' => 'calendar', 'count' => 98, 'color' => 'amber'],
-                    ['name' => 'Cards', 'icon' => 'mail', 'count' => 275, 'color' => 'cyan'],
-                    ['name' => 'Acrylic', 'icon' => 'diamond', 'count' => 64, 'color' => 'fuchsia'],
-                ];
-            @endphp
-
-            @foreach($categories as $cat)
-            <a href="#" class="category-card bg-white border border-slate-200 rounded-2xl p-6 text-center group">
-                <div class="w-14 h-14 bg-{{ $cat['color'] }}-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-{{ $cat['color'] }}-100 group-hover:scale-110 transition-all duration-300">
-                    <i data-lucide="{{ $cat['icon'] }}" class="w-7 h-7 text-{{ $cat['color'] }}-500"></i>
-                </div>
-                <h4 class="font-bold text-slate-900 text-sm">{{ $cat['name'] }}</h4>
-                <p class="text-xs text-slate-400 mt-1">{{ $cat['count'] }} stores</p>
-            </a>
-            @endforeach
-        </div>
-    </section>
-
-    {{-- ===== SECTION 4: CUSTOMER REVIEWS ===== --}}
-    <section class="max-w-[1400px] mx-auto py-16 border-t border-slate-100">
-        <div class="grid grid-cols-12 gap-10">
-            {{-- Left: Rating Summary --}}
-            <div class="col-span-12 lg:col-span-4">
-                <h2 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight">What Our Customers Say</h2>
-                <p class="text-lg text-slate-500 mt-2">Trusted by thousands of happy customers.</p>
-
-                <div class="mt-8 bg-white border border-slate-200 rounded-2xl p-8">
-                    <div class="text-center">
-                        <p class="text-6xl font-extrabold text-slate-900">4.9</p>
-                        <div class="flex items-center justify-center gap-1 mt-3">
-                            <i data-lucide="star" class="w-6 h-6 text-amber-400 fill-amber-400"></i>
-                            <i data-lucide="star" class="w-6 h-6 text-amber-400 fill-amber-400"></i>
-                            <i data-lucide="star" class="w-6 h-6 text-amber-400 fill-amber-400"></i>
-                            <i data-lucide="star" class="w-6 h-6 text-amber-400 fill-amber-400"></i>
-                            <i data-lucide="star" class="w-6 h-6 text-amber-400 fill-amber-400"></i>
-                        </div>
-                        <p class="text-sm text-slate-500 mt-2">Based on 2,847 reviews</p>
-                    </div>
-
-                    <div class="mt-8 space-y-3">
-                        @foreach([['5', 78], ['4', 15], ['3', 5], ['2', 1], ['1', 1]] as $rating)
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm font-semibold text-slate-600 w-3">{{ $rating[0] }}</span>
-                            <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0"></i>
-                            <div class="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-amber-400 rounded-full" style="width: {{ $rating[1] }}%"></div>
-                            </div>
-                            <span class="text-xs font-medium text-slate-400 w-8 text-right">{{ $rating[1] }}%</span>
-                        </div>
-                        @endforeach
-                    </div>
+                            </button>
+                        </form>
+                    </template>
                 </div>
             </div>
 
-            {{-- Right: Review Cards --}}
-            <div class="col-span-12 lg:col-span-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    @php
-                        $reviews = [
-                            [
-                                'name' => 'Sarah Mitchell',
-                                'initials' => 'SM',
-                                'color' => 'brand',
-                                'rating' => 5,
-                                'text' => 'The canvas print quality blew me away. Colors are vibrant and true to the original photo. Arrived in perfect condition within two days. Already ordered three more for the living room.',
-                                'store' => 'Qrinto NYC - Manhattan',
-                                'date' => 'Jul 2026',
-                            ],
-                            [
-                                'name' => 'James Thornton',
-                                'initials' => 'JT',
-                                'color' => 'emerald',
-                                'rating' => 5,
-                                'text' => 'Created a 100-page photo book of our wedding and it turned out absolutely stunning. The paper quality is fantastic and the binding is solid. Best decision for preserving our memories.',
-                                'store' => 'Qrinto LA - Beverly Hills',
-                                'date' => 'Jun 2026',
-                            ],
-                            [
-                                'name' => 'Amara Osei',
-                                'initials' => 'AO',
-                                'color' => 'rose',
-                                'rating' => 5,
-                                'text' => 'The design studio is incredibly intuitive. I uploaded my artwork and had custom mugs designed in under five minutes. The print quality on the mugs exceeded my expectations.',
-                                'store' => 'Qrinto Chicago - Loop',
-                                'date' => 'Jun 2026',
-                            ],
-                            [
-                                'name' => 'David Kim',
-                                'initials' => 'DK',
-                                'color' => 'amber',
-                                'rating' => 5,
-                                'text' => 'Outstanding service and quality! The acrylic prints look absolutely premium hanging in my office. The team at the store was incredibly helpful with the sizing recommendations.',
-                                'store' => 'Qrinto SF - Financial District',
-                                'date' => 'May 2026',
-                            ],
-                        ];
-                    @endphp
+            {{-- Geolocation Loading State --}}
+            <div x-show="nearbyLoading" x-cloak class="mb-10 text-center py-12 bg-slate-50 rounded-3xl border border-slate-200/80">
+                <div class="w-10 h-10 border-3 border-slate-200 border-t-brand-600 rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-sm font-bold text-slate-700">Detecting your nearest Qrinto branch location...</p>
+            </div>
 
-                    @foreach($reviews as $review)
-                    <div class="review-card bg-white border border-slate-200 rounded-2xl p-6">
-                        <div class="flex items-center gap-1 mb-4">
-                            @for($i = 0; $i < $review['rating']; $i++)
-                                <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-amber-400"></i>
-                            @endfor
-                        </div>
-                        <p class="text-slate-600 leading-relaxed text-sm">{{ $review['text'] }}</p>
-                        <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 bg-{{ $review['color'] }}-100 text-{{ $review['color'] }}-700 rounded-full flex items-center justify-center text-xs font-bold">
-                                    {{ $review['initials'] }}
-                                </div>
+            {{-- Search Results Grid --}}
+            <div x-show="hasSearched || stores.length > 0" x-cloak>
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-black text-slate-900 flex items-center gap-2">
+                        <i data-lucide="list" class="w-5 h-5 text-brand-600"></i>
+                        Available Stores
+                        <span x-show="stores.length > 0" class="text-xs font-bold text-slate-400" x-text="`(${stores.length} found)`"></span>
+                    </h3>
+                </div>
+
+                {{-- Empty Search Results State --}}
+                <div x-show="!isLoading && stores.length === 0 && query.length > 0" class="text-center py-20 bg-slate-50 rounded-3xl border border-slate-200/80">
+                    <div class="w-16 h-16 bg-slate-200/80 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
+                        <i data-lucide="map-pin-off" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-xl font-black text-slate-900">No stores found</h4>
+                    <p class="text-sm text-slate-500 font-medium mt-2">No matching branches for "<span x-text="query" class="font-bold text-slate-800"></span>". Try searching by another city or zip code.</p>
+                </div>
+
+                {{-- Stores Grid --}}
+                <div x-show="stores.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <template x-for="store in stores" :key="store.id">
+                        <form action="{{ route('flow-pc.set-store') }}" method="POST" class="h-full">
+                            @csrf
+                            <input type="hidden" name="store_id" :value="store.id">
+                            <button type="submit" class="store-card-premium w-full h-full text-left bg-white border border-slate-200/90 rounded-[28px] p-6 group cursor-pointer flex flex-col justify-between shadow-xs">
                                 <div>
-                                    <p class="text-sm font-semibold text-slate-900">{{ $review['name'] }}</p>
-                                    <p class="text-xs text-slate-400">{{ $review['store'] }}</p>
-                                </div>
-                            </div>
-                            <span class="text-xs text-slate-400">{{ $review['date'] }}</span>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
+                                    <!-- Store Logo & Badge Row -->
+                                    <div class="flex items-start justify-between gap-4 mb-5">
+                                        <div class="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-sm p-1 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 group-hover:border-brand-300 transition-all">
+                                            <template x-if="store.logo">
+                                                <img 
+                                                    :src="'{{ asset('storage') }}/' + store.logo"
+                                                    :alt="store.store_name"
+                                                    class="w-full h-full object-cover rounded-xl"
+                                                >
+                                            </template>
+                                            <template x-if="!store.logo">
+                                                <div class="w-full h-full rounded-xl bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600 text-white flex items-center justify-center text-xl font-black">
+                                                    <span x-text="store.store_name ? store.store_name.charAt(0) : 'Q'"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Open Now
+                                        </span>
+                                    </div>
 
-                <div class="mt-6 text-center">
-                    <a href="#" class="inline-flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors">
-                        Read all reviews <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                    </a>
+                                    <!-- Store Title & Rating -->
+                                    <h4 class="font-black text-slate-900 text-lg group-hover:text-brand-600 transition-colors line-clamp-1" x-text="store.store_name"></h4>
+                                    
+                                    <div class="flex items-center gap-1 mt-2 text-xs font-bold text-slate-600">
+                                        <div class="flex items-center gap-0.5 text-amber-400">
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                                        </div>
+                                        <span class="ml-1 text-slate-800">4.9</span>
+                                        <span class="text-slate-400 font-normal">(Verified Store)</span>
+                                    </div>
+
+                                    <!-- Location Info -->
+                                    <p class="text-xs text-slate-500 font-medium mt-3 flex items-start gap-1.5">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-slate-400 shrink-0 mt-0.5"></i>
+                                        <span x-text="`${store.city || ''}, ${store.state || ''} ${store.zip_code || ''}`"></span>
+                                    </p>
+                                    <p class="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1.5" x-show="store.phone">
+                                        <i data-lucide="phone" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                        <span x-text="store.phone"></span>
+                                    </p>
+                                </div>
+
+                                <!-- Card Action Footer -->
+                                <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold">
+                                    <span class="text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">Express Service</span>
+                                    <span class="text-brand-600 group-hover:text-brand-700 flex items-center gap-1">
+                                        Select Store <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                                    </span>
+                                </div>
+                            </button>
+                        </form>
+                    </template>
                 </div>
             </div>
         </div>
     </section>
+
+    {{-- ===== SECTION 3: COUNTRY-WISE STORE DIRECTORY ===== --}}
+    @php
+        $allStoresByCountry = \App\Models\Store::active()->get()->groupBy(function($store) {
+            return trim($store->country ?: 'Global Network');
+        });
+
+        $countryFlags = [
+            'India' => '🇮🇳',
+            'IN' => '🇮🇳',
+            'United States' => '🇺🇸',
+            'USA' => '🇺🇸',
+            'US' => '🇺🇸',
+            'Canada' => '🇨🇦',
+            'CA' => '🇨🇦',
+            'United Kingdom' => '🇬🇧',
+            'UK' => '🇬🇧',
+            'Australia' => '🇦🇺',
+            'AU' => '🇦🇺',
+            'Germany' => '🇩🇪',
+            'France' => '🇫🇷',
+            'Japan' => '🇯🇵',
+            'UAE' => '🇦🇪',
+        ];
+    @endphp
+
+    @if($allStoresByCountry->count() > 0)
+    <section id="country-stores" class="w-full bg-slate-50/60 py-16 px-6 sm:px-10 border-b border-slate-100/80 relative overflow-hidden">
+        <!-- Giant Background Watermark Text "Global" -->
+        <div class="absolute right-4 sm:right-10 bottom-2 sm:bottom-4 text-[140px] sm:text-[220px] lg:text-[280px] font-black text-slate-900/[0.025] select-none pointer-events-none tracking-tighter leading-none z-0">
+            Global
+        </div>
+
+        <div class="max-w-[1400px] mx-auto relative z-10">
+            <!-- Section Header -->
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+                <div>
+                    <span class="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 text-xs font-black px-4 py-2 rounded-full mb-3 uppercase tracking-widest border border-indigo-100">
+                        <i data-lucide="globe-2" class="w-4 h-4 text-indigo-600"></i> Country Directory
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                        Explore Stores <span class="bg-gradient-to-r from-brand-600 via-purple-600 to-pink-600 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">by Country</span>
+                    </h2>
+                    <p class="text-sm text-slate-500 font-medium mt-1">Browse active Qrinto branches grouped by region and country.</p>
+                </div>
+                <div class="shrink-0">
+                    <span class="text-xs font-black text-slate-500 bg-white border border-slate-200/90 px-4 py-2 rounded-2xl shadow-2xs">
+                        {{ $allStoresByCountry->count() }} {{ Str::plural('Country', $allStoresByCountry->count()) }} Available
+                    </span>
+                </div>
+            </div>
+
+            <!-- Country Rows -->
+            <div class="space-y-10">
+                @foreach($allStoresByCountry as $countryName => $cStores)
+                    <div class="bg-white border border-slate-200/90 rounded-[32px] p-6 sm:p-8 shadow-xs">
+                        <!-- Country Header Row -->
+                        <div class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">{{ $countryFlags[$countryName] ?? '🌍' }}</span>
+                                <div>
+                                    <h3 class="text-xl font-black text-slate-900 tracking-tight">{{ $countryName }}</h3>
+                                    <span class="text-xs text-slate-400 font-bold">{{ $cStores->count() }} {{ Str::plural('Branch', $cStores->count()) }}</span>
+                                </div>
+                            </div>
+                            <span class="text-xs font-extrabold text-brand-600 bg-brand-50 px-3.5 py-1.5 rounded-full border border-brand-100">
+                                {{ $cStores->first()->currency ?? 'USD' }} Region
+                            </span>
+                        </div>
+
+                        <!-- Stores Grid for this Country -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            @foreach($cStores as $cStore)
+                                <form action="{{ route('flow-pc.set-store') }}" method="POST" class="h-full">
+                                    @csrf
+                                    <input type="hidden" name="store_id" value="{{ $cStore->id }}">
+                                    <button type="submit" class="store-card-premium w-full h-full text-left bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-brand-300 rounded-[24px] p-5 group cursor-pointer flex flex-col justify-between transition-all shadow-2xs hover:shadow-md">
+                                        <div>
+                                            <!-- Store Logo & Badge Row -->
+                                            <div class="flex items-start justify-between gap-4 mb-4">
+                                                <div class="w-12 h-12 rounded-2xl bg-white border border-slate-200/90 shadow-2xs p-1 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-all">
+                                                    @if($cStore->logo)
+                                                        <img 
+                                                            src="{{ asset('storage/' . ltrim($cStore->logo, '/')) }}"
+                                                            alt="{{ $cStore->store_name }}"
+                                                            class="w-full h-full object-cover rounded-xl"
+                                                        >
+                                                    @else
+                                                        <div class="w-full h-full rounded-xl bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600 text-white flex items-center justify-center text-lg font-black">
+                                                            <span>{{ Str::upper(substr($cStore->store_name, 0, 1)) }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Open
+                                                </span>
+                                            </div>
+
+                                            <!-- Store Title & Rating -->
+                                            <h4 class="font-black text-slate-900 text-base group-hover:text-brand-600 transition-colors line-clamp-1">{{ $cStore->store_name }}</h4>
+                                            
+                                            <div class="flex items-center gap-1 mt-1.5 text-xs font-bold text-slate-600">
+                                                <div class="flex items-center gap-0.5 text-amber-400">
+                                                    @for($i = 0; $i < 5; $i++)
+                                                        <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                                                    @endfor
+                                                </div>
+                                                <span class="ml-1 text-slate-800 text-[11px]">4.9</span>
+                                                <span class="text-slate-400 font-normal text-[10px]">(Verified)</span>
+                                            </div>
+
+                                            <!-- Location Info -->
+                                            <p class="text-xs text-slate-500 font-medium mt-2.5 flex items-start gap-1.5">
+                                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5"></i>
+                                                <span>{{ implode(', ', array_filter([$cStore->city, $cStore->state, $cStore->zip_code])) }}</span>
+                                            </p>
+                                            @if($cStore->phone)
+                                                <p class="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1.5">
+                                                    <i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                                                    <span>{{ $cStore->phone }}</span>
+                                                </p>
+                                            @endif
+                                        </div>
+
+                                        <!-- Card Action Footer -->
+                                        <div class="mt-5 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs font-extrabold">
+                                            <span class="text-slate-500 bg-white border border-slate-200/80 px-2.5 py-0.5 rounded-md text-[11px]">Pickup</span>
+                                            <span class="text-brand-600 group-hover:text-brand-700 flex items-center gap-1 text-[11px]">
+                                                Select <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+                                            </span>
+                                        </div>
+                                    </button>
+                                </form>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+
+
+
+
+
+
 
 </div>
 
 @push('scripts')
 <script>
     document.addEventListener('alpine:init', () => {
+        Alpine.data('cardFanSlider', () => ({
+            currentIndex: 0,
+            timer: null,
+            cards: [
+                {
+                    city: 'New York, USA',
+                    title: 'Manhattan Print Studio',
+                    badge: '50+ US Labs',
+                    subtitle: 'Flagship print lab with same-day express pickup',
+                    features: 'Noritsu HD • Archival',
+                    img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=1000&q=80',
+                    color: 'pink'
+                },
+                {
+                    city: 'Tokyo, Japan',
+                    title: 'Ginza Precision Hub',
+                    badge: '35+ Asia Hubs',
+                    subtitle: 'Ultra-HD color calibration & canvas studio',
+                    features: 'Precision • 2hr Express',
+                    img: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1000&q=80',
+                    color: 'purple'
+                },
+                {
+                    city: 'London, UK',
+                    title: 'Soho Fine Art Lab',
+                    badge: '45+ EU Labs',
+                    subtitle: 'Archival cotton papers & photobook suite',
+                    features: 'Archival • Doorstep',
+                    img: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1000&q=80',
+                    color: 'cyan'
+                },
+                {
+                    city: 'Paris, France',
+                    title: 'Paris Atelier Studio',
+                    badge: '30+ EU Hubs',
+                    subtitle: 'Handcrafted stretched canvas & albums',
+                    features: 'Canvas • Courier',
+                    img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1000&q=80',
+                    color: 'amber'
+                },
+                {
+                    city: 'Sydney, Australia',
+                    title: 'Sydney Harbour Lab',
+                    badge: '25+ Oceania',
+                    subtitle: 'Coastal printing with eco archival inks',
+                    features: 'Eco Inks • Same-Day',
+                    img: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1000&q=80',
+                    color: 'emerald'
+                }
+            ],
+
+            init() {
+                this.startAutoplay();
+                this.$nextTick(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                });
+            },
+
+            next() {
+                this.currentIndex = (this.currentIndex + 1) % this.cards.length;
+                this.resetAutoplay();
+                this.$nextTick(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                });
+            },
+
+            prev() {
+                this.currentIndex = (this.currentIndex - 1 + this.cards.length) % this.cards.length;
+                this.resetAutoplay();
+                this.$nextTick(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                });
+            },
+
+            startAutoplay() {
+                this.timer = setInterval(() => {
+                    this.next();
+                }, 4000);
+            },
+
+            resetAutoplay() {
+                if (this.timer) clearInterval(this.timer);
+                this.startAutoplay();
+            },
+
+            getCardStyle(index) {
+                const total = this.cards.length;
+                let diff = (index - this.currentIndex + total) % total;
+
+                // Playing card hand fan array with Top Card ALWAYS at 0deg (straight & level):
+                const angles = [0, -10, -20, -30, -40];
+                const translateX = [0, -24, -48, -72, -96];
+                const translateY = [0, 6, 15, 27, 40];
+
+                const rotateDeg = angles[diff] || 0;
+                const tx = translateX[diff] || 0;
+                const ty = translateY[diff] || 0;
+
+                const zIndex = 30 - diff;
+                const opacity = diff === 0 ? 1 : (1 - diff * 0.12);
+
+                return `transform: translate(${tx}px, ${ty}px) rotate(${rotateDeg}deg); transform-origin: 75% 100%; z-index: ${zIndex}; opacity: ${opacity}; transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;`;
+            }
+        }));
+
         Alpine.data('storeAutocomplete', () => ({
             query: '<?php echo request('q'); ?>',
             stores: <?php echo json_encode(isset($stores) ? $stores : []); ?>,
@@ -650,6 +731,23 @@
                     lucide.createIcons();
                 }
                 this.detectLocation();
+            },
+
+            getLogoUrl(store) {
+                if (!store) return '';
+                if (store.logo && store.logo.trim() !== '') {
+                    const logo = store.logo.trim();
+                    if (logo.startsWith('http://') || logo.startsWith('https://')) return logo;
+                    if (logo.startsWith('/storage/stores/logos/')) return logo;
+                    if (logo.startsWith('storage/stores/logos/')) return '/' + logo;
+                    if (logo.startsWith('stores/logos/')) return '/storage/' + logo;
+                    if (logo.startsWith('/storage/')) return logo;
+                    if (logo.startsWith('storage/')) return '/' + logo;
+                    if (!logo.includes('/')) return '/storage/stores/logos/' + logo;
+                    return '/storage/' + logo.replace(/^\//, '');
+                }
+                const name = encodeURIComponent(store.store_name || 'Store');
+                return `https://ui-avatars.com/api/?name=${name}&background=4F46E5&color=fff&bold=true&font-size=0.45&rounded=true`;
             },
 
             detectLocation() {

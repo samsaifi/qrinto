@@ -235,7 +235,7 @@ class QuickFlowController extends Controller
         }elseif($product->no_of_pages == 2){
             return view($this->getViewPath('customize-double'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
         }else {  
-            return view($this->getViewPath('customize-single-mask'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
+            return view($this->getViewPath('customize-single'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
         // }else{
         //     return view($this->getViewPath('customize-single'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
         }
