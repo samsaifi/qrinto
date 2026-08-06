@@ -66,7 +66,7 @@
         width: 70px;
         height: 70px;
         border: 6px solid #f1f5f9;
-        border-top: 6px solid #0ea5e9;
+        border-top: 6px solid #6FBA3B;
         border-radius: 50%;
         animation: spin 1s linear infinite;
     }

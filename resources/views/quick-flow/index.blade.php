@@ -28,13 +28,13 @@
     }
 
     .flow-card:hover {
-        border-color: #0ea5e9;
-        box-shadow: 0 10px 30px rgba(14, 165, 233, 0.1);
+        border-color: #6FBA3B;
+        box-shadow: 0 10px 30px rgba(111, 186, 59, 0.1);
         transform: translateY(-2px);
     }
 
     .flow-card.active-link {
-        border-color: #0ea5e9;
+        border-color: #6FBA3B;
     }
 
     .icon-box {
@@ -52,7 +52,7 @@
     .icon-box svg {
         width: 100%;
         height: 100%;
-        fill: #0284c7 !important;
+        fill: #5A9A2F !important;
     }
 
     .card-name {
@@ -150,7 +150,7 @@
             @if($type->icon_svg)
             {!! $type->icon_svg !!}
             @else
-            <i data-lucide="package" style="width: 40px; height: 40px; color: #0ea5e9;"></i>
+            <i data-lucide="package" style="width: 40px; height: 40px; color: #6FBA3B;"></i>
             @endif
         </div>
         <h3 class="card-name">{{ $type->name }}</h3>

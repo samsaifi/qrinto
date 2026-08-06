@@ -13,25 +13,25 @@ export default {
 
     safelist: [
         {
-            pattern: /bg-brand-(50|100|200|300|400|500|600|700|800|900)/,
+            pattern: /bg-brand-(50|100|200|300|400|500|600|700|800|900|950)/,
             variants: ['hover', 'focus', 'active'],
         },
         {
-            pattern: /text-brand-(50|100|200|300|400|500|600|700|800|900)/,
+            pattern: /text-brand-(50|100|200|300|400|500|600|700|800|900|950)/,
         },
         {
-            pattern: /border-brand-(50|100|200|300|400|500|600|700|800|900)/,
+            pattern: /border-brand-(50|100|200|300|400|500|600|700|800|900|950)/,
         },
         {
-            pattern: /shadow-brand-(50|100|200|300|400|500|600|700|800|900)/,
+            pattern: /shadow-brand-(50|100|200|300|400|500|600|700|800|900|950)/,
         },
         // Store admin dashboard colors
         {
-            pattern: /bg-(emerald|amber|violet|teal)-(50|100|200|300|400|500|600|700|800|900)/,
+            pattern: /bg-(emerald|amber|violet|teal)-(50|100|200|300|400|500|600|700|800|900|950)/,
             variants: ['hover'],
         },
         {
-            pattern: /text-(emerald|amber|violet|teal)-(50|100|200|300|400|500|600|700|800|900)/,
+            pattern: /text-(emerald|amber|violet|teal)-(50|100|200|300|400|500|600|700|800|900|950)/,
         },
         {
             pattern: /border-(emerald|amber|violet|teal)-(100|200|500)/,
@@ -58,16 +58,36 @@ export default {
             },
             colors: {
                 brand: {
-                    50: '#f0f9ff',
-                    100: '#e0f2fe',
-                    200: '#bae6fd',
-                    300: '#7dd3fc',
-                    400: '#38bdf8',
-                    500: '#0ea5e9',
-                    600: '#0284c7',
-                    700: '#0369a1',
-                    800: '#075985',
-                    900: '#0c4a6e',
+                    50: '#F5FAF1',
+                    100: '#EAF5DD',
+                    200: '#D2EBB8',
+                    300: '#B5DE89',
+                    400: '#8BCF52',
+                    500: '#6FBA3B',
+                    600: '#5A9A2F',
+                    700: '#487A25',
+                    800: '#355A1C',
+                    900: '#243D12',
+                    950: '#14230A',
+                },
+                surface: {
+                    50: '#FCFBF9',
+                    100: '#F8F7F3',
+                    200: '#F1EEE8',
+                    300: '#E7E1D7',
+                    400: '#D7CFC2',
+                    500: '#B9B0A2',
+                    600: '#92887A',
+                    700: '#6B6257',
+                    800: '#403A33',
+                    900: '#24211D',
+                    950: '#151311',
+                },
+                text: {
+                    primary: '#24211D',
+                    secondary: '#6B6257',
+                    muted: '#92887A',
+                    inverse: '#FFFFFF',
                 },
                 accent: {
                     50: '#f0fdf4',
@@ -81,25 +101,14 @@ export default {
                     800: '#166534',
                     900: '#14532d',
                 },
-                surface: {
-                    50: '#f8fafc',
-                    100: '#f1f5f9',
-                    200: '#e2e8f0',
-                    300: '#cbd5e1',
-                    400: '#94a3b8',
-                    500: '#64748b',
-                    600: '#475569',
-                    700: '#334155',
-                    800: '#1e293b',
-                    900: '#0f172a',
-                    950: '#020617',
-                },
             },
             boxShadow: {
-                'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-                'premium': '0 10px 30px -10px rgba(0, 0, 0, 0.1)',
-                'card': '0 4px 24px rgba(0, 0, 0, 0.06)',
-                'hover': '0 20px 40px -15px rgba(0, 0, 0, 0.15)',
+                xs: '0 1px 2px rgba(0,0,0,.04)',
+                sm: '0 2px 6px rgba(0,0,0,.05)',
+                card: '0 8px 24px rgba(0,0,0,.06)',
+                premium: '0 20px 50px rgba(0,0,0,.08)',
+                hover: '0 30px 60px rgba(0,0,0,.12)',
+                glass: '0 8px 32px rgba(0,0,0,.05)',
             },
             animation: {
                 'float': 'float 6s ease-in-out infinite',
@@ -127,7 +136,8 @@ export default {
             },
             backgroundImage: {
                 'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                'hero-pattern': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'hero-pattern':
+                    'linear-gradient(135deg, #F5FAF1 0%, #EAF5DD 35%, #D2EBB8 100%)',
             },
         },
     },

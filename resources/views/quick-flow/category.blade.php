@@ -27,7 +27,7 @@
     .header-icon svg {
         width: 100%;
         height: 100%;
-        fill: #0284c7 !important;
+        fill: #5A9A2F !important;
     }
 
     /* ── Size groups ─────────────────────────────── */
@@ -62,8 +62,8 @@
     }
 
     .size-group-dim {
-        color: #0284c7;
-        background: #f0f9ff;
+        color: #5A9A2F;
+        background: #F5FAF1;
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.03em;
@@ -100,8 +100,8 @@
         width: 42px;
         height: 42px;
         border-radius: 13px;
-        background: #f0f9ff;
-        color: #0ea5e9;
+        background: #F5FAF1;
+        color: #6FBA3B;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -129,7 +129,7 @@
     }
 
     .price-current {
-        color: #0ea5e9;
+        color: #6FBA3B;
         font-weight: 700;
         font-size: 13px;
     }
@@ -147,7 +147,7 @@
     }
 
     .variant-row:hover .variant-arrow {
-        color: #0ea5e9;
+        color: #6FBA3B;
         transform: translateX(3px);
     }
 </style>
@@ -160,7 +160,7 @@
          @if($type->icon_svg)
             {!! $type->icon_svg !!}
         @else
-            <i data-lucide="package" style="width: 32px; height: 32px; color: #0ea5e9;"></i>
+            <i data-lucide="package" style="width: 32px; height: 32px; color: #6FBA3B;"></i>
         @endif
     </div>
     <div>

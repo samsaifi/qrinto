@@ -10,7 +10,7 @@
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     .paypal-sheet-handle { width: 36px; height: 4px; background: #cbd5e1; border-radius: 999px; margin: 0 auto 1rem; }
     .processing-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
-    .processing-overlay .spinner { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top: 4px solid #0ea5e9; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .processing-overlay .spinner { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top: 4px solid #6FBA3B; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .success-check { width: 64px; height: 64px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
     @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }

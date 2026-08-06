@@ -45,8 +45,8 @@
     }
 
     .thumb-nav-item.active {
-        border-color: #0ea5e9;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, .2);
+        border-color: #6FBA3B;
+        box-shadow: 0 0 0 3px rgba(111, 186, 59, .2);
     }
 
     .thumb-nav-item.disabled-tab {
@@ -108,8 +108,8 @@
     }
 
     .upload-zone:hover {
-        border-color: #0ea5e9;
-        background: #f0f9ff;
+        border-color: #6FBA3B;
+        background: #F5FAF1;
         transform: translateY(-2px);
     }
 
@@ -144,8 +144,8 @@
 
     .text-toolbar input[type="text"]:focus,
     .text-toolbar textarea:focus {
-        border-color: #0ea5e9;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        border-color: #6FBA3B;
+        box-shadow: 0 0 0 3px rgba(111, 186, 59, 0.1);
         outline: none;
     }
 

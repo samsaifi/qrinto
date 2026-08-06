@@ -80,17 +80,8 @@
                 <div class="flex items-center gap-5 shrink-0">
                     {{-- Logo --}}
                     <a href="{{ route('flow-pc.index') }}" class="flex items-center gap-3 shrink-0 group">
-                        <div
-                            class="w-10 h-10 rounded-2xl bg-brand-600 text-white font-black text-xl flex items-center justify-center shadow-md shadow-brand-600/20 group-hover:scale-105 transition-transform duration-300">
-                            Q
-                        </div>
-                        <div class="flex flex-col">
-                            <span
-                                class="text-xl font-black tracking-tight text-slate-900 group-hover:text-brand-600 transition-colors">Qrinto</span>
-                            <span
-                                class="text-[10px] font-extrabold tracking-widest text-slate-400 uppercase leading-none">Print
-                                Studio</span>
-                        </div>
+                        <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto Logo"
+                            class="h-10 sm:h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-300">
                     </a>
 
                     {{-- Menu Icon Button --}}
@@ -100,6 +91,9 @@
                         <span>Menu</span>
                     </button>
                 </div>
+
+                {{-- Primary Desktop Navigation --}}
+                @include('layouts.pc.nav')
 
                 {{-- Right Side: Selected Store + Cart --}}
                 <div class="flex items-center gap-3 shrink-0">
@@ -140,14 +134,10 @@
 
         {{-- Top Bar: Logo + Pill CLOSE Button --}}
         <div class="max-w-7xl mx-auto w-full flex items-center justify-between relative z-10">
-            <div class="flex items-center gap-3">
-                <div
-                    class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-pink-500 flex items-center justify-center text-white font-black text-xl shadow-lg">
-                    Q
-                </div>
-                <span class="text-2xl font-black tracking-tight text-white">Qrinto <span
-                        class="font-light text-brand-300">Studio</span></span>
-            </div>
+            <a href="{{ route('flow-pc.index') }}" @click="pcMenu = false" class="flex items-center gap-3 shrink-0 group">
+                <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto Logo"
+                    class="h-10 sm:h-12 w-auto object-contain brightness-0 invert group-hover:scale-105 transition-transform duration-300">
+            </a>
 
             <button @click="pcMenu = false" type="button"
                 class="flex items-center gap-2.5 px-6 py-2.5 rounded-full border border-white/30 hover:border-white hover:bg-white hover:text-slate-900 text-white text-xs font-black uppercase tracking-widest transition-all duration-300 shadow-lg cursor-pointer group active:scale-95">
@@ -231,14 +221,10 @@
             <!-- Top Section: Brand Callout & Newsletter -->
             <div class="pb-16 border-b border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 <div class="lg:col-span-6">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div
-                            class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-pink-600 flex items-center justify-center text-white font-black text-xl shadow-lg">
-                            Q
-                        </div>
-                        <span class="text-2xl font-black tracking-tight text-white">Qrinto <span
-                                class="text-brand-400 font-light">Studio</span></span>
-                    </div>
+                    <a href="{{ route('flow-pc.index') }}" class="flex items-center gap-3 mb-4 shrink-0 group w-fit">
+                        <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto Logo"
+                            class="h-10 sm:h-12 w-auto object-contain brightness-0 invert group-hover:scale-105 transition-transform duration-300">
+                    </a>
                     <p class="text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed font-medium">
                         Next-generation print studio combining real-time vector editing tools with museum-quality
                         archival printing and fast local store pickup.
