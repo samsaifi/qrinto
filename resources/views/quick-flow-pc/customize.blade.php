@@ -239,7 +239,7 @@
         <section class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 mt-8 mb-6">
             <div class="hero-glass-card hero-cust-pattern relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/80 transition-all duration-300">
                 {{-- Ambient lighting blobs --}}
-                <div class="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-pink-400/20 via-purple-400/20 to-indigo-400/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
                 <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-violet-400/15 via-fuchsia-400/15 to-pink-400/15 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="hero-dots opacity-40"></div>
 

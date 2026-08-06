@@ -77,8 +77,8 @@
 <div x-data="storeAutocomplete()" class="w-full overflow-hidden">
 
     {{-- ===== SECTION 1: HERO SECTION (WITH COLORFUL GRADIENT, ANIMATED SVG & SEARCH) ===== --}}
-    <section class="hero-mesh-overlay w-full px-6 lg:px-12 pt-14 pb-20 relative overflow-hidden text-white shadow-xl"
-        style="background: linear-gradient(135deg, #0d061c 0%, #1c0836 35%, #2a074a 70%, #0d061c 100%) !important;">
+    <section class="hero-mesh-overlay w-full px-6 lg:px-12 pt-14 pb-20 relative overflow-hidden text-white shadow-xl bg-brand-500"
+        style="background: #D65F32 !important;">
         <!-- Animated Ambient Gradient Blobs -->
         <div class="hero-orb-1"></div>
         <div class="hero-orb-2"></div>
@@ -313,7 +313,7 @@
                                                 >
                                             </template>
                                             <template x-if="!store.logo">
-                                                <div class="w-full h-full rounded-xl bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600 text-white flex items-center justify-center text-xl font-black">
+                                                <div class="w-full h-full rounded-xl bg-brand-500 text-white flex items-center justify-center text-xl font-black">
                                                     <span x-text="store.store_name ? store.store_name.charAt(0) : 'Q'"></span>
                                                 </div>
                                             </template>
@@ -402,7 +402,7 @@
                                                 >
                                             </template>
                                             <template x-if="!store.logo">
-                                                <div class="w-full h-full rounded-xl bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600 text-white flex items-center justify-center text-xl font-black">
+                                                <div class="w-full h-full rounded-xl bg-brand-500 text-white flex items-center justify-center text-xl font-black">
                                                     <span x-text="store.store_name ? store.store_name.charAt(0) : 'Q'"></span>
                                                 </div>
                                             </template>
@@ -540,7 +540,7 @@
                                                             class="w-full h-full object-cover rounded-xl"
                                                         >
                                                     @else
-                                                        <div class="w-full h-full rounded-xl bg-gradient-to-br from-brand-600 via-purple-600 to-pink-600 text-white flex items-center justify-center text-lg font-black">
+                                                        <div class="w-full h-full rounded-xl bg-brand-500 text-white flex items-center justify-center text-lg font-black">
                                                             <span>{{ Str::upper(substr($cStore->store_name, 0, 1)) }}</span>
                                                         </div>
                                                     @endif

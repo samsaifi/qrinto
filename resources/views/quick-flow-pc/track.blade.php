@@ -31,11 +31,11 @@
     }
 
     .ambient-bg {
-        background-color: #f8fafc;
+        background-color: #FCFBF9;
         background-image: 
-            radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.05) 0px, transparent 50%),
-            radial-gradient(circle at 50% 50%, rgba(241, 245, 249, 0.5) 0px, transparent 100%);
+            radial-gradient(at 0% 0%, rgba(214, 95, 50, 0.06) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(185, 79, 40, 0.06) 0px, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(250, 247, 244, 0.5) 0px, transparent 100%);
     }
 
     .fade-up {
@@ -147,7 +147,7 @@
                 <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-2xl shadow-slate-200/50 relative overflow-hidden space-y-6">
                     
                     {{-- Top Multi-Color Gradient Line --}}
-                    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600"></div>
+                    <div class="absolute top-0 left-0 right-0 h-1.5 bg-brand-500"></div>
 
                     {{-- Summary Header --}}
                     <div class="flex items-center justify-between pb-4 border-b border-slate-200/80">
@@ -200,7 +200,7 @@
                     {{-- Actions CTA Buttons --}}
                     <div class="space-y-3 pt-1">
                         <a href="{{ route('flow-pc.index') }}"
-                            class="shimmer-cta w-full bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-brand-600 hover:to-indigo-600 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-slate-900/20 hover:shadow-brand-500/30 transition-all duration-300 flex items-center justify-center gap-3 text-base no-underline tracking-wide active:scale-[0.99] cursor-pointer">
+                            class="shimmer-cta w-full bg-brand-500 hover:bg-brand-600 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-brand-500/20 hover:shadow-brand-500/30 transition-all duration-300 flex items-center justify-center gap-3 text-base no-underline tracking-wide active:scale-[0.99] cursor-pointer">
                             <i data-lucide="shopping-bag" class="w-5 h-5"></i>
                             Continue Shopping
                             <i data-lucide="arrow-right" class="w-5 h-5"></i>

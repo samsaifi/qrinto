@@ -244,7 +244,7 @@
                             <input type="email" placeholder="Enter your email address..."
                                 class="bg-white/10 border border-white/20 text-white placeholder-slate-400 text-sm px-4.5 py-3 rounded-xl focus:outline-none focus:border-brand-400 flex-1 backdrop-blur-md">
                             <button type="submit"
-                                class="bg-gradient-to-r from-brand-500 to-pink-600 hover:from-brand-600 hover:to-pink-700 text-white font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xl transition-all shadow-lg shrink-0">
+                                class="bg-brand-500 hover:bg-brand-600 text-white font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xl transition-all shadow-lg shrink-0">
                                 Subscribe
                             </button>
                         </form>

@@ -190,7 +190,7 @@
                     <div class="order-num">#{{ $order->order_number }}</div>
                     <div class="store-name">{{ $order->store?->store_name ?? 'Custom Print' }}</div>
                 </div>
-                <div style="font-weight: 800; color: #0ea5e9; font-size: 1.125rem;">
+                <div style="font-weight: 800; color: #D65F32; font-size: 1.125rem;">
                     {{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }}
                 </div>
             </div>

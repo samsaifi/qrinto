@@ -64,15 +64,12 @@
 @section('content')
 <div class="w-full overflow-hidden pb-24">
 
-    {{-- ===== HERO / PAGE HEADER (LUXURY DARK PURPLE & FAN SLIDER) ===== --}}
-    <section class="hero-mesh-overlay w-full px-6 lg:px-12 pt-12 pb-20 relative overflow-hidden text-white shadow-xl"
-        style="background: linear-gradient(135deg, #0d061c 0%, #1c0836 35%, #2a074a 70%, #0d061c 100%) !important;">
-        <!-- Animated Ambient Gradient Blobs -->
-        <div class="hero-orb-1"></div>
-        <div class="hero-orb-2"></div>
+    {{-- ===== HERO / PAGE HEADER (SOLID BRAND COLOR PRESENTATION) ===== --}}
+    <section class="w-full px-6 lg:px-12 pt-12 pb-20 relative overflow-hidden text-white shadow-xl bg-brand-500"
+        style="background: #D65F32 !important;">
 
         <!-- Giant Background Watermark Text "Category" (Bottom Right) -->
-        <div class="absolute right-4 sm:right-10 bottom-2 sm:bottom-4 text-[140px] sm:text-[220px] lg:text-[300px] font-black text-white/[0.035] select-none pointer-events-none tracking-tighter leading-none z-0">
+        <div class="absolute right-4 sm:right-10 bottom-2 sm:bottom-4 text-[140px] sm:text-[220px] lg:text-[300px] font-black text-white/[0.04] select-none pointer-events-none tracking-tighter leading-none z-0">
             Category
         </div>
 
@@ -81,21 +78,21 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 fade-up-cat" style="animation-delay:0s">
                 {{-- Breadcrumbs --}}
                 <nav class="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-semibold">
-                    <a href="{{ route('flow-pc.index') }}" class="text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/15 px-3 py-1.5 rounded-full shadow-2xs">
-                        <i data-lucide="home" class="w-3.5 h-3.5 text-pink-400"></i> Home
+                    <a href="{{ route('flow-pc.index') }}" class="text-white hover:text-white transition-colors flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/25 px-3 py-1.5 rounded-full shadow-2xs">
+                        <i data-lucide="home" class="w-3.5 h-3.5 text-white"></i> Home
                     </a>
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
-                    <span class="text-pink-300 bg-pink-500/10 backdrop-blur-md border border-pink-500/30 px-3 py-1.5 rounded-full shadow-2xs font-extrabold">{{ $type->name }}</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-brand-100"></i>
+                    <span class="text-white bg-white/20 backdrop-blur-md border border-white/30 px-3 py-1.5 rounded-full shadow-2xs font-extrabold">{{ $type->name }}</span>
                 </nav>
 
                 {{-- Active Branch Pill --}}
                 @if(session()->has('active_store_id'))
                     @php $activeStore = \App\Models\Store::find(session('active_store_id')); @endphp
                     @if($activeStore)
-                    <div class="flex items-center gap-2.5 bg-emerald-500/10 backdrop-blur-md border border-emerald-500/30 rounded-full px-4 py-1.5 shadow-2xs shrink-0 self-start md:self-auto">
-                        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                        <span class="text-[11px] font-black text-slate-200">Active Branch: <strong class="text-emerald-300 font-black">{{ $activeStore->store_name }}</strong></span>
-                        <a href="{{ route('flow-pc.find-store') }}" class="text-[10px] font-black text-emerald-400 hover:underline uppercase tracking-wider ml-1">Change</a>
+                    <div class="flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/25 rounded-full px-4 py-1.5 shadow-2xs shrink-0 self-start md:self-auto">
+                        <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                        <span class="text-[11px] font-black text-white">Active Branch: <strong class="text-white font-black">{{ $activeStore->store_name }}</strong></span>
+                        <a href="{{ route('flow-pc.find-store') }}" class="text-[10px] font-black text-brand-100 hover:underline uppercase tracking-wider ml-1">Change</a>
                     </div>
                     @endif
                 @endif
@@ -107,21 +104,21 @@
                 <div class="col-span-12 lg:col-span-6 xl:col-span-6">
                     <!-- Badge Tag -->
                     <div>
-                        <span class="inline-flex items-center gap-2 bg-white/5 backdrop-blur-md border border-pink-500/30 text-pink-300 text-[11px] font-black px-4 py-1.5 rounded-full mb-6 uppercase tracking-widest shadow-lg">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-pink-400"></i>
+                        <span class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 text-white text-[11px] font-black px-4 py-1.5 rounded-full mb-6 uppercase tracking-widest shadow-xs">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
                             SELECT YOUR PREFERRED SIZE
                         </span>
                     </div>
 
                     <!-- Heading -->
-                    <h1 class="text-4xl sm:text-5xl xl:text-6xl font-black text-white leading-[1.08] tracking-tight drop-shadow-md">
+                    <h1 class="text-4xl sm:text-5xl xl:text-6xl font-black text-white leading-[1.08] tracking-tight">
                         {{ $type->name }}<br>
-                        <span class="bg-gradient-to-r from-pink-300 via-purple-300 to-pink-400 bg-clip-text text-transparent italic"
+                        <span class="italic text-brand-100"
                             style="font-family: 'Playfair Display', serif;">Collection & Sizes.</span>
                     </h1>
 
                     <!-- Subtitle -->
-                    <p class="text-base sm:text-lg text-slate-200 font-medium mt-5 leading-relaxed max-w-xl">
+                    <p class="text-base sm:text-lg text-brand-100 font-medium mt-5 leading-relaxed max-w-xl">
                         @if($type->title)
                             {{ $type->title }} &mdash;
                         @endif
@@ -130,35 +127,35 @@
 
                     {{-- Quick Info Pills --}}
                     <div class="flex flex-wrap items-center gap-2.5 mt-8 fade-up-cat" style="animation-delay:0.25s">
-                        <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-xs font-black px-3.5 py-1.5 rounded-full">
-                            <i data-lucide="ruler" class="w-3.5 h-3.5 text-pink-400"></i>
+                        <span class="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-black px-3.5 py-1.5 rounded-full">
+                            <i data-lucide="ruler" class="w-3.5 h-3.5 text-white"></i>
                             {{ isset($subTypes) ? $subTypes->count() : 0 }} Sizes Available
                         </span>
-                        <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-xs font-black px-3.5 py-1.5 rounded-full">
-                            <i data-lucide="award" class="w-3.5 h-3.5 text-pink-400"></i>
+                        <span class="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-black px-3.5 py-1.5 rounded-full">
+                            <i data-lucide="award" class="w-3.5 h-3.5 text-white"></i>
                             Studio Print Quality
                         </span>
-                        <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/15 text-slate-200 text-xs font-black px-3.5 py-1.5 rounded-full">
-                            <i data-lucide="truck" class="w-3.5 h-3.5 text-pink-400"></i>
+                        <span class="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-black px-3.5 py-1.5 rounded-full">
+                            <i data-lucide="truck" class="w-3.5 h-3.5 text-white"></i>
                             Express Store Pickup
                         </span>
                     </div>
 
                     {{-- Trust Stats Bar --}}
-                    <div class="mt-10 pt-8 border-t border-white/15 flex items-center gap-8 text-white">
+                    <div class="mt-10 pt-8 border-t border-white/20 flex items-center gap-8 text-white">
                         <div>
-                            <p class="text-3xl font-black bg-gradient-to-r from-pink-300 to-cyan-300 bg-clip-text text-transparent">100%</p>
-                            <p class="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-wider">Quality Guaranteed</p>
+                            <p class="text-3xl font-black text-white">100%</p>
+                            <p class="text-[11px] font-black text-brand-100 mt-1 uppercase tracking-wider">Quality Guaranteed</p>
                         </div>
-                        <div class="h-8 w-px bg-white/15"></div>
+                        <div class="h-8 w-px bg-white/20"></div>
                         <div>
-                            <p class="text-3xl font-black bg-gradient-to-r from-amber-300 to-pink-300 bg-clip-text text-transparent">Live 3D</p>
-                            <p class="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-wider">Design Studio</p>
+                            <p class="text-3xl font-black text-white">Live 3D</p>
+                            <p class="text-[11px] font-black text-brand-100 mt-1 uppercase tracking-wider">Design Studio</p>
                         </div>
-                        <div class="h-8 w-px bg-white/15 hidden sm:block"></div>
+                        <div class="h-8 w-px bg-white/20 hidden sm:block"></div>
                         <div class="hidden sm:block">
-                            <p class="text-3xl font-black bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">Same-Day</p>
-                            <p class="text-[11px] font-black text-slate-400 mt-1 uppercase tracking-wider">Local Pickup</p>
+                            <p class="text-3xl font-black text-white">Same-Day</p>
+                            <p class="text-[11px] font-black text-brand-100 mt-1 uppercase tracking-wider">Local Pickup</p>
                         </div>
                     </div>
                 </div>
@@ -168,30 +165,30 @@
                     <div class="relative w-[440px] max-w-full">
 
                         <!-- Outer Glowing Glass Canvas Box -->
-                        <div class="bg-slate-950/80 backdrop-blur-2xl rounded-[32px] border border-pink-500/30 p-7 shadow-2xl relative overflow-hidden group">
+                        <div class="bg-slate-900/90 backdrop-blur-2xl rounded-[32px] border border-white/20 p-7 shadow-2xl relative overflow-hidden group">
                             
                             <!-- Corner Crop Blueprint Indicators -->
-                            <div class="absolute top-4 left-4 text-pink-400/40 text-[10px] font-mono font-bold select-none">┌ ── W: AUTO ── ┐</div>
-                            <div class="absolute bottom-4 left-4 text-pink-400/40 text-[10px] font-mono font-bold select-none">└ ── H: AUTO ── ┘</div>
+                            <div class="absolute top-4 left-4 text-white/40 text-[10px] font-mono font-bold select-none">┌ ── W: AUTO ── ┐</div>
+                            <div class="absolute bottom-4 left-4 text-white/40 text-[10px] font-mono font-bold select-none">└ ── H: AUTO ── ┘</div>
 
                             <!-- Top Header Tag -->
                             <div class="flex items-center justify-between mb-6">
-                                <span class="inline-flex items-center gap-1.5 bg-pink-500/20 border border-pink-500/40 text-pink-300 text-[11px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow-md">
-                                    <span class="w-2 h-2 rounded-full bg-pink-400 animate-ping"></span>
+                                <span class="inline-flex items-center gap-1.5 bg-white/15 border border-white/25 text-white text-[11px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow-md">
+                                    <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
                                     STEP 2 OF 4: SIZE SELECTION
                                 </span>
-                                <span class="text-xs font-black text-slate-400 flex items-center gap-1">
-                                    <i data-lucide="layers" class="w-3.5 h-3.5 text-pink-400"></i> {{ isset($subTypes) ? $subTypes->count() : 0 }} Options
+                                <span class="text-xs font-black text-slate-300 flex items-center gap-1">
+                                    <i data-lucide="layers" class="w-3.5 h-3.5 text-white"></i> {{ isset($subTypes) ? $subTypes->count() : 0 }} Options
                                 </span>
                             </div>
 
                             <!-- Studio Blueprint Graphic Overlay -->
-                            <div class="relative bg-slate-900/90 rounded-2xl p-6 border border-white/10 my-4 text-center overflow-hidden">
+                            <div class="relative bg-slate-900 rounded-2xl p-6 border border-white/10 my-4 text-center overflow-hidden">
                                 <!-- Grid background pattern -->
-                                <div class="absolute inset-0 opacity-15 pointer-events-none" style="background-image: radial-gradient(circle, #ec4899 1px, transparent 1px); background-size: 16px 16px;"></div>
+                                <div class="absolute inset-0 opacity-15 pointer-events-none" style="background-image: radial-gradient(circle, #ffffff 1px, transparent 1px); background-size: 16px 16px;"></div>
 
                                 <!-- Animated Icon Box -->
-                                <div class="w-16 h-16 bg-gradient-to-tr from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white shadow-lg shadow-pink-500/20 transform group-hover:scale-110 transition-transform duration-500">
+                                <div class="w-16 h-16 bg-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white shadow-lg transform group-hover:scale-110 transition-transform duration-500">
                                     <i data-lucide="ruler" class="w-8 h-8"></i>
                                 </div>
 
@@ -201,7 +198,7 @@
                                 </p>
 
                                 <!-- Animated Arrow Indicator -->
-                                <div class="mt-5 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-black px-5 py-2.5 rounded-full shadow-lg animate-bounce cursor-pointer active:scale-95"
+                                <div class="mt-5 inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-black px-5 py-2.5 rounded-full shadow-lg animate-bounce cursor-pointer active:scale-95"
                                     onclick="document.getElementById('size-grid')?.scrollIntoView({behavior: 'smooth'})">
                                     <span>Scroll & Pick Size</span>
                                     <i data-lucide="arrow-down" class="w-4 h-4"></i>
@@ -211,7 +208,7 @@
                             <!-- Bottom Available Sizes Summary Chips -->
                             <div class="mt-4 pt-4 border-t border-white/15 flex items-center justify-between text-xs font-bold text-slate-300">
                                 <span class="text-slate-400">Ready Studio Canvas:</span>
-                                <span class="text-pink-300 flex items-center gap-1 font-black">
+                                <span class="text-white flex items-center gap-1 font-black">
                                     <i data-lucide="check-circle2" class="w-4 h-4 text-emerald-400"></i> Standard & Custom Sizes
                                 </span>
                             </div>
@@ -230,12 +227,12 @@
         {{-- Section Header & Filter Toolbar --}}
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-6 border-b border-slate-200/80">
             <div>
-                <span class="inline-flex items-center gap-2 bg-pink-50 border border-pink-200/80 text-pink-700 text-[11px] font-black px-3.5 py-1.5 rounded-full mb-3 shadow-2xs">
-                    <i data-lucide="ruler" class="w-3.5 h-3.5 text-pink-600"></i>
+                <span class="inline-flex items-center gap-2 bg-brand-50 border border-brand-200/80 text-brand-700 text-[11px] font-black px-3.5 py-1.5 rounded-full mb-3 shadow-2xs">
+                    <i data-lucide="ruler" class="w-3.5 h-3.5 text-brand-600"></i>
                     DIMENSION & SIZE CATALOG
                 </span>
                 <h2 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                    Select a Size for <span class="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">{{ $type->name }}</span>
+                    Select a Size for <span class="italic text-brand-600" style="font-family: 'Playfair Display', serif;">{{ $type->name }}</span>
                 </h2>
                 <p class="text-base text-slate-500 font-medium mt-2 max-w-xl">
                     Choose your preferred canvas dimensions to unlock custom studio templates & live 3D print preview.
@@ -243,7 +240,7 @@
             </div>
             
             <a href="{{ route('flow-pc.index') }}" class="inline-flex items-center gap-2 text-xs font-black text-slate-700 hover:text-white hover:bg-slate-900 bg-white border border-slate-200/90 px-5 py-3 rounded-2xl transition-all duration-300 shadow-xs hover:shadow-md cursor-pointer shrink-0 self-start md:self-auto">
-                <i data-lucide="arrow-left" class="w-4 h-4 text-pink-500"></i>
+                <i data-lucide="arrow-left" class="w-4 h-4 text-brand-600"></i>
                 <span>Back to Categories</span>
             </a>
         </div>
@@ -253,16 +250,16 @@
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
             @foreach($subTypes as $index => $sub)
             <a href="{{ route('flow-pc.category', $sub->slug) }}"
-               class="size-card-premium group relative bg-white border border-slate-200/90 rounded-[32px] p-7 flex flex-col justify-between shadow-xs hover:shadow-2xl hover:border-pink-400 transition-all duration-300 cursor-pointer block"
+               class="size-card-premium group relative bg-white border border-slate-200/90 rounded-[32px] p-7 flex flex-col justify-between shadow-xs hover:shadow-2xl hover:border-brand-500 transition-all duration-300 cursor-pointer block"
                style="animation: fadeUpCat 0.5s cubic-bezier(0.16,1,0.3,1) {{ $index * 0.06 }}s both;">
 
-                <!-- Subtle Top Gradient Glow Accent -->
-                <div class="absolute top-0 inset-x-8 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <!-- Subtle Top Brand Glow Accent -->
+                <div class="absolute top-0 inset-x-8 h-1 bg-brand-500 rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                 <div>
                     {{-- Top Card Header: Icon & Dimension Tag --}}
                     <div class="flex items-center justify-between gap-4 mb-6">
-                        <div class="size-icon-box w-16 h-16 bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-pink-500/20 group-hover:scale-110 transition-transform duration-300 p-3">
+                        <div class="size-icon-box w-16 h-16 bg-brand-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-500/20 group-hover:scale-110 transition-transform duration-300 p-3">
                             @if($type->icon_svg)
                                 {!! $type->icon_svg !!}
                             @else
@@ -271,15 +268,15 @@
                         </div>
 
                         @if($sub->width && $sub->height)
-                        <span class="inline-flex items-center gap-1.5 bg-slate-950 text-pink-300 border border-pink-500/30 text-[11px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-xs">
-                            <i data-lucide="ruler" class="w-3.5 h-3.5 text-pink-400"></i>
+                        <span class="inline-flex items-center gap-1.5 bg-slate-900 text-brand-100 border border-brand-500/30 text-[11px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-xs">
+                            <i data-lucide="ruler" class="w-3.5 h-3.5 text-brand-400"></i>
                             {{ $sub->width }}&times;{{ $sub->height }} {{ $sub->unit }}
                         </span>
                         @endif
                     </div>
 
                     {{-- Size Name & Description --}}
-                    <h3 class="text-xl font-black text-slate-900 group-hover:text-pink-600 transition-colors leading-tight">
+                    <h3 class="text-xl font-black text-slate-900 group-hover:text-brand-600 transition-colors leading-tight">
                         {{ $sub->name }}
                     </h3>
                     
@@ -293,7 +290,7 @@
                             <i data-lucide="check-circle2" class="w-3.5 h-3.5 text-emerald-500"></i> High Resolution
                         </span>
                         <span class="inline-flex items-center gap-1 text-[11px] font-extrabold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-pink-500"></i> Studio Templates
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-500"></i> Studio Templates
                         </span>
                     </div>
                 </div>
@@ -304,7 +301,7 @@
                         <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Starting From</span>
                         <div class="flex items-baseline gap-2 mt-0.5">
                             @if($sub->price)
-                                <span class="text-2xl font-black bg-gradient-to-r from-slate-900 via-purple-950 to-pink-600 bg-clip-text text-transparent">
+                                <span class="text-2xl font-black text-slate-900">
                                     {{ \App\Services\CurrencyService::format($sub->price) }}
                                 </span>
                                 @if($sub->old_price && $sub->old_price > $sub->price)
@@ -319,7 +316,7 @@
                     </div>
 
                     {{-- CTA Button --}}
-                    <div class="size-arrow bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 group-hover:from-pink-600 group-hover:to-indigo-700 text-white font-black text-xs px-5 py-3 rounded-2xl shadow-md group-hover:shadow-pink-500/25 flex items-center gap-2 transition-all duration-300 transform group-hover:scale-105">
+                    <div class="size-arrow bg-brand-500 hover:bg-brand-600 text-white font-black text-xs px-5 py-3 rounded-2xl shadow-md flex items-center gap-2 transition-all duration-300 transform group-hover:scale-105">
                         <span>Select Size</span>
                         <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     </div>

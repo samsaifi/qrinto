@@ -31,11 +31,11 @@
     }
 
     .ambient-bg {
-        background-color: #f8fafc;
+        background-color: #FCFBF9;
         background-image: 
-            radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.05) 0px, transparent 50%),
-            radial-gradient(circle at 50% 50%, rgba(241, 245, 249, 0.5) 0px, transparent 100%);
+            radial-gradient(at 0% 0%, rgba(214, 95, 50, 0.06) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(185, 79, 40, 0.06) 0px, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(250, 247, 244, 0.5) 0px, transparent 100%);
     }
 
     .paypal-overlay {
@@ -254,7 +254,7 @@
                 <div class="pt-8">
                     <button @click="currentStep = 2"
                         :disabled="!uploadId"
-                        :class="!uploadId ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'shimmer-cta bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-brand-600 hover:to-indigo-600 text-white shadow-xl shadow-slate-900/20 active:scale-[0.99] cursor-pointer'"
+                        :class="!uploadId ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'shimmer-cta bg-brand-500 hover:bg-brand-600 text-white shadow-xl shadow-brand-500/20 active:scale-[0.99] cursor-pointer'"
                         class="w-full py-4 rounded-2xl font-black text-base transition-all duration-300 flex items-center justify-center gap-2">
                         <span>Continue to Select Sizes</span>
                         <i data-lucide="arrow-right" class="w-5 h-5"></i>
@@ -338,7 +338,7 @@
                 </button>
                 <button @click="currentStep = 3"
                     :disabled="!selectedSize"
-                    :class="!selectedSize ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'shimmer-cta bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-brand-600 hover:to-indigo-600 text-white shadow-xl shadow-slate-900/20 active:scale-[0.99] cursor-pointer'"
+                    :class="!selectedSize ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'shimmer-cta bg-brand-500 hover:bg-brand-600 text-white shadow-xl shadow-brand-500/20 active:scale-[0.99] cursor-pointer'"
                     class="flex-[2] py-4 rounded-2xl font-black text-base transition-all duration-300 flex items-center justify-center gap-2">
                     <span>Review Order</span>
                     <i data-lucide="arrow-right" class="w-5 h-5"></i>
@@ -439,7 +439,7 @@
                     <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-2xl shadow-slate-200/50 relative overflow-hidden space-y-6">
                         
                         {{-- Top Multi-Color Gradient Line --}}
-                        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600"></div>
+                        <div class="absolute top-0 left-0 right-0 h-1.5 bg-brand-500"></div>
 
                         {{-- Summary Header --}}
                         <div class="flex items-center justify-between pb-4 border-b border-slate-200/80">
@@ -480,7 +480,7 @@
                             <button type="button" 
                                     @click="openPaypal()"
                                     :disabled="isProcessing || !isValid"
-                                    class="shimmer-cta w-full bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-black py-4 rounded-2xl shadow-xl shadow-brand-500/25 disabled:shadow-none transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-base cursor-pointer">
+                                    class="shimmer-cta w-full bg-brand-500 hover:bg-brand-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-black py-4 rounded-2xl shadow-xl shadow-brand-500/25 disabled:shadow-none transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-base cursor-pointer">
                                 <i data-lucide="credit-card" class="w-5 h-5"></i>
                                 <span x-text="isValid ? 'Pay Now — ' + __price(selectedSize?.price * quantity) : 'Complete Pickup Info'"></span>
                                 <i data-lucide="arrow-right" class="w-5 h-5" x-show="isValid"></i>

@@ -106,10 +106,10 @@
     }
 
     .hero-checkout-gradient {
-        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
+        background: #FEF5F1;
     }
     .hero-checkout-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
+        background-image: radial-gradient(circle at 1px 1px, rgba(214,95,50,0.04) 1px, transparent 0);
         background-size: 32px 32px;
     }
     .hero-blob-1 {

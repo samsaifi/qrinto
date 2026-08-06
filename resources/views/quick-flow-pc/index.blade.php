@@ -10,7 +10,7 @@
     <style>
         /* ===== Colorful Animated Hero Background ===== */
         .hero-vibrant-bg {
-            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #31104b, #4c0519, #0284c7, #1e1b4b);
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #31104b, #4c0519, #B94F28, #1e1b4b);
             background-size: 400% 400%;
             animation: gradientFlow 15s ease infinite;
         }
@@ -376,14 +376,10 @@
     <div class=" ">
 
         {{-- ===== SECTION 1: HERO SECTION WITH COLORFUL GRADIENT, ANIMATED SVG TOOLS & SWIPER ===== --}}
-        <section class="hero-mesh-overlay w-full px-6 lg:px-12 pt-14 pb-20 relative overflow-hidden text-white shadow-xl"
-            style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #31104b 50%, #4c0519 75%, #0f172a 100%) !important;">
-            <!-- Animated Ambient Gradient Blobs -->
-            <div class="hero-orb-1"></div>
-            <div class="hero-orb-2"></div>
-            <div class="hero-orb-3"></div>
-
+        {{-- ===== SECTION 1: HERO SECTION (FULL WIDTH SOLID BRAND-500 COLOR) ===== --}}
+        <section class="w-full bg-brand-500 text-white px-6 lg:px-12 pt-14 pb-20 relative overflow-hidden shadow-xl" style="background-color: #D65F32 !important;">
             <div class="max-w-[1400px] mx-auto relative z-10">
+                
                 <div class="grid grid-cols-12 gap-10 lg:gap-14 items-center">
 
                     {{-- Left Column: Copy, CTAs & Animated SVG Editing Tools Dock --}}
@@ -392,24 +388,24 @@
                         <!-- Studio Badge Tag -->
                         <div class="fade-in">
                             <span
-                                class="inline-flex items-center gap-2.5 bg-slate-900/90 backdrop-blur-md border border-pink-400/40 text-pink-300 text-xs font-black px-4 py-2 rounded-full mb-6 uppercase tracking-widest shadow-lg">
-                                <i data-lucide="sparkles" class="w-4 h-4 text-pink-400 animate-pulse"></i>
+                                class="inline-flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-black px-4 py-2 rounded-full mb-6 uppercase tracking-widest shadow-xs">
+                                <i data-lucide="sparkles" class="w-4 h-4 text-white animate-pulse"></i>
                                 Next-Gen Interactive Print Studio
                             </span>
                         </div>
 
                         <!-- Hero Main Heading -->
                         <h1
-                            class="text-4xl sm:text-5xl xl:text-6xl font-black text-white leading-[1.1] tracking-tight fade-in fade-in-d1 drop-shadow-lg">
+                            class="text-4xl sm:text-5xl xl:text-6xl font-black text-white leading-[1.1] tracking-tight fade-in fade-in-d1">
                             Turn your memories<br>
                             into <span
-                                class="bg-gradient-to-r from-pink-300 via-purple-200 to-cyan-300 bg-clip-text text-transparent italic drop-shadow-md"
+                                class="text-brand-100 italic"
                                 style="font-family: 'Playfair Display', serif;">extraordinary prints</span>
                         </h1>
 
                         <!-- Subtitle -->
                         <p
-                            class="text-base sm:text-lg text-slate-100 font-semibold mt-5 leading-relaxed max-w-xl fade-in fade-in-d2 drop-shadow-sm">
+                            class="text-base sm:text-lg text-brand-100 font-semibold mt-5 leading-relaxed max-w-xl fade-in fade-in-d2">
                             Unleash your creativity with our real-time design studio. Transform photos into museum-quality
                             canvas, custom apparel, photobooks, and fine art prints.
                         </p>
@@ -417,13 +413,13 @@
                         <!-- CTA Action Buttons -->
                         <div class="flex flex-wrap items-center gap-4 mt-8 fade-in fade-in-d3">
                             <a href="#products"
-                                class="bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-extrabold px-8 py-4 rounded-2xl transition-all duration-300 active:scale-95 flex items-center gap-3 shadow-xl shadow-pink-500/30 border border-white/20">
+                                class="bg-white hover:bg-slate-50 text-brand-700 font-extrabold px-8 py-4 rounded-2xl transition-all duration-300 active:scale-95 flex items-center gap-3 shadow-xl text-base">
                                 <i data-lucide="pen-tool" class="w-5 h-5"></i>
                                 <span>Start Designing Now</span>
                             </a>
                             <a href="{{ url('/pc/templates') }}"
-                                class="bg-white text-slate-900 hover:bg-slate-100 font-extrabold px-7 py-4 rounded-2xl border border-white transition-all duration-200 active:scale-95 flex items-center gap-2 shadow-lg">
-                                <i data-lucide="layout-grid" class="w-5 h-5 text-purple-600"></i>
+                                class="bg-white/15 hover:bg-white/25 text-white font-extrabold px-7 py-4 rounded-2xl border border-white/25 transition-all duration-200 active:scale-95 flex items-center gap-2 shadow-xs text-base">
+                                <i data-lucide="layout-grid" class="w-5 h-5 text-white"></i>
                                 <span>Browse Templates</span>
                             </a>
                         </div>
@@ -432,151 +428,137 @@
                         <div class="mt-10 pt-8 border-t border-white/20 fade-in fade-in-d3">
                             <div class="flex items-center justify-between mb-4">
                                 <span
-                                    class="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2 drop-shadow-sm">
-                                    <i data-lucide="sliders" class="w-4 h-4 text-pink-400"></i> Live Design Editor Suite
+                                    class="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2">
+                                    <i data-lucide="sliders" class="w-4 h-4 text-white"></i> Live Design Editor Suite
                                 </span>
                                 <span
-                                    class="text-[11px] font-black bg-pink-500/30 text-pink-200 px-3 py-1 rounded-full border border-pink-400/50 shadow-sm">Vector
+                                    class="text-[11px] font-black bg-white/15 text-white px-3 py-1 rounded-full border border-white/25 shadow-xs">Vector
                                     Engine 2.0</span>
                             </div>
 
                             <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
                                 <!-- Tool 1: Vector Pen -->
-                                <div class="bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 backdrop-blur-md p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-md hover:border-pink-400/60 transition-all"
+                                <div class="bg-white/10 hover:bg-white/20 border border-white/20 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-xs transition-all"
                                     title="Vector Pen Tool">
                                     <div class="tool-icon-box mb-2">
-                                        <svg class="w-7 h-7 text-pink-400" viewBox="0 0 48 48" fill="none"
+                                        <svg class="w-7 h-7 text-white" viewBox="0 0 48 48" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 36L34 14L30 10L8 32V36H12Z" stroke="currentColor"
                                                 stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
-                                            <circle cx="34" cy="14" r="4" fill="#38bdf8" class="animate-ping"
+                                            <circle cx="34" cy="14" r="4" fill="#ffffff" class="animate-ping"
                                                 style="animation-duration: 2.5s;" />
-                                            <circle cx="34" cy="14" r="3" fill="#38bdf8" />
-                                            <path d="M8 20C18 10 30 22 40 12" stroke="#a855f7" stroke-width="2"
+                                            <circle cx="34" cy="14" r="3" fill="#ffffff" />
+                                            <path d="M8 20C18 10 30 22 40 12" stroke="#FEF5F1" stroke-width="2"
                                                 stroke-dasharray="4 4" stroke-linecap="round" />
                                         </svg>
                                     </div>
-                                    <span class="text-[11px] font-extrabold text-white group-hover:text-pink-300">Vector
+                                    <span class="text-[11px] font-extrabold text-white group-hover:text-brand-100">Vector
                                         Pen</span>
                                 </div>
 
                                 <!-- Tool 2: Color Palette -->
-                                <div class="bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 backdrop-blur-md p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-md hover:border-cyan-400/60 transition-all"
+                                <div class="bg-white/10 hover:bg-white/20 border border-white/20 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-xs transition-all"
                                     title="Color Swatches">
                                     <div class="tool-icon-box mb-2">
                                         <svg class="w-7 h-7" viewBox="0 0 48 48" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <path
                                                 d="M24 6C14.06 6 6 14.06 6 24C6 33.94 14.06 42 24 42C26.5 42 28.5 40 28.5 37.5C28.5 36.3 28 35.2 27.2 34.4C26.4 33.6 26 32.5 26 31.3C26 28.9 28 26.9 30.4 26.9H35C38.9 26.9 42 23.8 42 19.9C42 12.2 33.9 6 24 6Z"
-                                                fill="url(#paletteGrad)" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
-                                            <circle cx="15" cy="18" r="3.5" fill="#f43f5e"
+                                                fill="#ffffff" stroke="#D65F32" stroke-width="2" />
+                                            <circle cx="15" cy="18" r="3.5" fill="#D65F32"
                                                 class="animate-pulse" style="animation-duration: 1.8s;" />
-                                            <circle cx="24" cy="13" r="3.5" fill="#38bdf8"
+                                            <circle cx="24" cy="13" r="3.5" fill="#B94F28"
                                                 class="animate-pulse" style="animation-duration: 2.2s;" />
-                                            <circle cx="33" cy="18" r="3.5" fill="#facc15"
+                                            <circle cx="33" cy="18" r="3.5" fill="#EB7E4E"
                                                 class="animate-pulse" style="animation-duration: 1.5s;" />
-                                            <circle cx="15" cy="28" r="3.5" fill="#a855f7"
+                                            <circle cx="15" cy="28" r="3.5" fill="#953F21"
                                                 class="animate-pulse" style="animation-duration: 2.6s;" />
-                                            <defs>
-                                                <linearGradient id="paletteGrad" x1="6" y1="6"
-                                                    x2="42" y2="42" gradientUnits="userSpaceOnUse">
-                                                    <stop stop-color="#1e1b4b" />
-                                                    <stop offset="1" stop-color="#6b21a8" />
-                                                </linearGradient>
-                                            </defs>
                                         </svg>
                                     </div>
                                     <span
-                                        class="text-[11px] font-extrabold text-white group-hover:text-cyan-300">Palette</span>
+                                        class="text-[11px] font-extrabold text-white group-hover:text-brand-100">Palette</span>
                                 </div>
 
                                 <!-- Tool 3: Magic Wand AI -->
-                                <div class="bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 backdrop-blur-md p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-md hover:border-yellow-400/60 transition-all"
+                                <div class="bg-white/10 hover:bg-white/20 border border-white/20 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-xs transition-all"
                                     title="AI Filters">
                                     <div class="tool-icon-box mb-2">
-                                        <svg class="w-7 h-7 text-yellow-300" viewBox="0 0 48 48" fill="none"
+                                        <svg class="w-7 h-7 text-white" viewBox="0 0 48 48" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <path d="M10 38L28 20" stroke="currentColor" stroke-width="3.5"
                                                 stroke-linecap="round" />
-                                            <path d="M28 20L32 16L30 14L26 18L28 20Z" fill="#fbbf24" />
+                                            <path d="M28 20L32 16L30 14L26 18L28 20Z" fill="#ffffff" />
                                             <g class="animate-pulse" style="animation-duration: 1.5s;">
                                                 <path
                                                     d="M36 8L37.5 12L41.5 13.5L37.5 15L36 19L34.5 15L30.5 13.5L34.5 12L36 8Z"
-                                                    fill="#38bdf8" />
+                                                    fill="#ffffff" />
                                                 <path d="M20 8L21 11L24 12L21 13L20 16L19 13L16 12L19 11L20 8Z"
-                                                    fill="#ec4899" />
+                                                    fill="#FEF5F1" />
                                                 <path
                                                     d="M38 28L39 30.5L41.5 31.5L39 32.5L38 35L37 32.5L34.5 31.5L37 30.5L38 28Z"
-                                                    fill="#facc15" />
+                                                    fill="#ffffff" />
                                             </g>
                                         </svg>
                                     </div>
-                                    <span class="text-[11px] font-extrabold text-white group-hover:text-yellow-300">AI
+                                    <span class="text-[11px] font-extrabold text-white group-hover:text-brand-100">AI
                                         Wand</span>
                                 </div>
 
                                 <!-- Tool 4: Precision Crop -->
-                                <div class="bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 backdrop-blur-md p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-md hover:border-cyan-400/60 transition-all"
+                                <div class="bg-white/10 hover:bg-white/20 border border-white/20 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-xs transition-all"
                                     title="Crop & Resize">
                                     <div class="tool-icon-box mb-2">
-                                        <svg class="w-7 h-7 text-cyan-400" viewBox="0 0 48 48" fill="none"
+                                        <svg class="w-7 h-7 text-white" viewBox="0 0 48 48" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 6V36H42" stroke="currentColor" stroke-width="3"
                                                 stroke-linecap="round" />
                                             <path d="M36 42V12H6" stroke="currentColor" stroke-width="3"
                                                 stroke-linecap="round" />
                                             <rect x="16" y="16" width="16" height="16" rx="2"
-                                                stroke="#ec4899" stroke-width="2" stroke-dasharray="3 3" />
-                                            <circle cx="16" cy="16" r="3" fill="#38bdf8"
+                                                stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3" />
+                                            <circle cx="16" cy="16" r="3" fill="#ffffff"
                                                 class="animate-ping" style="animation-duration: 3s;" />
-                                            <circle cx="32" cy="32" r="3" fill="#38bdf8" />
+                                            <circle cx="32" cy="32" r="3" fill="#ffffff" />
                                         </svg>
                                     </div>
-                                    <span class="text-[11px] font-extrabold text-white group-hover:text-cyan-300">Smart
+                                    <span class="text-[11px] font-extrabold text-white group-hover:text-brand-100">Smart
                                         Crop</span>
                                 </div>
 
                                 <!-- Tool 5: Layers Engine -->
-                                <div class="bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 backdrop-blur-md p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-md hover:border-purple-400/60 transition-all"
+                                <div class="bg-white/10 hover:bg-white/20 border border-white/20 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-xs transition-all"
                                     title="Layer Stack">
                                     <div class="tool-icon-box mb-2">
-                                        <svg class="w-7 h-7 text-purple-300" viewBox="0 0 48 48" fill="none"
+                                        <svg class="w-7 h-7 text-white" viewBox="0 0 48 48" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M24 8L6 17L24 26L42 17L24 8Z" fill="url(#layerGrad1)"
-                                                stroke="#a855f7" stroke-width="1.5" />
-                                            <path d="M6 23.5L24 32.5L42 23.5" stroke="#ec4899" stroke-width="2.5"
+                                            <path d="M24 8L6 17L24 26L42 17L24 8Z" fill="#ffffff"
+                                                stroke="#D65F32" stroke-width="1.5" />
+                                            <path d="M6 23.5L24 32.5L42 23.5" stroke="#ffffff" stroke-width="2.5"
                                                 stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M6 30L24 39L42 30" stroke="#38bdf8" stroke-width="2.5"
+                                            <path d="M6 30L24 39L42 30" stroke="#FEF5F1" stroke-width="2.5"
                                                 stroke-linecap="round" stroke-linejoin="round" />
-                                            <defs>
-                                                <linearGradient id="layerGrad1" x1="6" y1="8"
-                                                    x2="42" y2="26" gradientUnits="userSpaceOnUse">
-                                                    <stop stop-color="#ec4899" stop-opacity="0.9" />
-                                                    <stop offset="1" stop-color="#8b5cf6" stop-opacity="0.9" />
-                                                </linearGradient>
-                                            </defs>
                                         </svg>
                                     </div>
                                     <span
-                                        class="text-[11px] font-extrabold text-white group-hover:text-purple-300">Layers</span>
+                                        class="text-[11px] font-extrabold text-white group-hover:text-brand-100">Layers</span>
                                 </div>
 
                                 <!-- Tool 6: Typography -->
-                                <div class="bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 backdrop-blur-md p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-md hover:border-amber-400/60 transition-all"
+                                <div class="bg-white/10 hover:bg-white/20 border border-white/20 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center group cursor-pointer shadow-xs transition-all"
                                     title="Text Editor">
                                     <div class="tool-icon-box mb-2">
-                                        <svg class="w-7 h-7 text-amber-300" viewBox="0 0 48 48" fill="none"
+                                        <svg class="w-7 h-7 text-white" viewBox="0 0 48 48" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 36L20 12H28L36 36" stroke="currentColor" stroke-width="3.5"
                                                 stroke-linecap="round" stroke-linejoin="round" />
                                             <path d="M16 26H32" stroke="currentColor" stroke-width="3"
                                                 stroke-linecap="round" />
                                             <rect x="38" y="14" width="3" height="20" rx="1.5"
-                                                fill="#ec4899" class="animate-pulse" />
+                                                fill="#ffffff" class="animate-pulse" />
                                         </svg>
                                     </div>
                                     <span
-                                        class="text-[11px] font-extrabold text-white group-hover:text-amber-300">Typography</span>
+                                        class="text-[11px] font-extrabold text-white group-hover:text-brand-100">Typography</span>
                                 </div>
                             </div>
                         </div>
@@ -584,22 +566,22 @@
                         <!-- Stats Row -->
                         <div class="mt-8 flex flex-wrap items-center gap-4">
                             <div
-                                class="flex items-center gap-2.5 bg-slate-900/80 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-sm">
-                                <i data-lucide="printer" class="w-5 h-5 text-pink-400"></i>
+                                class="flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/25 px-4 py-2 rounded-2xl shadow-xs">
+                                <i data-lucide="printer" class="w-5 h-5 text-white"></i>
                                 <span class="text-lg font-black text-white">2.4M+</span>
-                                <span class="text-xs font-bold text-slate-200">Printed</span>
+                                <span class="text-xs font-bold text-brand-100">Printed</span>
                             </div>
                             <div
-                                class="flex items-center gap-2.5 bg-slate-900/80 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-sm">
-                                <i data-lucide="star" class="w-5 h-5 text-amber-400 fill-amber-400"></i>
+                                class="flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/25 px-4 py-2 rounded-2xl shadow-xs">
+                                <i data-lucide="star" class="w-5 h-5 text-amber-300 fill-amber-300"></i>
                                 <span class="text-lg font-black text-white">4.9</span>
-                                <span class="text-xs font-bold text-slate-200">Rating</span>
+                                <span class="text-xs font-bold text-brand-100">Rating</span>
                             </div>
                             <div
-                                class="flex items-center gap-2.5 bg-slate-900/80 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl shadow-sm">
-                                <i data-lucide="zap" class="w-5 h-5 text-cyan-400"></i>
+                                class="flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/25 px-4 py-2 rounded-2xl shadow-xs">
+                                <i data-lucide="zap" class="w-5 h-5 text-white"></i>
                                 <span class="text-lg font-black text-white">48hr</span>
-                                <span class="text-xs font-bold text-slate-200">Fast Turnaround</span>
+                                <span class="text-xs font-bold text-brand-100">Fast Turnaround</span>
                             </div>
                         </div>
 
@@ -611,15 +593,15 @@
 
                             <!-- Floating SVG Tool Badges Docked around Swiper -->
                             <div
-                                class="floating-tool-1 absolute -top-5 -left-5 z-30 hidden sm:flex items-center gap-2 bg-slate-900/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-2xl">
-                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                                <i data-lucide="crop" class="w-4 h-4 text-cyan-300"></i>
+                                class="floating-tool-1 absolute -top-5 -left-5 z-30 hidden sm:flex items-center gap-2 bg-white/95 backdrop-blur-md border border-slate-200 text-slate-900 text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl">
+                                <span class="w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping"></span>
+                                <i data-lucide="crop" class="w-4 h-4 text-brand-600"></i>
                                 <span>300 DPI High-Res Print</span>
                             </div>
 
                             <div
-                                class="floating-tool-2 absolute -bottom-6 -right-4 z-30 hidden sm:flex items-center gap-2 bg-slate-900/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-2xl">
-                                <i data-lucide="palette" class="w-4 h-4 text-pink-400"></i>
+                                class="floating-tool-2 absolute -bottom-6 -right-4 z-30 hidden sm:flex items-center gap-2 bg-white/95 backdrop-blur-md border border-slate-200 text-slate-900 text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl">
+                                <i data-lucide="palette" class="w-4 h-4 text-brand-600"></i>
                                 <span>Ultra-Vibrant Color Match</span>
                             </div>
 
@@ -924,9 +906,9 @@
                             'bg' => 'bg-white',
                             'imgBg' => 'from-pink-500/15 via-rose-500/10 to-purple-500/20',
                             'badge' =>
-                                'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-md shadow-pink-500/30',
+                                'bg-brand-500 text-white shadow-md shadow-brand-500/30',
                             'btn' =>
-                                'bg-gradient-to-r from-pink-500 to-rose-600 text-white hover:from-pink-600 hover:to-rose-700',
+                                'bg-brand-500 text-white hover:bg-brand-600',
                             'titleHover' => 'group-hover:text-pink-600',
                             'accent' => 'pink',
                         ],
@@ -935,9 +917,9 @@
                             'bg' => 'bg-white',
                             'imgBg' => 'from-cyan-500/15 via-sky-500/10 to-blue-500/20',
                             'badge' =>
-                                'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/30',
+                                'bg-brand-500 text-white shadow-md shadow-brand-500/30',
                             'btn' =>
-                                'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700',
+                                'bg-brand-500 text-white hover:bg-brand-600',
                             'titleHover' => 'group-hover:text-cyan-600',
                             'accent' => 'cyan',
                         ],
@@ -946,9 +928,9 @@
                             'bg' => 'bg-white',
                             'imgBg' => 'from-purple-500/15 via-indigo-500/10 to-violet-500/20',
                             'badge' =>
-                                'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30',
+                                'bg-brand-500 text-white shadow-md shadow-brand-500/30',
                             'btn' =>
-                                'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700',
+                                'bg-brand-500 text-white hover:bg-brand-600',
                             'titleHover' => 'group-hover:text-purple-600',
                             'accent' => 'purple',
                         ],
@@ -957,9 +939,9 @@
                             'bg' => 'bg-white',
                             'imgBg' => 'from-amber-500/15 via-orange-500/10 to-yellow-500/20',
                             'badge' =>
-                                'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/30',
+                                'bg-brand-500 text-white shadow-md shadow-brand-500/30',
                             'btn' =>
-                                'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700',
+                                'bg-brand-500 text-white hover:bg-brand-600',
                             'titleHover' => 'group-hover:text-amber-600',
                             'accent' => 'amber',
                         ],
@@ -968,9 +950,9 @@
                             'bg' => 'bg-white',
                             'imgBg' => 'from-emerald-500/15 via-teal-500/10 to-green-500/20',
                             'badge' =>
-                                'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/30',
+                                'bg-brand-500 text-white shadow-md shadow-brand-500/30',
                             'btn' =>
-                                'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700',
+                                'bg-brand-500 text-white hover:bg-brand-600',
                             'titleHover' => 'group-hover:text-emerald-600',
                             'accent' => 'emerald',
                         ],
@@ -979,9 +961,9 @@
                             'bg' => 'bg-white',
                             'imgBg' => 'from-fuchsia-500/15 via-pink-500/10 to-rose-500/20',
                             'badge' =>
-                                'bg-gradient-to-br from-fuchsia-500 to-pink-600 text-white shadow-md shadow-fuchsia-500/30',
+                                'bg-brand-500 text-white shadow-md shadow-brand-500/30',
                             'btn' =>
-                                'bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white hover:from-fuchsia-600 hover:to-pink-700',
+                                'bg-brand-500 text-white hover:bg-brand-600',
                             'titleHover' => 'group-hover:text-fuchsia-600',
                             'accent' => 'fuchsia',
                         ],
@@ -1196,29 +1178,24 @@
         </section>
 
         {{-- ===== SECTION 3: HOW IT WORKS (FULL-WIDTH LUXURY GRADIENT) ===== --}}
+        {{-- ===== SECTION 3: HOW IT WORKS (SOLID BRAND COLOR PRESENTATION) ===== --}}
         <section
-            class="w-full bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white py-20 px-6 sm:px-10 relative overflow-hidden shadow-2xl border-y border-white/10">
-            <!-- Ambient Glow Orbs -->
-            <div class="absolute -top-20 -right-20 w-96 h-96 bg-pink-500/20 rounded-full blur-[90px] pointer-events-none">
-            </div>
-            <div
-                class="absolute -bottom-20 -left-20 w-96 h-96 bg-cyan-500/20 rounded-full blur-[90px] pointer-events-none">
-            </div>
+            class="w-full bg-brand-500 text-white py-20 px-6 sm:px-10 relative overflow-hidden shadow-xl">
 
             <div class="max-w-[1400px] mx-auto relative z-10">
                 <!-- Section Header -->
                 <div class="text-center max-w-2xl mx-auto mb-16 relative z-10">
                     <span
-                        class="inline-flex items-center gap-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-pink-300 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full mb-4 shadow-lg">
-                        <i data-lucide="sparkles" class="w-4 h-4 text-pink-400 animate-pulse"></i>
+                        class="inline-flex items-center gap-2.5 bg-white/15 backdrop-blur-md border border-white/30 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full mb-4 shadow-xs">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-white animate-pulse"></i>
                         Effortless Process
                     </span>
                     <h2 class="text-3xl sm:text-4xl xl:text-5xl font-black text-white tracking-tight leading-tight">
                         How it <span
-                            class="bg-gradient-to-r from-pink-300 via-purple-200 to-cyan-300 bg-clip-text text-transparent italic drop-shadow"
+                            class="italic text-brand-100"
                             style="font-family: 'Playfair Display', serif;">works</span>
                     </h2>
-                    <p class="text-base sm:text-lg text-slate-200 mt-3 font-medium">Create museum-quality custom prints in
+                    <p class="text-base sm:text-lg text-brand-100 mt-3 font-medium">Create museum-quality custom prints in
                         just 4 simple steps.</p>
                 </div>
 
@@ -1233,10 +1210,6 @@
                                     'Choose your nearest local Qrinto branch for fast pickup or doorstep delivery.',
                                 'icon' => 'store',
                                 'badge' => 'Branch Selector',
-                                'border' => 'border-cyan-400/40 hover:border-cyan-400',
-                                'glow' => 'from-cyan-500/20 to-blue-600/10',
-                                'numberColor' => 'from-cyan-400 to-blue-400',
-                                'iconColor' => 'text-cyan-300',
                             ],
                             [
                                 'step' => '02',
@@ -1244,10 +1217,6 @@
                                 'desc' => 'Browse canvas, photobooks, apparel, cards & custom merchandise.',
                                 'icon' => 'layers',
                                 'badge' => 'Product Catalog',
-                                'border' => 'border-purple-400/40 hover:border-purple-400',
-                                'glow' => 'from-purple-500/20 to-indigo-600/10',
-                                'numberColor' => 'from-purple-400 to-indigo-400',
-                                'iconColor' => 'text-purple-300',
                             ],
                             [
                                 'step' => '03',
@@ -1255,10 +1224,6 @@
                                 'desc' => 'Upload photos & customize with text tools, layers, and vector filters.',
                                 'icon' => 'wand-2',
                                 'badge' => 'Vector Studio 2.0',
-                                'border' => 'border-pink-400/40 hover:border-pink-400',
-                                'glow' => 'from-pink-500/20 to-rose-600/10',
-                                'numberColor' => 'from-pink-400 to-rose-400',
-                                'iconColor' => 'text-pink-300',
                             ],
                             [
                                 'step' => '04',
@@ -1266,54 +1231,45 @@
                                 'desc' => 'Secure checkout with instant store pickup or express 48hr delivery.',
                                 'icon' => 'package-check',
                                 'badge' => 'Express Turnaround',
-                                'border' => 'border-emerald-400/40 hover:border-emerald-400',
-                                'glow' => 'from-emerald-500/20 to-teal-600/10',
-                                'numberColor' => 'from-emerald-400 to-teal-400',
-                                'iconColor' => 'text-emerald-300',
                             ],
                         ];
                     @endphp
 
                     @foreach ($steps as $step)
                         <div
-                            class="bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-xl border {{ $step['border'] }} rounded-3xl p-8 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-2 shadow-xl relative overflow-hidden">
-                            <!-- Background Gradient Glow -->
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br {{ $step['glow'] }} opacity-50 group-hover:opacity-100 transition-opacity">
-                            </div>
-
+                            class="bg-white/10 hover:bg-white/15 backdrop-blur-xl border border-white/20 rounded-3xl p-8 flex flex-col justify-between group transition-all duration-300 hover:-translate-y-2 shadow-xl relative overflow-hidden">
                             <div class="relative z-10">
                                 <!-- Top Step Number & Icon Row -->
                                 <div class="flex items-center justify-between mb-6">
                                     <div
-                                        class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center {{ $step['iconColor'] }} group-hover:scale-110 transition-transform">
+                                        class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
                                         <i data-lucide="{{ $step['icon'] }}" class="w-7 h-7"></i>
                                     </div>
                                     <span
-                                        class="text-3xl font-black bg-gradient-to-r {{ $step['numberColor'] }} bg-clip-text text-transparent opacity-80 group-hover:opacity-100">
+                                        class="text-3xl font-black text-white/90 group-hover:text-white">
                                         {{ $step['step'] }}
                                     </span>
                                 </div>
 
                                 <!-- Step Title & Description -->
                                 <h3
-                                    class="text-xl font-black text-white mb-2.5 group-hover:text-pink-300 transition-colors">
+                                    class="text-xl font-black text-white mb-2.5">
                                     {{ $step['title'] }}
                                 </h3>
-                                <p class="text-sm text-slate-300 leading-relaxed font-medium">
+                                <p class="text-sm text-brand-100 leading-relaxed font-medium">
                                     {{ $step['desc'] }}
                                 </p>
                             </div>
 
                             <!-- Footer Feature Tag -->
                             <div
-                                class="relative z-10 mt-8 pt-4 border-t border-white/10 flex items-center justify-between">
+                                class="relative z-10 mt-8 pt-4 border-t border-white/20 flex items-center justify-between">
                                 <span
-                                    class="text-[11px] font-black uppercase tracking-wider text-slate-400 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                                    class="text-[11px] font-black uppercase tracking-wider text-white bg-white/15 px-2.5 py-1 rounded-lg border border-white/20">
                                     {{ $step['badge'] }}
                                 </span>
                                 <div
-                                    class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white/70 group-hover:bg-pink-500 group-hover:text-white transition-all">
+                                    class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white group-hover:bg-white group-hover:text-brand-600 transition-all">
                                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                                 </div>
                             </div>
@@ -1365,7 +1321,7 @@
                         <!-- CTA Button -->
                         <div class="mt-8">
                             <a href="{{ route('flow-pc.find-store') }}"
-                                class="inline-flex items-center gap-3 bg-gradient-to-r from-brand-600 via-purple-600 to-pink-600 hover:from-brand-700 hover:to-pink-700 text-white font-extrabold px-8 py-4 rounded-2xl shadow-xl shadow-brand-600/25 transition-all duration-300 hover:scale-105 active:scale-95 border border-brand-400/30">
+                                class="inline-flex items-center gap-3 bg-brand-500 hover:bg-brand-600 text-white font-extrabold px-8 py-4 rounded-2xl shadow-xl shadow-brand-500/25 transition-all duration-300 hover:scale-105 active:scale-95 border border-brand-400/30">
                                 <span>Find a Store Near You</span>
                                 <i data-lucide="arrow-right" class="w-5 h-5"></i>
                             </a>
@@ -1401,7 +1357,7 @@
                                         'cardBg' => 'from-pink-50/70 via-white to-white',
                                         'border' => 'border-pink-200/90 hover:border-pink-500 hover:shadow-pink-500/10',
                                         'iconBox' =>
-                                            'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/30',
+                                            'bg-brand-500 text-white shadow-lg shadow-brand-500/30',
                                         'titleColor' => 'group-hover:text-pink-600',
                                     ],
                                     [
@@ -1414,7 +1370,7 @@
                                         'border' =>
                                             'border-amber-200/90 hover:border-amber-500 hover:shadow-amber-500/10',
                                         'iconBox' =>
-                                            'bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30',
+                                            'bg-brand-500 text-white shadow-lg shadow-brand-500/30',
                                         'titleColor' => 'group-hover:text-amber-600',
                                     ],
                                     [
@@ -1427,7 +1383,7 @@
                                         'border' =>
                                             'border-purple-200/90 hover:border-purple-500 hover:shadow-purple-500/10',
                                         'iconBox' =>
-                                            'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30',
+                                            'bg-brand-500 text-white shadow-lg shadow-brand-500/30',
                                         'titleColor' => 'group-hover:text-purple-600',
                                     ],
                                     [
@@ -1440,7 +1396,7 @@
                                         'border' =>
                                             'border-emerald-200/90 hover:border-emerald-500 hover:shadow-emerald-500/10',
                                         'iconBox' =>
-                                            'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30',
+                                            'bg-brand-500 text-white shadow-lg shadow-brand-500/30',
                                         'titleColor' => 'group-hover:text-emerald-600',
                                     ],
                                 ];
@@ -1679,7 +1635,7 @@
 
                 <div class="flex flex-wrap items-center justify-center gap-4 mt-8">
                     <a href="#products"
-                        class="bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 text-white font-extrabold text-sm px-8 py-3.5 rounded-xl transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-2">
+                        class="bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-sm px-8 py-3.5 rounded-xl transition-all shadow-md hover:scale-105 active:scale-95 flex items-center gap-2">
                         <i data-lucide="pen-tool" class="w-4 h-4"></i>
                         <span>Start Designing Now</span>
                     </a>

@@ -1,11 +1,11 @@
 <style>
     /* ── Hero Header & Workspace ── */
     .hero-cust-gradient {
-        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
+        background: #FEF5F1;
     }
     .hero-glass-card {
-        background: linear-gradient(135deg, rgba(253, 242, 248, 0.95) 0%, rgba(250, 240, 255, 0.85) 50%, rgba(240, 244, 255, 0.95) 100%);
-        box-shadow: 0 20px 40px -15px rgba(236, 72, 153, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+        background: rgba(254, 245, 241, 0.95);
+        box-shadow: 0 20px 40px -15px rgba(214, 95, 50, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
     }
     @keyframes spinSlow {
         from { transform: rotate(0deg); }
@@ -64,7 +64,7 @@
     }
     .template-chip:hover { background: #e2e8f0; }
     .template-chip:active { transform: scale(.95); }
-    .template-chip i { width: 14px; height: 14px; color: #0ea5e9; }
+    .template-chip i { width: 14px; height: 14px; color: #D65F32; }
     .template-cat-filter {
         display: flex; gap: 6px; overflow-x: auto; padding: 4px 4px 2px;
         scrollbar-width: none; -webkit-overflow-scrolling: touch;
@@ -76,5 +76,5 @@
         color: #64748b; cursor: pointer; transition: all .2s; white-space: nowrap;
     }
     .template-cat-chip:hover { background: #e2e8f0; }
-    .template-cat-chip.active { background: #0ea5e9; border-color: #0ea5e9; color: #fff; }
+    .template-cat-chip.active { background: #D65F32; border-color: #D65F32; color: #fff; }
 </style>

@@ -70,8 +70,8 @@
 <div x-data="{ activeCategory: 'all', searchQuery: '' }" class="w-full overflow-hidden pb-24">
 
     {{-- ===== HERO HEADER (STEP 3 LUXURY DARK PURPLE & FAN SLIDER) ===== --}}
-    <section class="hero-mesh-overlay w-full px-6 lg:px-12 pt-12 pb-20 relative overflow-hidden text-white shadow-xl"
-        style="background: linear-gradient(135deg, #0d061c 0%, #1c0836 35%, #2a074a 70%, #0d061c 100%) !important;">
+    <section class="hero-mesh-overlay w-full px-6 lg:px-12 pt-12 pb-20 relative overflow-hidden text-white shadow-xl bg-brand-500"
+        style="background: #D65F32 !important;">
         <!-- Animated Ambient Gradient Blobs -->
         <div class="hero-orb-1"></div>
         <div class="hero-orb-2"></div>
@@ -145,7 +145,7 @@
                                     x-model="searchQuery" autocomplete="off"
                                     class="w-full text-sm sm:text-base text-white placeholder-slate-400 bg-transparent border-0 outline-none focus:ring-0">
                             </div>
-                            <button class="w-full sm:w-auto bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white font-black px-7 py-3.5 rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 shadow-lg shrink-0 cursor-pointer">
+                            <button class="w-full sm:w-auto bg-brand-500 hover:bg-brand-600 text-white font-black px-7 py-3.5 rounded-xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 shadow-lg shrink-0 cursor-pointer">
                                 <i data-lucide="sparkles" class="w-4 h-4"></i>
                                 <span>Filter</span>
                             </button>
