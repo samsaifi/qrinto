@@ -108,14 +108,14 @@
         .topbar-store-icon {
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            background: linear-gradient(135deg, #F5FAF1, #EAF5DD);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             overflow: hidden;
-            border: 1.5px solid rgba(14, 165, 233, 0.12);
+            border: 1.5px solid rgba(111, 186, 59, 0.15);
         }
 
         .topbar-store-icon-warn {
@@ -133,7 +133,7 @@
         .topbar-pin-icon {
             width: 16px;
             height: 16px;
-            color: #0284c7;
+            color: #5A9A2F;
         }
 
         .topbar-store-icon-warn .topbar-pin-icon {
@@ -182,21 +182,21 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            color: #0284c7;
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            border: 1.5px solid rgba(14, 165, 233, 0.2);
+            color: #5A9A2F;
+            background: linear-gradient(135deg, #F5FAF1, #EAF5DD);
+            border: 1.5px solid rgba(111, 186, 59, 0.25);
             border-radius: 20px;
             text-decoration: none;
             white-space: nowrap;
             flex-shrink: 0;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 3px rgba(14, 165, 233, 0.08);
+            box-shadow: 0 1px 3px rgba(111, 186, 59, 0.1);
         }
 
         .topbar-store-btn:hover {
-            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
-            border-color: rgba(14, 165, 233, 0.35);
-            box-shadow: 0 3px 12px rgba(14, 165, 233, 0.15);
+            background: linear-gradient(135deg, #EAF5DD, #D2EBB8);
+            border-color: rgba(111, 186, 59, 0.4);
+            box-shadow: 0 3px 12px rgba(111, 186, 59, 0.2);
             transform: translateY(-1px);
         }
 
@@ -205,15 +205,15 @@
         }
 
         .topbar-store-btn-action {
-            background: linear-gradient(135deg, #0284c7, #0369a1);
+            background: linear-gradient(135deg, #5A9A2F, #487A25);
             color: #ffffff;
             border-color: transparent;
-            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+            box-shadow: 0 2px 8px rgba(90, 154, 47, 0.3);
         }
 
         .topbar-store-btn-action:hover {
-            background: linear-gradient(135deg, #0369a1, #075985);
-            box-shadow: 0 4px 16px rgba(2, 132, 199, 0.3);
+            background: linear-gradient(135deg, #487A25, #355A1C);
+            box-shadow: 0 4px 16px rgba(90, 154, 47, 0.35);
         }
 
         .topbar-btn-icon {

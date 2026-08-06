@@ -6,7 +6,7 @@
 @push('styles')
 <style>
     .confetti-bg {
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);
+        background: linear-gradient(135deg, #F5FAF1 0%, #EAF5DD 50%, #f0fdf4 100%);
     }
     .success-ring {
         width: 80px;
