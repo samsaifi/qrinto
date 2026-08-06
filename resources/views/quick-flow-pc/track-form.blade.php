@@ -1,116 +1,164 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Track Your Order')
+@section('title', 'Track Your Order — Qrinto Print Studio')
 @section('header_title', 'Track Order')
 
 @push('styles')
 <style>
-    .hero-track-gradient {
-        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
+    .glass-card {
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
-    .hero-track-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
-        background-size: 32px 32px;
+
+    .shimmer-cta {
+        position: relative;
+        overflow: hidden;
     }
-    .hero-blob-1 {
-        position: absolute; top: -60px; right: 15%; width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
-        border-radius: 50%; filter: blur(40px); pointer-events: none;
+    .shimmer-cta::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -60%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transform: rotate(25deg);
+        transition: all 0.75s ease;
     }
-    .hero-blob-2 {
-        position: absolute; bottom: -40px; right: 5%; width: 200px; height: 200px;
-        background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
-        border-radius: 50%; filter: blur(30px); pointer-events: none;
+    .shimmer-cta:hover::after {
+        left: 140%;
     }
-    .hero-blob-3 {
-        position: absolute; top: 20%; right: 35%; width: 80px; height: 80px;
-        background: rgba(236, 72, 153, 0.15); border-radius: 50%; filter: blur(10px); pointer-events: none;
+
+    .ambient-bg {
+        background-color: #f8fafc;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.05) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.05) 0px, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(241, 245, 249, 0.5) 0px, transparent 100%);
     }
-    .hero-dots {
-        position: absolute; top: 10%; right: 3%; width: 80px; height: 80px;
-        background-image: radial-gradient(circle, rgba(236,72,153,0.2) 2px, transparent 2px);
-        background-size: 10px 10px; border-radius: 50%; pointer-events: none;
-    }
+
     .fade-up {
-        animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
     @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(16px); }
+        from { opacity: 0; transform: translateY(14px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
 @endpush
 
 @section('content')
-<div class="pb-24">
+<div class="ambient-bg min-h-screen py-8 -mt-6 font-sans text-slate-900">
+    <div class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {{-- Breadcrumb Navigation --}}
+        <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-6">
+            <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
+                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+            </a>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+            <span class="text-slate-900 font-bold">Track Order</span>
+        </nav>
 
-    {{-- ===== HERO HEADER ===== --}}
-    <section class="hero-track-gradient hero-track-pattern -mx-10 -mt-4 px-10 pt-12 pb-16 relative overflow-hidden mb-12">
-        <div class="hero-blob-1"></div>
-        <div class="hero-blob-2"></div>
-        <div class="hero-blob-3"></div>
-        <div class="hero-dots"></div>
-
-        <div class="max-w-[1400px] mx-auto relative z-10 text-center">
-            {{-- Breadcrumbs --}}
-            <nav class="flex items-center justify-center gap-2 text-sm mb-6 fade-up">
-                <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
-                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
-                </a>
-                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-                <span class="text-slate-700 font-semibold">Track Order</span>
-            </nav>
-
-            <div class="max-w-xl mx-auto">
-                <div class="fade-up" style="animation-delay: 0.05s">
-                    <span class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-4 shadow-sm backdrop-blur-sm">
-                        <i data-lucide="package-search" class="w-3.5 h-3.5"></i>
-                        Real-Time Status Lookup
-                    </span>
-                </div>
-
-                <h1 class="text-4xl xl:text-5xl font-extrabold text-slate-900 tracking-tight fade-up" style="animation-delay: 0.1s">
-                    Track Your <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">Order Status</span>
-                </h1>
-                <p class="text-slate-500 text-base mt-3 fade-up" style="animation-delay: 0.15s">
-                    Enter your order number below to check the real-time progress of your print order.
-                </p>
+        {{-- Main Hero Header Card --}}
+        <div class="text-center max-w-2xl mx-auto mb-10 fade-up">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-600 text-xs font-extrabold mb-3">
+                <i data-lucide="package-search" class="w-3.5 h-3.5"></i>
+                Real-Time Status Lookup
             </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
+                Track Your <span class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent italic">Print Order</span>
+            </h1>
+            <p class="text-slate-500 text-sm sm:text-base font-medium mt-3 leading-relaxed">
+                Enter your order tracking number below to view real-time fulfillment, printing status, and store pickup details.
+            </p>
         </div>
-    </section>
 
-    <div class="max-w-md mx-auto px-4">
-        @if(session('error'))
-            <div class="w-full bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-2xl text-left text-sm font-medium shadow-sm">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        <div class="bg-white border border-slate-100 rounded-3xl p-8 shadow-xl shadow-brand-500/5">
-            <form action="{{ route('flow-pc.track') }}" method="POST" class="w-full space-y-5">
-                @csrf
-                
-                <div class="relative text-left">
-                    <label for="order_number" class="block text-xs font-bold text-slate-500 uppercase tracking-widest pl-2 mb-2">Order Number</label>
-                    <div class="relative">
-                        <i data-lucide="hash" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                        <input type="text" id="order_number" name="order_number" required
-                               placeholder="e.g. ORD-20260323... "
-                               class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-bold focus:border-brand-500 focus:bg-white focus:ring-0 transition-all outline-none"
-                               value="{{ old('order_number') }}">
+        {{-- Search Form Box Container --}}
+        <div class="max-w-lg mx-auto mb-14 fade-up" style="animation-delay: 0.1s">
+            
+            {{-- Error Session Alert Banner --}}
+            @if(session('error'))
+                <div class="w-full bg-red-50/90 border-2 border-red-200 text-red-700 p-4 mb-6 rounded-2xl text-left text-xs font-bold flex items-center gap-3 shadow-sm">
+                    <div class="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="alert-circle" class="w-4 h-4"></i>
                     </div>
-                    @error('order_number')
-                        <p class="text-red-500 text-xs mt-1.5 pl-2 font-medium">{{ $message }}</p>
-                    @enderror
+                    <span>{{ session('error') }}</span>
                 </div>
+            @endif
 
-                <button type="submit" 
-                        class="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-brand-600/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-base">
-                    <i data-lucide="search" class="w-5 h-5"></i>
-                    Track Order Now
-                </button>
-            </form>
+            <div class="glass-card border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-200/50 relative overflow-hidden">
+                
+                {{-- Decorative Line --}}
+                <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600"></div>
+
+                <form action="{{ route('flow-pc.track') }}" method="POST" class="w-full space-y-6">
+                    @csrf
+                    
+                    <div class="text-left">
+                        <label for="order_number" class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
+                            Order Tracking Code <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative group">
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors">
+                                <i data-lucide="hash" class="w-5 h-5"></i>
+                            </div>
+                            <input type="text" id="order_number" name="order_number" required
+                                   placeholder="e.g. ORD-20260806-5A3B4"
+                                   class="w-full bg-white border-2 border-slate-200/90 rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-extrabold focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-base shadow-2xs"
+                                   value="{{ old('order_number') }}">
+                        </div>
+                        @error('order_number')
+                            <p class="text-red-500 text-xs font-bold mt-2 ml-1 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <button type="submit" 
+                            class="shimmer-cta w-full bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-brand-600 hover:to-indigo-600 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-slate-900/20 hover:shadow-brand-500/30 transition-all duration-300 flex items-center justify-center gap-3 text-base cursor-pointer tracking-wide active:scale-[0.99]">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                        Track Order Now
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                </form>
+            </div>
         </div>
+
+        {{-- 3 Features Grid Below Form --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto fade-up" style="animation-delay: 0.2s">
+            <div class="glass-card p-6 rounded-3xl border border-slate-200/80 shadow-xs flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="truck" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-base text-slate-900">Live Stage Tracking</h4>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Track exact prep, printing, and packaging progress in real time.</p>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 rounded-3xl border border-slate-200/80 shadow-xs flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="store" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-base text-slate-900">Store Pickup Info</h4>
+                    <p class="text-xs text-slate-500 font-medium mt-1">View pickup location, hours, and store contact information.</p>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 rounded-3xl border border-slate-200/80 shadow-xs flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-base text-slate-900">Instant Updates</h4>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Receive automated email & SMS alerts when your print is ready.</p>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection

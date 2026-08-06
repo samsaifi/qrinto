@@ -207,61 +207,68 @@ foreach($slots as $field => $label) {
 $maskData = $product->mask_data ?? [];
 if (is_string($maskData)) $maskData = json_decode($maskData, true) ?? [];
 $flowData = session('quick_flow_data', []);
+
+$bcStoreName = session('active_store_name') 
+    ?? (session('active_store_id') ? \App\Models\Store::find(session('active_store_id'))?->name : null)
+    ?? ($product->store->name ?? null)
+    ?? ($flowData['store_name'] ?? 'Store');
+
+$bcProductType = $flowData['type_name'] 
+    ?? ($product->productType->name ?? ($flowData['category_name'] ?? 'Product Type'));
+
+$bcTypeSlug = $flowData['type_slug'] ?? ($product->productType->slug ?? null);
+
+$bcPageSizeSide = $flowData['size_name'] 
+    ?? ($flowData['size_title'] ?? null)
+    ?? (isset($flowData['size_width'], $flowData['size_height']) ? $flowData['size_width'].'×'.$flowData['size_height'].($flowData['size_unit'] ?? '') : null)
+    ?? ($product->no_of_pages ? ($product->no_of_pages == 1 ? 'Single Side' : ($product->no_of_pages == 2 ? 'Double Side' : $product->no_of_pages.' Pages')) : 'Shape Mask Canvas');
+
+$bcTemplateName = $product->name ?? 'Custom Template';
 @endphp
 
 <div id="customizer-app" class="pb-16">
 
-    {{-- ── Hero Header ── --}}
-    <section class="hero-cust-gradient hero-cust-pattern -mx-10 -mt-4 px-10 pt-8 pb-10 mb-8 relative overflow-hidden">
-        <div class="hero-blob-1"></div>
-        <div class="hero-blob-2"></div>
-        <div class="hero-blob-3"></div>
-        <div class="hero-dots"></div>
+    {{-- ── Breadcrumb Navigation (Home >> Store >> Product Type >> Page Size/Side >> Template Name) ── --}}
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5">
+        <nav class="cust-breadcrumb flex items-center flex-wrap gap-2 text-xs font-semibold">
+            {{-- 1. Home --}}
+            <a href="{{ route('flow-pc.index') }}"
+                class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
+                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+            </a>
 
-        <div class="max-w-[1400px] mx-auto relative z-10">
-            <nav class="cust-breadcrumb flex items-center gap-2 text-sm mb-4">
-                <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
-                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
-                </a>
-                @if(isset($flowData['type_slug']))
-                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-                <a href="{{ route('flow-pc.category', $flowData['type_slug']) }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors">{{ $flowData['type_name'] ?? 'Category' }}</a>
-                @endif
-                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-                <span class="text-slate-700 font-semibold">Customize</span>
-            </nav>
+            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
 
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <a href="javascript:history.back()"
-                        class="w-11 h-11 bg-white/90 shadow-sm border border-slate-200/80 rounded-2xl flex items-center justify-center hover:bg-white hover:border-brand-200 transition-all text-slate-500 hover:text-brand-600 shrink-0">
-                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
-                    </a>
-                    <div>
-                        <div class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-xs font-semibold px-3 py-0.5 rounded-full mb-1 shadow-sm backdrop-blur-sm">
-                            <i data-lucide="crop" class="w-3.5 h-3.5"></i>
-                            Masked Design Customizer
-                        </div>
-                        <h1 class="text-2xl xl:text-3xl font-extrabold text-slate-900 tracking-tight">Customize <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span></h1>
-                        <p class="text-xs text-slate-500 mt-0.5">Upload your photo — it will be fitted to the shape guide on canvas.</p>
-                    </div>
-                </div>
-                @if(isset($flowData['size_width']) && isset($flowData['size_height']))
-                <div class="hidden lg:flex items-center gap-3">
-                    <span class="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-brand-700 text-xs font-semibold px-3.5 py-2 rounded-xl border border-brand-100 shadow-sm">
-                        <i data-lucide="ruler" class="w-3.5 h-3.5 text-brand-500"></i>
-                        {{ $flowData['size_width'] }}&times;{{ $flowData['size_height'] }}{{ $flowData['size_unit'] ?? '' }}
-                    </span>
-                    @if(isset($flowData['size_price']))
-                    <span class="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm text-emerald-700 text-xs font-bold px-3.5 py-2 rounded-xl border border-emerald-100 shadow-sm">
-                        {{ \App\Services\CurrencyService::format($flowData['size_price']) }}
-                    </span>
-                    @endif
-                </div>
-                @endif
-            </div>
-        </div>
-    </section>
+            {{-- 2. Selected Store --}}
+            <span class="text-slate-500 font-medium flex items-center gap-1">
+                <i data-lucide="store" class="w-3.5 h-3.5 text-slate-400"></i> {{ $bcStoreName }}
+            </span>
+
+            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+
+            {{-- 3. Product Type --}}
+            @if ($bcTypeSlug)
+                <a href="{{ route('flow-pc.category', $bcTypeSlug) }}"
+                    class="text-slate-400 font-medium hover:text-brand-600 transition-colors">{{ $bcProductType }}</a>
+            @else
+                <span class="text-slate-500 font-medium">{{ $bcProductType }}</span>
+            @endif
+
+            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+
+            {{-- 4. Page Size / Side --}}
+            <span class="text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60">
+                {{ $bcPageSizeSide }}
+            </span>
+
+            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+
+            {{-- 5. Template Name --}}
+            <span class="text-brand-600 font-bold max-w-[280px] sm:max-w-xs truncate" title="{{ $bcTemplateName }}">
+                {{ $bcTemplateName }}
+            </span>
+        </nav>
+    </div>
 
     {{-- ── 1. STUDIO EDITOR WORKSPACE (TOP FULL-SCREEN FOCUS WITH DOTTED BACKGROUND) ── --}}
     <section class="w-full relative py-8 px-4 sm:px-6 lg:px-10 border-b border-slate-200/80"
@@ -272,27 +279,37 @@ $flowData = session('quick_flow_data', []);
             {{-- Studio Independent Floating Layout (Centered Canvas + Absolute Floating Tools Docks) --}}
             <div class="relative w-full min-h-[80vh] flex items-center justify-center">
 
-                {{-- ═══ LEFT: ABSOLUTE FLOATING VERTICAL TOOL DOCK (Bottom baseline aligned with Right Dock) ═══ --}}
-                <div class="absolute left-2 lg:left-6 top-1/2 -translate-y-1/2 h-[488px] flex flex-col justify-end gap-6 shrink-0 z-30 py-4 px-2">
+                {{-- ═══ LEFT: ABSOLUTE FLOATING VERTICAL TOOL DOCK ═══ --}}
+                <div class="absolute left-2 lg:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 shrink-0 z-30 py-2 px-1">
                     
                     {{-- 1. Ready-Made Templates Button --}}
                     <button type="button" onclick="toggleTemplatesDrawer()"
-                        class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Ready-Made Templates">
+                        class="group flex flex-col items-center gap-1 cursor-pointer" title="Ready-Made Templates">
                         <div id="templates-dock-btn"
-                            class="w-14 h-14 rounded-full bg-white shadow-xl shadow-slate-300/40 border border-slate-200/90 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
-                            <i data-lucide="layout-template" class="w-6 h-6"></i>
+                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            <i data-lucide="layout-template" class="w-5 h-5"></i>
                         </div>
-                        <span class="text-xs font-bold text-slate-600 group-hover:text-indigo-600 transition-colors">Templates</span>
+                        <span class="text-[10px] font-black text-slate-600 group-hover:text-indigo-600 transition-colors">Templates</span>
                     </button>
 
                     {{-- 2. Layers Button --}}
                     <button type="button" onclick="toggleLayersDrawer()"
-                        class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Layers Panel">
+                        class="group flex flex-col items-center gap-1 cursor-pointer" title="Layers Panel">
                         <div id="layers-dock-btn"
-                            class="w-14 h-14 rounded-full bg-white shadow-xl shadow-slate-300/40 border border-slate-200/90 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
-                            <i data-lucide="layers" class="w-6 h-6"></i>
+                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            <i data-lucide="layers" class="w-5 h-5"></i>
                         </div>
-                        <span class="text-xs font-black text-slate-900">Layers</span>
+                        <span class="text-[10px] font-black text-slate-600 group-hover:text-emerald-600 transition-colors">Layers</span>
+                    </button>
+
+                    {{-- 3. Clear All Button --}}
+                    <button type="button" onclick="customizer.clearAll()"
+                        class="group flex flex-col items-center gap-1 cursor-pointer" title="Clear All Designs">
+                        <div id="clear-dock-btn"
+                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </div>
+                        <span class="text-[10px] font-black text-red-600">Clear All</span>
                     </button>
                 </div>
 
@@ -546,6 +563,68 @@ $flowData = session('quick_flow_data', []);
             </div>
         </div>
     </section>
+
+    {{-- ── 2. HERO HEADER SECTION (BELOW EDITOR SECTION) ── --}}
+    <section class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 mt-8 mb-6">
+        <div class="hero-glass-card hero-cust-pattern relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/80 transition-all duration-300">
+            {{-- Ambient lighting blobs --}}
+            <div class="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-violet-400/20 via-purple-400/20 to-fuchsia-400/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+            <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-pink-400/15 via-rose-400/15 to-purple-400/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="hero-dots opacity-40"></div>
+
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div class="flex items-center gap-5">
+                    <a href="javascript:history.back()"
+                        class="w-12 h-12 bg-white/90 hover:bg-white text-slate-600 hover:text-brand-600 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center shrink-0 group active:scale-95"
+                        title="Go Back">
+                        <i data-lucide="arrow-left" class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform"></i>
+                    </a>
+                    <div class="space-y-1">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-violet-200/80 text-violet-600 text-[11px] font-black shadow-2xs backdrop-blur-md tracking-wider uppercase">
+                            <i data-lucide="crop" class="w-3.5 h-3.5 text-violet-500 animate-spin-slow"></i>
+                            Masked Design Customizer
+                        </div>
+                        <h1 class="text-2xl lg:text-3xl xl:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                            Customize <span class="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span>
+                        </h1>
+                        <p class="text-xs lg:text-sm text-slate-500 font-semibold flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                            Upload your photo — it will be fitted to the shape guide on canvas.
+                        </p>
+                    </div>
+                </div>
+
+                @if(isset($flowData['size_width']) && isset($flowData['size_height']))
+                    <div class="flex items-center gap-3 shrink-0 self-start lg:self-center">
+                        <div class="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-slate-800">
+                            <div class="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+                                <i data-lucide="ruler" class="w-4.5 h-4.5"></i>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Dimensions</span>
+                                <span class="text-xs font-black text-slate-900">{{ $flowData['size_width'] }}&times;{{ $flowData['size_height'] }}{{ $flowData['size_unit'] ?? '' }}</span>
+                            </div>
+                        </div>
+
+                        @if(isset($flowData['size_price']))
+                            <div class="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-emerald-50/90 backdrop-blur-md border border-emerald-200/90 shadow-sm text-emerald-800">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] font-black uppercase tracking-wider text-emerald-600">Unit Price</span>
+                                    <span class="text-xs font-black text-emerald-900">{{ \App\Services\CurrencyService::format($flowData['size_price']) }}</span>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+    </section>
+
+    {{-- ── 3. HOW TO USE TOOL INSTRUCTION GUIDE ── --}}
+    @include('quick-flow-pc.partials.customizer-instructions')
 
 </div>
 @endsection
@@ -1011,23 +1090,44 @@ $flowData = session('quick_flow_data', []);
             if (window.lucide) window.lucide.createIcons();
         },
 
+        _calcCanvasDimensions(stageEl, customConfig) {
+            const stageH = (stageEl && stageEl.offsetHeight > 200) ? stageEl.offsetHeight : Math.round(window.innerHeight * 0.8);
+            const stageW = (stageEl && stageEl.offsetWidth > 200) ? stageEl.offsetWidth - 180 : 900;
+            
+            const isPortrait = <?php echo ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false'; ?>;
+            const adminW = (customConfig && customConfig.canvasWidth) || (isPortrait ? 400 : 560);
+            const adminH = (customConfig && customConfig.canvasHeight) || (isPortrait ? 560 : 400);
+
+            let targetH = Math.round(stageH * 0.8);
+            let scaleFactor = targetH / adminH;
+            let targetW = Math.round(adminW * scaleFactor);
+
+            if (targetW > stageW) {
+                targetW = stageW;
+                scaleFactor = targetW / adminW;
+                targetH = Math.round(adminH * scaleFactor);
+            }
+
+            return { displayWidth: targetW, displayHeight: targetH, scaleFactor, adminW, adminH };
+        },
+
         _initAllCanvases() {
             const containerEl = document.getElementById('canvas-container');
+            const stageEl = document.getElementById('canvas-stage');
             if (!containerEl) return;
-            const displayWidth = containerEl.offsetWidth;
+
+            const firstKey = Object.keys(this.imageTypes)[0];
+            const config = this.allMaskData[firstKey] || this.allMaskData || {};
+
+            const { displayWidth, displayHeight, scaleFactor, adminW, adminH } = this._calcCanvasDimensions(stageEl, config);
+
+            containerEl.style.width = displayWidth + 'px';
+            containerEl.style.height = displayHeight + 'px';
+            containerEl.style.maxWidth = '100%';
 
             Object.keys(this.imageTypes).forEach(key => {
                 const canvasEl = document.getElementById('canvas-' + key);
                 if (!canvasEl) return;
-
-                const config = this.allMaskData[key] || {};
-                const isPortrait = <?php echo ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false'; ?>;
-                const adminW = config.canvasWidth || (isPortrait ? 400 : 560);
-                const adminH = config.canvasHeight || (isPortrait ? 560 : 400);
-                const scaleFactor = displayWidth / adminW;
-                const displayHeight = Math.round(adminH * scaleFactor);
-
-                containerEl.style.height = displayHeight + 'px';
 
                 const fc = new fabric.Canvas('canvas-' + key, {
                     width: displayWidth,
@@ -1112,20 +1212,24 @@ $flowData = session('quick_flow_data', []);
 
         _resizeAllCanvases() {
             const containerEl = document.getElementById('canvas-container');
-            if (!containerEl) return;
-            const newWidth = containerEl.offsetWidth;
+            const stageEl = document.getElementById('canvas-stage');
+            if (!containerEl || !stageEl) return;
+
+            const firstKey = Object.keys(this.imageTypes)[0];
+            const config = this.allMaskData[firstKey] || this.allMaskData || {};
+
+            const { displayWidth: newWidth, displayHeight: newH, scaleFactor: newSF } = this._calcCanvasDimensions(stageEl, config);
+
+            containerEl.style.width = newWidth + 'px';
+            containerEl.style.height = newH + 'px';
+
             Object.keys(this.canvases).forEach(key => {
                 const cv = this.canvases[key];
                 if (!cv) return;
-                const config = this.allMaskData[key] || {};
-                const isPortrait = <?php echo ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false'; ?>;
-                const adminW = config.canvasWidth || (isPortrait ? 400 : 560);
-                const adminH = config.canvasHeight || (isPortrait ? 560 : 400);
-                const newSF = newWidth / adminW;
-                const newH = Math.round(adminH * newSF);
+
+                const ratio = newWidth / (cv.fabricCanvas.width || newWidth);
                 cv.fabricCanvas.setWidth(newWidth);
                 cv.fabricCanvas.setHeight(newH);
-                containerEl.style.height = newH + 'px';
                 cv.fabricCanvas.getObjects().forEach(o => {
                     if (o._isUserImage || o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg) {
                         const ratio = newWidth / (cv.fabricCanvas.width || newWidth);

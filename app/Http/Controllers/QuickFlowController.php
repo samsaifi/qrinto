@@ -1829,7 +1829,7 @@ class QuickFlowController extends Controller
                 'success' => true,
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'redirect_url' => route('flow.confirmation', $order->id),
+                'redirect_url' => route($this->getRoutePrefix() . 'confirmation', $order->id),
             ]);
         } catch (\Exception $e) {
             Log::error('Qrinto Cash Checkout Error: ' . $e->getMessage());
@@ -1909,7 +1909,7 @@ class QuickFlowController extends Controller
                 'success' => true,
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
-                'redirect_url' => route('flow.confirmation', $order->id),
+                'redirect_url' => route($this->getRoutePrefix() . 'confirmation', $order->id),
             ]);
         } catch (\Exception $e) {
             Log::error('Qrinto PayPal Finalize Error: ' . $e->getMessage());

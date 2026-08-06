@@ -1,57 +1,53 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Order Confirmed')
+@section('title', 'Order Confirmed — Qrinto Print Studio')
 @section('header_title', 'Order Confirmed')
 
 @push('styles')
 <style>
-    .confirm-grid {
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 24px;
-        align-items: start;
-    }
-    @media (max-width: 1024px) {
-        .confirm-grid { grid-template-columns: 1fr; }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
 
-    .confirm-hero {
-        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
+    .shimmer-cta {
+        position: relative;
+        overflow: hidden;
     }
-    .confirm-pattern {
-        background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
-        background-size: 32px 32px;
+    .shimmer-cta::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -60%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transform: rotate(25deg);
+        transition: all 0.75s ease;
     }
-    .hero-blob-1 {
-        position: absolute; top: -60px; right: 15%; width: 300px; height: 300px;
-        background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
-        border-radius: 50%; filter: blur(40px); pointer-events: none;
+    .shimmer-cta:hover::after {
+        left: 140%;
     }
-    .hero-blob-2 {
-        position: absolute; bottom: -40px; right: 5%; width: 200px; height: 200px;
-        background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
-        border-radius: 50%; filter: blur(30px); pointer-events: none;
-    }
-    .hero-blob-3 {
-        position: absolute; top: 20%; right: 35%; width: 80px; height: 80px;
-        background: rgba(236, 72, 153, 0.15); border-radius: 50%; filter: blur(10px); pointer-events: none;
-    }
-    .hero-dots {
-        position: absolute; top: 10%; right: 3%; width: 80px; height: 80px;
-        background-image: radial-gradient(circle, rgba(236,72,153,0.2) 2px, transparent 2px);
-        background-size: 10px 10px; border-radius: 50%; pointer-events: none;
+
+    .ambient-bg {
+        background-color: #f8fafc;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.06) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(79, 70, 229, 0.06) 0px, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(241, 245, 249, 0.5) 0px, transparent 100%);
     }
 
     .success-ring {
-        width: 80px;
-        height: 80px;
+        width: 88px;
+        height: 88px;
         background: linear-gradient(135deg, #22c55e, #16a34a);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 8px 30px -8px rgba(34, 197, 94, 0.4);
-        animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 12px 35px -8px rgba(34, 197, 94, 0.45);
+        animation: bounceIn 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     @keyframes bounceIn {
         0% { transform: scale(0) rotate(-45deg); opacity: 0; }
@@ -113,7 +109,7 @@
         animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
     @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(12px); }
+        from { opacity: 0; transform: translateY(14px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
@@ -158,201 +154,269 @@
     }
 @endphp
 
-<div class="max-w-[1400px] mx-auto pb-16">
+<div class="ambient-bg min-h-screen py-8 -mt-6 font-sans text-slate-900">
+    <div class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {{-- Top Navigation & Completed Step Indicator Bar --}}
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
+                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+                </a>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                <span class="text-slate-900 font-bold">Order Confirmation</span>
+            </nav>
 
-    {{-- ── Hero ── --}}
-    <section class="confirm-hero confirm-pattern -mx-10 -mt-4 px-10 pt-14 pb-16 relative overflow-hidden">
-        <div class="hero-blob-1"></div>
-        <div class="hero-blob-2"></div>
-        <div class="hero-blob-3"></div>
-        <div class="hero-dots"></div>
-
-        <div class="max-w-3xl mx-auto text-center relative z-10">
-            <div class="flex justify-center mb-6 fade-up">
-                <div class="success-ring">
-                    <i data-lucide="check" class="w-10 h-10 text-white"></i>
+            {{-- Checkout Completed 3-Step Bar --}}
+            <div class="flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/80 shadow-2xs">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                    <span class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-[10px]">✓</span>
+                    <span>Customize</span>
                 </div>
-            </div>
-
-            <h1 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight fade-up" style="animation-delay: 0.05s">
-                Order Placed <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">Successfully!</span>
-            </h1>
-            <p class="text-lg text-slate-500 mt-2 fade-up" style="animation-delay: 0.1s">
-                Your custom print is being prepared. We'll notify you when it's ready.
-            </p>
-
-            <div class="flex items-center justify-center gap-3 mt-6 fade-up" style="animation-delay: 0.15s">
-                <span class="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-xl px-5 py-2.5 shadow-sm">
-                    <i data-lucide="hash" class="w-4 h-4 text-brand-500"></i>
-                    <span class="font-extrabold text-slate-900 text-sm">{{ $order->order_number }}</span>
-                </span>
-                @if($order->store)
-                <span class="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-xl px-5 py-2.5 shadow-sm">
-                    <i data-lucide="store" class="w-4 h-4 text-brand-500"></i>
-                    <span class="font-bold text-slate-700 text-sm">{{ $order->store->store_name }}</span>
-                </span>
-                @endif
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                    <span class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center text-[10px]">✓</span>
+                    <span>Review Cart</span>
+                </div>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                <div class="flex items-center gap-1.5 text-xs font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/80">
+                    <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">✓</span>
+                    <span>Confirmed!</span>
+                </div>
             </div>
         </div>
-    </section>
 
-    {{-- ── Content Grid ── --}}
-    <div class="confirm-grid max-w-[1100px] mx-auto -mt-6">
+        {{-- Celebratory Hero Banner --}}
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-8 lg:p-10 mb-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-10 -top-10 w-64 h-64 bg-brand-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
-        {{-- LEFT: Design Preview --}}
-        <div class="space-y-6">
-
-            @if(count($pages) >= 2)
-            {{-- 3D Flipbook --}}
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 fade-up" style="animation-delay: 0.15s">
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Design</h2>
-                </div>
-
-                <div class="book-container">
-                    <div class="book" id="design-book" style="--book-w: {{ $baseWidth }}px; --book-h: {{ $baseHeight }}px;">
-                        @for($i = 0; $i < count($pages); $i += 2)
-                        <div class="page" style="--i: {{ $i / 2 }}" onclick="this.classList.toggle('flipped')">
-                            <div class="page-face front">
-                                <img src="{{ $pages[$i] }}" alt="Page {{ $i + 1 }}">
-                            </div>
-                            <div class="page-face back">
-                                @if(isset($pages[$i+1]))
-                                <img src="{{ $pages[$i+1] }}" alt="Page {{ $i + 2 }}">
-                                @else
-                                <div class="w-full h-full bg-slate-50 flex items-center justify-center">
-                                    <span class="text-slate-300 font-bold text-sm">Back</span>
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                        @endfor
+            <div class="max-w-3xl mx-auto text-center relative z-10">
+                <div class="flex justify-center mb-6 fade-up">
+                    <div class="success-ring">
+                        <i data-lucide="check" class="w-12 h-12 text-white"></i>
                     </div>
                 </div>
 
-                <p class="text-center text-[11px] text-slate-400 font-semibold flex items-center justify-center gap-1.5 mt-2">
-                    <i data-lucide="mouse-pointer-2" class="w-3 h-3"></i>
-                    Click to flip pages
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight fade-up" style="animation-delay: 0.05s">
+                    Order Placed <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-200 bg-clip-text text-transparent italic">Successfully!</span>
+                </h1>
+                <p class="text-base sm:text-lg text-slate-300 mt-3 font-medium max-w-xl mx-auto fade-up" style="animation-delay: 0.1s">
+                    Your custom print is queued for high-resolution processing. We'll send status updates directly to your email.
                 </p>
-            </div>
-            @endif
 
-            {{-- Order Progress --}}
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 fade-up" style="animation-delay: 0.2s">
-                <div class="flex items-center gap-2 mb-6">
-                    <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Progress</h2>
+                <div class="flex flex-wrap items-center justify-center gap-3 mt-8 fade-up" style="animation-delay: 0.15s">
+                    <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-5 py-3 text-white shadow-lg">
+                        <i data-lucide="hash" class="w-4 h-4 text-emerald-400"></i>
+                        <span class="font-black text-base">{{ $order->order_number }}</span>
+                    </span>
+                    @if($order->store)
+                    <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-5 py-3 text-white shadow-lg">
+                        <i data-lucide="store" class="w-4 h-4 text-brand-400"></i>
+                        <span class="font-bold text-sm">{{ $order->store->store_name }}</span>
+                    </span>
+                    @endif
+                    <span class="inline-flex items-center gap-2 bg-emerald-500/20 backdrop-blur-md border border-emerald-400/40 rounded-2xl px-5 py-3 text-emerald-300 font-bold text-sm shadow-lg">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+                        Verified Order
+                    </span>
                 </div>
-
-                @include('quick-flow-pc.partials.tracker', ['order' => $order])
             </div>
         </div>
 
-        {{-- RIGHT: Order Summary --}}
-        <div class="space-y-5">
+        {{-- 2-Column Full Desktop Content Grid --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {{-- LEFT COLUMN: Design Preview & Order Progress --}}
+            <div class="lg:col-span-7 space-y-6">
 
-            {{-- Order Details --}}
-            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden fade-up" style="animation-delay: 0.15s">
-                <div class="p-5 border-b border-slate-100">
-                    <div class="flex items-center gap-2">
-                        <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
-                        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Details</h2>
+                @if(count($pages) >= 2)
+                {{-- 3D Interactive Design Flipbook --}}
+                <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-sm fade-up" style="animation-delay: 0.15s">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-200/80 mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center">
+                                <i data-lucide="book-open" class="w-4.5 h-4.5"></i>
+                            </div>
+                            <h2 class="text-base font-black text-slate-900 tracking-tight">Interactive 3D Design Preview</h2>
+                        </div>
+                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/60">
+                            {{ count($pages) }} Pages
+                        </span>
+                    </div>
+
+                    <div class="book-container">
+                        <div class="book" id="design-book" style="--book-w: {{ $baseWidth }}px; --book-h: {{ $baseHeight }}px;">
+                            @for($i = 0; $i < count($pages); $i += 2)
+                            <div class="page" style="--i: {{ $i / 2 }}" onclick="this.classList.toggle('flipped')">
+                                <div class="page-face front">
+                                    <img src="{{ $pages[$i] }}" alt="Page {{ $i + 1 }}">
+                                </div>
+                                <div class="page-face back">
+                                    @if(isset($pages[$i+1]))
+                                    <img src="{{ $pages[$i+1] }}" alt="Page {{ $i + 2 }}">
+                                    @else
+                                    <div class="w-full h-full bg-slate-50 flex items-center justify-center">
+                                        <span class="text-slate-300 font-bold text-sm">Back Page</span>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endfor
+                        </div>
+                    </div>
+
+                    <p class="text-center text-xs text-slate-500 font-bold flex items-center justify-center gap-2 mt-4 bg-slate-100/70 py-2 rounded-xl border border-slate-200/60">
+                        <i data-lucide="mouse-pointer-2" class="w-4 h-4 text-brand-600"></i>
+                        Click on pages above to flip through your custom print design
+                    </p>
+                </div>
+                @endif
+
+                {{-- Order Progress Tracker Card --}}
+                <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-sm fade-up" style="animation-delay: 0.2s">
+                    <div class="flex items-center gap-2.5 mb-6 pb-4 border-b border-slate-200/80">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <i data-lucide="activity" class="w-4.5 h-4.5"></i>
+                        </div>
+                        <h2 class="text-base font-black text-slate-900 tracking-tight">Live Order Fulfillment Progress</h2>
+                    </div>
+
+                    @include('quick-flow-pc.partials.tracker', ['order' => $order])
+                </div>
+
+                {{-- What's Next Timeline Steps --}}
+                <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-sm fade-up" style="animation-delay: 0.25s">
+                    <div class="flex items-center gap-2.5 mb-5 pb-4 border-b border-slate-200/80">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+                            <i data-lucide="list-checks" class="w-4.5 h-4.5"></i>
+                        </div>
+                        <h2 class="text-base font-black text-slate-900 tracking-tight">What Happens Next?</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+                            <div class="w-9 h-9 bg-brand-50 border border-brand-100 rounded-xl flex items-center justify-center text-brand-600 mb-3">
+                                <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+                            </div>
+                            <h4 class="text-sm font-extrabold text-slate-900">1. Instant Updates</h4>
+                            <p class="text-xs text-slate-500 font-medium mt-1">You'll receive order updates via email and SMS notifications.</p>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+                            <div class="w-9 h-9 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 mb-3">
+                                <i data-lucide="printer" class="w-4.5 h-4.5"></i>
+                            </div>
+                            <h4 class="text-sm font-extrabold text-slate-900">2. Priority Printing</h4>
+                            <p class="text-xs text-slate-500 font-medium mt-1">Your design is sent to high-resolution print presses immediately.</p>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+                            <div class="w-9 h-9 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-center text-amber-600 mb-3">
+                                <i data-lucide="package-check" class="w-4.5 h-4.5"></i>
+                            </div>
+                            <h4 class="text-sm font-extrabold text-slate-900">3. Store Pickup</h4>
+                            <p class="text-xs text-slate-500 font-medium mt-1">Collect your finished prints from your chosen store location.</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="divide-y divide-slate-100">
-                    <div class="px-5 py-4 flex justify-between items-center">
-                        <span class="text-sm text-slate-500 font-medium">Product</span>
-                        <span class="text-sm font-bold text-slate-900 text-right max-w-[200px] truncate">{{ $item?->product_name ?? 'Custom Print' }}</span>
-                    </div>
-                    <div class="px-5 py-4 flex justify-between items-center">
-                        <span class="text-sm text-slate-500 font-medium">Quantity</span>
-                        <span class="text-sm font-bold text-slate-900">{{ $item?->quantity ?? 1 }}</span>
-                    </div>
-                    <div class="px-5 py-4 flex justify-between items-center">
-                        <span class="text-sm text-slate-500 font-medium">Payment</span>
-                        @if($order->payment_status === 'paid')
-                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
-                            Paid online
-                        </span>
-                        @else
-                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100">
-                            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                            Pay at store
-                        </span>
-                        @endif
-                    </div>
-                    <div class="px-5 py-4 flex justify-between items-center">
-                        <span class="text-sm text-slate-500 font-medium">Status</span>
-                        <span class="inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-100">
-                            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-                            {{ ucfirst($order->status) }}
-                        </span>
-                    </div>
-                </div>
+            </div>
 
-                <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50">
-                    <div class="flex justify-between items-center">
-                        <span class="text-base font-bold text-slate-900">{{ $order->payment_status === 'paid' ? 'Total Paid' : 'Total Due' }}</span>
-                        <span class="text-2xl font-extrabold text-brand-600">{{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }}</span>
+            {{-- RIGHT COLUMN: Order Summary & Actions (Hero Sidebar) --}}
+            <div class="lg:col-span-5 sticky top-24 space-y-6">
+                <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-2xl shadow-slate-200/50 relative overflow-hidden space-y-6 fade-up" style="animation-delay: 0.15s">
+                    
+                    {{-- Top Multi-Color Gradient Line --}}
+                    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-brand-500 to-indigo-600"></div>
+
+                    {{-- Summary Header --}}
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-200/80">
+                        <h3 class="text-xl font-black text-slate-900 tracking-tight">Order Details</h3>
+                        <span class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i> Confirmed
+                        </span>
                     </div>
+
+                    {{-- Specs List --}}
+                    <div class="divide-y divide-slate-100">
+                        <div class="py-3 flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-semibold">Product Name</span>
+                            <span class="font-extrabold text-slate-900 text-right max-w-[200px] truncate">{{ $item?->product_name ?? 'Custom Print' }}</span>
+                        </div>
+                        <div class="py-3 flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-semibold">Total Quantity</span>
+                            <span class="font-extrabold text-slate-900">{{ $item?->quantity ?? 1 }}</span>
+                        </div>
+                        <div class="py-3 flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-semibold">Payment Status</span>
+                            @if($order->payment_status === 'paid')
+                            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60">
+                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i> Paid Online
+                            </span>
+                            @else
+                            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200/60">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500"></i> Pay at Counter
+                            </span>
+                            @endif
+                        </div>
+                        <div class="py-3 flex justify-between items-center text-sm">
+                            <span class="text-slate-500 font-semibold">Fulfillment Status</span>
+                            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold text-brand-700 bg-brand-50 px-3 py-1 rounded-full border border-brand-200/60">
+                                <i data-lucide="printer" class="w-3.5 h-3.5 text-brand-500"></i> {{ ucfirst($order->status) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Dark Luxury Total Box --}}
+                    <div class="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 shadow-xl relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/20 rounded-full blur-xl pointer-events-none"></div>
+                        <div class="flex justify-between items-baseline mb-1 relative z-10">
+                            <span class="text-sm font-bold text-slate-300">{{ $order->payment_status === 'paid' ? 'Total Amount Paid' : 'Total Amount Due' }}</span>
+                            <span class="text-3xl font-black text-white tracking-tight">{{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }}</span>
+                        </div>
+                        <p class="text-[11px] font-medium text-slate-400 text-right relative z-10">Includes taxes & priority print processing</p>
+                    </div>
+
+                    {{-- Action CTA Buttons --}}
+                    <div class="space-y-3 pt-1">
+                        <a href="{{ route('flow-pc.track.order', $order->order_number) }}"
+                            class="shimmer-cta w-full bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-brand-600 hover:to-indigo-600 text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-slate-900/20 hover:shadow-brand-500/30 transition-all duration-300 flex items-center justify-center gap-3 text-base no-underline tracking-wide active:scale-[0.99] cursor-pointer">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                            Track Order Status
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </a>
+
+                        <a href="{{ route('flow-pc.index') }}"
+                            class="w-full bg-white border-2 border-slate-200/90 hover:border-slate-300 hover:bg-slate-50 text-slate-800 font-extrabold py-3.5 rounded-2xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-sm no-underline cursor-pointer">
+                            <i data-lucide="shopping-bag" class="w-5 h-5 text-brand-600"></i>
+                            <span>Continue Shopping</span>
+                        </a>
+                    </div>
+
+                    {{-- Trust Security Indicators --}}
+                    <div class="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-500">
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i>
+                            <span>100% Print Guarantee</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="truck" class="w-3.5 h-3.5 text-brand-500 shrink-0"></i>
+                            <span>Store Pickup</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i>
+                            <span>SSL Security</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <i data-lucide="headphones" class="w-3.5 h-3.5 text-purple-500 shrink-0"></i>
+                            <span>Store Support</span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            {{-- Actions --}}
-            <div class="space-y-3 fade-up" style="animation-delay: 0.2s">
-                <a href="{{ route('flow-pc.track.order', $order->order_number) }}"
-                    class="w-full bg-slate-900 hover:bg-black text-white font-extrabold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2.5 text-[15px] transition-all active:scale-[0.98] no-underline">
-                    <i data-lucide="map-pin" class="w-5 h-5"></i>
-                    Track Order
-                </a>
-
-                <a href="{{ route('flow-pc.index') }}"
-                    class="w-full bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-4 rounded-2xl flex items-center justify-center gap-2.5 text-[15px] transition-all active:scale-[0.98] no-underline">
-                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
-                    Continue Shopping
-                </a>
-            </div>
-
-            {{-- What's Next --}}
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 fade-up" style="animation-delay: 0.25s">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">What's Next</h2>
-                </div>
-
-                <div class="space-y-4">
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i data-lucide="bell" class="w-4 h-4 text-brand-500"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-700">Order Confirmation</p>
-                            <p class="text-xs text-slate-400 mt-0.5">You'll receive updates via email and SMS.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i data-lucide="printer" class="w-4 h-4 text-emerald-500"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-700">Print in Progress</p>
-                            <p class="text-xs text-slate-400 mt-0.5">Your design is printed with premium materials.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i data-lucide="package-check" class="w-4 h-4 text-amber-500"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-700">Ready for Pickup</p>
-                            <p class="text-xs text-slate-400 mt-0.5">Collect from your selected store location.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

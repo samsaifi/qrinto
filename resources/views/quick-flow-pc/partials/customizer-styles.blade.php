@@ -3,6 +3,17 @@
     .hero-cust-gradient {
         background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 30%, #faf0ff 60%, #f0f4ff 100%);
     }
+    .hero-glass-card {
+        background: linear-gradient(135deg, rgba(253, 242, 248, 0.95) 0%, rgba(250, 240, 255, 0.85) 50%, rgba(240, 244, 255, 0.95) 100%);
+        box-shadow: 0 20px 40px -15px rgba(236, 72, 153, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+    }
+    @keyframes spinSlow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+        animation: spinSlow 12s linear infinite;
+    }
     .hero-cust-pattern {
         background-image: radial-gradient(circle at 1px 1px, rgba(236,72,153,0.04) 1px, transparent 0);
         background-size: 32px 32px;
