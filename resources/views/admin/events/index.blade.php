@@ -84,7 +84,7 @@
                     @endif
                     <td class="px-3 py-3 hidden md:table-cell">
                         @if($event->creator)
-                            <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-md {{ $event->creator->isAdmin() ? 'bg-purple-50 text-purple-700' : 'bg-amber-50 text-amber-700' }}">
+                            <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-md {{ $event->creator->isAdmin() ? 'bg-brand-50 text-brand-700 border border-brand-200/60' : 'bg-amber-50 text-amber-700' }}">
                                 {{ $event->creator->isAdmin() ? 'Admin' : 'Store Admin' }}
                             </span>
                             <span class="block text-xs text-surface-400 mt-0.5">{{ $event->creator->name }}</span>

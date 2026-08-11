@@ -53,16 +53,17 @@
     <div class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {{-- Breadcrumb Navigation --}}
-        <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-6">
-            <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
-                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+        <nav class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-6">
+            <a href="{{ route('flow-pc.index') }}" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-1">
+                <i data-lucide="home" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>Home</span>
             </a>
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-            <a href="{{ route('flow-pc.track') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors">
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+            <a href="{{ route('flow-pc.track') }}" class="text-slate-500 hover:text-brand-600 transition-colors">
                 Track Order
             </a>
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-            <span class="text-slate-900 font-bold">{{ $order->order_number }}</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+            <span class="text-slate-900 font-extrabold">{{ $order->order_number }}</span>
         </nav>
 
         {{-- Main Page Title Header Bar --}}
@@ -78,7 +79,7 @@
                         <i data-lucide="clock" class="w-3.5 h-3.5"></i> Placed on {{ $order->created_at->format('M d, Y &bull; h:i A') }}
                     </div>
                     <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                        Order <span class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent italic">{{ $order->order_number }}</span>
+                        Order <span class="text-slate-950 italic">{{ $order->order_number }}</span>
                     </h1>
                 </div>
             </div>
@@ -224,7 +225,7 @@
                             <span>Store Pickup</span>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i>
+                            <i data-lucide="shield" class="w-3.5 h-3.5 text-brand-500 shrink-0"></i>
                             <span>SSL Security</span>
                         </div>
                         <div class="flex items-center gap-1.5">

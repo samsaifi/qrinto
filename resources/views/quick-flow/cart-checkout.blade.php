@@ -38,29 +38,122 @@
             @foreach($cart->items as $item)
                 @php
                     $customization = $item->customization_data ?? [];
-                    $itemUploadIds = $customization['upload_ids'] ?? [];
-                    $firstUpId = !empty($itemUploadIds) ? reset($itemUploadIds) : null;
-                    $thumb = null;
-                    if ($firstUpId && isset($uploads[$firstUpId])) {
-                        $thumb = $uploads[$firstUpId]->url;
-                    } elseif ($item->product && $item->product->frame_image_url) {
-                        $thumb = $item->product->frame_image_url;
+                    $uploadIds = $customization['upload_ids'] ?? [];
+                    $itemImageUrls = [];
+
+                    $slots = ['frame_image', 'sample_image', 'background_image', 'overlay_image'];
+                    $noOfPages = (int) ($item->product->no_of_pages ?? 1);
+                    if ($noOfPages <= 1) {
+                        $activeSlots = ['frame_image'];
+                    } elseif ($noOfPages == 2) {
+                        $activeSlots = ['frame_image', 'sample_image'];
+                    } else {
+                        $activeSlots = array_slice($slots, 0, min($noOfPages, 4));
                     }
+
+                    foreach ($activeSlots as $index => $slotKey) {
+                        $url = null;
+                        if (is_array($uploadIds)) {
+                            $upId = $uploadIds[$slotKey] ?? ($uploadIds[$index] ?? null);
+                            if ($upId && isset($uploads[$upId]) && !empty($uploads[$upId]->url)) {
+                                $url = $uploads[$upId]->url;
+                            }
+                        } elseif ($index === 0 && is_scalar($uploadIds) && isset($uploads[$uploadIds]) && !empty($uploads[$uploadIds]->url)) {
+                            $url = $uploads[$uploadIds]->url;
+                        }
+
+                        if (!$url && $item->product) {
+                            $url = $item->product->{$slotKey . '_url'} ?? null;
+                        }
+
+                        if ($url) {
+                            $itemImageUrls[] = $url;
+                        }
+                    }
+
+                    if (empty($itemImageUrls)) {
+                        if (is_array($uploadIds)) {
+                            foreach ($uploadIds as $upId) {
+                                if ($upId && isset($uploads[$upId]) && !empty($uploads[$upId]->url)) {
+                                    $itemImageUrls[] = $uploads[$upId]->url;
+                                }
+                            }
+                        }
+                        if (empty($itemImageUrls) && $item->product && $item->product->frame_image_url) {
+                            $itemImageUrls[] = $item->product->frame_image_url;
+                        }
+                    }
+
+                    $imageCount = count($itemImageUrls);
                 @endphp
                 <div class="flex items-center gap-3 {{ !$loop->last ? 'pb-4 border-b border-slate-50' : '' }}">
-                    <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-100">
-                        @if($thumb)
-                            <img src="{{ $thumb }}" alt="" class="w-full h-full object-cover">
+                    {{-- Fanned Card Deck Preview Stage --}}
+                    <div class="fanned-card-stage relative flex items-center justify-center w-20 h-20 shrink-0 select-none py-1 px-1">
+                        @if($imageCount > 0)
+                            @foreach($itemImageUrls as $idx => $imgUrl)
+                                @php
+                                    $count = $imageCount;
+                                    if ($count == 1) {
+                                        $rot = 0; $tx = 0; $ty = 0;
+                                    } elseif ($count == 2) {
+                                        $rot = $idx == 0 ? -12 : 12;
+                                        $tx = $idx == 0 ? -10 : 10;
+                                        $ty = 2;
+                                    } elseif ($count == 3) {
+                                        $rot = ($idx - 1) * 14;
+                                        $tx = ($idx - 1) * 12;
+                                        $ty = abs($idx - 1) * 2;
+                                    } elseif ($count == 4) {
+                                        $rots = [-16, -5, 5, 16];
+                                        $txs = [-16, -5, 5, 16];
+                                        $tys = [3, 1, 1, 3];
+                                        $rot = $rots[$idx];
+                                        $tx = $txs[$idx];
+                                        $ty = $tys[$idx];
+                                    } else {
+                                        $step = 36 / max(1, $count - 1);
+                                        $rot = -18 + ($idx * $step);
+                                        $tx = -18 + ($idx * (36 / max(1, $count - 1)));
+                                        $ty = abs($idx - ($count - 1) / 2) * 2;
+                                    }
+                                    $zIndex = ($idx + 1) * 10;
+                                @endphp
+                                <div class="fanned-card absolute top-1/2 left-1/2 rounded-lg overflow-hidden bg-white border border-white shadow-sm transition-all duration-300 hover:!z-50 hover:!scale-115 hover:!rotate-0"
+                                     style="width: {{ $count > 1 ? '44px' : '56px' }}; height: {{ $count > 1 ? '58px' : '64px' }}; margin-left: -{{ $count > 1 ? '22px' : '28px' }}; margin-top: -{{ $count > 1 ? '29px' : '32px' }}; transform: translate({{ $tx }}px, {{ $ty }}px) rotate({{ $rot }}deg); transform-origin: 50% 120%; z-index: {{ $zIndex }}; box-shadow: 0 4px 10px -2px rgba(0,0,0,0.18);"
+                                     title="Page {{ $idx + 1 }}">
+                                    <img src="{{ $imgUrl }}" alt="Page {{ $idx + 1 }}" class="w-full h-full object-cover">
+                                    @if($count > 1)
+                                        <div class="absolute bottom-0.5 right-0.5 bg-slate-900/85 text-white text-[6px] font-black px-0.5 rounded">
+                                            P{{ $idx + 1 }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+
+                            @if($count > 1)
+                                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-md backdrop-blur-xs whitespace-nowrap z-40 flex items-center gap-0.5 border border-slate-700/80">
+                                    <i data-lucide="layers" class="w-2 h-2 text-brand-400"></i>
+                                    {{ $count }} Pages
+                                </div>
+                            @endif
                         @else
-                            <div class="w-full h-full flex items-center justify-center"><i data-lucide="image" class="w-5 h-5 text-slate-300"></i></div>
+                            <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 shrink-0 relative flex flex-col items-center justify-center text-slate-300 shadow-2xs">
+                                <i data-lucide="image" class="w-5 h-5"></i>
+                            </div>
                         @endif
                     </div>
                     <div class="flex-1 min-w-0">
+                        @if(!empty($customization['type_name']))
+                            <span class="text-[9px] font-black text-brand-600 uppercase tracking-[0.15em] block leading-tight">{{ $customization['type_name'] }}</span>
+                        @endif
                         <h4 class="font-extrabold text-xs text-slate-900 truncate">{{ $item->product->name ?? 'Custom Print' }}</h4>
-                        <p class="text-[10px] font-bold text-slate-400">
+                        <p class="text-[10px] font-bold text-slate-400 mt-0.5">
                             Qty: {{ $item->quantity }}
                             @if(!empty($customization['size_name']))
                                 · {{ $customization['size_name'] }}
+                                @if(!empty($customization['size_width']) && !empty($customization['size_height']))
+                                    · {{ $customization['size_width'] }}×{{ $customization['size_height'] }}{{ $customization['size_unit'] ?? '' }}
+                                @endif
                             @endif
                         </p>
                     </div>

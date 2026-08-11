@@ -292,7 +292,7 @@
                     <td class="px-6 py-4 text-sm font-medium text-surface-900">{{ $user->name }}</td>
                     <td class="px-6 py-4 text-sm text-surface-600">{{ $user->email }}</td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $user->role === 'store_admin' ? 'bg-purple-100 text-purple-700' : ($user->role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700') }}">
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $user->role === 'store_admin' ? 'bg-brand-50 text-brand-700 border border-brand-200/60' : ($user->role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-amber-50 text-amber-700 border border-amber-200/60') }}">
                             {{ $user->role === 'store_admin' ? 'Store Admin' : ($user->role === 'admin' ? 'Super Admin' : 'Staff') }}
                         </span>
                     </td>

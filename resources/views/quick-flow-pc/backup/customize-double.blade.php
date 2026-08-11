@@ -1,11 +1,5 @@
-{{-- ═══════════════════════════════════════════════════════════════════════
-     Double Canvas Customizer (Desktop PC Version)
-     Mobile equivalent: quick-flow/customize-double.blade.php
-     - Two independent canvases (frame_image & sample_image)
-     - Uses shared partials & customizer-base.js for DRY refactoring
-     ═══════════════════════════════════════════════════════════════════════ --}}
-
-@extends('layouts.quick-flow-pc')
+{{-- Deprecated: All customizer views are unified in customize.blade.php --}}
+@include('quick-flow-pc.customize')
 @section('title', 'Customize Your ' . $product->name)
 
 @push('styles')
@@ -22,11 +16,15 @@ $slots = [
 ];
 $galleryImages = $product->images->values();
 $galleryIndex = 0;
+$fallbackUrl = $product->featured_image_url ?? $product->sample_image_url ?? $product->frame_image_url ?? $product->background_image_url ?? 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>';
 foreach($slots as $field => $label) {
     $url = $product->{$field . '_url'};
     if (!$url && isset($galleryImages[$galleryIndex])) {
-        $url = asset('storage/' . $galleryImages[$galleryIndex]->image_path);
+        $url = \App\Models\Product::formatStorageUrl($galleryImages[$galleryIndex]->image_path);
         $galleryIndex++;
+    }
+    if (!$url) {
+        $url = $fallbackUrl;
     }
     $imageTypes[$field] = ['label' => $label, 'url' => $url];
 }
@@ -59,38 +57,34 @@ $bcTemplateName = $product->name ?? 'Custom Template';
         <nav class="cust-breadcrumb flex items-center flex-wrap gap-2 text-xs font-semibold">
             {{-- 1. Home --}}
             <a href="{{ route('flow-pc.index') }}"
-                class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
-                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
-            </a>
+                class="text-slate-500 hover:text-brand-600 transition-colors">Home</a>
 
-            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
             {{-- 2. Selected Store --}}
-            <span class="text-slate-500 font-medium flex items-center gap-1">
-                <i data-lucide="store" class="w-3.5 h-3.5 text-slate-400"></i> {{ $bcStoreName }}
-            </span>
+            <span class="text-slate-500 font-medium">{{ $bcStoreName }}</span>
 
-            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
             {{-- 3. Product Type --}}
             @if ($bcTypeSlug)
                 <a href="{{ route('flow-pc.category', $bcTypeSlug) }}"
-                    class="text-slate-400 font-medium hover:text-brand-600 transition-colors">{{ $bcProductType }}</a>
+                    class="text-slate-500 hover:text-brand-600 transition-colors">{{ $bcProductType }}</a>
             @else
                 <span class="text-slate-500 font-medium">{{ $bcProductType }}</span>
             @endif
 
-            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
             {{-- 4. Page Size / Side --}}
-            <span class="text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60">
+            <span class="text-slate-500 font-medium">
                 {{ $bcPageSizeSide }}
             </span>
 
-            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
             {{-- 5. Template Name --}}
-            <span class="text-brand-600 font-bold max-w-[280px] sm:max-w-xs truncate" title="{{ $bcTemplateName }}">
+            <span class="text-slate-900 font-extrabold max-w-[280px] sm:max-w-xs truncate" title="{{ $bcTemplateName }}">
                 {{ $bcTemplateName }}
             </span>
         </nav>
@@ -106,7 +100,7 @@ $bcTemplateName = $product->name ?? 'Custom Template';
             <div class="relative w-full min-h-[80vh] flex items-center justify-center">
 
                 {{-- ═══ LEFT: ABSOLUTE FLOATING VERTICAL TOOL DOCK (PAGE TABS ABOVE TEMPLATE & LAYERS) ═══ --}}
-                <div class="absolute left-2 lg:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 shrink-0 z-30 py-2 px-1">
+                <div class="absolute left-1 lg:left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
 
                     {{-- Page Circle Buttons --}}
                     @foreach ($imageTypes as $key => $img)
@@ -119,7 +113,7 @@ $bcTemplateName = $product->name ?? 'Custom Template';
                             class="thumb-nav-btn group flex flex-col items-center gap-1 cursor-pointer {{ !$enabled ? 'disabled-tab' : '' }}"
                             data-key="{{ $key }}" title="{{ $img['label'] }}">
                             <div id="page-btn-{{ $key }}"
-                                class="w-11 h-11 rounded-2xl bg-white {{ $isFirst ? 'text-pink-600 shadow-md border-2 border-pink-500 scale-105' : 'text-slate-500 shadow-2xs border border-slate-200/90 group-hover:text-pink-600 group-hover:border-pink-300 group-hover:scale-105' }} flex items-center justify-center transition-all duration-200 relative {{ !$enabled ? 'opacity-70' : '' }}">
+                                class="w-12 h-12 rounded-2xl bg-white {{ $isFirst ? 'text-brand-600 shadow-md border-2 border-brand-500 scale-105' : 'text-slate-500 shadow-2xs border border-slate-200/90 group-hover:text-brand-hover group-hover:border-brand-hover group-hover:scale-105' }} flex items-center justify-center transition-all duration-200 relative {{ !$enabled ? 'opacity-70' : '' }}">
                                 <i data-lucide="file-text" class="w-5 h-5"></i>
                                 @if (!$enabled)
                                     <div class="thumb-lock-badge absolute -top-1 -right-1 w-4 h-4 rounded-full bg-slate-700 text-white flex items-center justify-center border border-white shadow-2xs z-20" title="Canvas Locked">
@@ -127,29 +121,29 @@ $bcTemplateName = $product->name ?? 'Custom Template';
                                     </div>
                                 @endif
                             </div>
-                            <span class="text-[10px] {{ $isFirst ? 'font-black text-pink-600' : 'font-bold text-slate-500 group-hover:text-pink-600' }} transition-colors">
+                            <span class="text-[10px] {{ $isFirst ? 'font-black text-brand-600' : 'font-bold text-slate-500 group-hover:text-brand-hover' }} transition-colors">
                                 Page {{ $loop->iteration }}
                             </span>
                         </button>
                     @endforeach
 
-                    <div class="w-7 h-px bg-slate-200/80 my-0.5"></div>
+                    <div id="left-dock-divider" class="col-span-2 w-full h-px bg-slate-200/80 my-0.5"></div>
 
                     {{-- 3. Ready-Made Templates Button --}}
-                    <button type="button" onclick="toggleTemplatesDrawer()"
+                    <button type="button" id="templates-dock-trigger" onclick="toggleTemplatesDrawer()"
                         class="group flex flex-col items-center gap-1 cursor-pointer" title="Ready-Made Templates">
                         <div id="templates-dock-btn"
-                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-brand-500 group-hover:bg-brand-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
                             <i data-lucide="layout-template" class="w-5 h-5"></i>
                         </div>
-                        <span class="text-[10px] font-black text-slate-600 group-hover:text-indigo-600 transition-colors">Templates</span>
+                        <span class="text-[10px] font-black text-slate-600 group-hover:text-brand-600 transition-colors">Templates</span>
                     </button>
 
                     {{-- 4. Layers Button --}}
-                    <button type="button" onclick="toggleLayersDrawer()"
+                    <button type="button" id="layers-dock-trigger" onclick="toggleLayersDrawer()"
                         class="group flex flex-col items-center gap-1 cursor-pointer" title="Layers Panel">
                         <div id="layers-dock-btn"
-                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
                             <i data-lucide="layers" class="w-5 h-5"></i>
                         </div>
                         <span class="text-[10px] font-black text-slate-600 group-hover:text-emerald-600 transition-colors">Layers</span>
@@ -159,7 +153,7 @@ $bcTemplateName = $product->name ?? 'Custom Template';
                     <button type="button" onclick="customizer.clearAll()"
                         class="group flex flex-col items-center gap-1 cursor-pointer" title="Clear All Designs">
                         <div id="clear-dock-btn"
-                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </div>
                         <span class="text-[10px] font-black text-red-600">Clear All</span>
@@ -186,8 +180,8 @@ $bcTemplateName = $product->name ?? 'Custom Template';
                             id="canvas-container">
                             <div id="canvas-loading-overlay"
                                 class="hidden absolute inset-0 bg-white/80 backdrop-blur-xs z-50 flex flex-col items-center justify-center space-y-3 rounded-2xl transition-all duration-300">
-                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-lg shadow-indigo-500/10">
-                                    <i data-lucide="loader-2" class="w-6 h-6 text-indigo-600 animate-spin"></i>
+                                <div class="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center shadow-lg shadow-brand-500/10">
+                                    <i data-lucide="loader-2" class="w-6 h-6 text-brand-600 animate-spin"></i>
                                 </div>
                                 <span class="text-xs font-black text-slate-800 tracking-wider uppercase">Loading Template...</span>
                             </div>
@@ -196,9 +190,10 @@ $bcTemplateName = $product->name ?? 'Custom Template';
                                 @php
                                     $config = $maskData[$key] ?? [];
                                     $enabled = ($config['enabled'] ?? true) !== false;
+                                    $isFirst = $loop->first;
                                 @endphp
-                                <div id="canvas-wrapper-{{ $key }}" class="canvas-layer"
-                                    style="position:absolute;top:0;left:0;width:100%;height:100%;visibility:hidden;pointer-events:none;z-index:-1;">
+                                <div id="canvas-wrapper-{{ $key }}" class="canvas-layer {{ !$isFirst ? 'canvas-hidden' : '' }}"
+                                    style="position:absolute;top:0;left:0;width:100%;height:100%;display:{{ $isFirst ? 'block' : 'none' }};visibility:{{ $isFirst ? 'visible' : 'hidden' }};pointer-events:{{ $isFirst ? 'auto' : 'none' }};z-index:{{ $isFirst ? '10' : '-1' }};">
                                     <canvas id="canvas-{{ $key }}"></canvas>
                                     @if (!$enabled)
                                         <div class="canvas-disabled-overlay"></div>
@@ -228,7 +223,7 @@ $bcTemplateName = $product->name ?? 'Custom Template';
         <div class="hero-glass-card hero-cust-pattern relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/80 transition-all duration-300">
             {{-- Ambient lighting blobs --}}
             <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-            <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-sky-400/15 via-indigo-400/15 to-purple-400/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-brand-400/15 via-brand-500/15 to-purple-400/15 rounded-full blur-3xl pointer-events-none"></div>
             <div class="hero-dots opacity-40"></div>
 
             <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -239,12 +234,12 @@ $bcTemplateName = $product->name ?? 'Custom Template';
                         <i data-lucide="arrow-left" class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform"></i>
                     </a>
                     <div class="space-y-1">
-                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-indigo-200/80 text-indigo-600 text-[11px] font-black shadow-2xs backdrop-blur-md tracking-wider uppercase">
-                            <i data-lucide="copy" class="w-3.5 h-3.5 text-indigo-500 animate-spin-slow"></i>
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-brand-200/80 text-brand-600 text-[11px] font-black shadow-2xs backdrop-blur-md tracking-wider uppercase">
+                            <i data-lucide="copy" class="w-3.5 h-3.5 text-brand-500 animate-spin-slow"></i>
                             Double Canvas Customizer
                         </div>
                         <h1 class="text-2xl lg:text-3xl xl:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                            Customize <span class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span>
+                            Customize <span class="text-slate-900 italic" style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span>
                         </h1>
                         <p class="text-xs lg:text-sm text-slate-500 font-semibold flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
@@ -256,7 +251,7 @@ $bcTemplateName = $product->name ?? 'Custom Template';
                 @if(isset($flowData['size_width']) && isset($flowData['size_height']))
                     <div class="flex items-center gap-3 shrink-0 self-start lg:self-center">
                         <div class="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-slate-800">
-                            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                            <div class="w-9 h-9 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
                                 <i data-lucide="ruler" class="w-4 h-4"></i>
                             </div>
                             <div>
@@ -370,15 +365,11 @@ const customizer = Object.assign(customizerBase({
             }
         });
 
-        // Right dock tools visibility based on lock state
-        const uploadLabel = document.getElementById('upload-tool-label');
-        const textBtn = document.getElementById('text-dock-trigger');
-        const colorTool = document.getElementById('color-tool');
-        const fontBtn = document.getElementById('fonts-dock-trigger');
-        if (uploadLabel) uploadLabel.style.display = enabled ? '' : 'none';
-        if (textBtn) textBtn.style.display = enabled ? '' : 'none';
-        if (colorTool) colorTool.style.display = enabled ? '' : 'none';
-        if (fontBtn) fontBtn.style.display = enabled ? '' : 'none';
+        // Dock tools & panel triggers visibility based on lock state
+        ['upload-tool-label', 'text-dock-trigger', 'shapes-dock-trigger', 'color-tool', 'fonts-dock-trigger', 'qr-dock-trigger', 'templates-dock-trigger', 'layers-dock-trigger', 'left-dock-divider'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = enabled ? '' : 'none';
+        });
 
         // Locked canvas banner
         const lockedBanner = document.getElementById('canvas-locked-banner');
@@ -410,16 +401,16 @@ const customizer = Object.assign(customizerBase({
                 }
 
                 if (k === key) {
-                    btnIcon.className = `w-11 h-11 rounded-2xl bg-white text-pink-600 shadow-md border-2 border-pink-500 flex items-center justify-center scale-105 transition-all duration-200 relative ${!isEnabled ? 'opacity-70' : ''}`;
+                    btnIcon.className = `w-12 h-12 rounded-2xl bg-white text-brand-600 shadow-md border-2 border-brand-500 flex items-center justify-center scale-105 transition-all duration-200 relative ${!isEnabled ? 'opacity-70' : ''}`;
                     if (btnWrapper) {
                         const txt = btnWrapper.querySelector('span');
-                        if (txt) txt.className = 'text-[10px] font-black text-pink-600';
+                        if (txt) txt.className = 'text-[10px] font-black text-brand-600';
                     }
                 } else {
-                    btnIcon.className = `w-11 h-11 rounded-2xl bg-white text-slate-500 shadow-2xs border border-slate-200/90 flex items-center justify-center group-hover:text-pink-600 group-hover:border-pink-300 group-hover:scale-105 transition-all duration-200 relative ${!isEnabled ? 'opacity-60' : ''}`;
+                    btnIcon.className = `w-12 h-12 rounded-2xl bg-white text-slate-500 shadow-2xs border border-slate-200/90 flex items-center justify-center group-hover:text-brand-hover group-hover:border-brand-hover group-hover:scale-105 transition-all duration-200 relative ${!isEnabled ? 'opacity-60' : ''}`;
                     if (btnWrapper) {
                         const txt = btnWrapper.querySelector('span');
-                        if (txt) txt.className = 'text-[10px] font-bold text-slate-500 group-hover:text-pink-600 transition-colors';
+                        if (txt) txt.className = 'text-[10px] font-bold text-slate-500 group-hover:text-brand-hover transition-colors';
                     }
                 }
             }
@@ -447,10 +438,10 @@ const customizer = Object.assign(customizerBase({
         const uploadIconBg = document.getElementById('upload-icon-bg');
         const uploadText = document.getElementById('upload-text');
         if (hasImg) {
-            if (uploadIconBg) uploadIconBg.className = 'w-14 h-14 rounded-full bg-emerald-500 text-white shadow-xl flex items-center justify-center border border-emerald-400';
+            if (uploadIconBg) uploadIconBg.className = 'w-12 h-12 rounded-full bg-emerald-500 text-white shadow-xl flex items-center justify-center border border-emerald-400';
             if (uploadText) uploadText.textContent = userImagesCount > 1 ? `Photo (${userImagesCount})` : 'Photo';
         } else {
-            if (uploadIconBg) uploadIconBg.className = 'w-14 h-14 rounded-full bg-white text-pink-500 shadow-xl flex items-center justify-center border border-slate-200';
+            if (uploadIconBg) uploadIconBg.className = 'w-12 h-12 rounded-full bg-white text-pink-500 shadow-xl flex items-center justify-center border border-slate-200';
             if (uploadText) uploadText.textContent = 'Photo';
         }
 

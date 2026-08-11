@@ -53,16 +53,16 @@
             font-weight: 600;
         }
 
-        .badge-blue {
-            background: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-            border: 1px solid rgba(59, 130, 246, 0.3);
+        .badge-brand {
+            background: rgba(214, 95, 50, 0.15);
+            color: #d65f32;
+            border: 1px solid rgba(214, 95, 50, 0.3);
         }
 
-        .badge-purple {
-            background: rgba(139, 92, 246, 0.15);
-            color: #a78bfa;
-            border: 1px solid rgba(139, 92, 246, 0.3);
+        .badge-emerald {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
         }
 
         .badge-amber {
@@ -308,8 +308,8 @@
     <div class="toolbar">
         <div class="toolbar-left">
             <h1>📄 PDF Design Preview</h1>
-            <span class="badge badge-blue">{{ $order->order_number }}</span>
-            <span class="badge badge-purple">{{ $orientation }} fold</span>
+            <span class="badge badge-brand">{{ $order->order_number }}</span>
+            <span class="badge badge-emerald">{{ $orientation }} fold</span>
             <span class="badge badge-amber">{{ $width }}" × {{ $height }}"</span>
         </div>
         <div class="toolbar-right">

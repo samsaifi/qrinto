@@ -91,6 +91,7 @@ $registerFlowRoutes = function (string $controller, string $namePrefix, string $
         Route::get('/print/{order}/pdf', [$controller, 'viewPdf'])->name('print.pdf');
 
         Route::get('/find-store', [$controller, 'findStore'])->name('find-store');
+        Route::get('/nearest-store', [$controller, 'getNearestStore'])->name('nearest-store');
         Route::get('/set-store', fn() => redirect()->route("$namePrefix.find-store"));
         Route::post('/set-store', [$controller, 'setStore'])->name('set-store');
         Route::post('/apply-coupon', [$controller, 'applyCoupon'])->name('apply-coupon');
@@ -164,7 +165,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
     Route::prefix('my-account')->name('customer.')->group(function () {
         Route::get('/', [CustomerController::class, 'dashboard'])->name('dashboard');
         Route::get('/orders', [CustomerController::class, 'orders'])->name('orders');
@@ -256,6 +256,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('templates', AdminTemplateController::class);
     Route::post('templates/{template}/toggle', [AdminTemplateController::class, 'toggle'])->name('templates.toggle');
     Route::post('templates/upload-asset', [AdminTemplateController::class, 'uploadAsset'])->name('templates.upload-asset');
+
+    // Documentations
+    Route::get('docs', [\App\Http\Controllers\Admin\DocumentationController::class, 'index'])->name('docs.index');
+    Route::get('docs/manage', [\App\Http\Controllers\Admin\DocumentationController::class, 'manage'])->name('docs.manage');
+    Route::get('docs/create', [\App\Http\Controllers\Admin\DocumentationController::class, 'create'])->name('docs.create');
+    Route::post('docs', [\App\Http\Controllers\Admin\DocumentationController::class, 'store'])->name('docs.store');
+    Route::get('docs/{slug}', [\App\Http\Controllers\Admin\DocumentationController::class, 'show'])->name('docs.show');
+    Route::get('docs/{slug}/edit', [\App\Http\Controllers\Admin\DocumentationController::class, 'edit'])->name('docs.edit');
+    Route::put('docs/{slug}', [\App\Http\Controllers\Admin\DocumentationController::class, 'update'])->name('docs.update');
+    Route::delete('docs/{slug}', [\App\Http\Controllers\Admin\DocumentationController::class, 'destroy'])->name('docs.destroy');
+    Route::post('docs/{slug}/toggle', [\App\Http\Controllers\Admin\DocumentationController::class, 'toggle'])->name('docs.toggle');
 });
 
 require __DIR__ . '/auth.php';

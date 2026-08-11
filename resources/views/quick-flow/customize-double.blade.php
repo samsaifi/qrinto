@@ -666,14 +666,20 @@
 
         $galleryImages = $product->images->values();
         $galleryIndex = 0;
+        $fallbackUrl = $product->featured_image_url ?? $product->sample_image_url ?? $product->frame_image_url ?? $product->background_image_url ?? 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>';
 
         foreach ($slots as $field => $label) {
             $url = $product->{$field . '_url'};
 
             // If field is empty, try to take from gallery
             if (!$url && isset($galleryImages[$galleryIndex])) {
-                $url = asset('storage/' . $galleryImages[$galleryIndex]->image_path);
+                $url = \App\Models\Product::formatStorageUrl($galleryImages[$galleryIndex]->image_path);
                 $galleryIndex++;
+            }
+
+            // If still empty, use fallback product URL
+            if (!$url) {
+                $url = $fallbackUrl;
             }
 
             $imageTypes[$field] = ['label' => $label, 'url' => $url];
@@ -1830,12 +1836,7 @@
                                     });
                                 }
 
-                                // --- Apply Mask Clip ---
-                                const firstKey = Object.keys(this.imageTypes)[0];
-                                if (key === firstKey) {
-                                    const clipGroup = this._createCombinedClipPath(key, cv.scaleFactor);
-                                    if (clipGroup) obj.set('clipPath', clipGroup);
-                                }
+
 
                                 fc.add(obj);
                             });
@@ -2045,13 +2046,6 @@
                             centeredScaling: false
                         });
 
-                        // --- Apply Mask Clip ---
-                        const firstKey = Object.keys(this.imageTypes)[0];
-                        if (key === firstKey) {
-                            const clipGroup = this._createCombinedClipPath(key, cv.scaleFactor);
-                            if (clipGroup) img.set('clipPath', clipGroup);
-                        }
-
                         cv.fabricCanvas.add(img);
 
                         this._enforceZOrder(key);
@@ -2197,13 +2191,6 @@
 
                 // 2. Set as selected immediately! This prevents the "new layer on every character" bug.
                 this.selectedObject = t;
-
-                // --- Apply Mask Clip ---
-                const firstKey = Object.keys(this.imageTypes)[0];
-                if (key === firstKey) {
-                    const clipGroup = this._createCombinedClipPath(key, cv.scaleFactor);
-                    if (clipGroup) t.set('clipPath', clipGroup);
-                }
 
                 cv.fabricCanvas.add(t);
 

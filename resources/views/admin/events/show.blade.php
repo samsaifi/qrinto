@@ -45,7 +45,7 @@
             @if($event->categories->count())
             <div class="flex flex-wrap gap-1.5">
                 @foreach($event->categories as $category)
-                <span class="inline-flex px-2.5 py-1 text-xs font-medium rounded-md bg-blue-50 text-blue-700">{{ $category->name }}</span>
+                <span class="inline-flex px-2.5 py-1 text-xs font-medium rounded-md bg-brand-50 text-brand-700 border border-brand-200/60">{{ $category->name }}</span>
                 @endforeach
             </div>
             @else

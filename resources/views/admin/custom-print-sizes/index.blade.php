@@ -13,8 +13,8 @@
 </div>
 
 <!-- Info Card -->
-<div class="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl flex items-center gap-3 text-sm">
-    <i data-lucide="info" class="w-5 h-5 text-blue-600 flex-shrink-0"></i>
+<div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3 text-sm">
+    <i data-lucide="info" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
     <span>These sizes and prices are displayed to customers on the <strong>Custom Print</strong> page when they upload their own designs.</span>
 </div>
 

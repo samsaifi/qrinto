@@ -18,7 +18,7 @@ class QuickFlowOrderMail extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(Order $order, bool $isAdmin = false, string $pdfPath = null)
+    public function __construct(Order $order, bool $isAdmin = false, $pdfPath = null)
     {
         $this->order = $order->loadMissing('store', 'items');
         $this->isAdmin = $isAdmin;
@@ -37,11 +37,20 @@ class QuickFlowOrderMail extends Mailable
         $mail = $this->subject($subject)
             ->view('emails.quick-flow-order');
 
-        if ($this->pdfPath && file_exists($this->pdfPath)) {
-            $mail->attach($this->pdfPath, [
-                'as' => 'Order_Design_' . $this->order->order_number . '.pdf',
-                'mime' => 'application/pdf',
-            ]);
+        if ($this->pdfPath) {
+            $paths = is_array($this->pdfPath) ? $this->pdfPath : [$this->pdfPath];
+            foreach ($paths as $idx => $path) {
+                if ($path && file_exists($path)) {
+                    $asName = count($paths) > 1 
+                        ? 'Order_Design_' . $this->order->order_number . '_item_' . ($idx + 1) . '.pdf'
+                        : 'Order_Design_' . $this->order->order_number . '.pdf';
+
+                    $mail->attach($path, [
+                        'as' => $asName,
+                        'mime' => 'application/pdf',
+                    ]);
+                }
+            }
         }
 
         return $mail;

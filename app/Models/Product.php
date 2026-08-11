@@ -110,20 +110,31 @@ class Product extends Model
         return $query->where('is_featured', true);
     }
 
+    public static function formatStorageUrl(?string $path): ?string
+    {
+        if (!$path || trim($path) === '') {
+            return null;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
+            return $path;
+        }
+        $cleanPath = ltrim($path, '/');
+        if (str_starts_with($cleanPath, 'storage/')) {
+            return asset($cleanPath);
+        }
+        return asset('storage/' . $cleanPath);
+    }
+
     public function getFrameImageUrlAttribute(): ?string
     {
-        if ($this->frame_image) {
-            return asset('storage/' . $this->frame_image);
-        }
-        return null;
+        return static::formatStorageUrl($this->frame_image);
     }
 
     public function getFrameImageThumbnailAttribute(): ?string
     {   
-        
         if (!$this->frame_image) return null;
         
-        $thumbPath = 'thumbnails/products/' . $this->frame_image;
+        $thumbPath = 'thumbnails/products/' . ltrim($this->frame_image, '/');
         if (\Illuminate\Support\Facades\Storage::disk('public')->exists($thumbPath)) {
             return asset('storage/' . $thumbPath);
         }
@@ -133,38 +144,39 @@ class Product extends Model
 
     public function getSampleImageUrlAttribute(): ?string
     {
-        if ($this->sample_image) {
-            return asset('storage/' . $this->sample_image);
-        }
-        return null;
+        return static::formatStorageUrl($this->sample_image);
     }
 
     public function getBackgroundImageUrlAttribute(): ?string
     {
-        if ($this->background_image) {
-            return asset('storage/' . $this->background_image);
-        }
-        return null;
+        return static::formatStorageUrl($this->background_image);
     }
 
     public function getOverlayImageUrlAttribute(): ?string
     {
-        if ($this->overlay_image) {
-            return asset('storage/' . $this->overlay_image);
-        }
-        return null;
+        return static::formatStorageUrl($this->overlay_image);
     }
 
     /**
-     * Backward-compatible alias: returns frame image or first gallery image.
+     * Backward-compatible alias: returns frame image, sample image, background image or first gallery image.
      */
     public function getFeaturedImageUrlAttribute(): ?string
     {
         if ($this->frame_image) {
-            return asset('storage/' . $this->frame_image);
+            return static::formatStorageUrl($this->frame_image);
+        }
+        if ($this->sample_image) {
+            return static::formatStorageUrl($this->sample_image);
+        }
+        if ($this->background_image) {
+            return static::formatStorageUrl($this->background_image);
         }
         $primary = $this->images()->where('is_primary', true)->first();
-        return $primary ? asset('storage/' . $primary->image_path) : null;
+        if ($primary) {
+            return static::formatStorageUrl($primary->image_path);
+        }
+        $first = $this->images()->first();
+        return $first ? static::formatStorageUrl($first->image_path) : null;
     }
     private function thumbnailUrl(?string $path, int $width = 190, int $height = 140): ?string
 {

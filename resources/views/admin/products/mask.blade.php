@@ -117,12 +117,12 @@
 
                 <!-- Polygon drawing hint -->
                 <div id="polygonHelp"
-                    style="display:none; align-items:center; gap:8px; background:#eff6ff; padding:4px 12px; border-radius:6px; border:1px solid #bfdbfe;">
-                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                    <span style="font-size:11px; color:#1e3a8a; font-weight:500;">Click to add points. Double-click or press
+                    style="display:none; align-items:center; gap:8px; background:#ecfdf5; padding:4px 12px; border-radius:6px; border:1px solid #a7f3d0;">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span style="font-size:11px; color:#065f46; font-weight:500;">Click to add points. Double-click or press
                         Enter to finish.</span>
                     <button type="button" onclick="finishPolygon()"
-                        style="background:#3b82f6; color:white; border:none; padding:2px 8px; font-size:10px; border-radius:4px; cursor:pointer; font-weight:bold;">Finish</button>
+                        style="background:#10b981; color:white; border:none; padding:2px 8px; font-size:10px; border-radius:4px; cursor:pointer; font-weight:bold;">Finish</button>
                     <button type="button" onclick="cancelPolygon()"
                         style="background:white; color:#ef4444; border:1px solid #fca5a5; padding:1px 7px; font-size:10px; border-radius:4px; cursor:pointer;">Cancel</button>
                 </div>
@@ -166,56 +166,56 @@
             <!-- Shape Grid -->
             <div style="padding:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                 <button type="button" onclick="addShape('square')" class="shape-btn group">
-                    <div class="w-8 h-8 bg-blue-500/40 border-2 border-blue-500 rounded-sm"></div><span>Square</span>
+                    <div class="w-8 h-8 bg-emerald-500/40 border-2 border-emerald-500 rounded-sm"></div><span>Square</span>
                 </button>
                 <button type="button" onclick="addShape('rectangle')" class="shape-btn group">
-                    <div class="w-10 h-7 bg-blue-500/40 border-2 border-blue-500 rounded-sm"></div><span>Rectangle</span>
+                    <div class="w-10 h-7 bg-emerald-500/40 border-2 border-emerald-500 rounded-sm"></div><span>Rectangle</span>
                 </button>
                 <button type="button" onclick="addShape('circle')" class="shape-btn group">
-                                    <div class="w-8 h-8 bg-blue-500/40 border-2 border-blue-500 rounded-full"></div><span>Circle</span>
+                                    <div class="w-8 h-8 bg-emerald-500/40 border-2 border-emerald-500 rounded-full"></div><span>Circle</span>
                                 </button>
                                 <button type="button" onclick="addShape('ellipse')" class="shape-btn group">
-                                    <div class="w-10 h-7 bg-blue-500/40 border-2 border-blue-500 rounded-full"></div><span>Ellipse</span>
+                                    <div class="w-10 h-7 bg-emerald-500/40 border-2 border-emerald-500 rounded-full"></div><span>Ellipse</span>
                                 </button>
                                 <button type="button" onclick="addShape('triangle')" class="shape-btn group">
-                                    <div class="w-0 h-0 border-l-[20px] border-r-[20px] border-b-[35px] border-l-transparent border-r-transparent border-b-blue-500/60"></div><span>Triangle</span>
+                                    <div class="w-0 h-0 border-l-[20px] border-r-[20px] border-b-[35px] border-l-transparent border-r-transparent border-b-emerald-500/60"></div><span>Triangle</span>
                                 </button>
                                 <button type="button" onclick="addShape('diamond')" class="shape-btn group">
-                                    <div class="w-7 h-7 bg-blue-500/40 border-2 border-blue-500 rotate-45 rounded-sm"></div><span>Diamond</span>
+                                    <div class="w-7 h-7 bg-emerald-500/40 border-2 border-emerald-500 rotate-45 rounded-sm"></div><span>Diamond</span>
                                 </button>
                                 <button type="button" onclick="addShape('pentagon')" class="shape-btn group">
                                     <svg class="w-8 h-8" viewBox="0 0 40 40">
-                                        <polygon points="20,2 38,15 31,37 9,37 2,15" fill="rgba(59,130,246,0.4)" stroke="rgb(59,130,246)" stroke-width="2" />
+                                        <polygon points="20,2 38,15 31,37 9,37 2,15" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
                                     </svg><span>Pentagon</span>
                                 </button>
                                 <button type="button" onclick="addShape('hexagon')" class="shape-btn group">
                                     <svg class="w-8 h-8" viewBox="0 0 40 40">
-                                        <polygon points="20,2 36,10 36,30 20,38 4,30 4,10" fill="rgba(59,130,246,0.4)" stroke="rgb(59,130,246)" stroke-width="2" />
+                                        <polygon points="20,2 36,10 36,30 20,38 4,30 4,10" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
                                     </svg><span>Hexagon</span>
                                 </button>
                                 <button type="button" onclick="addShape('star')" class="shape-btn group">
                                     <svg class="w-8 h-8" viewBox="0 0 40 40">
-                                        <polygon points="20,2 25,15 39,15 27,24 31,38 20,29 9,38 13,24 1,15 15,15" fill="rgba(59,130,246,0.4)" stroke="rgb(59,130,246)" stroke-width="2" />
+                                        <polygon points="20,2 25,15 39,15 27,24 31,38 20,29 9,38 13,24 1,15 15,15" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
                                     </svg><span>Star</span>
                                 </button>
                                 <button type="button" onclick="addShape('heart')" class="shape-btn group">
                                     <svg class="w-8 h-8" viewBox="0 0 40 40">
-                                        <path d="M20 36 C10 28 2 22 2 14 C2 8 6 4 12 4 C16 4 19 6 20 9 C21 6 24 4 28 4 C34 4 38 8 38 14 C38 22 30 28 20 36Z" fill="rgba(59,130,246,0.4)" stroke="rgb(59,130,246)" stroke-width="2" />
+                                        <path d="M20 36 C10 28 2 22 2 14 C2 8 6 4 12 4 C16 4 19 6 20 9 C21 6 24 4 28 4 C34 4 38 8 38 14 C38 22 30 28 20 36Z" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
                                     </svg><span>Heart</span>
                                 </button>
                                 <button type="button" onclick="addShape('arch')" class="shape-btn group">
                                     <svg class="w-10 h-10" viewBox="0 0 40 40">
-                                        <path d="M4 38 L4 18 C4 8 12 2 20 2 C28 2 36 8 36 18 L36 38 Z" fill="rgba(59,130,246,0.4)" stroke="rgb(59,130,246)" stroke-width="2" />
+                                        <path d="M4 38 L4 18 C4 8 12 2 20 2 C28 2 36 8 36 18 L36 38 Z" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
                                     </svg><span>Arch</span>
                                 </button>
                                 <button type="button" onclick="addShape('oval')" class="shape-btn group">
-                                    <div class="w-6 h-9 bg-blue-500/40 border-2 border-blue-500 rounded-full"></div><span>Oval</span>
+                                    <div class="w-6 h-9 bg-emerald-500/40 border-2 border-emerald-500 rounded-full"></div><span>Oval</span>
                                 </button>
  
-                <button type="button" onclick="startPolygonDraw()" class="shape-btn group col-span-2 bg-blue-50/50">
+                <button type="button" onclick="startPolygonDraw()" class="shape-btn group col-span-2 bg-emerald-50/50">
                     <svg class="w-8 h-8" viewBox="0 0 40 40">
-                        <path d="M 10,30 L 5,10 L 25,5 L 35,20 L 25,35 Z" fill="rgba(59,130,246,0.4)"
-                            stroke="rgb(59,130,246)" stroke-width="2" stroke-linejoin="round" />
+                        <path d="M 10,30 L 5,10 L 25,5 L 35,20 L 25,35 Z" fill="rgba(16,185,129,0.4)"
+                            stroke="rgb(16,185,129)" stroke-width="2" stroke-linejoin="round" />
                     </svg>
                     <span>Custom (Freehand)</span>
                 </button>
@@ -601,7 +601,7 @@
                             width: BASE_WIDTH,
                             height: newCanvasH,
                             fill: 'transparent',
-                            stroke: '#2563eb', // Nice brand blue color
+                            stroke: '#10b981', // Nice brand emerald color
                             strokeWidth: 2,
                             strokeDashArray: [6, 4],
                             selectable: false,
@@ -1171,7 +1171,7 @@
                 masks.forEach((m, i) => {
                     const div = document.createElement('div');
                     div.className =
-                        'mask-item flex items-center justify-between px-3 py-2 bg-surface-50 rounded-lg cursor-pointer hover:bg-blue-50 transition group';
+                        'mask-item flex items-center justify-between px-3 py-2 bg-surface-50 rounded-lg cursor-pointer hover:bg-emerald-50 transition group';
                     div.onclick = () => selectMask(m.name);
                     div.innerHTML = `
                 <div class="flex items-center gap-2">

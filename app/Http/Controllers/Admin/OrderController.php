@@ -242,6 +242,13 @@ class OrderController extends Controller
             abort(403, 'Unauthorized access to this store\'s order.');
         }
 
+        // Automatic PDF self-healing: Check & generate missing PDFs for any items in this order
+        try {
+            app(\App\Services\OrderPdfService::class)->ensureOrderPdfsExist($order);
+        } catch (\Throwable $e) {
+            \Log::error("Admin Order Show PDF Auto-Repair Error: " . $e->getMessage(), ['order_id' => $order->id]);
+        }
+
         $order->load('user', 'items.product', 'payments', 'statusHistories.user', 'store');
         return view('admin.orders.show', compact('order'));
     }

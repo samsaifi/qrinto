@@ -76,34 +76,24 @@
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
             <div class="flex h-20 items-center justify-between gap-6">
-                {{-- Left Side: Logo + Menu Icon --}}
+                {{-- Left Side: Logo --}}
                 <div class="flex items-center gap-5 shrink-0">
                     {{-- Logo --}}
                     <a href="{{ route('flow-pc.index') }}" class="flex items-center gap-3 shrink-0 group">
                         <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto Logo"
                             class="h-10 sm:h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-300">
                     </a>
-
-                    {{-- Menu Icon Button --}}
-                    <button type="button" @click="pcMenu = true; $nextTick(() => lucide.createIcons())"
-                        class="h-11 flex items-center gap-2 px-4 rounded-xl bg-slate-100/90 hover:bg-brand-50 text-slate-800 hover:text-brand-600 font-bold text-xs uppercase tracking-wider transition-all border border-slate-200/90 hover:border-brand-200 cursor-pointer active:scale-95 shadow-2xs">
-                        <i data-lucide="menu" class="w-4 h-4 text-slate-600"></i>
-                        <span>Menu</span>
-                    </button>
                 </div>
 
-                {{-- Primary Desktop Navigation --}}
-                @include('layouts.pc.nav')
-
-                {{-- Right Side: Selected Store + Cart --}}
+                {{-- Right Side: Location + Cart + Menu --}}
                 <div class="flex items-center gap-3 shrink-0">
                     {{-- Active Store Selector --}}
                     @include('layouts.pc.store')
 
                     {{-- Cart Button --}}
                     <a href="{{ route('flow-pc.cart.index') }}" id="cart-btn-pc"
-                        class="relative h-11 flex items-center gap-2 px-4 rounded-xl bg-slate-900 hover:bg-brand-600 text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 border border-slate-800 cursor-pointer active:scale-95 shadow-2xs">
-                        <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-300"></i>
+                        class="relative h-11 flex items-center gap-2 px-4 rounded-xl hover:bg-slate-100 text-slate-800 hover:text-brand-600 font-bold text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95">
+                        <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-600"></i>
                         <span>Cart</span>
                         @if ($cartCount > 0)
                             <span id="cart-count-pc"
@@ -112,6 +102,13 @@
                             </span>
                         @endif
                     </a>
+
+                    {{-- Menu Icon Button --}}
+                    <button type="button" @click="pcMenu = true; $nextTick(() => lucide.createIcons())"
+                        class="h-11 flex items-center gap-2 px-4 rounded-xl hover:bg-slate-100 text-slate-800 hover:text-brand-600 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-95">
+                        <i data-lucide="menu" class="w-4 h-4 text-slate-600"></i>
+                        <span>Menu</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -122,7 +119,7 @@
         x-transition:enter-start="opacity-0 scale-98" x-transition:enter-end="opacity-100 scale-100"
         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-98"
-        class="fixed inset-0 w-screen h-screen min-h-screen z-[9999] bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col justify-between p-6 sm:p-12 overflow-y-auto"
+        class="fixed inset-0 w-screen h-screen min-h-screen z-[9999] bg-gradient-to-br from-slate-950 via-slate-900 to-brand-950 text-white flex flex-col justify-between p-6 sm:p-12 overflow-y-auto"
         style="display: none;" x-cloak>
 
         <!-- Giant MENU Watermark Background Text -->
@@ -156,22 +153,22 @@
             </a>
 
             <a href="{{ route('flow-pc.qrinto') }}" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-pink-400 hover:scale-105 transition-all duration-300 tracking-tight block">
+                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-brand-400 hover:scale-105 transition-all duration-300 tracking-tight block">
                 Custom Upload & Print
             </a>
 
             <a href="{{ route('flow-pc.index') }}#products" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-purple-400 hover:scale-105 transition-all duration-300 tracking-tight block">
+                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-brand-300 hover:scale-105 transition-all duration-300 tracking-tight block">
                 Print Categories
             </a>
 
             <a href="{{ route('flow-pc.index') }}#how-it-works" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-cyan-400 hover:scale-105 transition-all duration-300 tracking-tight block">
+                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-brand-400 hover:scale-105 transition-all duration-300 tracking-tight block">
                 How It Works
             </a>
 
             <a href="{{ route('flow-pc.find-store') }}" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-emerald-400 hover:scale-105 transition-all duration-300 tracking-tight block">
+                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-brand-400 hover:scale-105 transition-all duration-300 tracking-tight block">
                 Find Store Locations
             </a>
 
@@ -209,7 +206,7 @@
 
     {{-- ===== PREMIUM LUXURY FOOTER ===== --}}
     <footer
-        class="w-full bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white relative overflow-hidden border-t border-white/10 pt-20 pb-10">
+        class="w-full bg-gradient-to-br from-slate-950 via-slate-900 to-brand-950 text-white relative overflow-hidden border-t border-white/10 pt-20 pb-10">
         <!-- Ambient Glowing Background Orbs -->
         <div class="absolute -top-32 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-[120px] pointer-events-none">
         </div>
@@ -233,8 +230,7 @@
 
                 <div class="lg:col-span-6">
                     <div class="bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10 shadow-xl">
-                        <h4 class="text-base font-extrabold text-white mb-2 flex items-center gap-2">
-                            <i data-lucide="sparkles" class="w-4 h-4 text-pink-400"></i>
+                        <h4 class="text-base font-extrabold text-white mb-2">
                             Get Special Studio Offers & Print Guides
                         </h4>
                         <p class="text-xs text-slate-400 mb-4">Join over 50,000+ creators getting exclusive discounts &
@@ -257,102 +253,66 @@
                 <!-- Column 1: Print Products -->
                 <div>
                     <h5
-                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5 flex items-center gap-2">
-                        <i data-lucide="layers" class="w-4 h-4 text-brand-400"></i>
+                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
                         Print Products
                     </h5>
                     <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
                         <li><a href="#products"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Custom Canvas
-                                Prints</a></li>
+                                class="hover:text-white transition-colors">Custom Canvas Prints</a></li>
                         <li><a href="#products"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Hardcover Photo
-                                Books</a></li>
+                                class="hover:text-white transition-colors">Hardcover Photo Books</a></li>
                         <li><a href="#products"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Custom T-Shirts &
-                                Apparel</a></li>
+                                class="hover:text-white transition-colors">Custom T-Shirts & Apparel</a></li>
                         <li><a href="#products"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Greeting Cards &
-                                Gifts</a></li>
+                                class="hover:text-white transition-colors">Greeting Cards & Gifts</a></li>
                         <li><a href="#products"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Acrylic Wall
-                                Art</a></li>
+                                class="hover:text-white transition-colors">Acrylic Wall Art</a></li>
                     </ul>
                 </div>
 
                 <!-- Column 2: Design Editor -->
                 <div>
                     <h5
-                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5 flex items-center gap-2">
-                        <i data-lucide="wand-2" class="w-4 h-4 text-purple-400"></i>
+                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
                         Design Studio
                     </h5>
                     <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
                         <li><a href="#products"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Vector Editor
-                                Suite</a></li>
+                                class="hover:text-white transition-colors">Vector Editor Suite</a></li>
                         <li><a href="{{ route('flow-pc.track.form') }}"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Track Your
-                                Order</a></li>
+                                class="hover:text-white transition-colors">Track Your Order</a></li>
                         <li><a href="{{ route('flow-pc.find-store') }}"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Local Store
-                                Pickup</a></li>
+                                class="hover:text-white transition-colors">Local Store Pickup</a></li>
                         <li><a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Print Quality
-                                Guide</a></li>
+                                class="hover:text-white transition-colors">Print Quality Guide</a></li>
                     </ul>
                 </div>
 
                 <!-- Column 3: Store & Support -->
                 <div>
                     <h5
-                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5 flex items-center gap-2">
-                        <i data-lucide="store" class="w-4 h-4 text-pink-400"></i>
+                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
                         Stores & Service
                     </h5>
                     <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
                         <li><a href="{{ route('flow-pc.find-store') }}"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Find Nearby
-                                Studio</a></li>
+                                class="hover:text-white transition-colors">Find Nearby Studio</a></li>
                         <li><a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Terms & Privacy
-                                Notice</a></li>
+                                class="hover:text-white transition-colors">Terms & Privacy Notice</a></li>
                         <li><a href="{{ route('flow-pc.track.form') }}"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Order Lookup</a>
-                        </li>
+                                class="hover:text-white transition-colors">Order Lookup</a></li>
                         <li><a href="mailto:info@qrinto.com"
-                                class="hover:text-white transition-colors flex items-center gap-1.5"><i
-                                    data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i> Customer
-                                Support</a></li>
+                                class="hover:text-white transition-colors">Customer Support</a></li>
                     </ul>
                 </div>
 
                 <!-- Column 4: Quick Guarantees & Noritsu Badge -->
                 <div>
                     <h5
-                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5 flex items-center gap-2">
-                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
                         Quality Standard
                     </h5>
                     <div class="space-y-3 text-xs text-slate-400 font-medium">
-                        <div class="bg-white/5 border border-white/10 p-3.5 rounded-xl">
-                            <p class="text-white font-bold mb-1 flex items-center gap-1.5"><i data-lucide="zap"
-                                    class="w-3.5 h-3.5 text-amber-400"></i> Fast 48hr Turnaround</p>
-                            <p class="text-[11px] text-slate-400">Same-day store pickup available at select locations.
-                            </p>
-                        </div>
                         <div
                             class="bg-white/5 border border-white/10 p-3.5 rounded-xl flex items-center justify-between">
                             <span class="text-[11px] text-slate-300">Powered by high precision</span>

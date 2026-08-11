@@ -153,12 +153,15 @@
         <div class="hero-dots"></div>
 
         <div class="max-w-[1400px] mx-auto relative z-10">
-            <nav class="flex items-center gap-2 text-sm mb-6 fade-up">
-                <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
-                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+            <nav class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-6 fade-up">
+                <a href="{{ route('flow-pc.index') }}" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-1">
+                    <i data-lucide="home" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span>Home</span>
                 </a>
-                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-                <span class="text-slate-700 font-semibold">Checkout</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <a href="{{ route('flow-pc.cart.index') }}" class="text-slate-500 hover:text-brand-600 transition-colors">Cart</a>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <span class="text-slate-900 font-extrabold">Checkout</span>
             </nav>
 
             <div class="flex items-center justify-between">
@@ -172,7 +175,7 @@
                             <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
                             Final Step &bull; Secure Checkout
                         </div>
-                        <h1 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight">Review &amp; <span class="bg-gradient-to-r from-brand-600 to-violet-500 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">Pay</span></h1>
+                        <h1 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight">Review & <span class="text-slate-950 italic" style="font-family: 'Playfair Display', serif;">Pay</span></h1>
                         <p class="text-sm text-slate-500 mt-1">Review your order details and select your preferred payment method.</p>
                     </div>
                 </div>

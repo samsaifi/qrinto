@@ -166,7 +166,7 @@ $(document).ready(function() {
                 className: 'hidden lg:table-cell',
                 render: function(data) {
                     return data
-                        ? `<span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-mono rounded-lg">${data}</span>`
+                        ? `<span class="px-2 py-0.5 bg-brand-50 text-brand-700 text-xs font-mono rounded-lg border border-brand-200/60">${data}</span>`
                         : '<span class="text-surface-400 text-xs">Not set</span>';
                 }
             },

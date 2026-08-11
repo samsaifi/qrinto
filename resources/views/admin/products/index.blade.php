@@ -151,7 +151,7 @@
                             <a href="{{ route('admin.products.edit', $product) }}" class="inline-flex p-1.5 rounded-lg hover:bg-brand-50 text-surface-400 hover:text-brand-600 transition" title="Edit">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </a>
-                            <a href="{{ route('admin.products.mask', $product) }}" class="inline-flex p-1.5 rounded-lg hover:bg-purple-50 text-surface-400 hover:text-purple-600 transition" title="Mask Editor">
+                            <a href="{{ route('admin.products.mask', $product) }}" class="inline-flex p-1.5 rounded-lg hover:bg-emerald-50 text-surface-400 hover:text-emerald-600 transition" title="Mask Editor">
                                 <i data-lucide="layers" class="w-4 h-4"></i>
                             </a>
                         </div>

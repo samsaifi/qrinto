@@ -69,7 +69,7 @@
                     </td>
                     <td class="px-3 py-3 hidden md:table-cell">
                         @if($category->parent)
-                            <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700">{{ $category->parent->name }}</span>
+                            <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-md bg-brand-50 text-brand-700 border border-brand-200/60">{{ $category->parent->name }}</span>
                         @else
                             <span class="text-xs text-surface-400">&mdash;</span>
                         @endif

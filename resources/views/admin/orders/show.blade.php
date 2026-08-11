@@ -13,152 +13,304 @@
     </div>
     <div class="flex items-center gap-3">
         @if($order->store)
-        <a href="{{ route('admin.stores.edit', $order->store) }}" class="px-4 py-2 text-sm font-semibold rounded-xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center gap-2 hover:bg-purple-100 transition">
+        <a href="{{ route('admin.stores.edit', $order->store) }}" class="px-4 py-2 text-sm font-semibold rounded-xl bg-brand-50 text-brand-700 border border-brand-200/60 flex items-center gap-2 hover:bg-brand-100 transition">
             <i data-lucide="store" class="w-4 h-4"></i> {{ $order->store->store_name }}
         </a>
         @endif
-        @php
-        $adminPrintUrl = null;
-        $items = $order->items;
-        if ($items && $items->isNotEmpty()) {
-        $images = $items->first()->uploaded_images;
-        if ($images && is_array($images) && count($images) > 0) {
-        $firstImage = reset($images);
-        $adminPrintUrl = str_starts_with($firstImage, 'http') ? $firstImage : asset('storage/' . $firstImage);
-        } elseif (!empty($items->first()->customization_data['preview_url'])) {
-        $adminPrintUrl = $items->first()->customization_data['preview_url'];
-        }
-        }
-        @endphp
-
-        @if($adminPrintUrl)
-
-        <button type="button" onclick="printBrowserPdf('{{ $items && $items->isNotEmpty() && $items->first()->pdf_path ? asset('storage/' . $items->first()->pdf_path) : route('admin.orders.print.page', $order->id) }}')"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
-            <i data-lucide="printer" class="w-4 h-4"></i> Print Design
-        </button>
-        
-        @endif 
-         
     </div>
 </div>
 
 <div class="grid lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
         <!-- Items -->
-        <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
-            <h2 class="font-display font-semibold text-lg mb-5">Order Items</h2>
-            <div class="space-y-4">
+        <div class="bg-white rounded-2xl border border-surface-200/80 shadow-xs p-6">
+            <div class="flex items-center justify-between mb-5 pb-3 border-b border-surface-100">
+                <h2 class="font-display font-bold text-lg text-surface-900 flex items-center gap-2">
+                    <i data-lucide="package" class="w-5 h-5 text-brand-500"></i>
+                    Order Items & Custom Designs
+                </h2>
+                <span class="text-xs font-semibold text-surface-500 bg-surface-100 px-3 py-1 rounded-full">
+                    {{ $order->items->count() }} {{ Str::plural('Item', $order->items->count()) }}
+                </span>
+            </div>
+
+            <div class="space-y-5">
                 @foreach($order->items as $item)
-                <div class="flex gap-4 p-4 bg-surface-50 rounded-xl">
-                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                        @php
-                        $previewUrl = !empty($item->customization_data['preview_url']) ? $item->customization_data['preview_url'] : null;
-                        @endphp
+                @php
+                    $itemImages = [];
 
-                        @if(!empty($item->uploaded_images) && is_array($item->uploaded_images))
-                        @foreach($item->uploaded_images as $idx => $img)
-                        @php
-                        $imgUrl = str_starts_with($img, 'http') ? $img : asset('storage/' . $img);
-                        @endphp
-                        <div class="w-16 h-16 rounded-lg overflow-hidden bg-surface-200 flex-shrink-0">
-                            <a href="{{ $imgUrl }}" target="_blank" title="View Design Canvas">
-                                <img src="{{ $imgUrl }}" class="w-full h-full object-cover hover:opacity-80 transition">
-                            </a>
+                    // 1. Collect from uploaded_images array
+                    if (!empty($item->uploaded_images) && is_array($item->uploaded_images)) {
+                        foreach ($item->uploaded_images as $img) {
+                            if (!empty($img) && is_string($img) && trim($img) !== '') {
+                                $url = str_starts_with($img, 'http') ? $img : asset('storage/' . ltrim($img, '/'));
+                                if (!in_array($url, $itemImages)) {
+                                    $itemImages[] = $url;
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Collect from customization_data upload_ids / canvas_mapped_ids
+                    $uploadIds = $item->customization_data['canvas_mapped_ids'] ?? ($item->customization_data['upload_ids'] ?? []);
+                    if (is_array($uploadIds) && !empty($uploadIds)) {
+                        $uList = \App\Models\CustomerUpload::whereIn('id', array_values(array_filter($uploadIds)))->get();
+                        foreach ($uList as $uObj) {
+                            if (!empty($uObj->file_path)) {
+                                $url = asset('storage/' . ltrim($uObj->file_path, '/'));
+                                if (!in_array($url, $itemImages)) {
+                                    $itemImages[] = $url;
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. Collect from customization_data preview_url
+                    if (!empty($item->customization_data['preview_url'])) {
+                        $url = $item->customization_data['preview_url'];
+                        if (!in_array($url, $itemImages)) {
+                            $itemImages[] = $url;
+                        }
+                    }
+
+                    // 4. Fallback to product featured/sample/frame image URL
+                    if (empty($itemImages) && $item->product) {
+                        if (!empty($item->product->featured_image_url)) {
+                            $itemImages[] = $item->product->featured_image_url;
+                        } elseif (!empty($item->product->sample_image_url)) {
+                            $itemImages[] = $item->product->sample_image_url;
+                        } elseif (!empty($item->product->frame_image_url)) {
+                            $itemImages[] = $item->product->frame_image_url;
+                        }
+                    }
+
+                    $imageCount = count($itemImages);
+                    $itemPdfUrl = $item->pdf_path ? asset('storage/' . $item->pdf_path) : null;
+                    $firstImgUrl = !empty($itemImages) ? $itemImages[0] : null;
+                    $itemPrintUrl = $itemPdfUrl ?: ($firstImgUrl ?: route('admin.orders.print.page', $order->id));
+                @endphp
+
+                <div class="bg-surface-50/70 border border-surface-200/70 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row gap-5 items-start justify-between relative group hover:border-brand-300 transition-all">
+                    
+                    {{-- Left Column: Desktop Cart Style Fanned Card Stage --}}
+                    <div class="flex items-center justify-center shrink-0">
+                        
+                        {{-- Desktop Cart Deck Fan Stage --}}
+                        <div class="fanned-card-stage relative flex items-center justify-center w-28 h-28 shrink-0 select-none py-1 px-1 bg-white/80 rounded-2xl border border-surface-200/80 shadow-2xs">
+                            @if($imageCount > 0)
+                                @foreach($itemImages as $idx => $imgUrl)
+                                    @php
+                                        $count = $imageCount;
+                                        if ($count == 1) {
+                                            $rot = 0; $tx = 0; $ty = 0;
+                                        } elseif ($count == 2) {
+                                            $rot = $idx == 0 ? -12 : 12;
+                                            $tx = $idx == 0 ? -12 : 12;
+                                            $ty = 2;
+                                        } elseif ($count == 3) {
+                                            $rot = ($idx - 1) * 15;
+                                            $tx = ($idx - 1) * 15;
+                                            $ty = abs($idx - 1) * 2;
+                                        } elseif ($count == 4) {
+                                            $rots = [-18, -6, 6, 18];
+                                            $txs = [-18, -6, 6, 18];
+                                            $tys = [4, 1, 1, 4];
+                                            $rot = $rots[$idx];
+                                            $tx = $txs[$idx];
+                                            $ty = $tys[$idx];
+                                        } else {
+                                            $step = 40 / max(1, $count - 1);
+                                            $rot = -20 + ($idx * $step);
+                                            $tx = -22 + ($idx * (44 / max(1, $count - 1)));
+                                            $ty = abs($idx - ($count - 1) / 2) * 2;
+                                        }
+                                        $zIndex = ($idx + 1) * 10;
+                                    @endphp
+                                    <a href="{{ $imgUrl }}" target="_blank"
+                                       class="fanned-card absolute top-1/2 left-1/2 rounded-xl overflow-hidden bg-white border border-surface-200 shadow-md transition-all duration-300 hover:!z-50 hover:!scale-110 hover:!rotate-0"
+                                       style="width: {{ $count > 1 ? '56px' : '76px' }}; height: {{ $count > 1 ? '76px' : '88px' }}; margin-left: -{{ $count > 1 ? '28px' : '38px' }}; margin-top: -{{ $count > 1 ? '38px' : '44px' }}; transform: translate({{ $tx }}px, {{ $ty }}px) rotate({{ $rot }}deg); transform-origin: 50% 120%; z-index: {{ $zIndex }}; box-shadow: 0 4px 12px -2px rgba(0,0,0,0.18);"
+                                       title="View Page {{ $idx + 1 }}">
+                                        <img src="{{ $imgUrl }}" alt="Page {{ $idx + 1 }}" class="w-full h-full object-cover">
+                                        @if($count > 1)
+                                            <div class="absolute bottom-0.5 right-0.5 bg-surface-900/90 text-white text-[8px] font-black px-1 rounded">
+                                                P{{ $idx + 1 }}
+                                            </div>
+                                        @endif
+                                    </a>
+                                @endforeach
+
+                                @if($count > 1)
+                                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 bg-surface-900/90 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-md backdrop-blur-xs whitespace-nowrap z-40 flex items-center gap-1 border border-surface-700">
+                                        <i data-lucide="layers" class="w-3 h-3 text-brand-400"></i>
+                                        {{ $count }} Pages
+                                    </div>
+                                @endif
+                            @else
+                                <div class="w-full h-full rounded-xl overflow-hidden bg-surface-100 flex flex-col items-center justify-center text-surface-400">
+                                    <i data-lucide="image" class="w-6 h-6 mb-1 text-surface-300"></i>
+                                    <span class="text-[9px] font-bold">No Image</span>
+                                </div>
+                            @endif
                         </div>
-                        @endforeach
-                        @elseif($previewUrl)
-                        <div class="w-16 h-16 rounded-lg overflow-hidden bg-surface-200 flex-shrink-0">
-                            <a href="{{ $previewUrl }}" target="_blank" title="View Full Design">
-                                <img src="{{ $previewUrl }}" class="w-full h-full object-cover hover:opacity-80 transition">
-                            </a>
-                        </div>
-                        @elseif($item->product && $item->product->featured_image_url)
-                        <div class="w-16 h-16 rounded-lg overflow-hidden bg-surface-200 flex-shrink-0">
-                            <img src="{{ $item->product->featured_image_url }}" class="w-full h-full object-cover">
-                        </div>
-                        @else
-                        <div class="w-16 h-16 rounded-lg overflow-hidden bg-surface-200 flex-shrink-0 flex items-center justify-center">
-                            <i data-lucide="image" class="w-5 h-5 text-surface-300"></i>
-                        </div>
-                        @endif
+
                     </div>
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-surface-800">{{ $item->product_name }}</h3>
-                        <p class="text-xs text-surface-500">{{ \App\Services\CurrencyService::formatWithCurrency($item->unit_price, $order->currency) }} × {{ $item->quantity }}</p>
 
-                        {{-- Display Selected Options --}}
+                    {{-- Center Column: Item Details & Options --}}
+                    <div class="flex-1 min-w-0 space-y-2">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h3 class="font-bold text-surface-900 text-base leading-snug">{{ $item->product_name }}</h3>
+                                <p class="text-xs text-surface-500 font-semibold mt-0.5">
+                                    {{ \App\Services\CurrencyService::formatWithCurrency($item->unit_price, $order->currency) }} × {{ $item->quantity }} pcs
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Selected Options --}}
                         @if($item->selected_options && count($item->selected_options) > 0)
                         @php
-                        // Handle both ID-based options and string-based options
-                        $optionIds = array_filter($item->selected_options, fn($val) => is_numeric($val));
-                        $stringOptions = array_filter($item->selected_options, fn($val) => !is_numeric($val));
-                        $selectedOptionValues = !empty($optionIds) ? \App\Models\ProductOptionValue::with('optionGroup')->whereIn('id', $optionIds)->get() : collect();
+                            $optionIds = array_filter($item->selected_options, fn($val) => is_numeric($val));
+                            $stringOptions = array_filter($item->selected_options, fn($val) => !is_numeric($val));
+                            $selectedOptionValues = !empty($optionIds) ? \App\Models\ProductOptionValue::with('optionGroup')->whereIn('id', $optionIds)->get() : collect();
                         @endphp
-                        <div class="mt-2 space-y-1">
+                        <div class="flex flex-wrap gap-2 pt-1">
                             @foreach($selectedOptionValues as $optVal)
-                            <p class="text-xs text-surface-600">
-                                <span class="font-medium text-surface-700">{{ $optVal->optionGroup->name }}:</span>
-                                {{ $optVal->label }}
-                            </p>
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-surface-700 bg-white px-2.5 py-1 rounded-lg border border-surface-200">
+                                <span class="text-surface-400">{{ $optVal->optionGroup->name }}:</span>
+                                <strong class="text-surface-900">{{ $optVal->label }}</strong>
+                            </span>
                             @endforeach
 
                             @foreach($stringOptions as $key => $val)
-                            <p class="text-xs text-surface-600">
-                                <span class="font-medium text-surface-700">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
-                                {{ $val }}
-                            </p>
+                            @if($val !== null && $val !== '' && strtolower($val) !== 'null')
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-surface-700 bg-white px-2.5 py-1 rounded-lg border border-surface-200">
+                                <span class="text-surface-400">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
+                                <strong class="text-surface-900">{{ $val }}</strong>
+                            </span>
+                            @endif
                             @endforeach
                         </div>
                         @endif
 
-                        {{-- Display Customization Data --}}
-                        @if($item->customization_data)
-                        <div class="mt-2 text-xs text-surface-500 space-y-1">
-                            @foreach((array)$item->customization_data as $k => $v)
-                            @if(!in_array($k, ['preview_url', 'design_id', 'style', 'uploaded_images']))
-                            <p>
-                                <span class="font-medium text-surface-700">{{ ucfirst(str_replace('_', ' ', $k)) }}:</span>
-                                @if(is_array($v))
-                                {{ implode(', ', $v) }}
-                                @else
-                                {{ $v }}
-                                @endif
-                            </p>
-                            @endif
+                        {{-- 100% Dynamic Product Specification Details Box --}}
+                        @php
+                            $visibleCustomDetails = [];
 
-                            {{-- Special display for style data (like in Split Canvas) --}}
-                            @if($k === 'style' && is_array($v))
-                            @foreach($v as $styleKey => $styleVal)
-                            @if(in_array($styleKey, ['fontSize', 'fontFamily', 'textAlign', 'isPortrait']))
-                            <p>
-                                <span class="font-medium text-surface-700">{{ ucfirst(preg_replace('/(?<!^)[A-Z]/', ' $0', $styleKey)) }}:</span>
-                                {{ is_bool($styleVal) ? ($styleVal ? 'Yes' : 'No') : $styleVal }}
-                            </p>
-                            @endif
-                            @endforeach
-                            @endif
+                            // 1. Dynamic Dimensions
+                            $dim = $item->customization_data['dimensions'] ?? null;
+                            if (empty($dim) && !empty($item->customization_data['size_width']) && !empty($item->customization_data['size_height'])) {
+                                $dim = sprintf('%.2f', (float)$item->customization_data['size_width']) . ' × ' . sprintf('%.2f', (float)$item->customization_data['size_height']);
+                            }
+                            if (empty($dim) && $item->product && !empty($item->product->width) && !empty($item->product->height)) {
+                                $dim = sprintf('%.2f', (float)$item->product->width) . ' × ' . sprintf('%.2f', (float)$item->product->height);
+                            }
+                            if (empty($dim) && $item->product && $item->product->productType && !empty($item->product->productType->width) && !empty($item->product->productType->height)) {
+                                $dim = sprintf('%.2f', (float)$item->product->productType->width) . ' × ' . sprintf('%.2f', (float)$item->product->productType->height);
+                            }
+                            if (!empty($dim) && trim(strtolower($dim)) !== 'x') {
+                                $visibleCustomDetails['Dimensions'] = $dim;
+                            }
+
+                            // 2. Dynamic Unit
+                            $unit = $item->customization_data['unit'] ?? ($item->product->unit ?? ($item->product->productType->unit ?? null));
+                            if (!empty($unit)) {
+                                $visibleCustomDetails['Unit'] = $unit;
+                            }
+
+                            // 3. Dynamic Size label
+                            $sizeLabel = $item->customization_data['size_label'] ?? ($item->customization_data['size_name'] ?? null);
+                            if (empty($sizeLabel) && $item->product && $item->product->productType) {
+                                $sizeLabel = $item->product->productType->title ?? $item->product->productType->name;
+                            }
+                            if (!empty($sizeLabel)) {
+                                $visibleCustomDetails['Size label'] = $sizeLabel;
+                            }
+
+                            // 4. Dynamic Card Type
+                            $cardType = $item->customization_data['type_name'] ?? ($item->customization_data['card_type'] ?? null);
+                            if (empty($cardType) && $item->product && $item->product->productType) {
+                                $cardType = $item->product->productType->title ?? $item->product->productType->name;
+                            }
+                            if (empty($cardType) && $item->product && isset($item->product->cardType)) {
+                                $cardType = $item->product->cardType->title ?? $item->product->cardType->name;
+                            }
+                            if (!empty($cardType)) {
+                                $visibleCustomDetails['Card Type'] = $cardType;
+                            }
+
+                            // 5. Dynamic Category
+                            $category = $item->customization_data['category_name'] ?? ($item->product->category->name ?? null);
+                            if (!empty($category)) {
+                                $visibleCustomDetails['Category'] = $category;
+                            }
+
+                            // 6. All Other Dynamic Customization Data (Message, Custom Text, etc.)
+                            if (!empty($item->customization_data) && is_array($item->customization_data)) {
+                                foreach ($item->customization_data as $k => $v) {
+                                    if (in_array($k, ['preview_url', 'design_id', 'style', 'uploaded_images', 'canvas_mapped_ids', 'upload_ids', 'dimensions', 'unit', 'size_label', 'size_name', 'type_name', 'card_type', 'category_name', 'size_width', 'size_height'])) continue;
+                                    
+                                    if ($v === null || $v === '' || (is_string($v) && in_array(trim(strtolower($v)), ['', 'x', 'null', 'n/a', ' x '])) || (is_array($v) && empty($v))) continue;
+                                    
+                                    $formattedKey = ucfirst(str_replace('_', ' ', $k));
+                                    $formattedVal = is_array($v) ? implode(', ', $v) : $v;
+                                    $visibleCustomDetails[$formattedKey] = $formattedVal;
+                                }
+
+                                if (isset($item->customization_data['style']) && is_array($item->customization_data['style'])) {
+                                    foreach ($item->customization_data['style'] as $styleKey => $styleVal) {
+                                        if (in_array($styleKey, ['fontSize', 'fontFamily', 'textAlign', 'isPortrait']) && $styleVal !== null && $styleVal !== '') {
+                                            $formattedKey = ucfirst(preg_replace('/(?<!^)[A-Z]/', ' $0', $styleKey));
+                                            $formattedVal = is_bool($styleVal) ? ($styleVal ? 'Yes' : 'No') : $styleVal;
+                                            $visibleCustomDetails[$formattedKey] = $formattedVal;
+                                        }
+                                    }
+                                }
+                            }
+                        @endphp
+
+                        @if(count($visibleCustomDetails) > 0)
+                        <div class="text-xs text-surface-600 bg-white p-3.5 rounded-xl border border-surface-200/80 space-y-1.5 shadow-2xs">
+                            @foreach($visibleCustomDetails as $detailLabel => $detailValue)
+                                <p class="flex items-center gap-2 text-xs">
+                                    <span class="font-semibold text-surface-500 w-24 flex-shrink-0">{{ $detailLabel }}:</span>
+                                    <span class="text-surface-900 font-bold">{{ $detailValue }}</span>
+                                </p>
                             @endforeach
                         </div>
+                        @endif
 
-                        @if($item->pdf_path)
-                        <div class="mt-3">
-                            <a href="{{ asset('storage/' . $item->pdf_path) }}" download="design-pdf-{{ $item->order_id }}-{{ $item->id }}.pdf" target="_blank"
-                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-lg hover:bg-rose-100 transition">
-                                <i data-lucide="download" class="w-3 h-3"></i> Download Combined PDF
+                        {{-- Item Action Buttons --}}
+                        <div class="pt-2 flex items-center gap-2 flex-wrap">
+                            @if($itemPdfUrl)
+                            <a href="{{ $itemPdfUrl }}" download="design-pdf-{{ $item->order_id }}-{{ $item->id }}.pdf" target="_blank"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl hover:bg-rose-100 transition shadow-2xs">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download PDF
                             </a>
-                        </div>
-                        @elseif($previewUrl)
-                        <div class="mt-3">
-                            <a href="{{ $previewUrl }}" download="design-{{ $item->order_id }}-{{ $item->id }}.jpg" target="_blank"
-                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold rounded-lg hover:bg-brand-100 transition">
-                                <i data-lucide="download" class="w-3 h-3"></i> Download Design
+                            @endif
+
+                            @if($firstImgUrl)
+                            <a href="{{ $firstImgUrl }}" download="design-{{ $item->order_id }}-{{ $item->id }}.jpg" target="_blank"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-xl hover:bg-rose-100 transition shadow-2xs">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Image
                             </a>
+                            @endif
+
+                            @if($itemPrintUrl)
+                            <button type="button" onclick="printBrowserPdf('{{ $itemPrintUrl }}')"
+                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-600 text-white text-xs font-bold rounded-xl hover:bg-brand-700 transition shadow-xs active:scale-95">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print Design
+                            </button>
+                            @endif
                         </div>
-                        @endif
-                        @endif
                     </div>
-                    <span class="font-bold text-surface-800">{{ \App\Services\CurrencyService::formatWithCurrency($item->total_price, $order->currency) }}</span>
+
+                    {{-- Right Price Tag --}}
+                    <div class="text-right shrink-0">
+                        <span class="text-lg font-black text-surface-900 block">
+                            {{ \App\Services\CurrencyService::formatWithCurrency($item->total_price, $order->currency) }}
+                        </span>
+                    </div>
+
                 </div>
                 @endforeach
             </div>
@@ -201,7 +353,7 @@
                 @if($order->payment_gateway === 'cash')
                 <span class="text-amber-600 font-semibold">Pay at Store (Cash)</span>
                 @elseif($order->payment_gateway === 'paypal')
-                <span class="text-indigo-600 font-semibold">Online (PayPal)</span>
+                <span class="text-brand-600 font-semibold">Online (PayPal)</span>
                 @else
                 <span class="text-surface-600 font-semibold">{{ ucfirst($order->payment_gateway ?? 'Unknown') }}</span>
                 @endif
@@ -367,8 +519,8 @@
             {{-- Header --}}
             <div class="flex items-center justify-between px-6 py-5 border-b border-surface-100">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                        <i data-lucide="printer" class="w-5 h-5 text-indigo-600"></i>
+                    <div class="w-10 h-10 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center">
+                        <i data-lucide="printer" class="w-5 h-5 text-brand-600"></i>
                     </div>
                     <div>
                         <h3 class="font-display font-bold text-lg text-surface-900">Select Store Printer</h3>
@@ -385,14 +537,14 @@
                 <div class="relative">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400"></i>
                     <input type="text" id="printStoreSearch" placeholder="Search store by name or city..."
-                        class="w-full pl-9 pr-4 py-2.5 rounded-xl border-surface-200 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        class="w-full pl-9 pr-4 py-2.5 rounded-xl border-surface-200 text-sm focus:border-brand-500 focus:ring-brand-500">
                 </div>
             </div>
 
             {{-- Store List --}}
             <div class="flex-1 overflow-y-auto px-6 py-3" id="storeListContainer" style="max-height: 300px;">
                 <div id="storeListLoading" class="py-8 text-center text-surface-400">
-                    <div class="w-6 h-6 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mx-auto mb-2"></div>
+                    <div class="w-6 h-6 border-2 border-brand-300 border-t-brand-600 rounded-full animate-spin mx-auto mb-2"></div>
                     <p class="text-sm">Loading stores...</p>
                 </div>
                 <div id="storeList" class="space-y-2 hidden"></div>
@@ -404,11 +556,11 @@
 
             {{-- Selected Store --}}
             <div id="selectedStoreInfo" class="px-6 py-3 border-t border-surface-100 hidden">
-                <div class="flex items-center gap-3 px-4 py-3 bg-indigo-50 rounded-xl">
-                    <i data-lucide="check-circle" class="w-5 h-5 text-indigo-600 flex-shrink-0"></i>
+                <div class="flex items-center gap-3 px-4 py-3 bg-brand-50 rounded-xl">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-brand-600 flex-shrink-0"></i>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-indigo-900" id="selectedStoreName"></p>
-                        <p class="text-xs text-indigo-600" id="selectedStoreDetails"></p>
+                        <p class="text-sm font-semibold text-brand-900" id="selectedStoreName"></p>
+                        <p class="text-xs text-brand-600" id="selectedStoreDetails"></p>
                     </div>
                 </div>
             </div>
@@ -420,7 +572,7 @@
                     Cancel
                 </button>
                 <button id="sendPrintBtn" disabled onclick="sendPrint()"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-brand-500 text-white rounded-xl hover:bg-brand-600 transition shadow-md shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i data-lucide="printer" class="w-4 h-4"></i>
                     <span id="sendPrintBtnText">Send Print</span>
                 </button>

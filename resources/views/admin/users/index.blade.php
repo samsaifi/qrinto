@@ -34,7 +34,7 @@
                     </td>
                     <td class="px-6 py-4 text-sm text-surface-600">{{ $user->email }}</td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-0.5 text-xs font-bold rounded {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-surface-100 text-surface-600' }}">
+                        <span class="px-2 py-0.5 text-xs font-bold rounded {{ $user->role === 'admin' ? 'bg-brand-50 text-brand-700 border border-brand-200/60' : 'bg-surface-100 text-surface-600' }}">
                             {{ ucfirst($user->role) }}
                         </span>
                     </td>

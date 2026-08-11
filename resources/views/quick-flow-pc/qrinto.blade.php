@@ -512,7 +512,7 @@
                                 <span>Store Pickup</span>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <i data-lucide="shield" class="w-3.5 h-3.5 text-indigo-500 shrink-0"></i>
+                                <i data-lucide="shield" class="w-3.5 h-3.5 text-brand-500 shrink-0"></i>
                                 <span>SSL Security</span>
                             </div>
                             <div class="flex items-center gap-1.5">
@@ -535,7 +535,7 @@
                 <div class="paypal-sheet" @click.stop>
                     <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                            <div class="w-10 h-10 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600">
                                 <i data-lucide="credit-card" class="w-5 h-5"></i>
                             </div>
                             <div>
@@ -548,7 +548,7 @@
                         </button>
                     </div>
 
-                    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl p-4 mb-5 flex items-center justify-between shadow-lg">
+                    <div class="bg-gradient-to-r from-slate-900 to-brand-950 text-white rounded-2xl p-4 mb-5 flex items-center justify-between shadow-lg">
                         <div>
                             <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Amount to Pay</p>
                             <p class="text-2xl font-black text-white" x-text="__price(selectedSize?.price * quantity)"></p>

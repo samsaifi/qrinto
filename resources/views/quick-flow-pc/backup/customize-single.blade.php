@@ -1,13 +1,5 @@
-{{-- ═══════════════════════════════════════════════════════════════════════
-     Single Canvas Customizer (Desktop) — No Masking
-     Mobile equivalent: quick-flow/customize-single.blade.php
-     - Single canvas (frame_image only, no page tabs)
-     - Dynamic aspect ratio from product pdf_orientation
-     - No masking / clip-path
-     - Uses shared partials + customizer-base.js for DRY
-     ═══════════════════════════════════════════════════════════════════════ --}}
-
-@extends('layouts.quick-flow-pc')
+{{-- Deprecated: All customizer views are unified in customize.blade.php --}}
+@include('quick-flow-pc.customize')
 @section('title', 'Customize Your ' . $product->name)
 
 @push('styles')
@@ -80,11 +72,15 @@
     $slots = ['frame_image' => 'Page 1'];
     $galleryImages = $product->images->values();
     $galleryIndex = 0;
+    $fallbackUrl = $product->featured_image_url ?? $product->sample_image_url ?? $product->frame_image_url ?? $product->background_image_url ?? 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>';
     foreach ($slots as $field => $label) {
         $url = $product->{$field . '_url'};
         if (!$url && isset($galleryImages[$galleryIndex])) {
-            $url = asset('storage/' . $galleryImages[$galleryIndex]->image_path);
+            $url = \App\Models\Product::formatStorageUrl($galleryImages[$galleryIndex]->image_path);
             $galleryIndex++;
+        }
+        if (!$url) {
+            $url = $fallbackUrl;
         }
         $imageTypes[$field] = ['label' => $label, 'url' => $url];
     }
@@ -116,38 +112,34 @@
         <nav class="cust-breadcrumb flex items-center flex-wrap gap-2 text-xs font-semibold">
             {{-- 1. Home --}}
             <a href="{{ route('flow-pc.index') }}"
-                class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
-                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
-            </a>
+                class="text-slate-500 hover:text-brand-600 transition-colors">Home</a>
 
-            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
             {{-- 2. Selected Store --}}
-            <span class="text-slate-500 font-medium flex items-center gap-1">
-                <i data-lucide="store" class="w-3.5 h-3.5 text-slate-400"></i> {{ $bcStoreName }}
-            </span>
+            <span class="text-slate-500 font-medium">{{ $bcStoreName }}</span>
 
-            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
             {{-- 3. Product Type --}}
             @if ($bcTypeSlug)
                 <a href="{{ route('flow-pc.category', $bcTypeSlug) }}"
-                    class="text-slate-400 font-medium hover:text-brand-600 transition-colors">{{ $bcProductType }}</a>
+                    class="text-slate-500 hover:text-brand-600 transition-colors">{{ $bcProductType }}</a>
             @else
                 <span class="text-slate-500 font-medium">{{ $bcProductType }}</span>
             @endif
 
-            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
             {{-- 4. Page Size / Side --}}
-            <span class="text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60">
+            <span class="text-slate-500 font-medium">
                 {{ $bcPageSizeSide }}
             </span>
 
-            <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
             {{-- 5. Template Name --}}
-            <span class="text-brand-600 font-bold max-w-[280px] sm:max-w-xs truncate" title="{{ $bcTemplateName }}">
+            <span class="text-slate-900 font-extrabold max-w-[280px] sm:max-w-xs truncate" title="{{ $bcTemplateName }}">
                 {{ $bcTemplateName }}
             </span>
         </nav>
@@ -161,21 +153,21 @@
             <div class="relative w-full min-h-[80vh] flex items-center justify-center">
 
                 {{-- ═══ LEFT: FLOATING DOCK (Templates & Layers only — NO page buttons) ═══ --}}
-                <div class="absolute left-2 lg:left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 shrink-0 z-30 py-2 px-1">
+                <div class="absolute left-1 lg:left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
                     {{-- Templates --}}
                     <button type="button" onclick="toggleTemplatesDrawer()"
                         class="group flex flex-col items-center gap-1 cursor-pointer" title="Ready-Made Templates">
                         <div id="templates-dock-btn"
-                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-brand-500 group-hover:bg-brand-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
                             <i data-lucide="layout-template" class="w-5 h-5"></i>
                         </div>
-                        <span class="text-[10px] font-black text-slate-600 group-hover:text-indigo-600 transition-colors">Templates</span>
+                        <span class="text-[10px] font-black text-slate-600 group-hover:text-brand-600 transition-colors">Templates</span>
                     </button>
                     {{-- Layers --}}
                     <button type="button" onclick="toggleLayersDrawer()"
                         class="group flex flex-col items-center gap-1 cursor-pointer" title="Canvas Layers Panel">
                         <div id="layers-dock-btn"
-                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
                             <i data-lucide="layers" class="w-5 h-5"></i>
                         </div>
                         <span class="text-[10px] font-black text-slate-600 group-hover:text-emerald-600 transition-colors">Layers</span>
@@ -184,7 +176,7 @@
                     <button type="button" onclick="customizer.clearAll()"
                         class="group flex flex-col items-center gap-1 cursor-pointer" title="Clear All Designs">
                         <div id="clear-dock-btn"
-                            class="w-11 h-11 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </div>
                         <span class="text-[10px] font-black text-red-600">Clear All</span>
@@ -201,8 +193,8 @@
                             id="canvas-container">
                             <div id="canvas-loading-overlay"
                                 class="hidden absolute inset-0 bg-white/80 backdrop-blur-xs z-50 flex flex-col items-center justify-center space-y-3 rounded-2xl transition-all duration-300">
-                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-lg shadow-indigo-500/10">
-                                    <i data-lucide="loader-2" class="w-6 h-6 text-indigo-600 animate-spin"></i>
+                                <div class="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center shadow-lg shadow-brand-500/10">
+                                    <i data-lucide="loader-2" class="w-6 h-6 text-brand-600 animate-spin"></i>
                                 </div>
                                 <span class="text-xs font-black text-slate-800 tracking-wider uppercase">Loading Template...</span>
                             </div>
@@ -261,7 +253,7 @@
                             Studio Canvas Customizer
                         </div>
                         <h1 class="text-2xl lg:text-3xl xl:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                            Customize <span class="bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 bg-clip-text text-transparent italic" style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span>
+                            Customize <span class="text-slate-900 italic" style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span>
                         </h1>
                         <p class="text-xs lg:text-sm text-slate-500 font-semibold flex items-center gap-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
@@ -385,10 +377,10 @@
                 const uploadIconBg = document.getElementById('upload-icon-bg');
                 const uploadText = document.getElementById('upload-text');
                 if (hasImg) {
-                    if (uploadIconBg) uploadIconBg.className = 'w-14 h-14 rounded-full bg-emerald-500 text-white shadow-xl flex items-center justify-center border border-emerald-400';
+                    if (uploadIconBg) uploadIconBg.className = 'w-12 h-12 rounded-full bg-emerald-500 text-white shadow-xl flex items-center justify-center border border-emerald-400';
                     if (uploadText) uploadText.textContent = userImagesCount > 1 ? `Photo (${userImagesCount})` : 'Photo';
                 } else {
-                    if (uploadIconBg) uploadIconBg.className = 'w-14 h-14 rounded-full bg-white text-pink-500 shadow-xl flex items-center justify-center border border-slate-200';
+                    if (uploadIconBg) uploadIconBg.className = 'w-12 h-12 rounded-full bg-white text-pink-500 shadow-xl flex items-center justify-center border border-slate-200';
                     if (uploadText) uploadText.textContent = 'Photo';
                 }
 

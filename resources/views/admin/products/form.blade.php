@@ -38,7 +38,7 @@
                     <div class="flex items-center justify-between mb-5">
                         <h2 class="font-display font-semibold text-lg">Basic Information</h2>
                         <button type="button" id="ai-generate-btn" onclick="aiGenerate()"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-violet-600 hover:to-purple-700 transition shadow-lg shadow-purple-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-xl transition shadow-md shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
                             <span id="ai-btn-icon">&#10024;</span>
                             <span id="ai-btn-text">AI Generate</span>
                         </button>

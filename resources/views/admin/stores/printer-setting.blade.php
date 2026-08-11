@@ -13,8 +13,8 @@
         @endif
     </div>
 
-    <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-        <p class="text-xs text-blue-700 flex items-start gap-2">
+    <div class="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+        <p class="text-xs text-emerald-700 flex items-start gap-2">
             <i data-lucide="info" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
             <span>Configure FTP credentials to send print files directly to the printer's FTP server. The system will upload the generated PDF/print file to the specified remote path on the printer.</span>
         </p>

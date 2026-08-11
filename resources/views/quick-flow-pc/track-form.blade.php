@@ -53,12 +53,13 @@
     <div class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {{-- Breadcrumb Navigation --}}
-        <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-6">
-            <a href="{{ route('flow-pc.index') }}" class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
-                <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+        <nav class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-6">
+            <a href="{{ route('flow-pc.index') }}" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-1">
+                <i data-lucide="home" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>Home</span>
             </a>
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-            <span class="text-slate-900 font-bold">Track Order</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+            <span class="text-slate-900 font-extrabold">Track Order</span>
         </nav>
 
         {{-- Main Hero Header Card --}}
@@ -68,7 +69,7 @@
                 Real-Time Status Lookup
             </div>
             <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-                Track Your <span class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent italic">Print Order</span>
+                Track Your <span class="text-slate-950 italic">Print Order</span>
             </h1>
             <p class="text-slate-500 text-sm sm:text-base font-medium mt-3 leading-relaxed">
                 Enter your order tracking number below to view real-time fulfillment, printing status, and store pickup details.

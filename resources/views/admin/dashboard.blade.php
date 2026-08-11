@@ -141,7 +141,7 @@
                                             @php
                                                 $statusColors = [
                                                     'pending' => 'bg-yellow-400/20 text-yellow-200',
-                                                    'processing' => 'bg-blue-400/20 text-blue-200',
+                                                    'processing' => 'bg-brand-400/20 text-brand-200',
                                                     'completed' => 'bg-green-400/20 text-green-200',
                                                     'delivered' => 'bg-emerald-400/20 text-emerald-200',
                                                     'cancelled' => 'bg-red-400/20 text-red-200',
@@ -186,7 +186,7 @@
                         <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
                             <p class="text-brand-200 text-xs font-medium uppercase tracking-wider">Today's Revenue</p>
                             <p class="text-white text-xl font-bold mt-1">
-                                {{ \App\Services\CurrencyService::formatOnly($todayRevenue, 0) }}</p>
+                                {{ \App\Services\CurrencyService::formatOnly($todayRevenue, 2) }}</p>
                         </div>
                         <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
                             <p class="text-brand-200 text-xs font-medium uppercase tracking-wider">Completed</p>
@@ -249,7 +249,7 @@
                 $stats = [
                     [
                         'label' => 'Total Revenue',
-                        'value' => \App\Services\CurrencyService::formatOnly($totalRevenue, 0),
+                        'value' => \App\Services\CurrencyService::formatOnly($totalRevenue, 2),
                         'icon' => 'dollar-sign',
                         'color' => 'emerald',
                         'sub' => 'All time earnings',
@@ -258,7 +258,7 @@
                         'label' => 'Total Orders',
                         'value' => number_format($totalOrders),
                         'icon' => 'package',
-                        'color' => 'blue',
+                        'color' => 'brand',
                         'sub' => $pendingOrders . ' pending',
                     ],
                     [
@@ -272,7 +272,7 @@
                         'label' => 'Completion Rate',
                         'value' => $totalOrders > 0 ? round(($completedOrders / $totalOrders) * 100) . '%' : '0%',
                         'icon' => 'check-circle',
-                        'color' => 'violet',
+                        'color' => 'emerald',
                         'sub' => $completedOrders . ' completed',
                     ],
                 ];
@@ -307,7 +307,7 @@
                 $stats = [
                     [
                         'label' => 'Total Revenue',
-                        'value' => \App\Services\CurrencyService::formatOnly($totalRevenue, 0),
+                        'value' => \App\Services\CurrencyService::formatOnly($totalRevenue, 2),
                         'icon' => 'dollar-sign',
                         'color' => 'brand',
                         'sub' => 'All time',
@@ -316,7 +316,7 @@
                         'label' => 'Total Orders',
                         'value' => number_format($totalOrders),
                         'icon' => 'package',
-                        'color' => 'blue',
+                        'color' => 'brand',
                         'sub' => $pendingOrders . ' pending',
                     ],
                 ];
@@ -333,7 +333,7 @@
                         'label' => 'Products',
                         'value' => number_format($totalProducts),
                         'icon' => 'box',
-                        'color' => 'purple',
+                        'color' => 'emerald',
                         'sub' => 'Active listings',
                     ];
                 }
@@ -580,8 +580,9 @@
                 return d.innerHTML;
             }
 
+            const currencySymbol = @json(\App\Services\CurrencyService::getSymbol());
             function fmtNum(v) {
-                return Number(v).toLocaleString('en-US', {
+                return currencySymbol + Number(v).toLocaleString('en-US', {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                 });
@@ -628,7 +629,7 @@
                         <td class="px-4 py-3 text-sm text-surface-400">${si + i + 1}</td>
                         <td class="px-4 py-3 text-sm font-semibold text-surface-800">${escHtml(s.store_name)}</td>
                         <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.total_orders > 0 ? 'bg-brand-100 text-brand-700' : 'bg-surface-100 text-surface-400'}">${s.total_orders}</span></td>
-                        <td class="px-4 py-3 text-right text-sm font-medium text-blue-700">${fmtNum(s.online_amount)}</td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-brand-700">${fmtNum(s.online_amount)}</td>
                         <td class="px-4 py-3 text-right text-sm font-medium text-emerald-700">${fmtNum(s.cash_amount)}</td>
                         <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.pending_orders > 0 ? 'bg-amber-100 text-amber-700' : 'bg-surface-100 text-surface-400'}">${s.pending_orders}</span></td>
                         <td class="px-4 py-3 text-right text-sm font-medium text-amber-700">${fmtNum(s.pending_amount)}</td>
@@ -645,7 +646,7 @@
                     <td class="px-4 py-3"></td>
                     <td class="px-4 py-3 text-sm text-surface-900">Grand Total</td>
                     <td class="px-4 py-3 text-right text-sm text-surface-900">${t.total_orders}</td>
-                    <td class="px-4 py-3 text-right text-sm text-blue-800">${fmtNum(t.online_amount)}</td>
+                    <td class="px-4 py-3 text-right text-sm text-brand-800">${fmtNum(t.online_amount)}</td>
                     <td class="px-4 py-3 text-right text-sm text-emerald-800">${fmtNum(t.cash_amount)}</td>
                     <td class="px-4 py-3 text-right text-sm text-surface-900">${t.pending_orders}</td>
                     <td class="px-4 py-3 text-right text-sm text-amber-800">${fmtNum(t.pending_amount)}</td>
