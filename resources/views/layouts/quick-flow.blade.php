@@ -7,6 +7,11 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>@yield('title', 'Create Your Custom Print')</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+    <link rel="alternate icon" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+    <link rel="shortcut icon" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0ea5e9">

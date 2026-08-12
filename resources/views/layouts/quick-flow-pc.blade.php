@@ -5,25 +5,29 @@
     <meta charset="utf-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <title>@yield('title', 'Qrinto — Premium Custom Printing & Photo Cards Studio')</title>
+    <title>@yield('title', 'Qrinto - Premium Custom Printing & Photo Cards Studio')</title>
     <meta name="description" content="@yield('meta_description', 'Design and order custom greeting cards, photo prints, business cards, and personalized stationery with Qrinto. Instant online customization & fast store pickup.')">
     <meta name="keywords" content="@yield('meta_keywords', 'custom printing, photo greeting cards, birthday cards, business cards, photo prints, custom stationery, Qrinto print studio')">
     <meta name="robots" content="@yield('meta_robots', 'index, follow')">
     <link rel="canonical" href="@yield('canonical_url', url()->current())">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+    <link rel="alternate icon" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+    <link rel="shortcut icon" href="{{ asset('images/svg-logo/Q-only.svg') }}">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:url" content="@yield('canonical_url', url()->current())">
-    <meta property="og:title" content="@yield('title', 'Qrinto — Premium Custom Printing & Photo Cards Studio')">
+    <meta property="og:title" content="@yield('title', 'Qrinto - Premium Custom Printing & Photo Cards Studio')">
     <meta property="og:description" content="@yield('meta_description', 'Design and order custom greeting cards, photo prints, business cards, and personalized stationery with Qrinto.')">
-    <meta property="og:image" content="@yield('og_image', asset('images/logo.png'))">
+    <meta property="og:image" content="@yield('og_image', asset('logo/Qrinto-logo-small.png'))">
     <meta property="og:site_name" content="Qrinto Print Studio">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('title', 'Qrinto — Premium Custom Printing & Photo Cards Studio')">
+    <meta name="twitter:title" content="@yield('title', 'Qrinto - Premium Custom Printing & Photo Cards Studio')">
     <meta name="twitter:description" content="@yield('meta_description', 'Design and order custom greeting cards, photo prints, business cards, and personalized stationery with Qrinto.')">
-    <meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))">
+    <meta name="twitter:image" content="@yield('og_image', asset('logo/Qrinto-logo-small.png'))">
 
     @yield('json_ld')
 
@@ -151,7 +155,8 @@
 
         {{-- Top Bar: Logo + Pill CLOSE Button --}}
         <div class="max-w-7xl mx-auto w-full flex items-center justify-between relative z-10">
-            <a href="{{ route('flow-pc.index') }}" @click="pcMenu = false" class="flex items-center gap-3 shrink-0 group">
+            <a href="{{ route('flow-pc.index') }}" @click="pcMenu = false"
+                class="flex items-center gap-3 shrink-0 group">
                 <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto Logo"
                     class="h-10 sm:h-12 w-auto object-contain brightness-0 invert group-hover:scale-105 transition-transform duration-300">
             </a>
@@ -204,7 +209,8 @@
             <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-slate-300">
                 <a href="#products" @click="pcMenu = false" class="hover:text-white transition-colors">Canvas Art</a>
                 <span>•</span>
-                <a href="#products" @click="pcMenu = false" class="hover:text-white transition-colors">Photo Books</a>
+                <a href="#products" @click="pcMenu = false" class="hover:text-white transition-colors">Photo
+                    Books</a>
                 <span>•</span>
                 <a href="#products" @click="pcMenu = false" class="hover:text-white transition-colors">Custom
                     Apparel</a>
@@ -272,33 +278,30 @@
             <div class="py-16 grid grid-cols-2 md:grid-cols-4 gap-8 xl:gap-12 border-b border-white/10">
                 <!-- Column 1: Print Products -->
                 <div>
-                    <h5
-                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
+                    <h5 class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
                         Print Products
                     </h5>
                     <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
-                        <li><a href="#products"
-                                class="hover:text-white transition-colors">Custom Canvas Prints</a></li>
-                        <li><a href="#products"
-                                class="hover:text-white transition-colors">Hardcover Photo Books</a></li>
-                        <li><a href="#products"
-                                class="hover:text-white transition-colors">Custom T-Shirts & Apparel</a></li>
-                        <li><a href="#products"
-                                class="hover:text-white transition-colors">Greeting Cards & Gifts</a></li>
-                        <li><a href="#products"
-                                class="hover:text-white transition-colors">Acrylic Wall Art</a></li>
+                        <li><a href="#products" class="hover:text-white transition-colors">Custom Canvas Prints</a>
+                        </li>
+                        <li><a href="#products" class="hover:text-white transition-colors">Hardcover Photo Books</a>
+                        </li>
+                        <li><a href="#products" class="hover:text-white transition-colors">Custom T-Shirts &
+                                Apparel</a></li>
+                        <li><a href="#products" class="hover:text-white transition-colors">Greeting Cards & Gifts</a>
+                        </li>
+                        <li><a href="#products" class="hover:text-white transition-colors">Acrylic Wall Art</a></li>
                     </ul>
                 </div>
 
                 <!-- Column 2: Design Editor -->
                 <div>
-                    <h5
-                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
+                    <h5 class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
                         Design Studio
                     </h5>
                     <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
-                        <li><a href="#products"
-                                class="hover:text-white transition-colors">Vector Editor Suite</a></li>
+                        <li><a href="#products" class="hover:text-white transition-colors">Vector Editor Suite</a>
+                        </li>
                         <li><a href="{{ route('flow-pc.track.form') }}"
                                 class="hover:text-white transition-colors">Track Your Order</a></li>
                         <li><a href="{{ route('flow-pc.find-store') }}"
@@ -310,8 +313,7 @@
 
                 <!-- Column 3: Store & Support -->
                 <div>
-                    <h5
-                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
+                    <h5 class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
                         Stores & Service
                     </h5>
                     <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
@@ -321,15 +323,14 @@
                                 class="hover:text-white transition-colors">Terms & Privacy Notice</a></li>
                         <li><a href="{{ route('flow-pc.track.form') }}"
                                 class="hover:text-white transition-colors">Order Lookup</a></li>
-                        <li><a href="mailto:info@qrinto.com"
-                                class="hover:text-white transition-colors">Customer Support</a></li>
+                        <li><a href="mailto:info@qrinto.com" class="hover:text-white transition-colors">Customer
+                                Support</a></li>
                     </ul>
                 </div>
 
                 <!-- Column 4: Quick Guarantees & Noritsu Badge -->
                 <div>
-                    <h5
-                        class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
+                    <h5 class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
                         Quality Standard
                     </h5>
                     <div class="space-y-3 text-xs text-slate-400 font-medium">

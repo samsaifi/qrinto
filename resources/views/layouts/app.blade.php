@@ -8,6 +8,11 @@
     <meta name="description" content="@yield('meta_description', 'Transform your photos into stunning wall art. Custom acrylic, canvas, and poster prints with personalized framing options.')">
     <meta name="keywords" content="@yield('meta_keywords', 'custom prints, acrylic photo, wall art, canvas prints, photo framing')">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+    <link rel="alternate icon" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+    <link rel="shortcut icon" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+
     <!-- OG Tags -->
     <meta property="og:title" content="@yield('title', config('app.name'))">
     <meta property="og:description" content="@yield('meta_description', 'Custom photo printing and wall art')">

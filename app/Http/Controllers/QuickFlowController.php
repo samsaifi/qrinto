@@ -1740,9 +1740,13 @@ class QuickFlowController extends Controller
             ]);
         }
        
-        if(session()->get('quick_flow_data')['type_name']){
-            return redirect()->route($this->getRoutePrefix() . 'category', session()->get('quick_flow_data')['type_name'])->with('success', 'Store selected successfully!');
-        } 
+        $flowData = session('quick_flow_data');
+        $typeParam = is_array($flowData) ? ($flowData['type_slug'] ?? $flowData['type_name'] ?? null) : null;
+
+        if (!empty($typeParam)) {
+            return redirect()->route($this->getRoutePrefix() . 'category', $typeParam)->with('success', 'Store selected successfully!');
+        }
+
         return redirect()->route($this->getRoutePrefix() . 'index')->with('success', 'Store selected successfully!');
     }
 

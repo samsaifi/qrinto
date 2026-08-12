@@ -1,20 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Find Qrinto Print Shop Locations & Nearest Stores — Qrinto')
-@section('meta_description', 'Locate the nearest Qrinto print studio store location for fast order pickup, high quality photo printing, and local customer service.')
-@section('meta_keywords', 'qrinto store locator, print shop near me, photo print store location, print studio finder, nearest Qrinto shop')
-@section('header_title', 'Find Store')
+@section('title', 'Qrinto Store Locator')
 
-@section('json_ld')
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "ItemPage",
-  "name": "Find Qrinto Print Shop Locations",
-  "description": "Locate Qrinto print studio locations for instant pickup."
-}
-</script>
-@endsection
+@section('header_title', 'Store Locator')
 
 @push('styles')
     <!-- Swiper CSS CDN -->
@@ -222,29 +210,26 @@
                                     <span class="text-xs font-black text-amber-900 leading-tight">No Store Selected</span>
                                 </div>
                             </div>
-                        @else
-                            @php $selectedStore = \App\Models\Store::find(session('active_store_id')); @endphp
-                            @if ($selectedStore)
+                        @elseif ($selectedStore = \App\Models\Store::find(session('active_store_id')))
+                            <div
+                                class="flex items-center gap-3 bg-emerald-50/90 border border-emerald-200/90 rounded-2xl px-4 py-2.5">
                                 <div
-                                    class="flex items-center gap-3 bg-emerald-50/90 border border-emerald-200/90 rounded-2xl px-4 py-2.5">
-                                    <div
-                                        class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-2xs">
-                                        <i data-lucide="check-circle-2" class="w-4.5 h-4.5"></i>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <span
-                                            class="text-[9px] font-black uppercase tracking-wider text-emerald-700 block leading-none">Currently
-                                            Active Branch</span>
-                                        <h4
-                                            class="text-xs font-black text-slate-900 truncate max-w-[140px] sm:max-w-[180px] mt-0.5">
-                                            {{ $selectedStore->store_name }}</h4>
-                                    </div>
-                                    <span
-                                        class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-white border border-emerald-200/80 px-2.5 py-1 rounded-full shrink-0 ml-1">
-                                        Active <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    </span>
+                                    class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                    <i data-lucide="check-circle-2" class="w-4.5 h-4.5"></i>
                                 </div>
-                            @endif
+                                <div class="min-w-0">
+                                    <span
+                                        class="text-[9px] font-black uppercase tracking-wider text-emerald-700 block leading-none">Currently
+                                        Active Branch</span>
+                                    <h4
+                                        class="text-xs font-black text-slate-900 truncate max-w-[140px] sm:max-w-[180px] mt-0.5">
+                                        {{ $selectedStore->store_name }}</h4>
+                                </div>
+                                <span
+                                    class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-white border border-emerald-200/80 px-2.5 py-1 rounded-full shrink-0 ml-1">
+                                    Active <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                </span>
+                            </div>
                         @endif
                     </div>
 
@@ -694,281 +679,262 @@
                 </div>
             </section>
         @endif
-
-
-
-
-
-
-
     </div>
+@endsection
 
-    @push('scripts')
-        <!-- Leaflet OpenStreetMap JS CDN -->
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('storeAutocomplete', () => ({
-                    query: '<?php echo request('q'); ?>',
-                    stores: <?php echo json_encode(isset($stores) ? $stores : []); ?>,
-                    isLoading: false,
-                    hasSearched: <?php echo isset($query) && $query !== '' ? 'true' : 'false'; ?>,
-                    nearbyStores: [],
-                    nearbyLoading: false,
-                    nearbyError: false,
-                    geolocationChecked: false,
+@push('scripts')
+    <!-- Leaflet OpenStreetMap JS CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('storeAutocomplete', () => ({
+                query: '<?php echo request('q'); ?>',
+                stores: <?php echo json_encode(isset($stores) ? $stores : []); ?>,
+                isLoading: false,
+                hasSearched: <?php echo isset($query) && $query !== '' ? 'true' : 'false'; ?>,
+                nearbyStores: [],
+                nearbyLoading: false,
+                nearbyError: false,
+                geolocationChecked: false,
 
-                    userLat: null,
-                    userLon: null,
-                    map: null,
-                    userMarker: null,
-                    storeMarkers: [],
-                    routeLine: null,
-                    selectedStoreDistance: null,
-                    selectedStoreName: null,
-                    selectedStoreObj: null,
+                userLat: null,
+                userLon: null,
+                map: null,
+                userMarker: null,
+                storeMarkers: [],
+                routeLine: null,
+                selectedStoreDistance: null,
+                selectedStoreName: null,
+                selectedStoreObj: null,
 
-                    init() {
-                        if (typeof lucide !== 'undefined') {
-                            lucide.createIcons();
-                        }
-                        this.detectLocation();
-                    },
+                init() {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                    this.detectLocation();
+                },
 
-                    calculateDistance(lat1, lon1, lat2, lon2) {
-                        if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-                        const R = 6371; // Earth radius in km
-                        const dLat = (lat2 - lat1) * Math.PI / 180;
-                        const dLon = (lon2 - lon1) * Math.PI / 180;
-                        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                        const d = R * c;
-                        return d < 1 ? `${Math.round(d * 1000)} m` : `${d.toFixed(1)} km`;
-                    },
+                calculateDistance(lat1, lon1, lat2, lon2) {
+                    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+                    const R = 6371; // Earth radius in km
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    const d = R * c;
+                    return d < 1 ? `${Math.round(d * 1000)} m` : `${d.toFixed(1)} km`;
+                },
 
-                    initMap() {
-                        this.$nextTick(() => {
-                            const container = document.getElementById('store-leaflet-map');
-                            if (!container || typeof L === 'undefined') return;
+                initMap() {
+                    this.$nextTick(() => {
+                        const container = document.getElementById('store-leaflet-map');
+                        if (!container || typeof L === 'undefined') return;
 
-                            if (!this.map) {
-                                this.map = L.map('store-leaflet-map', {
-                                    zoomControl: false
-                                }).setView([28.6139, 77.2090], 11);
-                                L.control.zoom({
-                                    position: 'topright'
-                                }).addTo(this.map);
-                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                    maxZoom: 19,
-                                    attribution: '&copy; OpenStreetMap'
-                                }).addTo(this.map);
-                            }
-                            this.updateMapMarkers();
-                        });
-                    },
-
-                    updateMapMarkers() {
-                        if (!this.map || typeof L === 'undefined') return;
-
-                        this.storeMarkers.forEach(m => this.map.removeLayer(m));
-                        this.storeMarkers = [];
-                        if (this.routeLine) {
-                            this.map.removeLayer(this.routeLine);
-                            this.routeLine = null;
-                        }
-
-                        const bounds = L.latLngBounds();
-
-                        if (this.userLat && this.userLon) {
-                            const userLatLng = [this.userLat, this.userLon];
-                            if (!this.userMarker) {
-                                const userIcon = L.divIcon({
-                                    className: 'custom-user-pin',
-                                    html: `<div class="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white shadow-md animate-pulse flex items-center justify-center text-white text-[10px]">📍</div>`,
-                                    iconSize: [24, 24],
-                                    iconAnchor: [12, 12]
-                                });
-                                this.userMarker = L.marker(userLatLng, {
-                                        icon: userIcon
-                                    }).addTo(this.map)
-                                    .bindPopup('<strong style="font-size:12px;">Your Location</strong>');
-                            } else {
-                                this.userMarker.setLatLng(userLatLng);
-                            }
-                            bounds.extend(userLatLng);
-                        }
-
-                        const activeList = (this.nearbyStores.length > 0 && !this.hasSearched) ? this
-                            .nearbyStores : this.stores;
-
-                        activeList.forEach((store, idx) => {
-                            let lat = parseFloat(store.lat);
-                            let lon = parseFloat(store.lon);
-
-                            if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
-                                if (this.userLat && this.userLon) {
-                                    lat = this.userLat + (idx === 0 ? 0.015 : (idx + 1) * 0.02);
-                                    lon = this.userLon + (idx === 0 ? 0.015 : (idx + 1) * 0.02);
-                                } else {
-                                    lat = 28.6139 + (idx * 0.02);
-                                    lon = 77.2090 + (idx * 0.02);
-                                }
-                            }
-
-                            store._mapLat = lat;
-                            store._mapLon = lon;
-
-                            const storeIcon = L.divIcon({
-                                className: 'custom-store-pin',
-                                html: `<div class="w-9 h-9 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg border-2 border-brand-400 font-bold text-xs cursor-pointer hover:scale-110 transition-transform">🏪</div>`,
-                                iconSize: [36, 36],
-                                iconAnchor: [18, 18]
-                            });
-
-                            const storeLatLng = [lat, lon];
-                            const marker = L.marker(storeLatLng, {
-                                icon: storeIcon
+                        if (!this.map) {
+                            this.map = L.map('store-leaflet-map', {
+                                zoomControl: false
+                            }).setView([28.6139, 77.2090], 11);
+                            L.control.zoom({
+                                position: 'topright'
                             }).addTo(this.map);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                maxZoom: 19,
+                                attribution: '&copy; OpenStreetMap'
+                            }).addTo(this.map);
+                        }
+                        this.updateMapMarkers();
+                    });
+                },
 
-                            let distStr = '';
-                            if (this.userLat && this.userLon) {
-                                const dist = this.calculateDistance(this.userLat, this.userLon, lat,
-                                    lon);
-                                if (dist) {
-                                    distStr =
-                                        `<div style="margin-top:4px;font-size:11px;font-weight:bold;color:#059669;">📍 ${dist} away</div>`;
-                                    store._calcDistance = dist;
-                                }
-                            }
+                updateMapMarkers() {
+                    if (!this.map || typeof L === 'undefined') return;
 
-                            marker.bindPopup(`
-                                <div style="font-family:sans-serif;padding:4px;">
-                                    <div style="font-weight:bold;font-size:13px;color:#0f172a;">${store.store_name}</div>
-                                    <div style="font-size:11px;color:#64748b;margin-top:2px;">${store.city || ''}, ${store.state || ''}</div>
-                                    ${distStr}
-                                </div>
-                            `);
+                    this.storeMarkers.forEach(m => this.map.removeLayer(m));
+                    this.storeMarkers = [];
+                    if (this.routeLine) {
+                        this.map.removeLayer(this.routeLine);
+                        this.routeLine = null;
+                    }
 
-                            marker.on('click', () => {
-                                this.selectStoreOnMap(store, lat, lon);
+                    const bounds = L.latLngBounds();
+
+                    if (this.userLat && this.userLon) {
+                        const userLatLng = [this.userLat, this.userLon];
+                        if (!this.userMarker) {
+                            const userIcon = L.divIcon({
+                                className: 'custom-user-pin',
+                                html: `<div class="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white shadow-md animate-pulse flex items-center justify-center text-white text-[10px]">📍</div>`,
+                                iconSize: [24, 24],
+                                iconAnchor: [12, 12]
                             });
+                            this.userMarker = L.marker(userLatLng, {
+                                    icon: userIcon
+                                }).addTo(this.map)
+                                .bindPopup('<strong style="font-size:12px;">Your Location</strong>');
+                        } else {
+                            this.userMarker.setLatLng(userLatLng);
+                        }
+                        bounds.extend(userLatLng);
+                    }
 
-                            this.storeMarkers.push(marker);
-                            bounds.extend(storeLatLng);
+                    const activeList = (this.nearbyStores.length > 0 && !this.hasSearched) ? this
+                        .nearbyStores : this.stores;
 
-                            if (idx === 0) {
-                                this.selectStoreOnMap(store, lat, lon);
+                    activeList.forEach((store, idx) => {
+                        let lat = parseFloat(store.lat);
+                        let lon = parseFloat(store.lon);
+
+                        if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
+                            if (this.userLat && this.userLon) {
+                                lat = this.userLat + (idx === 0 ? 0.015 : (idx + 1) * 0.02);
+                                lon = this.userLon + (idx === 0 ? 0.015 : (idx + 1) * 0.02);
+                            } else {
+                                lat = 28.6139 + (idx * 0.02);
+                                lon = 77.2090 + (idx * 0.02);
                             }
+                        }
+
+                        store._mapLat = lat;
+                        store._mapLon = lon;
+
+                        const storeIcon = L.divIcon({
+                            className: 'custom-store-pin',
+                            html: `<div class="w-9 h-9 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg border-2 border-brand-400 font-bold text-xs cursor-pointer hover:scale-110 transition-transform">🏪</div>`,
+                            iconSize: [36, 36],
+                            iconAnchor: [18, 18]
                         });
 
-                        if (bounds.isValid()) {
-                            this.map.fitBounds(bounds, {
-                                padding: [40, 40],
-                                maxZoom: 14
-                            });
-                        }
-                    },
+                        const storeLatLng = [lat, lon];
+                        const marker = L.marker(storeLatLng, {
+                            icon: storeIcon
+                        }).addTo(this.map);
 
-                    selectStoreOnMap(store, lat, lon) {
-                        this.selectedStoreObj = store;
-                        this.selectedStoreName = store.store_name;
-                        const targetLat = lat || store._mapLat;
-                        const targetLon = lon || store._mapLon;
-
-                        if (this.userLat && this.userLon && targetLat && targetLon) {
-                            this.selectedStoreDistance = this.calculateDistance(this.userLat, this.userLon,
-                                targetLat, targetLon);
-                            if (this.map && typeof L !== 'undefined') {
-                                if (this.routeLine) this.map.removeLayer(this.routeLine);
-                                this.routeLine = L.polyline([
-                                    [this.userLat, this.userLon],
-                                    [targetLat, targetLon]
-                                ], {
-                                    color: '#6fb63a',
-                                    weight: 4,
-                                    opacity: 0.85,
-                                    dashArray: '8, 8'
-                                }).addTo(this.map);
+                        let distStr = '';
+                        if (this.userLat && this.userLon) {
+                            const dist = this.calculateDistance(this.userLat, this.userLon, lat,
+                                lon);
+                            if (dist) {
+                                distStr =
+                                    `<div style="margin-top:4px;font-size:11px;font-weight:bold;color:#059669;">📍 ${dist} away</div>`;
+                                store._calcDistance = dist;
                             }
                         }
-                    },
 
-                    getDirectionsUrl(store) {
-                        if (!store) return '#';
-                        const q = encodeURIComponent(
-                            `${store.store_name}, ${store.city || ''} ${store.address || ''}`);
-                        return `https://www.google.com/maps/search/?api=1&query=${q}`;
-                    },
+                        marker.bindPopup(`
+                            <div style="font-family:sans-serif;padding:4px;">
+                                <div style="font-weight:bold;font-size:13px;color:#0f172a;">${store.store_name}</div>
+                                <div style="font-size:11px;color:#64748b;margin-top:2px;">${store.city || ''}, ${store.state || ''}</div>
+                                ${distStr}
+                            </div>
+                        `);
 
-                    getLogoUrl(store) {
-                        if (!store) return '';
-                        if (store.logo && store.logo.trim() !== '') {
-                            const logo = store.logo.trim();
-                            if (logo.startsWith('http://') || logo.startsWith('https://')) return logo;
-                            if (logo.startsWith('/storage/stores/logos/')) return logo;
-                            if (logo.startsWith('storage/stores/logos/')) return '/' + logo;
-                            if (logo.startsWith('stores/logos/')) return '/storage/' + logo;
-                            if (logo.startsWith('/storage/')) return logo;
-                            if (logo.startsWith('storage/')) return '/' + logo;
-                            if (!logo.includes('/')) return '/storage/stores/logos/' + logo;
-                            return '/storage/' + logo.replace(/^\//, '');
+                        marker.on('click', () => {
+                            this.selectStoreOnMap(store, lat, lon);
+                        });
+
+                        this.storeMarkers.push(marker);
+                        bounds.extend(storeLatLng);
+
+                        if (idx === 0) {
+                            this.selectStoreOnMap(store, lat, lon);
                         }
-                        const name = encodeURIComponent(store.store_name || 'Store');
-                        return `https://ui-avatars.com/api/?name=${name}&background=4F46E5&color=fff&bold=true&font-size=0.45&rounded=true`;
-                    },
+                    });
 
-                    detectLocation() {
-                        if (!navigator.geolocation) {
-                            this.nearbyError = true;
-                            this.geolocationChecked = true;
-                            this.initMap();
-                            return;
+                    if (bounds.isValid()) {
+                        this.map.fitBounds(bounds, {
+                            padding: [40, 40],
+                            maxZoom: 14
+                        });
+                    }
+                },
+
+                selectStoreOnMap(store, lat, lon) {
+                    this.selectedStoreObj = store;
+                    this.selectedStoreName = store.store_name;
+                    const targetLat = lat || store._mapLat;
+                    const targetLon = lon || store._mapLon;
+
+                    if (this.userLat && this.userLon && targetLat && targetLon) {
+                        this.selectedStoreDistance = this.calculateDistance(this.userLat, this.userLon,
+                            targetLat, targetLon);
+                        if (this.map && typeof L !== 'undefined') {
+                            if (this.routeLine) this.map.removeLayer(this.routeLine);
+                            this.routeLine = L.polyline([
+                                [this.userLat, this.userLon],
+                                [targetLat, targetLon]
+                            ], {
+                                color: '#6fb63a',
+                                weight: 4,
+                                opacity: 0.85,
+                                dashArray: '8, 8'
+                            }).addTo(this.map);
                         }
+                    }
+                },
 
-                        this.nearbyLoading = true;
-                        navigator.geolocation.getCurrentPosition(
-                            async (position) => {
-                                    const lat = position.coords.latitude;
-                                    const lon = position.coords.longitude;
-                                    this.userLat = lat;
-                                    this.userLon = lon;
+                getDirectionsUrl(store) {
+                    if (!store) return '#';
+                    const q = encodeURIComponent(
+                        `${store.store_name}, ${store.city || ''} ${store.address || ''}`);
+                    return `https://www.google.com/maps/search/?api=1&query=${q}`;
+                },
 
-                                    try {
-                                        const response = await fetch(
-                                            `<?php echo url()->current(); ?>?lat=${lat}&lon=${lon}`, {
-                                                headers: {
-                                                    'Accept': 'application/json',
-                                                    'X-Requested-With': 'XMLHttpRequest'
-                                                }
-                                            });
-                                        if (response.ok) {
-                                            const data = await response.json();
-                                            this.nearbyStores = data.stores || [];
-                                            if (this.nearbyStores.length === 0) {
-                                                this.nearbyError = true;
-                                            }
-                                        } else {
-                                            this.nearbyError = true;
-                                        }
-                                    } catch (err) {
-                                        console.error('Error fetching nearby stores:', err);
-                                        this.nearbyError = true;
-                                    } finally {
-                                        this.nearbyLoading = false;
-                                        this.geolocationChecked = true;
-                                        this.initMap();
-                                        this.$nextTick(() => {
-                                            if (typeof lucide !== 'undefined') {
-                                                lucide.createIcons();
+                getLogoUrl(store) {
+                    if (!store) return '';
+                    if (store.logo && store.logo.trim() !== '') {
+                        const logo = store.logo.trim();
+                        if (logo.startsWith('http://') || logo.startsWith('https://')) return logo;
+                        if (logo.startsWith('/storage/stores/logos/')) return logo;
+                        if (logo.startsWith('storage/stores/logos/')) return '/' + logo;
+                        if (logo.startsWith('stores/logos/')) return '/storage/' + logo;
+                        if (logo.startsWith('/storage/')) return logo;
+                        if (logo.startsWith('storage/')) return '/' + logo;
+                        if (!logo.includes('/')) return '/storage/stores/logos/' + logo;
+                        return '/storage/' + logo.replace(/^\//, '');
+                    }
+                    const name = encodeURIComponent(store.store_name || 'Store');
+                    return `https://ui-avatars.com/api/?name=${name}&background=4F46E5&color=fff&bold=true&font-size=0.45&rounded=true`;
+                },
+
+                detectLocation() {
+                    if (!navigator.geolocation) {
+                        this.nearbyError = true;
+                        this.geolocationChecked = true;
+                        this.initMap();
+                        return;
+                    }
+
+                    this.nearbyLoading = true;
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                                const lat = position.coords.latitude;
+                                const lon = position.coords.longitude;
+                                this.userLat = lat;
+                                this.userLon = lon;
+
+                                try {
+                                    const response = await fetch(
+                                        `<?php echo url()->current(); ?>?lat=${lat}&lon=${lon}`, {
+                                            headers: {
+                                                'Accept': 'application/json',
+                                                'X-Requested-With': 'XMLHttpRequest'
                                             }
                                         });
+                                    if (response.ok) {
+                                        const data = await response.json();
+                                        this.nearbyStores = data.stores || [];
+                                        if (this.nearbyStores.length === 0) {
+                                            this.nearbyError = true;
+                                        }
+                                    } else {
+                                        this.nearbyError = true;
                                     }
-                                },
-                                (error) => {
-                                    console.error('Geolocation error:', error);
+                                } catch (err) {
+                                    console.error('Error fetching nearby stores:', err);
                                     this.nearbyError = true;
+                                } finally {
                                     this.nearbyLoading = false;
                                     this.geolocationChecked = true;
                                     this.initMap();
@@ -978,32 +944,12 @@
                                         }
                                     });
                                 }
-                        );
-                    },
-
-                    async fetchStores() {
-                        if (this.query.length === 0) {
-                            this.stores = [];
-                            this.hasSearched = false;
-                            this.initMap();
-                            return;
-                        }
-
-                        this.isLoading = true;
-                        this.hasSearched = true;
-
-                        try {
-                            const response = await fetch(
-                                `<?php echo url()->current(); ?>?q=${encodeURIComponent(this.query)}`, {
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'X-Requested-With': 'XMLHttpRequest'
-                                    }
-                                });
-
-                            if (response.ok) {
-                                const data = await response.json();
-                                this.stores = data.stores || [];
+                            },
+                            (error) => {
+                                console.error('Geolocation error:', error);
+                                this.nearbyError = true;
+                                this.nearbyLoading = false;
+                                this.geolocationChecked = true;
                                 this.initMap();
                                 this.$nextTick(() => {
                                     if (typeof lucide !== 'undefined') {
@@ -1011,14 +957,46 @@
                                     }
                                 });
                             }
-                        } catch (error) {
-                            console.error('Error fetching stores:', error);
-                        } finally {
-                            this.isLoading = false;
-                        }
+                    );
+                },
+
+                async fetchStores() {
+                    if (this.query.length === 0) {
+                        this.stores = [];
+                        this.hasSearched = false;
+                        this.initMap();
+                        return;
                     }
-                }));
-            });
-        </script>
-    @endpush
-@endsection
+
+                    this.isLoading = true;
+                    this.hasSearched = true;
+
+                    try {
+                        const response = await fetch(
+                            `<?php echo url()->current(); ?>?q=${encodeURIComponent(this.query)}`, {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.stores = data.stores || [];
+                            this.initMap();
+                            this.$nextTick(() => {
+                                if (typeof lucide !== 'undefined') {
+                                    lucide.createIcons();
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error fetching stores:', error);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+            }));
+        });
+    </script>
+@endpush

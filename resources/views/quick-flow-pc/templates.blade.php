@@ -1,38 +1,13 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Free Customizable ' . $type->name . ' Design Templates — Qrinto')
-@section('meta_description', 'Browse professionally designed ' . $type->name . ' design templates. Select a template and customize online with your photos and text at Qrinto.')
-@section('meta_keywords', $type->name . ' templates, free ' . strtolower($type->name) . ' designs, customizable ' . strtolower($type->name) . ' layout, Qrinto templates')
+@section('title', $type->name . ' — Choose a Template (Step 3)')
 @section('header_title', $type->name)
-
-@section('json_ld')
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "{{ route('flow-pc.index') }}"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "{{ $type->name }} Templates",
-      "item": "{{ url()->current() }}"
-    }
-  ]
-}
-</script>
-@endsection
 
 @push('styles')
     <style>
         .hero-pattern-bg {
             background-color: #ffffff;
-            background-image: 
+            background-image:
                 radial-gradient(rgba(148, 163, 184, 0.28) 1.2px, transparent 1.2px),
                 linear-gradient(to right, rgba(241, 245, 249, 0.7) 1px, transparent 1px),
                 linear-gradient(to bottom, rgba(241, 245, 249, 0.7) 1px, transparent 1px);
@@ -41,7 +16,7 @@
 
         .hero-gradient-overlay {
             background: radial-gradient(circle at 85% 20%, rgba(111, 182, 58, 0.08) 0%, rgba(255, 255, 255, 0) 55%),
-                        radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.06) 0%, rgba(255, 255, 255, 0) 50%);
+                radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.06) 0%, rgba(255, 255, 255, 0) 50%);
         }
 
         .filter-pill {
@@ -135,12 +110,14 @@
                 <div class="max-w-3xl">
                     <!-- Heading -->
                     <h1 class="text-3xl sm:text-4xl xl:text-5xl font-black text-slate-900 leading-tight tracking-tight">
-                        {{ $type->name }} <span class="text-brand-600 italic" style="font-family: 'Playfair Display', serif;">Templates & Studio.</span>
+                        {{ $type->name }} <span class="text-brand-600 italic"
+                            style="font-family: 'Playfair Display', serif;">Templates & Studio.</span>
                     </h1>
 
                     <!-- Subtitle -->
                     <p class="text-sm sm:text-base text-slate-600 font-medium mt-3 leading-relaxed max-w-2xl">
-                        Select a professionally crafted template or start with a blank canvas to customize your {{ strtolower($type->parent->name ?? $type->name) }}.
+                        Select a professionally crafted template or start with a blank canvas to customize your
+                        {{ strtolower($type->parent->name ?? $type->name) }}.
                     </p>
                 </div>
             </div>
@@ -152,7 +129,8 @@
             {{-- Premium Filter Header & Category Pills (Clean Floating Layout - No Outer Card Background or Outer Border) --}}
             <div class="mb-8">
                 {{-- Header Row inside Filter Toolbar --}}
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-5 border-b border-slate-200/80">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-5 border-b border-slate-200/80">
                     <div class="flex items-center gap-2">
                         <span
                             class="inline-flex items-center gap-1.5 bg-brand-50 text-brand-700 border border-brand-200/80 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-2xs">
@@ -187,7 +165,8 @@
                             'bg-brand-500 hover:bg-brand-600 text-white border-brand-500 shadow-md shadow-brand-500/25 ring-2 ring-brand-500/20' :
                             'bg-white hover:bg-slate-50 text-slate-700 hover:text-brand-600 border-slate-200/90 hover:border-brand-300 shadow-2xs'"
                         class="filter-pill px-4 py-2.5 rounded-xl border text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-2">
-                        <i data-lucide="sparkles" class="w-3.5 h-3.5" :class="activeCategory === 'all' ? 'text-white' : 'text-brand-500'"></i>
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"
+                            :class="activeCategory === 'all' ? 'text-white' : 'text-brand-500'"></i>
                         <span>All Templates</span>
                         <span
                             :class="activeCategory === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'"
@@ -204,7 +183,8 @@
                                 class="filter-pill px-4 py-2.5 rounded-xl border text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-2">
                                 <span>{{ $cat->name }}</span>
                                 <span
-                                    :class="activeCategory === {{ $cat->id }} ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'"
+                                    :class="activeCategory === {{ $cat->id }} ? 'bg-white/20 text-white' :
+                                        'bg-slate-100 text-slate-700'"
                                     class="px-2 py-0.5 rounded-md text-[10px] font-black transition-colors">{{ $catCount }}</span>
                             </button>
                         @endif
@@ -217,8 +197,8 @@
                 @forelse($templates as $index => $tpl)
                     <a href="{{ route('flow-pc.customize', $tpl->slug) }}"
                         x-show="(activeCategory === 'all' || activeCategory === {{ $tpl->category_id }}) && ('{{ strtolower(addslashes($tpl->name)) }}'.includes(searchQuery.toLowerCase()) || searchQuery === '')"
-                        x-transition:enter="transition ease-out duration-300"
-                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100"
                         class="template-card-premium group relative bg-slate-900 border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs hover:shadow-2xl hover:border-brand-400 cursor-pointer block h-[170px]"
                         style="animation: tplFade 0.45s cubic-bezier(0.16,1,0.3,1) {{ min($index * 0.04, 0.4) }}s both;">
 
@@ -227,11 +207,15 @@
                             class="tpl-img w-full h-full object-cover" alt="{{ $tpl->name }}" loading="lazy">
 
                         @if ($tpl->category_id == 21)
-                            <div class="absolute inset-0 z-15 bg-white flex flex-col items-center justify-center p-3 text-center border border-slate-200/80">
-                                <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mb-1.5 group-hover:bg-brand-50 group-hover:text-brand-600 group-hover:border-brand-200 transition-all">
+                            <div
+                                class="absolute inset-0 z-15 bg-white flex flex-col items-center justify-center p-3 text-center border border-slate-200/80">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mb-1.5 group-hover:bg-brand-50 group-hover:text-brand-600 group-hover:border-brand-200 transition-all">
                                     <i data-lucide="plus" class="w-4 h-4"></i>
                                 </div>
-                                <span class="text-xs font-black text-slate-700 group-hover:text-brand-600 transition-colors">Add your stuff</span>
+                                <span
+                                    class="text-xs font-black text-slate-700 group-hover:text-brand-600 transition-colors">Add
+                                    your stuff</span>
                                 <span class="text-[9px] font-semibold text-slate-400">Blank Canvas</span>
                             </div>
                         @endif
