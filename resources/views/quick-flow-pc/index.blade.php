@@ -1,7 +1,22 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'What would you like to create?')
+@section('title', 'Qrinto — Custom Print Studio | Personalized Photo Cards & Business Stationery')
+@section('meta_description', 'Design and print custom greeting cards, photo prints, business cards, and personalized stationery online with Qrinto. Instant customization and fast store pickup.')
+@section('meta_keywords', 'custom print studio, photo greeting cards, personalized birthday cards, business cards, photo printing, Qrinto, print shop near me')
 @section('header_title', 'Create')
+
+@section('json_ld')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Qrinto Print Studio",
+  "url": "{{ url('/') }}",
+  "logo": "{{ asset('images/logo.png') }}",
+  "sameAs": []
+}
+</script>
+@endsection
 
 @push('styles')
     <!-- Swiper CSS CDN -->

@@ -1,6 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Review & Pay')
+@section('title', 'Review & Pay — Qrinto Print Studio')
+@section('meta_description', 'Review your print design details and complete payment or in-store pickup options securely.')
+@section('meta_robots', 'noindex, nofollow')
 @section('header_title', 'Review & Pay')
 
 @push('styles')

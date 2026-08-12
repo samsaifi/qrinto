@@ -1,7 +1,32 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', $type->name . ' — Choose Your Size')
+@section('title', 'Custom ' . $type->name . ' — Select Format & Dimensions | Qrinto')
+@section('meta_description', 'Explore customizable ' . $type->name . ' templates with custom sizes, paper types, and instant online editor. High quality printing at Qrinto.')
+@section('meta_keywords', 'custom ' . strtolower($type->name) . ', ' . strtolower($type->name) . ' printing, personalized ' . strtolower($type->name) . ', Qrinto ' . strtolower($type->name))
 @section('header_title', $type->name)
+
+@section('json_ld')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "{{ route('flow-pc.index') }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "{{ $type->name }}",
+      "item": "{{ url()->current() }}"
+    }
+  ]
+}
+</script>
+@endsection
 
 @push('styles')
     <style>

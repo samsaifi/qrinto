@@ -1,6 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Shopping Cart — Qrinto Print Studio')
+@section('title', 'Your Shopping Cart — Qrinto Print Studio')
+@section('meta_description', 'Review your custom print items, apply coupon codes, and proceed to secure checkout with Qrinto.')
+@section('meta_robots', 'noindex, nofollow')
 
 @php
     $routePrefix = $routePrefix ?? 'flow-pc.';

@@ -1,7 +1,24 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Custom Print Studio — Qrinto')
+@section('title', 'Custom Print Studio — Print Anything Online | Qrinto')
+@section('meta_description', 'Upload your document or photo for instant custom size printing, paper selection, and fast store pickup with Qrinto Print Studio.')
+@section('meta_keywords', 'custom print studio, upload photo print, custom size printing, online document print, Qrinto print')
 @section('header_title', 'Custom Print')
+
+@section('json_ld')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "Custom Print Studio",
+  "provider": {
+    "@type": "Organization",
+    "name": "Qrinto"
+  },
+  "description": "Upload files for custom size photo and document printing."
+}
+</script>
+@endsection
 
 @push('styles')
 <style>

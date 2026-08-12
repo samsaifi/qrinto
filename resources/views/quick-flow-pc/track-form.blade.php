@@ -1,6 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Track Your Order — Qrinto Print Studio')
+@section('title', 'Track Your Print Order Status — Qrinto')
+@section('meta_description', 'Track your Qrinto print order in real-time. Enter your order number and contact details to check print and store pickup status.')
+@section('meta_keywords', 'track order, Qrinto order tracking, print job status, order lookup Qrinto')
 @section('header_title', 'Track Order')
 
 @push('styles')

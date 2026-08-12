@@ -59,6 +59,11 @@ class ProductType extends Model
         return $this->hasMany(ProductType::class, 'parent_id');
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

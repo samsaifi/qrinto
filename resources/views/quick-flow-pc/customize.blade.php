@@ -7,7 +7,27 @@
      ═══════════════════════════════════════════════════════════════════════ --}}
 
 @extends('layouts.quick-flow-pc')
-@section('title', 'Customize Your ' . $product->name)
+@section('title', 'Customize ' . $product->name . ' Online — Qrinto Design Studio')
+@section('meta_description', 'Personalize ' . $product->name . ' online with photos, custom text, shapes, and QR codes. High resolution print preview and fast store pickup.')
+@section('meta_keywords', 'customize ' . strtolower($product->name) . ', design ' . strtolower($product->name) . ' online, custom ' . strtolower($product->name) . ' editor, Qrinto studio')
+
+@section('json_ld')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ $product->name }}",
+  "description": "{{ $product->short_description ?? 'Customizable print product at Qrinto' }}",
+  "sku": "{{ $product->sku ?? ('SKU-' . $product->id) }}",
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "INR",
+    "price": "{{ $product->base_price }}",
+    "availability": "https://schema.org/InStock"
+  }
+}
+</script>
+@endsection
 
 @push('styles')
     @include('quick-flow-pc.partials.customizer-styles')

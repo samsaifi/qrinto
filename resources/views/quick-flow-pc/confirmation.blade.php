@@ -1,6 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
 @section('title', 'Order Confirmed — Qrinto Print Studio')
+@section('meta_description', 'Your custom print order has been placed successfully with Qrinto.')
+@section('meta_robots', 'noindex, nofollow')
 @section('header_title', 'Order Confirmed')
 
 @push('styles')

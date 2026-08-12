@@ -5,7 +5,27 @@
     <meta charset="utf-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <title>@yield('title', 'Qrinto - Custom Print Studio')</title>
+    <title>@yield('title', 'Qrinto — Premium Custom Printing & Photo Cards Studio')</title>
+    <meta name="description" content="@yield('meta_description', 'Design and order custom greeting cards, photo prints, business cards, and personalized stationery with Qrinto. Instant online customization & fast store pickup.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'custom printing, photo greeting cards, birthday cards, business cards, photo prints, custom stationery, Qrinto print studio')">
+    <meta name="robots" content="@yield('meta_robots', 'index, follow')">
+    <link rel="canonical" href="@yield('canonical_url', url()->current())">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:url" content="@yield('canonical_url', url()->current())">
+    <meta property="og:title" content="@yield('title', 'Qrinto — Premium Custom Printing & Photo Cards Studio')">
+    <meta property="og:description" content="@yield('meta_description', 'Design and order custom greeting cards, photo prints, business cards, and personalized stationery with Qrinto.')">
+    <meta property="og:image" content="@yield('og_image', asset('images/logo.png'))">
+    <meta property="og:site_name" content="Qrinto Print Studio">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('title', 'Qrinto — Premium Custom Printing & Photo Cards Studio')">
+    <meta name="twitter:description" content="@yield('meta_description', 'Design and order custom greeting cards, photo prints, business cards, and personalized stationery with Qrinto.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/logo.png'))">
+
+    @yield('json_ld')
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -1,6 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Track Order ' . $order->order_number)
+@section('title', 'Order Status ' . $order->order_number . ' — Qrinto')
+@section('meta_description', 'Real-time order tracking status for order #' . $order->order_number . ' at Qrinto.')
+@section('meta_robots', 'noindex, nofollow')
 @section('header_title', 'Track Order')
 
 @push('styles')

@@ -1,6 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Checkout — Qrinto Print Studio')
+@section('title', 'Secure Checkout — Qrinto Print Studio')
+@section('meta_description', 'Complete your order for store pickup or delivery securely with Qrinto.')
+@section('meta_robots', 'noindex, nofollow')
 @section('header_title', 'Checkout')
 
 @php

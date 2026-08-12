@@ -1,7 +1,20 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Find a Store Location')
+@section('title', 'Find Qrinto Print Shop Locations & Nearest Stores — Qrinto')
+@section('meta_description', 'Locate the nearest Qrinto print studio store location for fast order pickup, high quality photo printing, and local customer service.')
+@section('meta_keywords', 'qrinto store locator, print shop near me, photo print store location, print studio finder, nearest Qrinto shop')
 @section('header_title', 'Find Store')
+
+@section('json_ld')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemPage",
+  "name": "Find Qrinto Print Shop Locations",
+  "description": "Locate Qrinto print studio locations for instant pickup."
+}
+</script>
+@endsection
 
 @push('styles')
     <!-- Swiper CSS CDN -->
