@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\OrderPrintController;
 use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\PaperTypeController as AdminPaperTypeController;
+use App\Http\Controllers\Admin\KioskController as AdminKioskController;
 use App\Http\Controllers\Admin\AIProductController;
 use App\Http\Controllers\NoritsuController;
 use App\Http\Controllers\QuickFlowController;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CartPcController;
 use App\Http\Controllers\AIController;
+use App\Http\Middleware\DetectDevice;
 Route::get('/storage-link', function () {
     $link = public_path('storage');
     $target = storage_path('app/public');
@@ -112,12 +114,15 @@ $registerFlowRoutes = function (string $controller, string $namePrefix, string $
         Route::get('/track', [$controller, 'trackForm'])->name('track.form');
         Route::post('/track', [$controller, 'track'])->name('track');
         Route::get('/track/{orderNumber}', [$controller, 'trackOrder'])->name('track.order');
+        Route::post('/subscribe', [$controller, 'subscribe'])->name('subscribe');
 
         Route::get('/thumbnails/generate', [\App\Http\Controllers\UtilityController::class, 'generateThumbnails'])->name('utility.thumbnails');
     });
 };
-
-Route::get('/', [QuickFlowController::class, 'index'])->name('flow.index');
+Route::get('/', [QuickFlowController::class, 'index'])
+    ->middleware(DetectDevice::class)
+    ->name('flow.index');
+// Route::get('/', [QuickFlowController::class, 'index'])->name('flow.index');
 $registerFlowRoutes(QuickFlowController::class, 'flow');
 
 Route::prefix('pc')->group(function () use ($registerFlowRoutes) {
@@ -248,6 +253,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Paper Types
     Route::resource('paper-types', AdminPaperTypeController::class)->except(['show']);
+
+    // Kiosk Management
+    Route::resource('kiosks', AdminKioskController::class);
 
     // AI Product Generation
     Route::post('products/ai-generate', [AIProductController::class, 'generate'])->name('products.ai-generate');

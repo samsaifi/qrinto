@@ -1,7 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Order Confirmed — Qrinto Print Studio')
+@section('title', 'Order Confirmed | Qrinto Custom Print Studio')
 @section('header_title', 'Order Confirmed')
+@section('meta_robots', 'noindex, nofollow')
 
 @push('styles')
     <style>
@@ -43,7 +44,7 @@
         .success-ring {
             width: 88px;
             height: 88px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
+            background: linear-gradient(135deg, #0ea5e9, #16a34a);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -243,22 +244,21 @@
                         Order Confirmation
                     </h1>
                     <span
-                        class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60 flex items-center gap-1">
-                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-500"></i> Confirmed!
+                        class="text-xs font-extrabold  text-gray-700  bg-gray-50 px-2.5 py-0.5 rounded-full border  border-gray-200/60 flex items-center gap-1">
+                        <i data-lucide="check-circle" class="w-3.5 h-3.5  text-gray-500"></i> Confirmed!
                     </span>
                 </div>
 
                 {{-- Step Indicator --}}
                 <div class="flex items-center gap-3">
                     <div class="hidden md:flex items-center gap-2 text-[11px] font-bold">
-                        <span class="text-emerald-600 flex items-center gap-1"><i data-lucide="check-circle"
+                        <span class=" text-gray-600 flex items-center gap-1"><i data-lucide="check-circle"
                                 class="w-3 h-3"></i> 1. Customize</span>
                         <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
-                        <span class="text-emerald-600 flex items-center gap-1"><i data-lucide="check-circle"
+                        <span class=" text-gray-600 flex items-center gap-1"><i data-lucide="check-circle"
                                 class="w-3 h-3"></i> 2. Cart</span>
                         <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
-                        <span
-                            class="text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">3.
+                        <span class=" text-gray-700  bg-gray-50 px-2.5 py-0.5 rounded-full border  border-gray-200/80">3.
                             Confirmed!</span>
                     </div>
                     <div class="h-4 w-px bg-slate-200 hidden md:block"></div>
@@ -271,11 +271,11 @@
 
             {{-- Celebratory Light Hero Banner --}}
             <div
-                class="bg-emerald-50/90 border border-emerald-200/90 text-slate-900 rounded-2xl p-4 sm:p-5 mb-4 shadow-2xs relative overflow-hidden">
+                class=" bg-gray-50/90 border  border-gray-200/90 text-slate-900 rounded-2xl p-4 sm:p-5 mb-4 shadow-2xs relative overflow-hidden">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-3.5">
                         <div
-                            class="w-11 h-11 bg-emerald-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                            class="w-11 h-11  bg-gray-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                             <i data-lucide="check" class="w-6 h-6"></i>
                         </div>
                         <div>
@@ -290,8 +290,8 @@
 
                     <div class="flex flex-wrap items-center gap-2 shrink-0">
                         <span
-                            class="inline-flex items-center gap-1.5 bg-white border border-emerald-200 rounded-xl px-3 py-1.5 text-slate-900 text-xs font-black shadow-2xs">
-                            <i data-lucide="hash" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            class="inline-flex items-center gap-1.5 bg-white border  border-gray-200 rounded-xl px-3 py-1.5 text-slate-900 text-xs font-black shadow-2xs">
+                            <i data-lucide="hash" class="w-3.5 h-3.5  text-gray-600"></i>
                             <span>{{ $order->order_number }}</span>
                         </span>
                         @if ($order->store)
@@ -418,7 +418,7 @@
                     <div class="glass-card border border-slate-200/90 rounded-2xl p-4 shadow-2xs">
                         <div class="flex items-center gap-2 mb-4 pb-2.5 border-b border-slate-200/80">
                             <div
-                                class="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
+                                class="w-7 h-7 rounded-lg  bg-gray-50 border  border-gray-100  text-gray-600 flex items-center justify-center">
                                 <i data-lucide="activity" class="w-3.5 h-3.5"></i>
                             </div>
                             <h2 class="text-sm font-black text-slate-900 tracking-tight">Live Order Fulfillment Progress
@@ -450,7 +450,7 @@
 
                             <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
                                 <div
-                                    class="w-7 h-7 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mb-2">
+                                    class="w-7 h-7  bg-gray-50 border  border-gray-100 rounded-lg flex items-center justify-center  text-gray-600 mb-2">
                                     <i data-lucide="printer" class="w-3.5 h-3.5"></i>
                                 </div>
                                 <h4 class="text-xs font-extrabold text-slate-900">2. Priority Printing</h4>
@@ -476,14 +476,14 @@
                         class="glass-card border border-slate-200/90 rounded-2xl p-4 lg:p-5 shadow-lg shadow-slate-200/40 relative overflow-hidden space-y-4">
 
                         {{-- Top Accent Line --}}
-                        <div class="absolute top-0 left-0 right-0 h-1 bg-emerald-500"></div>
+                        <div class="absolute top-0 left-0 right-0 h-1  bg-gray-500"></div>
 
                         {{-- Summary Header --}}
                         <div class="flex items-center justify-between pb-3 border-b border-slate-200/80">
                             <h3 class="text-base font-black text-slate-900 tracking-tight">Order Details</h3>
                             <span
-                                class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                                <i data-lucide="shield-check" class="w-3 h-3 text-emerald-500"></i> Confirmed
+                                class="inline-flex items-center gap-1 text-[10px] font-black  text-gray-700  bg-gray-50 px-2 py-0.5 rounded-full border  border-gray-200/60">
+                                <i data-lucide="shield-check" class="w-3 h-3  text-gray-500"></i> Confirmed
                             </span>
                         </div>
 
@@ -502,8 +502,8 @@
                                 <span class="text-slate-500 font-semibold">Payment Status</span>
                                 @if ($order->payment_status === 'paid')
                                     <span
-                                        class="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                                        <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500"></i> Paid Online
+                                        class="inline-flex items-center gap-1 text-[10px] font-extrabold  text-gray-700  bg-gray-50 px-2 py-0.5 rounded-full border  border-gray-200/60">
+                                        <i data-lucide="check-circle-2" class="w-3 h-3  text-gray-500"></i> Paid Online
                                     </span>
                                 @else
                                     <span
@@ -554,7 +554,7 @@
                         <div
                             class="pt-2.5 border-t border-slate-100 grid grid-cols-2 gap-1.5 text-[10px] font-semibold text-slate-400">
                             <div class="flex items-center gap-1">
-                                <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500 shrink-0"></i>
+                                <i data-lucide="check-circle-2" class="w-3 h-3  text-gray-500 shrink-0"></i>
                                 <span>Print Guarantee</span>
                             </div>
                             <div class="flex items-center gap-1">

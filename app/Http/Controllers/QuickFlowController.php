@@ -2147,4 +2147,52 @@ class QuickFlowController extends Controller
     {
         return \App\Services\OrderPdfService::physicallyRotateImage($sourcePath, $rotationString);
     }
+
+    /**
+     * Store subscriber email in database.
+     */
+    public function subscribe(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'email' => 'required|email:rfc,dns|max:255',
+        ], [
+            'email.required' => 'Please enter your email address.',
+            'email.email' => 'Please enter a valid email address.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('email'),
+            ], 422);
+        }
+
+        try {
+            // Ensure table exists
+            if (!\Illuminate\Support\Facades\Schema::hasTable('newsletter_subscribers')) {
+                \Illuminate\Support\Facades\Schema::create('newsletter_subscribers', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->id();
+                    $table->string('email')->unique();
+                    $table->timestamps();
+                });
+            }
+
+            $email = strtolower(trim($request->input('email')));
+
+            \App\Models\NewsletterSubscriber::firstOrCreate(
+                ['email' => $email]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Thanks for subscribing!',
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Newsletter Subscribe Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while saving your subscription. Please try again.',
+            ], 500);
+        }
+    }
 }

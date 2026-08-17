@@ -1,7 +1,23 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', $type->name . ' — Choose a Template (Step 3)')
+@section('title', 'Design Templates for ' . $type->name . ' | Qrinto Studio')
 @section('header_title', $type->name)
+@section('meta_description',
+    'Choose from professionally designed ' .
+    $type->name .
+    ' templates. Customize text, photos,
+    and layouts in real-time with Qrinto print studio.')
+@section('meta_keywords', strtolower($type->name) . ' templates, design ' . strtolower($type->name) . ', custom ' .
+    strtolower($type->name) . ' layout, Qrinto templates')
+@section('canonical_url', url()->current())
+@section('og_type', 'website')
+@section('og_title', 'Design Templates for ' . $type->name . ' | Qrinto Studio')
+@section('og_description',
+    'Choose from professionally designed ' .
+    $type->name .
+    ' templates. Customize text, photos,
+    and layouts in real-time with Qrinto print studio.')
+@section('og_image', asset('logo/Qrinto-logo-small.png'))
 
 @push('styles')
     <style>
@@ -297,7 +313,7 @@
                     </div>
                     <div class="flex items-center gap-4">
                         <div
-                            class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            class="w-12 h-12  bg-gray-50  text-gray-600 rounded-2xl flex items-center justify-center flex-shrink-0">
                             <i data-lucide="eye" class="w-6 h-6"></i>
                         </div>
                         <div>

@@ -18,19 +18,24 @@
     <style>
         *,
         *::before,
-        *::after { box-sizing: border-box; }
+        *::after {
+            box-sizing: border-box;
+        }
 
         :root {
             --brand: #0ea5e9;
             --brand-600: #0284c7;
             --brand-700: #0369a1;
             --ink: #0f172a;
-            --muted: #64748b;
+            --muted: #0ea5e9;
             --faint: #94a3b8;
             --line: #eef2f7;
         }
 
-        html, body { height: 100%; }
+        html,
+        body {
+            height: 100%;
+        }
 
         body {
             margin: 0;
@@ -76,6 +81,7 @@
             gap: 10px;
             padding: 18px 22px;
         }
+
         .logo-badge {
             width: 40px;
             height: 40px;
@@ -86,6 +92,7 @@
             justify-content: center;
             box-shadow: 0 8px 20px -6px rgba(2, 132, 199, .5);
         }
+
         .logo-badge span {
             color: #fff;
             font-family: 'Outfit', sans-serif;
@@ -93,8 +100,19 @@
             font-size: 22px;
             line-height: 1;
         }
-        .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-        .logo-text b { font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .logo-text b {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -.02em;
+        }
+
         .logo-text small {
             font-size: 9.5px;
             font-weight: 800;
@@ -131,11 +149,23 @@
             box-shadow: 0 18px 40px -16px rgba(2, 132, 199, .35);
             animation: float 4.5s ease-in-out infinite;
         }
-        .icon-orb svg { width: 44px; height: 44px; stroke-width: 1.9; }
+
+        .icon-orb svg {
+            width: 44px;
+            height: 44px;
+            stroke-width: 1.9;
+        }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-9px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-9px);
+            }
         }
 
         .code {
@@ -157,6 +187,7 @@
             letter-spacing: -.01em;
             margin: 0 0 8px;
         }
+
         .lead {
             font-size: 14px;
             font-weight: 500;
@@ -175,6 +206,7 @@
             gap: 12px;
             padding: 28px 28px 8px;
         }
+
         .btn {
             display: flex;
             align-items: center;
@@ -190,20 +222,38 @@
             cursor: pointer;
             transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
         }
-        .btn svg { width: 18px; height: 18px; stroke-width: 2.2; }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2.2;
+        }
+
         .btn-primary {
             color: #fff;
             background: linear-gradient(135deg, var(--brand), var(--brand-600));
             box-shadow: 0 12px 26px -10px rgba(2, 132, 199, .6);
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 30px -10px rgba(2, 132, 199, .65); }
-        .btn-primary:active { transform: translateY(0) scale(.99); }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px -10px rgba(2, 132, 199, .65);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0) scale(.99);
+        }
+
         .btn-ghost {
             color: var(--brand-600);
             background: #fff;
             border-color: var(--line);
         }
-        .btn-ghost:hover { background: #f8fafc; border-color: #d8e3ef; }
+
+        .btn-ghost:hover {
+            background: #f8fafc;
+            border-color: #d8e3ef;
+        }
 
         /* Footer helper links */
         .foot {
@@ -212,6 +262,7 @@
             padding: 22px 28px calc(26px + env(safe-area-inset-bottom, 0px));
             text-align: center;
         }
+
         .foot .links {
             display: flex;
             align-items: center;
@@ -219,6 +270,7 @@
             gap: 18px;
             margin-bottom: 14px;
         }
+
         .foot a {
             font-size: 12.5px;
             font-weight: 700;
@@ -226,8 +278,18 @@
             text-decoration: none;
             transition: color .18s ease;
         }
-        .foot a:hover { color: var(--brand-600); }
-        .foot .sep { width: 4px; height: 4px; border-radius: 50%; background: #cbd5e1; }
+
+        .foot a:hover {
+            color: var(--brand-600);
+        }
+
+        .foot .sep {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+
         .foot .mark {
             font-size: 9.5px;
             font-weight: 800;
@@ -237,7 +299,9 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .icon-orb { animation: none; }
+            .icon-orb {
+                animation: none;
+            }
         }
     </style>
 </head>
@@ -248,7 +312,8 @@
 
         <!-- Branding -->
         <header class="topbar">
-            <a href="{{ url('/') }}" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+            <a href="{{ url('/') }}"
+                style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
                 <span class="logo-badge"><span>Q</span></span>
                 <span class="logo-text">
                     <b>Qrinto</b>
@@ -261,7 +326,8 @@
         <main class="main">
             <div class="icon-orb" aria-hidden="true">
                 <!-- map-pin-off (lost / store not found) -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
                     <path d="M5.43 5.43A8.06 8.06 0 0 0 4 10c0 6 8 12 8 12a29.94 29.94 0 0 0 5-5" />
                     <path d="M19.18 13.52A8.66 8.66 0 0 0 20 10a8 8 0 0 0-13.95-5.39" />
                     <path d="M9.13 9.13A2.74 2.74 0 0 0 9 10a3 3 0 0 0 3 3 2.74 2.74 0 0 0 .87-.13" />
@@ -281,7 +347,8 @@
         <div class="actions">
             <a class="btn btn-primary" href="{{ url('/') }}">
                 <!-- home -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
                     <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                     <path d="M9 22V12h6v10" />
                 </svg>
@@ -289,7 +356,8 @@
             </a>
             <a class="btn btn-ghost" href="{{ url('/find-store') }}">
                 <!-- search -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.3-4.3" />
                 </svg>

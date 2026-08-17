@@ -1,7 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Checkout — Qrinto Print Studio')
+@section('title', 'Cart Checkout | Qrinto Custom Print Studio')
 @section('header_title', 'Checkout')
+@section('meta_robots', 'noindex, nofollow')
 
 @php
     $routePrefix = $routePrefix ?? 'flow-pc.';
@@ -180,7 +181,7 @@
         .success-check {
             width: 72px;
             height: 72px;
-            background: #22c55e;
+            background: #0ea5e9;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -246,7 +247,7 @@
                         Checkout & Review
                     </h1>
                     <span
-                        class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
+                        class="text-xs font-extrabold  text-gray-700  bg-gray-50 px-2.5 py-0.5 rounded-full border  border-gray-200/60">
                         <i data-lucide="shield-check" class="w-3 h-3 inline"></i> 256-Bit SSL
                     </span>
                 </div>
@@ -254,10 +255,10 @@
                 {{-- Step Indicator & Order Count --}}
                 <div class="flex items-center gap-3">
                     <div class="hidden md:flex items-center gap-2 text-[11px] font-bold">
-                        <span class="text-emerald-600 flex items-center gap-1"><i data-lucide="check-circle"
+                        <span class=" text-gray-600 flex items-center gap-1"><i data-lucide="check-circle"
                                 class="w-3 h-3"></i> 1. Customize</span>
                         <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
-                        <span class="text-emerald-600 flex items-center gap-1"><i data-lucide="check-circle"
+                        <span class=" text-gray-600 flex items-center gap-1"><i data-lucide="check-circle"
                                 class="w-3 h-3"></i> 2. Cart</span>
                         <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
                         <span class="text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200/60">3.
@@ -507,7 +508,7 @@
                                         @input="if(touched.pickupName) validatePickupName()"
                                         :class="errors.pickupName ? 'border-red-400 bg-red-50/20 focus:border-red-500' : (
                                             touched.pickupName && !errors.pickupName ?
-                                            'border-emerald-400 bg-emerald-50/10' :
+                                            ' border-gray-400  bg-gray-50/10' :
                                             'border-slate-200 focus:border-brand-500')"
                                         class="w-full bg-white border focus:bg-white rounded-xl py-2 pl-9 pr-3 font-bold text-slate-900 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-xs shadow-2xs"
                                         placeholder="Enter your full name">
@@ -534,7 +535,7 @@
                                         @input="if(touched.pickupEmail) validatePickupEmail()"
                                         :class="errors.pickupEmail ? 'border-red-400 bg-red-50/20 focus:border-red-500' : (
                                             touched.pickupEmail && !errors.pickupEmail ?
-                                            'border-emerald-400 bg-emerald-50/10' :
+                                            ' border-gray-400  bg-gray-50/10' :
                                             'border-slate-200 focus:border-brand-500')"
                                         class="w-full bg-white border focus:bg-white rounded-xl py-2 pl-9 pr-3 font-bold text-slate-900 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-xs shadow-2xs"
                                         placeholder="name@example.com">
@@ -561,7 +562,7 @@
                                         @input="if(touched.contactNumber) validateContactNumber()"
                                         :class="errors.contactNumber ? 'border-red-400 bg-red-50/20 focus:border-red-500' : (
                                             touched.contactNumber && !errors.contactNumber ?
-                                            'border-emerald-400 bg-emerald-50/10' :
+                                            ' border-gray-400  bg-gray-50/10' :
                                             'border-slate-200 focus:border-brand-500')"
                                         class="w-full bg-white border focus:bg-white rounded-xl py-2 pl-9 pr-3 font-bold text-slate-900 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-xs shadow-2xs"
                                         placeholder="Phone number">
@@ -608,8 +609,8 @@
                         <div class="flex items-center justify-between pb-3 border-b border-slate-200/80">
                             <h3 class="text-base font-black text-slate-900 tracking-tight">Payment Summary</h3>
                             <span
-                                class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                                <i data-lucide="shield-check" class="w-3 h-3 text-emerald-500"></i> Encrypted
+                                class="inline-flex items-center gap-1 text-[10px] font-black  text-gray-700  bg-gray-50 px-2 py-0.5 rounded-full border  border-gray-200/60">
+                                <i data-lucide="shield-check" class="w-3 h-3  text-gray-500"></i> Encrypted
                             </span>
                         </div>
 
@@ -638,7 +639,7 @@
                                 </button>
                             </div>
                             <p x-show="couponMessage" x-text="couponMessage"
-                                :class="appliedCoupon ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
+                                :class="appliedCoupon ? ' text-gray-600  bg-gray-50  border-gray-200' :
                                     'text-red-500 bg-red-50 border-red-200'"
                                 class="text-xs font-bold mt-1.5 p-1.5 rounded-lg border" style="display:none"></p>
                         </div>
@@ -650,7 +651,7 @@
                                 <span class="font-extrabold text-slate-800" x-text="__price(subtotal)"></span>
                             </div>
                             <template x-if="discountAmount > 0">
-                                <div class="flex justify-between items-center text-emerald-600 font-semibold">
+                                <div class="flex justify-between items-center  text-gray-600 font-semibold">
                                     <span x-text="'Discount (' + appliedCoupon + ')'" class="flex items-center gap-1"><i
                                             data-lucide="tag" class="w-3 h-3"></i></span>
                                     <span class="font-black" x-text="'-' + __price(discountAmount)"></span>
@@ -659,7 +660,7 @@
                             <div class="flex justify-between items-center">
                                 <span class="text-slate-600 font-semibold">Shipping / Pickup Fee</span>
                                 <span
-                                    class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">FREE
+                                    class="text-[10px] font-black  text-gray-600  bg-gray-50 px-2 py-0.5 rounded-full border  border-gray-200/60">FREE
                                     Pickup</span>
                             </div>
                         </div>
@@ -678,7 +679,7 @@
                         <div>
                             <div class="flex items-start gap-2.5 p-3 bg-slate-50 border transition-all rounded-xl"
                                 :class="errors.terms ? 'border-red-400 bg-red-50/30' : (acceptedTerms ?
-                                    'border-emerald-300 bg-emerald-50/20' : 'border-slate-200')">
+                                    ' border-gray-300  bg-gray-50/20' : 'border-slate-200')">
                                 <input type="checkbox" x-model="acceptedTerms" @change="validateTerms()"
                                     id="terms-checkbox-pc"
                                     class="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
@@ -708,7 +709,7 @@
 
                             <button type="button" @click="payByCash()" :disabled="!isFormValid()"
                                 class="w-full bg-white disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 font-extrabold py-2.5 rounded-xl shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs cursor-pointer">
-                                <i data-lucide="banknote" class="w-4 h-4 text-emerald-600"></i>
+                                <i data-lucide="banknote" class="w-4 h-4  text-gray-600"></i>
                                 <span>Pay by Cash at Counter</span>
                             </button>
                         </div>
@@ -717,7 +718,7 @@
                         <div
                             class="pt-2.5 border-t border-slate-100 grid grid-cols-2 gap-1.5 text-[10px] font-semibold text-slate-400">
                             <div class="flex items-center gap-1">
-                                <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500 shrink-0"></i>
+                                <i data-lucide="check-circle-2" class="w-3 h-3  text-gray-500 shrink-0"></i>
                                 <span>Print Guarantee</span>
                             </div>
                             <div class="flex items-center gap-1">
@@ -780,7 +781,7 @@
 
                             <p
                                 class="text-center text-xs text-slate-400 font-medium mt-4 flex items-center justify-center gap-1.5">
-                                <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                <i data-lucide="lock" class="w-3.5 h-3.5  text-gray-500"></i>
                                 Payments are processed securely by PayPal
                             </p>
                         </div>

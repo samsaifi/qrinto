@@ -1,7 +1,20 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Custom Print Studio — Qrinto')
+@section('title', 'Custom Photo Upload & Direct Printing Studio | Qrinto')
 @section('header_title', 'Custom Print')
+@section('meta_description',
+    'Upload your own images and photos for high quality custom printing. Select custom sizes,
+    paper finishes, and local store pickup options with Qrinto.')
+@section('meta_keywords',
+    'custom photo upload, direct photo printing, custom size photo print, upload photo print,
+    Qrinto print studio')
+@section('canonical_url', route('flow-pc.qrinto'))
+@section('og_type', 'website')
+@section('og_title', 'Custom Photo Upload & Direct Printing Studio | Qrinto')
+@section('og_description',
+    'Upload your own images and photos for high quality custom printing. Select custom sizes,
+    paper finishes, and local store pickup options with Qrinto.')
+@section('og_image', asset('logo/Qrinto-logo-small.png'))
 
 @push('styles')
     <style>
@@ -109,7 +122,7 @@
         .success-check {
             width: 76px;
             height: 76px;
-            background: #22c55e;
+            background: #0ea5e9;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -177,11 +190,11 @@
                 <div
                     class="flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/80 shadow-2xs">
                     <div class="flex items-center gap-1.5 text-xs font-bold"
-                        :class="currentStep >= 1 ? (currentStep > 1 ? 'text-emerald-600' :
+                        :class="currentStep >= 1 ? (currentStep > 1 ? ' text-gray-600' :
                             'text-brand-600 font-black bg-brand-50 px-3 py-1 rounded-full border border-brand-200/60'
-                            ) : 'text-slate-400'">
+                        ) : 'text-slate-400'">
                         <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
-                            :class="currentStep > 1 ? 'bg-emerald-100 text-emerald-600 font-bold' : (currentStep === 1 ?
+                            :class="currentStep > 1 ? ' bg-gray-100  text-gray-600 font-bold' : (currentStep === 1 ?
                                 'bg-brand-600 text-white font-black' : 'bg-slate-100 text-slate-400')">
                             <template x-if="currentStep > 1"><span>✓</span></template>
                             <template x-if="currentStep <= 1"><span>1</span></template>
@@ -191,11 +204,11 @@
                     <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
 
                     <div class="flex items-center gap-1.5 text-xs font-bold"
-                        :class="currentStep >= 2 ? (currentStep > 2 ? 'text-emerald-600' :
+                        :class="currentStep >= 2 ? (currentStep > 2 ? ' text-gray-600' :
                             'text-brand-600 font-black bg-brand-50 px-3 py-1 rounded-full border border-brand-200/60'
-                            ) : 'text-slate-400'">
+                        ) : 'text-slate-400'">
                         <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
-                            :class="currentStep > 2 ? 'bg-emerald-100 text-emerald-600 font-bold' : (currentStep === 2 ?
+                            :class="currentStep > 2 ? ' bg-gray-100  text-gray-600 font-bold' : (currentStep === 2 ?
                                 'bg-brand-600 text-white font-black' : 'bg-slate-100 text-slate-400')">
                             <template x-if="currentStep > 2"><span>✓</span></template>
                             <template x-if="currentStep <= 2"><span>2</span></template>
@@ -282,7 +295,7 @@
                                     <img :src="previewUrl" class="w-full h-full object-contain rounded-3xl">
                                     <div
                                         class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-black px-3 py-1 rounded-xl shadow-md flex items-center gap-1.5">
-                                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i> Ready for
+                                        <i data-lucide="check-circle" class="w-3.5 h-3.5  text-gray-400"></i> Ready for
                                         Print
                                     </div>
                                     <button type="button" @click.stop="removeFile()"
@@ -393,7 +406,7 @@
                                     <p class="font-black text-lg text-slate-900" x-text="__price(size.price)"></p>
                                     <template x-if="size.popular">
                                         <span
-                                            class="text-[9px] font-black bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md uppercase tracking-wider">Popular</span>
+                                            class="text-[9px] font-black  bg-gray-100  text-gray-700 px-2 py-0.5 rounded-md uppercase tracking-wider">Popular</span>
                                     </template>
                                 </div>
                             </button>
@@ -450,7 +463,7 @@
                                             class="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/80"
                                             x-text="selectedSize?.dimensions"></span>
                                         <span
-                                            class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60">High
+                                            class="text-xs font-bold  text-gray-700  bg-gray-50 px-2.5 py-1 rounded-lg border  border-gray-200/60">High
                                             Resolution</span>
                                     </div>
                                     <div class="mt-3 flex items-center justify-center sm:justify-start gap-3">
@@ -542,8 +555,8 @@
                             <div class="flex items-center justify-between pb-4 border-b border-slate-200/80">
                                 <h3 class="text-xl font-black text-slate-900 tracking-tight">Payment Summary</h3>
                                 <span
-                                    class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60">
-                                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i> Encrypted
+                                    class="inline-flex items-center gap-1 text-[11px] font-black  text-gray-700  bg-gray-50 px-2.5 py-1 rounded-full border  border-gray-200/60">
+                                    <i data-lucide="shield-check" class="w-3.5 h-3.5  text-gray-500"></i> Encrypted
                                 </span>
                             </div>
 
@@ -561,7 +574,7 @@
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="text-slate-500 font-semibold">Setup & Printing</span>
                                     <span
-                                        class="text-xs font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">FREE
+                                        class="text-xs font-black  text-gray-600  bg-gray-50 px-2.5 py-0.5 rounded-full border  border-gray-200/60">FREE
                                         Included</span>
                                 </div>
                             </div>
@@ -594,7 +607,7 @@
                                 <button type="button" @click="processCheckout('cash')"
                                     :disabled="isProcessing || !isValid"
                                     class="w-full bg-white disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 font-extrabold py-3.5 rounded-2xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-sm cursor-pointer">
-                                    <i data-lucide="banknote" class="w-5 h-5 text-emerald-600"></i>
+                                    <i data-lucide="banknote" class="w-5 h-5  text-gray-600"></i>
                                     <span>Pay by Cash at Store Counter</span>
                                 </button>
 
@@ -609,7 +622,7 @@
                             <div
                                 class="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-500">
                                 <div class="flex items-center gap-1.5">
-                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i>
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5  text-gray-500 shrink-0"></i>
                                     <span>Print Guarantee</span>
                                 </div>
                                 <div class="flex items-center gap-1.5">
@@ -676,7 +689,7 @@
 
                         <p
                             class="text-center text-xs text-slate-400 font-medium mt-4 flex items-center justify-center gap-1.5">
-                            <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-500"></i>
+                            <i data-lucide="lock" class="w-3.5 h-3.5  text-gray-500"></i>
                             Payments are processed securely by PayPal
                         </p>
                     </div>
@@ -865,22 +878,22 @@
 
                     try {
                         const response = await fetch(
-                        '{{ route('flow-pc.qrinto.checkout.cash') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                upload_id: this.uploadId,
-                                size_id: this.selectedSize.id,
-                                quantity: this.quantity,
-                                pickup_name: this.pickupName,
-                                pickup_email: this.pickupEmail,
-                                contact_number: this.contactNumber
-                            })
-                        });
+                            '{{ route('flow-pc.qrinto.checkout.cash') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    upload_id: this.uploadId,
+                                    size_id: this.selectedSize.id,
+                                    quantity: this.quantity,
+                                    pickup_name: this.pickupName,
+                                    pickup_email: this.pickupEmail,
+                                    contact_number: this.contactNumber
+                                })
+                            });
 
                         const data = await response.json();
                         if (response.ok && data.success) {

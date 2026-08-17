@@ -31,7 +31,22 @@
 
     <!-- Onboarding Tour CSS (loaded only when tour is active) -->
     <script>
-        (function(){var d='qrinto_tour_completed_v1';try{if(localStorage.getItem(d)==='1'&&localStorage.getItem('qrinto_tour_active_v1')!=='1')return}catch(e){}var h=document.head;var a=document.createElement('link');a.rel='stylesheet';a.href='https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.css';h.appendChild(a);var b=document.createElement('link');b.rel='stylesheet';b.href='{{ asset("css/qrinto-tour.css") }}';h.appendChild(b);window.__qrintoTourCSS=true})();
+        (function() {
+            var d = 'qrinto_tour_completed_v1';
+            try {
+                if (localStorage.getItem(d) === '1' && localStorage.getItem('qrinto_tour_active_v1') !== '1') return
+            } catch (e) {}
+            var h = document.head;
+            var a = document.createElement('link');
+            a.rel = 'stylesheet';
+            a.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.css';
+            h.appendChild(a);
+            var b = document.createElement('link');
+            b.rel = 'stylesheet';
+            b.href = '{{ asset('css/qrinto-tour.css') }}';
+            h.appendChild(b);
+            window.__qrintoTourCSS = true
+        })();
     </script>
 
     <style>
@@ -91,10 +106,10 @@
         .topbar-store-indicator {
             width: 8px;
             height: 8px;
-            background: #22c55e;
+            background: #0ea5e9;
             border-radius: 50%;
             flex-shrink: 0;
-            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+            box-shadow: 0 0 0 3px #7dd3fc;
             animation: topbar-pulse 2.5s ease-in-out infinite;
         }
 
@@ -102,30 +117,30 @@
 
             0%,
             100% {
-                box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+                box-shadow: 0 0 0 3px #7dd3fc;
             }
 
             50% {
-                box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.08);
+                box-shadow: 0 0 0 6px #7dd3fc;
             }
         }
 
         .topbar-store-icon {
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, #F5FAF1, #EAF5DD);
+            background: linear-gradient(135deg, #e0f2fe, #e0f2fe);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             overflow: hidden;
-            border: 1.5px solid rgba(111, 186, 59, 0.15);
+            border: 1.5px solid #7dd3fc;
         }
 
         .topbar-store-icon-warn {
             background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border-color: rgba(245, 158, 11, 0.15);
+            border-color: #7dd3fc;
         }
 
         .topbar-store-logo-img {
@@ -138,7 +153,7 @@
         .topbar-pin-icon {
             width: 16px;
             height: 16px;
-            color: #5A9A2F;
+            color: #0ea5e9;
         }
 
         .topbar-store-icon-warn .topbar-pin-icon {
@@ -187,21 +202,21 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            color: #5A9A2F;
-            background: linear-gradient(135deg, #F5FAF1, #EAF5DD);
-            border: 1.5px solid rgba(111, 186, 59, 0.25);
+            color: #0ea5e9;
+            background: linear-gradient(135deg, #e0f2fe, #e0f2fe);
+            border: 1.5px solid #7dd3fc;
             border-radius: 20px;
             text-decoration: none;
             white-space: nowrap;
             flex-shrink: 0;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 3px rgba(111, 186, 59, 0.1);
+            box-shadow: 0 1px 3px #7dd3fc;
         }
 
         .topbar-store-btn:hover {
-            background: linear-gradient(135deg, #EAF5DD, #D2EBB8);
-            border-color: rgba(111, 186, 59, 0.4);
-            box-shadow: 0 3px 12px rgba(111, 186, 59, 0.2);
+            background: linear-gradient(135deg, #e0f2fe, #e0f2fe);
+            border-color: #7dd3fc;
+            box-shadow: 0 3px 12px #7dd3fc;
             transform: translateY(-1px);
         }
 
@@ -210,15 +225,15 @@
         }
 
         .topbar-store-btn-action {
-            background: linear-gradient(135deg, #5A9A2F, #487A25);
+            background: linear-gradient(135deg, #0ea5e9, #0369a1);
             color: #ffffff;
             border-color: transparent;
-            box-shadow: 0 2px 8px rgba(90, 154, 47, 0.3);
+            box-shadow: 0 2px 8px #7dd3fc;
         }
 
         .topbar-store-btn-action:hover {
-            background: linear-gradient(135deg, #487A25, #355A1C);
-            box-shadow: 0 4px 16px rgba(90, 154, 47, 0.35);
+            background: linear-gradient(135deg, #0369a1, #0369a1);
+            box-shadow: 0 4px 16px #7dd3fc;
         }
 
         .topbar-btn-icon {
@@ -273,13 +288,10 @@
 
             <div class="flex flex-col h-full ">
                 <!-- Modal Header (Blue Theme) -->
-                <div class="bg-brand-600 px-6 py-8 rounded-b-[40px] shadow-lg shadow-brand-900/10 mb-6">
+                <div class="bg-mobile-600 px-6 py-8 rounded-b-[40px] shadow-lg shadow-mobile-900/10 mb-6">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shadow-md">
-                                <span class="text-brand-600 font-black text-2xl">Q</span>
-                            </div>
-                            <span class="text-xl font-black tracking-tighter text-white uppercase">Menu</span>
+                            <img src="{{ asset('/images/svg-logo/Qrinto-logo-one-color-white-only.svg') }}" />
                         </div>
                         <button @click="mobileMenu = false"
                             class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all active:scale-90 border border-white/10">
@@ -292,11 +304,11 @@
                 <div class="flex-1 px-6 pb-8 space-y-6 overflow-y-auto">
                     <!-- Main Call to Action -->
                     <a href="{{ route('flow.index') }}" @click="mobileMenu = false"
-                        class="block w-full group relative overflow-hidden bg-brand-600 p-6 rounded-[32px] shadow-lg shadow-brand-100 transition-all hover:bg-brand-700 active:scale-[0.98]">
+                        class="block w-full group relative overflow-hidden bg-mobile-600 p-6 rounded-[32px] shadow-lg shadow-mobile-100 transition-all hover:bg-mobile-700 active:scale-[0.98]">
                         <div class="relative z-10 flex items-center justify-between">
                             <div class="flex flex-col text-left">
                                 <span
-                                    class="text-[10px] font-black text-brand-200 uppercase tracking-[0.2em] mb-1">Start
+                                    class="text-[10px] font-black text-mobile-200 uppercase tracking-[0.2em] mb-1">Start
                                     New Flow</span>
                                 <span class="text-xl font-black text-white leading-tight">Create Custom Print</span>
                             </div>
@@ -309,11 +321,11 @@
 
                     <!-- Direct Print CTA -->
                     <a href="{{ route('flow.qrinto') }}" @click="mobileMenu = false"
-                        class="block w-full group relative overflow-hidden bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 transition-all hover:border-brand-500 active:scale-[0.98]">
+                        class="block w-full group relative overflow-hidden bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 transition-all hover:border-mobile-500 active:scale-[0.98]">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-4">
                                 <div
-                                    class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl text-slate-400 group-hover:text-brand-600 group-hover:bg-brand-50 transition-all">
+                                    class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl text-slate-400 group-hover:text-mobile-600 group-hover:bg-mobile-50 transition-all">
                                     <i data-lucide="upload" class="w-6 h-6"></i>
                                 </div>
                                 <div class="flex flex-col text-left">
@@ -324,7 +336,7 @@
                                 </div>
                             </div>
                             <div
-                                class="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-brand-600 group-hover:text-white group-hover:border-brand-600 transition-all">
+                                class="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-mobile-600 group-hover:text-white group-hover:border-mobile-600 transition-all">
                                 <i data-lucide="chevron-right" class="w-4 h-4"></i>
                             </div>
                         </div>
@@ -333,16 +345,16 @@
                     <!-- Store Context -->
                     <div class="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100">
                         <div class="flex items-center gap-2 mb-4">
-                            <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
+                            <div class="w-1.5 h-4 bg-mobile-500 rounded-full"></div>
                             <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Active
                                 Branch</span>
                         </div>
 
                         @if ($activeStore)
                             <div
-                                class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4 group transition-all hover:bg-white hover:border-brand-200">
+                                class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4 group transition-all hover:bg-white hover:border-mobile-200">
                                 <div
-                                    class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-brand-600 group-hover:bg-brand-50 transition-colors">
+                                    class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-mobile-600 group-hover:bg-mobile-50 transition-colors">
                                     <i data-lucide="store" class="w-7 h-7"></i>
                                 </div>
                                 <div class="flex flex-col flex-1 overflow-hidden">
@@ -369,7 +381,7 @@
                                 </div>
                             </div>
                             <a href="{{ route('flow.find-store') }}"
-                                class="flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-brand-600 text-white font-black text-sm uppercase tracking-widest hover:bg-brand-700 transition-all shadow-lg shadow-brand-100 active:scale-[0.98]">
+                                class="flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-mobile-600 text-white font-black text-sm uppercase tracking-widest hover:bg-mobile-700 transition-all shadow-lg shadow-mobile-100 active:scale-[0.98]">
                                 Change Location
                                 <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
                             </a>
@@ -388,11 +400,11 @@
 
                     <!-- Tracking Quick Link -->
                     <a href="{{ route('flow.track.form') }}"
-                        class="block bg-white rounded-[28px] shadow-sm border border-slate-100 transition-all hover:border-brand-200 group overflow-hidden">
+                        class="block bg-white rounded-[28px] shadow-sm border border-slate-100 transition-all hover:border-mobile-200 group overflow-hidden">
                         <div class="flex items-center justify-between p-5">
                             <div class="flex items-center gap-5">
                                 <div
-                                    class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl text-slate-400 group-hover:text-brand-600 group-hover:bg-brand-50 transition-all">
+                                    class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl text-slate-400 group-hover:text-mobile-600 group-hover:bg-mobile-50 transition-all">
                                     <i data-lucide="map-pin" class="w-6 h-6"></i>
                                 </div>
                                 <div class="flex flex-col">
@@ -402,7 +414,7 @@
                                 </div>
                             </div>
                             <div
-                                class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white group-hover:border-brand-600 transition-all">
+                                class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-mobile-600 group-hover:text-white group-hover:border-mobile-600 transition-all">
                                 <i data-lucide="chevron-right" class="w-5 h-5"></i>
                             </div>
                         </div>
@@ -410,11 +422,11 @@
 
                     <!-- Replay Onboarding Tour -->
                     <button type="button" data-qt-restart="{{ route('flow.find-store') }}"
-                        class="w-full text-left bg-white rounded-[28px] shadow-sm border border-slate-100 transition-all hover:border-brand-200 group overflow-hidden">
+                        class="w-full text-left bg-white rounded-[28px] shadow-sm border border-slate-100 transition-all hover:border-mobile-200 group overflow-hidden">
                         <div class="flex items-center justify-between p-5">
                             <div class="flex items-center gap-5">
                                 <div
-                                    class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl text-slate-400 group-hover:text-brand-600 group-hover:bg-brand-50 transition-all">
+                                    class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl text-slate-400 group-hover:text-mobile-600 group-hover:bg-mobile-50 transition-all">
                                     <i data-lucide="sparkles" class="w-6 h-6"></i>
                                 </div>
                                 <div class="flex flex-col">
@@ -424,7 +436,7 @@
                                 </div>
                             </div>
                             <div
-                                class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white group-hover:border-brand-600 transition-all">
+                                class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:bg-mobile-600 group-hover:text-white group-hover:border-mobile-600 transition-all">
                                 <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
                             </div>
                         </div>
@@ -434,9 +446,9 @@
                 <!-- Modal Footer -->
                 <div class="mt-auto pt-8 border-t border-slate-100 flex flex-col items-center gap-5">
                     <div class="flex gap-8">
-                        <a href="#" class="text-slate-300 hover:text-brand-600 transition-colors"><i
+                        <a href="#" class="text-slate-300 hover:text-mobile-600 transition-colors"><i
                                 data-lucide="instagram" class="w-6 h-6"></i></a>
-                        <a href="#" class="text-slate-300 hover:text-brand-600 transition-colors"><i
+                        <a href="#" class="text-slate-300 hover:text-mobile-600 transition-colors"><i
                                 data-lucide="mail" class="w-6 h-6"></i></a>
                     </div>
                     <div class="flex flex-col items-center">
@@ -450,19 +462,11 @@
 
         <!-- Simplified Modern Header (Blue Theme) -->
         <header
-            class="sticky top-0 z-50 bg-brand-600 border-b border-brand-700/50 px-5 py-4 shadow-lg shadow-brand-900/10">
+            class="sticky top-0 z-50 bg-mobile-600 border-b border-mobile-700/50 px-5   shadow-lg shadow-mobile-900/10">
             <div class="flex items-center justify-between">
                 <!-- Branding -->
                 <a href="{{ url('/') }}" class="flex items-center gap-2.5 group">
-                    <div
-                        class="w-10 h-10 bg-white rounded-[14px] flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300">
-                        <span class="text-brand-600 font-black text-xl leading-none">Q</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-xl font-black tracking-tight text-white leading-none">Qrinto</span>
-                        <span class="text-[10px] font-extrabold text-brand-100 uppercase tracking-widest mt-0.5">Print
-                            Studio</span>
-                    </div>
+                    <img src="{{ asset('/images/svg-logo/Qrinto-logo-one-color-white-only.svg') }}" class="w-32" />
                 </a>
 
                 <!-- Simplified Actions -->
@@ -474,10 +478,11 @@
                         $cartCount = 0;
                         try {
                             $cartCount = app(\App\Services\CartService::class)->getCart()->item_count;
-                        } catch (\Exception $e) {}
+                        } catch (\Exception $e) {
+                        }
                     @endphp
                     @if ($pcRoute && Route::has($pcRoute))
-                        <!-- <a href="{{ route($pcRoute, $params) }}" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-brand-100 hover:text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95" title="Switch to PC View">
+                        <!-- <a href="{{ route($pcRoute, $params) }}" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-mobile-100 hover:text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95" title="Switch to PC View">
                         <i data-lucide="monitor" class="w-5 h-5"></i>
                     </a> -->
                     @endif
@@ -485,8 +490,9 @@
                     <a href="{{ route('flow.cart.index') }}" id="cart-btn"
                         class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95 relative">
                         <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-                        @if($cartCount > 0)
-                            <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg">{{ $cartCount }}</span>
+                        @if ($cartCount > 0)
+                            <span id="cart-count"
+                                class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg">{{ $cartCount }}</span>
                         @endif
                     </a>
 
@@ -548,7 +554,7 @@
         @endif
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto px-6 py-4">
+        <main class="flex-1 overflow-y-auto   py-4">
             @yield('content')
         </main>
 
@@ -567,7 +573,20 @@
 
     <!-- Onboarding Tour JS (loaded only when tour is active) -->
     <script>
-        (function(){try{if(localStorage.getItem('qrinto_tour_completed_v1')==='1'&&localStorage.getItem('qrinto_tour_active_v1')!=='1')return}catch(e){}var a=document.createElement('script');a.src='https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.js.iife.js';a.onload=function(){var b=document.createElement('script');b.src='{{ asset("js/qrinto-tour.js") }}';document.body.appendChild(b)};document.body.appendChild(a)})();
+        (function() {
+            try {
+                if (localStorage.getItem('qrinto_tour_completed_v1') === '1' && localStorage.getItem(
+                        'qrinto_tour_active_v1') !== '1') return
+            } catch (e) {}
+            var a = document.createElement('script');
+            a.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.3.6/dist/driver.js.iife.js';
+            a.onload = function() {
+                var b = document.createElement('script');
+                b.src = '{{ asset('js/qrinto-tour.js') }}';
+                document.body.appendChild(b)
+            };
+            document.body.appendChild(a)
+        })();
     </script>
 
     <!-- PWA Service Worker -->

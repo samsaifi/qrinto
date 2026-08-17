@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\CheckoutApiController;
 use App\Http\Controllers\Api\V1\OrderApiController;
 use App\Http\Controllers\Api\V1\CouponApiController;
 use App\Http\Controllers\Api\V1\AiApiController;
+use App\Http\Controllers\Api\V1\KioskApiController;
 
 use App\Http\Controllers\Api\Noritsu\StoreController as NoritsuStoreController;
 use App\Http\Controllers\Api\Noritsu\TemplateController as NoritsuTemplateController;
@@ -81,6 +82,13 @@ Route::prefix('v1')->group(function () {
 
     // ── 11. AI Assistant Chat ──
     Route::post('/ai/chat', [AiApiController::class, 'chat']);
+
+    // ── 12. Kiosk Endpoints ──
+    Route::get('/kiosks', [KioskApiController::class, 'index']);
+    Route::get('/kiosks/{id}', [KioskApiController::class, 'show']);
+    Route::post('/kiosks', [KioskApiController::class, 'store']);
+    Route::put('/kiosks/{id}', [KioskApiController::class, 'update']);
+    Route::delete('/kiosks/{id}', [KioskApiController::class, 'destroy']);
 });
 
 /*

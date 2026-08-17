@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Admin') - {{ config('app.name') }}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+    <link rel="alternate icon" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+    <link rel="shortcut icon" href="{{ asset('images/svg-logo/Q-only.svg') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    @stack('styles')
+</head>
+
+<body class="font-sans antialiased bg-surface-50" x-data="{ sidebarOpen: true }">
+    @php
+        $isStoreAdmin = auth()->user()->isStoreAdmin();
+        $userStore = $isStoreAdmin && auth()->user()->store_id ? auth()->user()->store : null;
+    @endphp
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'"
+            class="fixed inset-y-0 left-0 {{ $isStoreAdmin ? 'bg-gradient-to-b from-surface-900 to-surface-950' : 'bg-surface-900' }} transition-all duration-300 z-50 flex flex-col">
+            <!-- Logo -->
+            @if ($isStoreAdmin && $userStore)
+                <div class="flex items-center gap-3 px-5 py-3 border-b border-surface-800">
+                    @if ($userStore->logo)
+                        <div class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-2 ring-emerald-500/30">
+                            <img src="{{ asset('storage/' . $userStore->logo) }}" alt="{{ $userStore->store_name }}"
+                                class="w-full h-full object-cover">
+                        </div>
+                    @else
+                        <div
+                            class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="store" class="w-4 h-4 text-white"></i>
+                        </div>
+                    @endif
+                    <div x-show="sidebarOpen" x-transition class="min-w-0">
+                        <span class="font-display font-bold text-white text-sm whitespace-nowrap block">Store
+                            Panel</span>
+                        <span class="text-xs  text-gray-400 truncate block max-w-[160px]"
+                            title="{{ $userStore->store_name }}">{{ $userStore->store_name }}</span>
+                    </div>
+                </div>
+            @else
+                <div class="flex items-center gap-3 px-5 h-16 border-b border-surface-800">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <span x-show="sidebarOpen" x-transition
+                        class="font-display font-bold text-white text-lg whitespace-nowrap">Admin Panel</span>
+                </div>
+            @endif
+            <div class="relative    flex w-full gap-4 rounded-lg border border-white/[0.06] bg-white/[0.04] p-[3px]">
+
+                <!-- Slider -->
+                <div
+                    class="absolute inset-y-[3px] left-1/2 w-[calc(50%-3px)]
+                        rounded-[7px] border border-[#7CDB55]
+                        bg-[#7CDB55]/[0.14] transition-all duration-200">
+                </div>
+
+                <!-- Admin -->
+                <a href="{{ route('admin.dashboard') }}"
+                    class="relative z-10 flex flex-1 items-center justify-center gap-1.5
+                        rounded-md py-[7px] text-[12.5px] font-medium
+                        text-[#7A837A] hover:bg-brand-500 hover:text-white">
+                    <span class="text-sm text-[#7A837A]">▦</span>
+                    <span>Admin Panel</span>
+                </a>
+
+                <!-- Kiosk - Active -->
+                <button type="button"
+                    class="relative z-10 flex flex-1 items-center justify-center gap-1.5
+                        rounded-md py-[7px] text-[12.5px] font-medium
+                        text-[#EAF5E4]">
+                    <span class="text-sm text-[#7CDB55]">▣</span>
+                    <span>Kiosk</span>
+                </button>
+
+            </div>
+            <!-- Nav -->
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto no-scrollbar">
+                @php
+                    $topItems = [
+                        [
+                            'route' => 'admin.dashboard',
+                            'icon' => 'layout-dashboard',
+                            'label' => 'Dashboard',
+                            'match' => 'admin.dashboard',
+                        ],
+                    ];
+                @endphp
+
+                @foreach ($topItems as $item)
+                    <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {{ request()->routeIs($item['match']) ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                        <i data-lucide="{{ $item['icon'] }}"
+                            class="w-5 h-5 flex-shrink-0 {{ request()->routeIs($item['match']) ? 'text-white' : 'text-brand-500' }}"></i>
+                        <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
+            </nav>
+
+            <!-- Footer -->
+            <div class="px-3 py-4 border-t border-surface-800 space-y-1">
+                <a href="{{ route('home') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-surface-400 hover:bg-surface-800 hover:text-white transition">
+                    <i data-lucide="external-link" class="w-5 h-5 flex-shrink-0"></i>
+                    <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">View Site</span>
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}" x-data>
+                    @csrf
+                    <button type="submit"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 hover:text-red-400 transition"
+                        @click.prevent="$root.submit();">
+                        <i data-lucide="log-out" class="w-5 h-5 flex-shrink-0"></i>
+                        <span x-show="sidebarOpen" x-transition class="whitespace-nowrap text-left">Log Out</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <div :class="sidebarOpen ? 'ml-64' : 'ml-20'" class="flex-1 transition-all duration-300">
+            <!-- Top Bar -->
+            <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-surface-100 shadow-glass">
+                <div class="flex items-center justify-between h-16 px-6">
+                    <button @click="sidebarOpen = !sidebarOpen"
+                        class="p-2 rounded-xl hover:bg-surface-100 text-surface-500 transition">
+                        <i data-lucide="panel-left" class="w-5 h-5"></i>
+                    </button>
+                    <div class="flex items-center gap-4">
+                        {{-- Documentation Dropdown Menu --}}
+                        <div class="relative" x-data="{ docMenuOpen: false }">
+                            <button @click="docMenuOpen = !docMenuOpen" @click.away="docMenuOpen = false"
+                                class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-100 hover:bg-surface-200 text-surface-700 text-xs font-semibold transition border border-surface-200/80 shadow-2xs cursor-pointer">
+                                <i data-lucide="book-open" class="w-4 h-4 text-brand-600"></i>
+                                <span class="hidden sm:inline">Documentations</span>
+                                <i data-lucide="chevron-down"
+                                    class="w-3.5 h-3.5 text-surface-400 transition-transform duration-200"
+                                    :class="docMenuOpen ? 'rotate-180' : ''"></i>
+                            </button>
+
+                            <div x-show="docMenuOpen" x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                class="absolute right-0 mt-2 w-72 bg-white rounded-2xl border border-surface-200 shadow-xl py-2 z-50 divide-y divide-surface-100">
+
+                                <div class="px-4 py-2 bg-surface-50/70">
+                                    <p class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">
+                                        Documentation Center</p>
+                                    <a href="{{ route('admin.docs.index') }}"
+                                        class="text-xs font-bold text-brand-600 hover:text-brand-700 block mt-0.5">
+                                        View Help Center Home →
+                                    </a>
+                                </div>
+
+                                <div class="py-1">
+                                    <p
+                                        class="px-4 py-1 text-[10px] font-bold text-surface-400 uppercase tracking-wider">
+                                        Customer Flow</p>
+                                    <a href="{{ route('admin.docs.show', 'mobile-custom-editing-ordering-guide') }}"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
+                                        <i data-lucide="smartphone" class="w-4 h-4 text-pink-500"></i>
+                                        <span>Mobile Ordering Guide</span>
+                                    </a>
+                                    <a href="{{ route('admin.docs.show', 'desktop-custom-editing-ordering-guide') }}"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
+                                        <i data-lucide="monitor" class="w-4 h-4 text-indigo-500"></i>
+                                        <span>Desktop PC Studio Guide</span>
+                                    </a>
+                                </div>
+
+                                <div class="py-1">
+                                    <p
+                                        class="px-4 py-1 text-[10px] font-bold text-surface-400 uppercase tracking-wider">
+                                        Admin Operations</p>
+                                    <a href="{{ route('admin.docs.show', 'getting-started') }}"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
+                                        <i data-lucide="compass" class="w-4 h-4 text-brand-500"></i>
+                                        <span>Getting Started</span>
+                                    </a>
+                                    <a href="{{ route('admin.docs.show', 'orders') }}"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
+                                        <i data-lucide="package" class="w-4 h-4  text-gray-500"></i>
+                                        <span>Orders & Workflow</span>
+                                    </a>
+                                    <a href="{{ route('admin.docs.show', 'products') }}"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
+                                        <i data-lucide="box" class="w-4 h-4 text-amber-500"></i>
+                                        <span>Products & Masking</span>
+                                    </a>
+                                    <a href="{{ route('admin.docs.show', 'stores') }}"
+                                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
+                                        <i data-lucide="store" class="w-4 h-4 text-purple-500"></i>
+                                        <span>Stores & Printers</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        @if ($isStoreAdmin && $userStore)
+                            {{-- Store admin: show store logo + owner name --}}
+                            <div
+                                class="flex items-center gap-3 px-3 py-2 rounded-xl  bg-gray-50 border  border-gray-100">
+                                @if ($userStore->logo)
+                                    <div
+                                        class="w-8 h-8 rounded-lg overflow-hidden ring-2 ring-emerald-200 flex-shrink-0">
+                                        <img src="{{ asset('storage/' . $userStore->logo) }}"
+                                            alt="{{ $userStore->store_name }}" class="w-full h-full object-cover">
+                                    </div>
+                                @else
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="store" class="w-4 h-4 text-white"></i>
+                                    </div>
+                                @endif
+                                <div class="hidden sm:block">
+                                    <p class="text-sm font-semibold text-surface-800 leading-tight">
+                                        {{ auth()->user()->name }}</p>
+                                    <p class="text-xs  text-gray-600 leading-tight">{{ $userStore->store_name }}</p>
+                                </div>
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold  bg-gray-100  text-gray-700 uppercase tracking-wider">Store</span>
+                            </div>
+                        @else
+                            <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-100">
+                                <div
+                                    class="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center">
+                                    <span
+                                        class="text-white text-xs font-bold">{{ substr(auth()->user()->name, 0, 1) }}</span>
+                                </div>
+                                <span class="text-sm font-medium text-surface-700">{{ auth()->user()->name }}</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="p-6">
+                @if (session('success'))
+                    <div
+                        class="mb-6 p-4 bg-accent-50 border border-accent-200 text-accent-800 rounded-xl flex items-center gap-3 text-sm">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-accent-600"></i> {{ session('success') }}
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div
+                        class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center gap-3 text-sm">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-red-600"></i> {{ session('error') }}
+                    </div>
+                @endif
+                @if ($errors->any())
+                    <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm">
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                @yield('content')
+            </main>
+        </div>
+    </div>
+
+    <script>
+        window.__currency = @json(\App\Services\CurrencyService::toArray());
+        window.__price = function(amount, decimals) {
+            decimals = decimals !== undefined ? decimals : 2;
+            return window.__currency.symbol + parseFloat(amount).toFixed(decimals);
+        };
+    </script>
+    @stack('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>

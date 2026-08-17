@@ -1,8 +1,33 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Qrinto Store Locator')
-
+@section('title', 'Find a Qrinto Print Studio Store Near You | Local Store Pickup')
 @section('header_title', 'Store Locator')
+@section('meta_description',
+    'Locate Qrinto print studio branches near you for fast local store pickup, instant photo
+    printing, custom cards, business stationery, and order collection.')
+@section('meta_keywords',
+    'find print store, local photo print pickup, Qrinto store locator, photo studio near me,
+    custom printing shop, instant store pickup')
+@section('canonical_url', route('flow-pc.find-store'))
+@section('og_type', 'website')
+@section('og_title', 'Find a Qrinto Print Studio Store Near You | Local Store Pickup')
+@section('og_description',
+    'Locate Qrinto print studio branches near you for fast local store pickup, instant photo
+    printing, custom cards, business stationery, and order collection.')
+@section('og_image', asset('logo/Qrinto-logo-small.png'))
+
+@section('json_ld')
+    <script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "Store",
+  "name": "Qrinto Custom Print Studio Stores",
+  "url": "{{ route('flow-pc.find-store') }}",
+  "description": "Locate Qrinto print studio branches near you for fast local store pickup, instant photo printing, custom cards, and business stationery.",
+  "image": "{{ asset('logo/Qrinto-logo-small.png') }}"
+}
+</script>
+@endsection
 
 @push('styles')
     <!-- Swiper CSS CDN -->
@@ -212,22 +237,22 @@
                             </div>
                         @elseif ($selectedStore = \App\Models\Store::find(session('active_store_id')))
                             <div
-                                class="flex items-center gap-3 bg-emerald-50/90 border border-emerald-200/90 rounded-2xl px-4 py-2.5">
+                                class="flex items-center gap-3  bg-gray-50/90 border  border-gray-200/90 rounded-2xl px-4 py-2.5">
                                 <div
-                                    class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                    class="w-8 h-8 rounded-xl  bg-gray-500 text-white flex items-center justify-center text-xs shrink-0 shadow-2xs">
                                     <i data-lucide="check-circle-2" class="w-4.5 h-4.5"></i>
                                 </div>
                                 <div class="min-w-0">
                                     <span
-                                        class="text-[9px] font-black uppercase tracking-wider text-emerald-700 block leading-none">Currently
+                                        class="text-[9px] font-black uppercase tracking-wider  text-gray-700 block leading-none">Currently
                                         Active Branch</span>
                                     <h4
                                         class="text-xs font-black text-slate-900 truncate max-w-[140px] sm:max-w-[180px] mt-0.5">
                                         {{ $selectedStore->store_name }}</h4>
                                 </div>
                                 <span
-                                    class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-white border border-emerald-200/80 px-2.5 py-1 rounded-full shrink-0 ml-1">
-                                    Active <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    class="inline-flex items-center gap-1 text-[10px] font-black  text-gray-700 bg-white border  border-gray-200/80 px-2.5 py-1 rounded-full shrink-0 ml-1">
+                                    Active <span class="w-2 h-2 rounded-full  bg-gray-500 animate-pulse"></span>
                                 </span>
                             </div>
                         @endif
@@ -314,9 +339,9 @@
 
                                                         <template x-if="userLat && store._calcDistance">
                                                             <div
-                                                                class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full mt-2">
+                                                                class="inline-flex items-center gap-1 text-[10px] font-bold  text-gray-700  bg-gray-50 border  border-gray-200/80 px-2 py-0.5 rounded-full mt-2">
                                                                 <i data-lucide="navigation"
-                                                                    class="w-3 h-3 text-emerald-600"></i>
+                                                                    class="w-3 h-3  text-gray-600"></i>
                                                                 <span x-text="`${store._calcDistance} away`"></span>
                                                             </div>
                                                         </template>
@@ -418,9 +443,9 @@
 
                                                         <template x-if="userLat && store._calcDistance">
                                                             <div
-                                                                class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full mt-2">
+                                                                class="inline-flex items-center gap-1 text-[10px] font-bold  text-gray-700  bg-gray-50 border  border-gray-200/80 px-2 py-0.5 rounded-full mt-2">
                                                                 <i data-lucide="navigation"
-                                                                    class="w-3 h-3 text-emerald-600"></i>
+                                                                    class="w-3 h-3  text-gray-600"></i>
                                                                 <span x-text="`${store._calcDistance} away`"></span>
                                                             </div>
                                                         </template>
@@ -452,14 +477,14 @@
                         <div class="bg-white border border-slate-200/90 rounded-[28px] p-3.5 shadow-xs">
                             <div class="flex items-center justify-between px-3 py-2 border-b border-slate-100 mb-2.5">
                                 <div class="flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span class="w-2.5 h-2.5 rounded-full  bg-gray-500 animate-pulse"></span>
                                     <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Live Store
                                         Location Map</span>
                                 </div>
                                 <template x-if="userLat && userLon">
                                     <span
-                                        class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full">
-                                        <i data-lucide="crosshair" class="w-3 h-3 text-emerald-600"></i> GPS Active
+                                        class="inline-flex items-center gap-1 text-[10px] font-bold  text-gray-700  bg-gray-50 border  border-gray-200/80 px-2.5 py-0.5 rounded-full">
+                                        <i data-lucide="crosshair" class="w-3 h-3  text-gray-600"></i> GPS Active
                                     </span>
                                 </template>
                             </div>
@@ -765,7 +790,7 @@
                         if (!this.userMarker) {
                             const userIcon = L.divIcon({
                                 className: 'custom-user-pin',
-                                html: `<div class="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white shadow-md animate-pulse flex items-center justify-center text-white text-[10px]">📍</div>`,
+                                html: `<div class="w-6 h-6 rounded-full  bg-gray-500 border-2 border-white shadow-md animate-pulse flex items-center justify-center text-white text-[10px]">📍</div>`,
                                 iconSize: [24, 24],
                                 iconAnchor: [12, 12]
                             });
@@ -825,7 +850,7 @@
                         marker.bindPopup(`
                             <div style="font-family:sans-serif;padding:4px;">
                                 <div style="font-weight:bold;font-size:13px;color:#0f172a;">${store.store_name}</div>
-                                <div style="font-size:11px;color:#64748b;margin-top:2px;">${store.city || ''}, ${store.state || ''}</div>
+                                <div style="font-size:11px;color:#0ea5e9;margin-top:2px;">${store.city || ''}, ${store.state || ''}</div>
                                 ${distStr}
                             </div>
                         `);

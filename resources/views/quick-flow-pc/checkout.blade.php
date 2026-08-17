@@ -1,7 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Review & Pay')
+@section('title', 'Secure Checkout | Qrinto Custom Print Studio')
 @section('header_title', 'Review & Pay')
+@section('meta_robots', 'noindex, nofollow')
 
 @push('styles')
     <style>
@@ -84,7 +85,7 @@
         .success-check {
             width: 64px;
             height: 64px;
-            background: #22c55e;
+            background: #0ea5e9;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -258,7 +259,7 @@
                     <div class="hidden lg:flex items-center gap-3 fade-up" style="animation-delay: 0.1s">
                         <div
                             class="flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-2xl px-5 py-3 shadow-sm">
-                            <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <div class="w-3 h-3 rounded-full  bg-gray-500 animate-pulse"></div>
                             <span class="text-xs font-bold text-slate-700">SSL Encrypted Checkout</span>
                         </div>
                     </div>
@@ -307,7 +308,7 @@
                                                 alt="{{ $label }}">
                                             @if ($currentUpload)
                                                 <div
-                                                    class="absolute top-2.5 right-2.5 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-sm">
+                                                    class="absolute top-2.5 right-2.5 w-6 h-6  bg-gray-500 rounded-full flex items-center justify-center shadow-sm">
                                                     <i data-lucide="check" class="w-3 h-3 text-white"></i>
                                                 </div>
                                             @endif
@@ -317,7 +318,7 @@
                                                 class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{{ $label }}</span>
                                             @if ($currentUpload)
                                                 <span
-                                                    class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                    class="inline-flex items-center gap-1 text-[10px] font-bold  text-gray-600  bg-gray-50 px-2 py-0.5 rounded-full">
                                                     <i data-lucide="pen-tool" class="w-2.5 h-2.5"></i> Custom
                                                 </span>
                                             @else
@@ -478,7 +479,7 @@
                                 </button>
                             </div>
                             <p x-show="couponMessage" x-text="couponMessage"
-                                :class="appliedCoupon ? 'text-emerald-600' : 'text-red-500'"
+                                :class="appliedCoupon ? ' text-gray-600' : 'text-red-500'"
                                 class="text-[11px] font-bold mt-2" style="display:none"></p>
                         </div>
 
@@ -491,9 +492,9 @@
 
                             <template x-if="discountAmount > 0">
                                 <div class="flex justify-between items-center text-sm">
-                                    <span class="text-emerald-600 font-medium"
+                                    <span class=" text-gray-600 font-medium"
                                         x-text="'Discount (' + appliedCoupon + ')'"></span>
-                                    <span class="text-emerald-600 font-semibold"
+                                    <span class=" text-gray-600 font-semibold"
                                         x-text="'-' + __price(discountAmount)"></span>
                                 </div>
                             </template>

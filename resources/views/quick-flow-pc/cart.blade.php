@@ -1,6 +1,7 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Shopping Cart — Qrinto Print Studio')
+@section('title', 'Shopping Cart | Qrinto Custom Print Studio')
+@section('meta_robots', 'noindex, nofollow')
 
 @php
     $routePrefix = $routePrefix ?? 'flow-pc.';
@@ -145,7 +146,8 @@
 @endpush
 
 @section('content')
-    <div x-data="cartPage()" class="ambient-bg min-h-screen pt-5 pb-6">
+    <div x-data="cartPage()" @cart-updated.window="updateFromResponse($event.detail)"
+        class="ambient-bg min-h-screen pt-5 pb-6">
         <div class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- Sleek Compact Top Header Bar --}}
@@ -172,7 +174,7 @@
                 {{-- Step Indicator & Actions --}}
                 <div class="flex items-center gap-3">
                     <div class="hidden md:flex items-center gap-2 text-[11px] font-bold">
-                        <span class="text-emerald-600 flex items-center gap-1"><i data-lucide="check-circle"
+                        <span class=" text-gray-600 flex items-center gap-1"><i data-lucide="check-circle"
                                 class="w-3 h-3"></i> Customize</span>
                         <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
                         <span class="text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200/60">2.
@@ -403,8 +405,8 @@
                                                 @endif
 
                                                 <span
-                                                    class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
-                                                    <i data-lucide="sparkles" class="w-3 h-3 text-emerald-500"></i> High Res
+                                                    class="inline-flex items-center gap-1 text-[11px] font-bold  text-gray-700  bg-gray-50 px-2 py-0.5 rounded-md border  border-gray-200/60">
+                                                    <i data-lucide="sparkles" class="w-3 h-3  text-gray-500"></i> High Res
                                                 </span>
                                             </div>
 
@@ -463,15 +465,15 @@
 
                         {{-- Guarantee Banner Below Items --}}
                         <div
-                            class="bg-emerald-50/80 border border-emerald-200/80 text-slate-900 rounded-2xl py-2 px-4 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-2xs">
+                            class=" bg-gray-50/80 border  border-gray-200/80 text-slate-900 rounded-2xl py-2 px-4 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-2xs">
                             <div class="flex items-center gap-2 text-xs">
-                                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+                                <i data-lucide="shield-check" class="w-4 h-4  text-gray-600 shrink-0"></i>
                                 <span class="font-extrabold text-slate-900">100% Print Guarantee</span>
                                 <span class="hidden sm:inline text-slate-500 font-medium">— Free reprint or refund if not
                                     satisfied</span>
                             </div>
                             <a href="{{ route($routePrefix . 'index') }}"
-                                class="shrink-0 text-[11px] font-black text-emerald-700 hover:text-emerald-800 transition-colors flex items-center gap-1">
+                                class="shrink-0 text-[11px] font-black  text-gray-700 hover: text-gray-800 transition-colors flex items-center gap-1">
                                 Continue Shopping <i data-lucide="arrow-right" class="w-3 h-3"></i>
                             </a>
                         </div>
@@ -489,8 +491,8 @@
                             <div class="flex items-center justify-between pb-3 border-b border-slate-200/80 mb-3.5">
                                 <h2 class="text-lg font-black text-slate-900 tracking-tight">Order Summary</h2>
                                 <span
-                                    class="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                                    <i data-lucide="shield-check" class="w-3 h-3 text-emerald-500"></i> SSL Secure
+                                    class="inline-flex items-center gap-1 text-[10px] font-black  text-gray-700  bg-gray-50 px-2 py-0.5 rounded-full border  border-gray-200/60">
+                                    <i data-lucide="shield-check" class="w-3 h-3  text-gray-500"></i> SSL Secure
                                 </span>
                             </div>
 
@@ -537,7 +539,7 @@
                                     </button>
                                 </div>
                                 <p x-show="couponMessage" x-text="couponMessage"
-                                    :class="appliedCoupon ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
+                                    :class="appliedCoupon ? ' text-gray-600  bg-gray-50  border-gray-200' :
                                         'text-red-500 bg-red-50 border-red-200'"
                                     class="text-xs font-bold mt-2 p-1.5 rounded-lg border" style="display:none"></p>
                             </div>
@@ -551,11 +553,11 @@
 
                                 <template x-if="discount > 0">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-emerald-600 font-bold flex items-center gap-1">
+                                        <span class=" text-gray-600 font-bold flex items-center gap-1">
                                             <i data-lucide="tag" class="w-3 h-3"></i> Discount (<span
                                                 x-text="appliedCoupon"></span>)
                                         </span>
-                                        <span class="font-extrabold text-emerald-600"
+                                        <span class="font-extrabold  text-gray-600"
                                             x-text="'-' + __price(discount)"></span>
                                     </div>
                                 </template>
@@ -563,7 +565,7 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-slate-500 font-semibold">Shipping</span>
                                     <span
-                                        class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">Calculated
+                                        class="text-[10px] font-black  text-gray-600  bg-gray-50 px-2 py-0.5 rounded-full border  border-gray-200/60">Calculated
                                         at Checkout</span>
                                 </div>
                             </div>
@@ -590,7 +592,7 @@
                                 <div
                                     class="pt-2 border-t border-slate-100 grid grid-cols-2 gap-1.5 text-[10px] font-semibold text-slate-400">
                                     <div class="flex items-center gap-1">
-                                        <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-500 shrink-0"></i>
+                                        <i data-lucide="check-circle-2" class="w-3 h-3  text-gray-500 shrink-0"></i>
                                         <span>Print Guarantee</span>
                                     </div>
                                     <div class="flex items-center gap-1">
@@ -755,10 +757,17 @@
                 },
 
                 updateFromResponse(data) {
-                    this.subtotal = data.subtotal;
-                    this.discount = data.discount;
-                    this.total = data.total;
-                    this.itemCount = data.cart_count;
+                    if (!data) return;
+                    this.subtotal = parseFloat(data.subtotal || 0);
+                    this.discount = parseFloat(data.discount || 0);
+                    this.total = parseFloat(data.total || 0);
+                    this.itemCount = parseInt(data.cart_count || 0);
+
+                    const pcCount = document.getElementById('cart-count-pc');
+                    if (pcCount) pcCount.textContent = this.itemCount;
+                    const mobCount = document.getElementById('cart-count');
+                    if (mobCount) mobCount.textContent = this.itemCount;
+
                     if (data.cart_count === 0) {
                         setTimeout(() => location.reload(), 300);
                     }
@@ -822,6 +831,26 @@
                 loading: false,
                 removed: false,
 
+                updateCartPage(data) {
+                    const page = document.querySelector('[x-data^="cartPage"]');
+                    if (page) {
+                        if (window.Alpine && window.Alpine.$data) {
+                            const pageData = window.Alpine.$data(page);
+                            if (pageData && typeof pageData.updateFromResponse === 'function') {
+                                pageData.updateFromResponse(data);
+                            }
+                        } else if (page.__x && page.__x.$data) {
+                            page.__x.$data.subtotal = parseFloat(data.subtotal);
+                            page.__x.$data.discount = parseFloat(data.discount);
+                            page.__x.$data.total = parseFloat(data.total);
+                            page.__x.$data.itemCount = parseInt(data.cart_count);
+                        }
+                    }
+                    window.dispatchEvent(new CustomEvent('cart-updated', {
+                        detail: data
+                    }));
+                },
+
                 async changeQty(newQty) {
                     if (newQty < 1 || this.loading) return;
                     this.loading = true;
@@ -841,13 +870,7 @@
                         const data = await res.json();
                         if (data.success) {
                             this.qty = newQty;
-                            const page = document.querySelector('[x-data^="cartPage"]');
-                            if (page && page.__x) {
-                                page.__x.$data.subtotal = data.subtotal;
-                                page.__x.$data.discount = data.discount;
-                                page.__x.$data.total = data.total;
-                                page.__x.$data.itemCount = data.cart_count;
-                            }
+                            this.updateCartPage(data);
                         }
                     } catch (e) {
                         console.error(e);
@@ -870,14 +893,7 @@
                         const data = await res.json();
                         if (data.success) {
                             this.removed = true;
-                            const page = document.querySelector('[x-data^="cartPage"]');
-                            if (page && page.__x) {
-                                page.__x.$data.subtotal = data.subtotal;
-                                page.__x.$data.discount = data.discount;
-                                page.__x.$data.total = data.total;
-                                page.__x.$data.itemCount = data.cart_count;
-                                if (data.cart_count === 0) setTimeout(() => location.reload(), 300);
-                            }
+                            this.updateCartPage(data);
                         }
                     } catch (e) {
                         console.error(e);

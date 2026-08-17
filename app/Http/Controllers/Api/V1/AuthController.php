@@ -50,6 +50,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'phone' => $user->phone ?? null,
                     'role'  => $user->role ?? 'customer',
+                    'store' => $user->store ?? null,
                 ],
                 'token' => $token,
             ],

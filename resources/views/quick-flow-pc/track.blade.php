@@ -1,7 +1,8 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Track Order ' . $order->order_number)
+@section('title', 'Order Details #' . $order->order_number . ' | Qrinto')
 @section('header_title', 'Track Order')
+@section('meta_robots', 'noindex, nofollow')
 
 @push('styles')
     <style>
@@ -131,7 +132,7 @@
                         <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-sm">
                             <div class="flex items-center gap-3.5 mb-5 pb-4 border-b border-slate-200/80">
                                 <div
-                                    class="w-10 h-10 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0">
+                                    class="w-10 h-10  bg-gray-50 border  border-gray-100 rounded-2xl flex items-center justify-center  text-gray-600 shrink-0">
                                     <i data-lucide="store" class="w-5 h-5"></i>
                                 </div>
                                 <div>
@@ -175,8 +176,8 @@
                         <div class="flex items-center justify-between pb-4 border-b border-slate-200/80">
                             <h3 class="text-xl font-black text-slate-900 tracking-tight">Order Summary</h3>
                             <span
-                                class="inline-flex items-center gap-1 text-[11px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60">
-                                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i> Verified
+                                class="inline-flex items-center gap-1 text-[11px] font-black  text-gray-700  bg-gray-50 px-2.5 py-1 rounded-full border  border-gray-200/60">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5  text-gray-500"></i> Verified
                             </span>
                         </div>
 
@@ -203,8 +204,8 @@
                                 <span class="text-slate-500 font-semibold">Payment Status</span>
                                 @if ($order->payment_status === 'paid')
                                     <span
-                                        class="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60">
-                                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i> Paid
+                                        class="inline-flex items-center gap-1.5 text-xs font-extrabold  text-gray-700  bg-gray-50 px-3 py-1 rounded-full border  border-gray-200/60">
+                                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5  text-gray-500"></i> Paid
                                         Online
                                     </span>
                                 @else
@@ -251,7 +252,7 @@
                         <div
                             class="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-500">
                             <div class="flex items-center gap-1.5">
-                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i>
+                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5  text-gray-500 shrink-0"></i>
                                 <span>100% Print Guarantee</span>
                             </div>
                             <div class="flex items-center gap-1.5">

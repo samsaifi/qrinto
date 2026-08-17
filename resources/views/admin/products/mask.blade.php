@@ -31,33 +31,43 @@
             {{ session('success') }}
         </div>
     @endif
-     
+
     @php
-    
-        if($product->no_of_pages ==4){
-        $imageTypes = [
-            'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url], 
-            'sample_image' => ['label' => 'Inside Left Image', 'icon' => 'image', 'url' => $product->sample_image_url],
-            'background_image' => [
-                'label' => 'Inside Right Image',
-                'icon' => 'layers',
-                'url' => $product->background_image_url,
-            ],
-            'overlay_image' => ['label' => 'Back Cover Image', 'icon' => 'sparkles', 'url' => $product->overlay_image_url],
-        ];
-        }elseif($product->no_of_pages ==2){
-             $imageTypes = [
-                'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url], 
-                'sample_image' => ['label' => 'Inside Left Image', 'icon' => 'image', 'url' => $product->sample_image_url],
-                 
-            ];
-        }else{
+
+        if ($product->no_of_pages == 4) {
             $imageTypes = [
-                'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url],   
+                'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url],
+                'sample_image' => [
+                    'label' => 'Inside Left Image',
+                    'icon' => 'image',
+                    'url' => $product->sample_image_url,
+                ],
+                'background_image' => [
+                    'label' => 'Inside Right Image',
+                    'icon' => 'layers',
+                    'url' => $product->background_image_url,
+                ],
+                'overlay_image' => [
+                    'label' => 'Back Cover Image',
+                    'icon' => 'sparkles',
+                    'url' => $product->overlay_image_url,
+                ],
+            ];
+        } elseif ($product->no_of_pages == 2) {
+            $imageTypes = [
+                'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url],
+                'sample_image' => [
+                    'label' => 'Inside Left Image',
+                    'icon' => 'image',
+                    'url' => $product->sample_image_url,
+                ],
+            ];
+        } else {
+            $imageTypes = [
+                'frame_image' => ['label' => 'Front Image', 'icon' => 'frame', 'url' => $product->frame_image_url],
             ];
         }
-        
-        
+
         $savedMaskData = $product->mask_data ?? [];
         if (is_string($savedMaskData)) {
             $savedMaskData = json_decode($savedMaskData, true) ?? [];
@@ -110,7 +120,7 @@
                 style="display:flex; align-items:center; justify-content:space-between; padding:8px 16px; background:#f8fafc; border-bottom:1px solid #f1f5f9;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span
-                        style="font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;"
+                        style="font-size:11px; font-weight:600; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.05em;"
                         id="canvasLabel">Canvas — Frame Image</span>
                     <span id="canvasInfo" style="font-size:11px; color:#94a3b8;"></span>
                 </div>
@@ -118,7 +128,7 @@
                 <!-- Polygon drawing hint -->
                 <div id="polygonHelp"
                     style="display:none; align-items:center; gap:8px; background:#ecfdf5; padding:4px 12px; border-radius:6px; border:1px solid #a7f3d0;">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <div class="w-2 h-2 rounded-full  bg-gray-500 animate-pulse"></div>
                     <span style="font-size:11px; color:#065f46; font-weight:500;">Click to add points. Double-click or press
                         Enter to finish.</span>
                     <button type="button" onclick="finishPolygon()"
@@ -149,7 +159,7 @@
             <div id="canvasDisabledOverlay"
                 style="display:none; position:absolute; inset:0; background:rgba(148,163,184,0.25); backdrop-filter:blur(2px); z-index:40; border-radius:1rem; cursor:not-allowed; flex-direction:column; align-items:center; justify-content:center;">
                 <i data-lucide="lock" style="width:32px; height:32px; color:#94a3b8;"></i>
-                <p style="font-size:13px; font-weight:600; color:#64748b; margin-top:8px;">Canvas disabled — toggle to
+                <p style="font-size:13px; font-weight:600; color:#0ea5e9; margin-top:8px;">Canvas disabled — toggle to
                     enable</p>
             </div>
         </div>
@@ -166,53 +176,65 @@
             <!-- Shape Grid -->
             <div style="padding:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                 <button type="button" onclick="addShape('square')" class="shape-btn group">
-                    <div class="w-8 h-8 bg-emerald-500/40 border-2 border-emerald-500 rounded-sm"></div><span>Square</span>
+                    <div class="w-8 h-8  bg-gray-500/40 border-2  border-gray-500 rounded-sm"></div><span>Square</span>
                 </button>
                 <button type="button" onclick="addShape('rectangle')" class="shape-btn group">
-                    <div class="w-10 h-7 bg-emerald-500/40 border-2 border-emerald-500 rounded-sm"></div><span>Rectangle</span>
+                    <div class="w-10 h-7  bg-gray-500/40 border-2  border-gray-500 rounded-sm"></div>
+                    <span>Rectangle</span>
                 </button>
                 <button type="button" onclick="addShape('circle')" class="shape-btn group">
-                                    <div class="w-8 h-8 bg-emerald-500/40 border-2 border-emerald-500 rounded-full"></div><span>Circle</span>
-                                </button>
-                                <button type="button" onclick="addShape('ellipse')" class="shape-btn group">
-                                    <div class="w-10 h-7 bg-emerald-500/40 border-2 border-emerald-500 rounded-full"></div><span>Ellipse</span>
-                                </button>
-                                <button type="button" onclick="addShape('triangle')" class="shape-btn group">
-                                    <div class="w-0 h-0 border-l-[20px] border-r-[20px] border-b-[35px] border-l-transparent border-r-transparent border-b-emerald-500/60"></div><span>Triangle</span>
-                                </button>
-                                <button type="button" onclick="addShape('diamond')" class="shape-btn group">
-                                    <div class="w-7 h-7 bg-emerald-500/40 border-2 border-emerald-500 rotate-45 rounded-sm"></div><span>Diamond</span>
-                                </button>
-                                <button type="button" onclick="addShape('pentagon')" class="shape-btn group">
-                                    <svg class="w-8 h-8" viewBox="0 0 40 40">
-                                        <polygon points="20,2 38,15 31,37 9,37 2,15" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
-                                    </svg><span>Pentagon</span>
-                                </button>
-                                <button type="button" onclick="addShape('hexagon')" class="shape-btn group">
-                                    <svg class="w-8 h-8" viewBox="0 0 40 40">
-                                        <polygon points="20,2 36,10 36,30 20,38 4,30 4,10" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
-                                    </svg><span>Hexagon</span>
-                                </button>
-                                <button type="button" onclick="addShape('star')" class="shape-btn group">
-                                    <svg class="w-8 h-8" viewBox="0 0 40 40">
-                                        <polygon points="20,2 25,15 39,15 27,24 31,38 20,29 9,38 13,24 1,15 15,15" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
-                                    </svg><span>Star</span>
-                                </button>
-                                <button type="button" onclick="addShape('heart')" class="shape-btn group">
-                                    <svg class="w-8 h-8" viewBox="0 0 40 40">
-                                        <path d="M20 36 C10 28 2 22 2 14 C2 8 6 4 12 4 C16 4 19 6 20 9 C21 6 24 4 28 4 C34 4 38 8 38 14 C38 22 30 28 20 36Z" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
-                                    </svg><span>Heart</span>
-                                </button>
-                                <button type="button" onclick="addShape('arch')" class="shape-btn group">
-                                    <svg class="w-10 h-10" viewBox="0 0 40 40">
-                                        <path d="M4 38 L4 18 C4 8 12 2 20 2 C28 2 36 8 36 18 L36 38 Z" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
-                                    </svg><span>Arch</span>
-                                </button>
-                                <button type="button" onclick="addShape('oval')" class="shape-btn group">
-                                    <div class="w-6 h-9 bg-emerald-500/40 border-2 border-emerald-500 rounded-full"></div><span>Oval</span>
-                                </button>
- 
-                <button type="button" onclick="startPolygonDraw()" class="shape-btn group col-span-2 bg-emerald-50/50">
+                    <div class="w-8 h-8  bg-gray-500/40 border-2  border-gray-500 rounded-full"></div>
+                    <span>Circle</span>
+                </button>
+                <button type="button" onclick="addShape('ellipse')" class="shape-btn group">
+                    <div class="w-10 h-7  bg-gray-500/40 border-2  border-gray-500 rounded-full"></div>
+                    <span>Ellipse</span>
+                </button>
+                <button type="button" onclick="addShape('triangle')" class="shape-btn group">
+                    <div
+                        class="w-0 h-0 border-l-[20px] border-r-[20px] border-b-[35px] border-l-transparent border-r-transparent border-b-emerald-500/60">
+                    </div><span>Triangle</span>
+                </button>
+                <button type="button" onclick="addShape('diamond')" class="shape-btn group">
+                    <div class="w-7 h-7  bg-gray-500/40 border-2  border-gray-500 rotate-45 rounded-sm"></div>
+                    <span>Diamond</span>
+                </button>
+                <button type="button" onclick="addShape('pentagon')" class="shape-btn group">
+                    <svg class="w-8 h-8" viewBox="0 0 40 40">
+                        <polygon points="20,2 38,15 31,37 9,37 2,15" fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)"
+                            stroke-width="2" />
+                    </svg><span>Pentagon</span>
+                </button>
+                <button type="button" onclick="addShape('hexagon')" class="shape-btn group">
+                    <svg class="w-8 h-8" viewBox="0 0 40 40">
+                        <polygon points="20,2 36,10 36,30 20,38 4,30 4,10" fill="rgba(16,185,129,0.4)"
+                            stroke="rgb(16,185,129)" stroke-width="2" />
+                    </svg><span>Hexagon</span>
+                </button>
+                <button type="button" onclick="addShape('star')" class="shape-btn group">
+                    <svg class="w-8 h-8" viewBox="0 0 40 40">
+                        <polygon points="20,2 25,15 39,15 27,24 31,38 20,29 9,38 13,24 1,15 15,15"
+                            fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
+                    </svg><span>Star</span>
+                </button>
+                <button type="button" onclick="addShape('heart')" class="shape-btn group">
+                    <svg class="w-8 h-8" viewBox="0 0 40 40">
+                        <path
+                            d="M20 36 C10 28 2 22 2 14 C2 8 6 4 12 4 C16 4 19 6 20 9 C21 6 24 4 28 4 C34 4 38 8 38 14 C38 22 30 28 20 36Z"
+                            fill="rgba(16,185,129,0.4)" stroke="rgb(16,185,129)" stroke-width="2" />
+                    </svg><span>Heart</span>
+                </button>
+                <button type="button" onclick="addShape('arch')" class="shape-btn group">
+                    <svg class="w-10 h-10" viewBox="0 0 40 40">
+                        <path d="M4 38 L4 18 C4 8 12 2 20 2 C28 2 36 8 36 18 L36 38 Z" fill="rgba(16,185,129,0.4)"
+                            stroke="rgb(16,185,129)" stroke-width="2" />
+                    </svg><span>Arch</span>
+                </button>
+                <button type="button" onclick="addShape('oval')" class="shape-btn group">
+                    <div class="w-6 h-9  bg-gray-500/40 border-2  border-gray-500 rounded-full"></div><span>Oval</span>
+                </button>
+
+                <button type="button" onclick="startPolygonDraw()" class="shape-btn group col-span-2  bg-gray-50/50">
                     <svg class="w-8 h-8" viewBox="0 0 40 40">
                         <path d="M 10,30 L 5,10 L 25,5 L 35,20 L 25,35 Z" fill="rgba(16,185,129,0.4)"
                             stroke="rgb(16,185,129)" stroke-width="2" stroke-linejoin="round" />
@@ -222,44 +244,44 @@
             </div>
 
             <!-- Add Text
-                <div style="padding:10px; border-top:1px solid #f1f5f9;">
-                    <h3
-                        style="font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
-                        Add Text</h3>
-                    <input type="text" id="maskTextInput" placeholder="Enter text…"
-                        style="width:100%; padding:6px 10px; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; outline:none; margin-bottom:6px; box-sizing:border-box;">
-                    <div style="display:flex; gap:6px; margin-bottom:6px;">
-                        <select id="maskFontSize"
-                            style="flex:1; padding:5px 6px; font-size:11px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; outline:none;">
-                            <option value="14">14px</option>
-                            <option value="18">18px</option>
-                            <option value="24" selected>24px</option>
-                            <option value="32">32px</option>
-                            <option value="40">40px</option>
-                            <option value="48">48px</option>
-                            <option value="64">64px</option>
-                            <option value="80">80px</option>
-                        </select>
-                        <input type="color" id="maskTextColor" value="#0064ff"
-                            style="width:34px; height:30px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; padding:2px;">
-                    </div>
-                    <select id="maskFontFamily"
-                        style="width:100%; padding:5px 6px; font-size:11px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; outline:none; margin-bottom:8px;">
-                        <option>Arial</option>
-                        <option>Helvetica</option>
-                        <option>Times New Roman</option>
-                        <option>Georgia</option>
-                        <option>Courier New</option>
-                        <option>Verdana</option>
-                        <option>Impact</option>
-                        <option>Comic Sans MS</option>
-                    </select>
-                    <button type="button" onclick="addTextMask()"
-                        style="width:100%; padding:7px 0; font-size:12px; font-weight:600; color:#fff; background:#2563eb; border:none; border-radius:8px; cursor:pointer;">
-                        + Add Text
-                    </button>
-                </div>
-                -->
+                            <div style="padding:10px; border-top:1px solid #f1f5f9;">
+                                <h3
+                                    style="font-size:11px; font-weight:600; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
+                                    Add Text</h3>
+                                <input type="text" id="maskTextInput" placeholder="Enter text…"
+                                    style="width:100%; padding:6px 10px; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; outline:none; margin-bottom:6px; box-sizing:border-box;">
+                                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                    <select id="maskFontSize"
+                                        style="flex:1; padding:5px 6px; font-size:11px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; outline:none;">
+                                        <option value="14">14px</option>
+                                        <option value="18">18px</option>
+                                        <option value="24" selected>24px</option>
+                                        <option value="32">32px</option>
+                                        <option value="40">40px</option>
+                                        <option value="48">48px</option>
+                                        <option value="64">64px</option>
+                                        <option value="80">80px</option>
+                                    </select>
+                                    <input type="color" id="maskTextColor" value="#0064ff"
+                                        style="width:34px; height:30px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; padding:2px;">
+                                </div>
+                                <select id="maskFontFamily"
+                                    style="width:100%; padding:5px 6px; font-size:11px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; outline:none; margin-bottom:8px;">
+                                    <option>Arial</option>
+                                    <option>Helvetica</option>
+                                    <option>Times New Roman</option>
+                                    <option>Georgia</option>
+                                    <option>Courier New</option>
+                                    <option>Verdana</option>
+                                    <option>Impact</option>
+                                    <option>Comic Sans MS</option>
+                                </select>
+                                <button type="button" onclick="addTextMask()"
+                                    style="width:100%; padding:7px 0; font-size:12px; font-weight:600; color:#fff; background:#2563eb; border:none; border-radius:8px; cursor:pointer;">
+                                    + Add Text
+                                </button>
+                            </div>
+                            -->
             <!-- Active Mask List -->
             <div class="border-t border-surface-100 px-4 py-3 flex-1">
                 <h3 class="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Active Masks</h3>
@@ -271,7 +293,7 @@
             <!-- Properties Panel -->
             <div id="propsPanel" style="border-top:1px solid #f1f5f9; padding:10px; display:none;">
                 <h3
-                    style="font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
+                    style="font-size:11px; font-weight:600; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
                     Properties</h3>
                 <!-- Shape props -->
                 <div id="shapeProps" style="display:none;">
@@ -292,7 +314,7 @@
                         <label style="font-size:10px; color:#94a3b8; display:block; margin-bottom:3px;">Opacity</label>
                         <input type="range" id="propOpacity" min="0" max="100" value="45"
                             oninput="applyOpacity(this.value)" style="width:100%; cursor:pointer;">
-                        <span id="propOpacityVal" style="font-size:10px; color:#64748b;">45%</span>
+                        <span id="propOpacityVal" style="font-size:10px; color:#0ea5e9;">45%</span>
                     </div>
                 </div>
                 <!-- Text props -->
@@ -389,7 +411,7 @@
         .shape-btn span {
             font-size: 10px;
             font-weight: 500;
-            color: #64748b;
+            color: #0ea5e9;
         }
 
         .shape-btn:hover span {
@@ -1171,7 +1193,7 @@
                 masks.forEach((m, i) => {
                     const div = document.createElement('div');
                     div.className =
-                        'mask-item flex items-center justify-between px-3 py-2 bg-surface-50 rounded-lg cursor-pointer hover:bg-emerald-50 transition group';
+                        'mask-item flex items-center justify-between px-3 py-2 bg-surface-50 rounded-lg cursor-pointer hover: bg-gray-50 transition group';
                     div.onclick = () => selectMask(m.name);
                     div.innerHTML = `
                 <div class="flex items-center gap-2">
@@ -1363,7 +1385,8 @@
                     // tabs were visited, so skipping tabs can never persist the stale default.
                     const probe = imageProbes[key];
                     if (probe && probe.complete && probe.naturalWidth > 0) {
-                        canvasStates[key].canvasHeight = Math.round(BASE_WIDTH * probe.naturalHeight / probe.naturalWidth);
+                        canvasStates[key].canvasHeight = Math.round(BASE_WIDTH * probe.naturalHeight / probe
+                            .naturalWidth);
                     }
                     payload[key] = {
                         enabled: canvasStates[key].enabled,

@@ -7,7 +7,23 @@
      ═══════════════════════════════════════════════════════════════════════ --}}
 
 @extends('layouts.quick-flow-pc')
-@section('title', 'Customize Your ' . $product->name)
+@section('title', 'Customize Your ' . $product->name . ' | Qrinto Online Print Studio')
+@section('meta_description',
+    'Customize ' .
+    $product->name .
+    ' online with Qrinto real-time design studio. Add custom
+    text, photos, colors, and layers with instant store pickup.')
+@section('meta_keywords', 'customize ' . strtolower($product->name) . ', online print editor, custom ' .
+    strtolower($product->name) . ' design, Qrinto studio')
+@section('canonical_url', url()->current())
+@section('og_type', 'product')
+@section('og_title', 'Customize Your ' . $product->name . ' | Qrinto Online Print Studio')
+@section('og_description',
+    'Customize ' .
+    $product->name .
+    ' online with Qrinto real-time design studio. Add custom
+    text, photos, colors, and layers with instant store pickup.')
+@section('og_image', asset('logo/Qrinto-logo-small.png'))
 
 @push('styles')
     @include('quick-flow-pc.partials.customizer-styles')
@@ -331,9 +347,9 @@
                                     <span class="hidden sm:inline">Crop Image</span>
                                 </button>
                                 <button type="button" id="mask-top-btn" onclick="toggleShapeMaskDrawer()"
-                                    class="hidden p-2 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 shadow-2xs"
+                                    class="hidden p-2  text-gray-700  bg-gray-50 hover: bg-gray-100 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 shadow-2xs"
                                     title="Mask Image into Shape">
-                                    <i data-lucide="shapes" class="w-4 h-4 text-emerald-600"></i>
+                                    <i data-lucide="shapes" class="w-4 h-4  text-gray-600"></i>
                                     <span class="hidden sm:inline">Shape Mask</span>
                                 </button>
                             </div>
@@ -350,9 +366,9 @@
 
                                 {{-- 300 DPI Pre-flight Indicator --}}
                                 <div id="preflight-badge"
-                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[11px] font-extrabold shadow-2xs"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full  bg-gray-50  text-gray-700 border  border-gray-200/80 text-[11px] font-extrabold shadow-2xs"
                                     title="Print Quality Score">
-                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5  text-gray-600"></i>
                                     <span id="preflight-text">300 DPI Optimal</span>
                                 </div>
                             </div>
@@ -523,7 +539,7 @@
                                 Customize <span class="text-slate-800 font-semibold">{{ $product->name }}</span>
                             </h1>
                             <p class="text-xs text-slate-500 font-semibold flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span class="w-1.5 h-1.5 rounded-full  bg-gray-500 animate-ping"></span>
                                 @if (count($imageTypes) == 1)
                                     Customize your design elements using the tools on the right dock.
                                 @elseif (count($imageTypes) == 2)
@@ -554,17 +570,17 @@
 
                                 @if (isset($flowData['size_price']))
                                     <div
-                                        class="flex items-center gap-3 px-4 py-2 rounded-2xl bg-emerald-50/90 backdrop-blur-md border border-emerald-200/90 shadow-2xs text-emerald-800">
+                                        class="flex items-center gap-3 px-4 py-2 rounded-2xl  bg-gray-50/90 backdrop-blur-md border  border-gray-200/90 shadow-2xs  text-gray-800">
                                         <div
-                                            class="w-8 h-8 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
+                                            class="w-8 h-8 rounded-xl  bg-gray-100/80  text-gray-600 flex items-center justify-center shrink-0">
                                             <i data-lucide="tag" class="w-4 h-4"></i>
                                         </div>
                                         <div>
                                             <span
-                                                class="block text-[10px] font-black uppercase tracking-wider text-emerald-600">Unit
+                                                class="block text-[10px] font-black uppercase tracking-wider  text-gray-600">Unit
                                                 Price</span>
                                             <span
-                                                class="text-xs font-black text-emerald-900">{{ \App\Services\CurrencyService::format($flowData['size_price']) }}</span>
+                                                class="text-xs font-black  text-gray-900">{{ \App\Services\CurrencyService::format($flowData['size_price']) }}</span>
                                         </div>
                                     </div>
                                 @endif
@@ -813,7 +829,7 @@
                 const uploadText = document.getElementById('upload-text');
                 if (hasImg) {
                     if (uploadIconBg) uploadIconBg.className =
-                        'w-12 h-12 rounded-full bg-emerald-500 text-white shadow-xl flex items-center justify-center border border-emerald-400';
+                        'w-12 h-12 rounded-full  bg-gray-500 text-white shadow-xl flex items-center justify-center border  border-gray-400';
                     if (uploadText) uploadText.textContent = userImagesCount > 1 ? 'Photo (' + userImagesCount +
                         ')' : 'Photo';
                 } else {

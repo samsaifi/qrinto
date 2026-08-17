@@ -152,7 +152,7 @@
             text-align: center;
             font-size: 13px;
             font-weight: 600;
-            color: #64748b;
+            color: #0ea5e9;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 12px;
@@ -273,7 +273,7 @@
         }
 
         .image-debug th {
-            color: #64748b;
+            color: #0ea5e9;
             font-weight: 600;
             text-transform: uppercase;
             font-size: 11px;
@@ -314,8 +314,9 @@
         </div>
         <div class="toolbar-right">
             <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-outline">← Back to Order</a>
-            @if($item && $item->pdf_path)
-            <a href="{{ asset('storage/' . $item->pdf_path) }}" target="_blank" class="btn btn-primary">View Actual PDF</a>
+            @if ($item && $item->pdf_path)
+                <a href="{{ asset('storage/' . $item->pdf_path) }}" target="_blank" class="btn btn-primary">View Actual
+                    PDF</a>
             @endif
         </div>
     </div>
@@ -323,124 +324,127 @@
     <!-- Info bar -->
     <div class="info-bar">
         <div class="info-item"><strong>Paper Size:</strong> {{ $width }}" × {{ $height }}"</div>
-        <div class="info-item"><strong>Original:</strong> {{ $flowData['size_width'] ?? '?' }}" × {{ $flowData['size_height'] ?? '?' }}"</div>
+        <div class="info-item"><strong>Original:</strong> {{ $flowData['size_width'] ?? '?' }}" ×
+            {{ $flowData['size_height'] ?? '?' }}"</div>
         <div class="info-item"><strong>Orientation:</strong> {{ $orientation }}</div>
         <div class="info-item"><strong>Product:</strong> {{ $item->product_name ?? 'N/A' }}</div>
-        @if(isset($flowData['size_dimensions']))
-        <div class="info-item"><strong>Size Label:</strong> {{ $flowData['size_dimensions'] }}</div>
+        @if (isset($flowData['size_dimensions']))
+            <div class="info-item"><strong>Size Label:</strong> {{ $flowData['size_dimensions'] }}</div>
         @endif
     </div>
 
     <div class="pages-wrapper">
         @php
-        // Calculate pixel display size: 1 inch = 96px for browser preview
-        $scale = 96;
-        $displayWidth = $width * $scale;
-        $displayHeight = $height * $scale;
+            // Calculate pixel display size: 1 inch = 96px for browser preview
+            $scale = 96;
+            $displayWidth = $width * $scale;
+            $displayHeight = $height * $scale;
         @endphp
 
-        @if($orientation === 'portrait')
-        <!-- Portrait Grouping -->
-        <!-- Page 1 -->
-        <div>
-            <div class="page-label">Page 1</div>
-            <div class="pdf-page" style="width: {{ $displayWidth }}px; height: {{ $displayHeight }}px;">
-                <div class="fold-line"></div>
-                <div class="img-container top {{ $rotations['frame_image'] ?? 'rotate_0' }}">
-                    <span class="img-label">frame_image ({{ $rotations['frame_image'] ?? 'rotate_0' }})</span>
-                    @if(!empty($images['frame_image']))
-                    <img src="{{ $images['frame_image'] }}" alt="Frame Image">
-                    @else
-                    <div class="no-image">No frame_image</div>
-                    @endif
-                </div>
-                <div class="img-container bottom {{ $rotations['overlay_image'] ?? 'rotate_0' }}">
-                    <span class="img-label">overlay_image ({{ $rotations['overlay_image'] ?? 'rotate_0' }})</span>
-                    @if(!empty($images['overlay_image']))
-                    <img src="{{ $images['overlay_image'] }}" alt="Overlay Image">
-                    @else
-                    <div class="no-image">No overlay_image</div>
-                    @endif
-                </div>
+        @if ($orientation === 'portrait')
+            <!-- Portrait Grouping -->
+            <!-- Page 1 -->
+            <div>
+                <div class="page-label">Page 1</div>
+                <div class="pdf-page" style="width: {{ $displayWidth }}px; height: {{ $displayHeight }}px;">
+                    <div class="fold-line"></div>
+                    <div class="img-container top {{ $rotations['frame_image'] ?? 'rotate_0' }}">
+                        <span class="img-label">frame_image ({{ $rotations['frame_image'] ?? 'rotate_0' }})</span>
+                        @if (!empty($images['frame_image']))
+                            <img src="{{ $images['frame_image'] }}" alt="Frame Image">
+                        @else
+                            <div class="no-image">No frame_image</div>
+                        @endif
+                    </div>
+                    <div class="img-container bottom {{ $rotations['overlay_image'] ?? 'rotate_0' }}">
+                        <span class="img-label">overlay_image ({{ $rotations['overlay_image'] ?? 'rotate_0' }})</span>
+                        @if (!empty($images['overlay_image']))
+                            <img src="{{ $images['overlay_image'] }}" alt="Overlay Image">
+                        @else
+                            <div class="no-image">No overlay_image</div>
+                        @endif
+                    </div>
 
+                </div>
             </div>
-        </div>
 
-        <!-- Page 2 -->
-        <div>
-            <div class="page-label">Page 2</div>
-            <div class="pdf-page" style="width: {{ $displayWidth }}px; height: {{ $displayHeight }}px;">
-                <div class="fold-line"></div>
-                <div class="img-container top  {{ $rotations['sample_image'] ?? 'rotate_0' }}">
-                    <span class="img-label">sample_image ({{ $rotations['sample_image'] ?? 'rotate_0' }})</span>
-                    @if(!empty($images['sample_image']))
-                    <img src="{{ $images['sample_image'] }}" alt="Sample Image">
-                    @else
-                    <div class="no-image">No sample_image</div>
-                    @endif
-                </div>
-                <div class="img-container  bottom {{ $rotations['background_image'] ?? 'rotate_0' }}">
-                    <span class="img-label">background_image ({{ $rotations['background_image'] ?? 'rotate_0' }})</span>
-                    @if(!empty($images['background_image']))
-                    <img src="{{ $images['background_image'] }}" alt="Background Image">
-                    @else
-                    <div class="no-image">No background_image</div>
-                    @endif
-                </div>
+            <!-- Page 2 -->
+            <div>
+                <div class="page-label">Page 2</div>
+                <div class="pdf-page" style="width: {{ $displayWidth }}px; height: {{ $displayHeight }}px;">
+                    <div class="fold-line"></div>
+                    <div class="img-container top  {{ $rotations['sample_image'] ?? 'rotate_0' }}">
+                        <span class="img-label">sample_image ({{ $rotations['sample_image'] ?? 'rotate_0' }})</span>
+                        @if (!empty($images['sample_image']))
+                            <img src="{{ $images['sample_image'] }}" alt="Sample Image">
+                        @else
+                            <div class="no-image">No sample_image</div>
+                        @endif
+                    </div>
+                    <div class="img-container  bottom {{ $rotations['background_image'] ?? 'rotate_0' }}">
+                        <span class="img-label">background_image
+                            ({{ $rotations['background_image'] ?? 'rotate_0' }})</span>
+                        @if (!empty($images['background_image']))
+                            <img src="{{ $images['background_image'] }}" alt="Background Image">
+                        @else
+                            <div class="no-image">No background_image</div>
+                        @endif
+                    </div>
 
+                </div>
             </div>
-        </div>
         @else
-        <!-- Landscape Grouping -->
-        <!-- Page 1 -->
-        <div>
-            <div class="page-label">Page 1</div>
-            <div class="pdf-page" style="width: {{ $displayWidth }}px; height: {{ $displayHeight }}px;">
-                <div class="fold-line"></div>
-                <div class="img-container top {{ $rotations['sample_image'] ?? 'rotate_0' }}">
-                    <span class="img-label">sample_image ({{ $rotations['sample_image'] ?? 'rotate_0' }})</span>
-                    @if(!empty($images['sample_image']))
-                    <img src="{{ $images['sample_image'] }}" alt="Sample Image">
-                    @else
-                    <div class="no-image">No sample_image</div>
-                    @endif
-                </div>
-                <div class="img-container bottom {{ $rotations['background_image'] ?? 'rotate_0' }}">
-                    <span class="img-label">background_image ({{ $rotations['background_image'] ?? 'rotate_0' }})</span>
-                    @if(!empty($images['background_image']))
-                    <img src="{{ $images['background_image'] }}" alt="Background Image">
-                    @else
-                    <div class="no-image">No background_image</div>
-                    @endif
-                </div>
+            <!-- Landscape Grouping -->
+            <!-- Page 1 -->
+            <div>
+                <div class="page-label">Page 1</div>
+                <div class="pdf-page" style="width: {{ $displayWidth }}px; height: {{ $displayHeight }}px;">
+                    <div class="fold-line"></div>
+                    <div class="img-container top {{ $rotations['sample_image'] ?? 'rotate_0' }}">
+                        <span class="img-label">sample_image ({{ $rotations['sample_image'] ?? 'rotate_0' }})</span>
+                        @if (!empty($images['sample_image']))
+                            <img src="{{ $images['sample_image'] }}" alt="Sample Image">
+                        @else
+                            <div class="no-image">No sample_image</div>
+                        @endif
+                    </div>
+                    <div class="img-container bottom {{ $rotations['background_image'] ?? 'rotate_0' }}">
+                        <span class="img-label">background_image
+                            ({{ $rotations['background_image'] ?? 'rotate_0' }})</span>
+                        @if (!empty($images['background_image']))
+                            <img src="{{ $images['background_image'] }}" alt="Background Image">
+                        @else
+                            <div class="no-image">No background_image</div>
+                        @endif
+                    </div>
 
+                </div>
             </div>
-        </div>
 
-        <!-- Page 2 -->
-        <div>
-            <div class="page-label">Page 2</div>
-            <div class="pdf-page" style="width: {{ $displayWidth }}px; height: {{ $displayHeight }}px;">
-                <div class="fold-line"></div>
-                <div class="img-container top {{ $rotations['frame_image'] ?? 'rotate_0' }}">
-                    <span class="img-label">frame_image ({{ $rotations['frame_image'] ?? 'rotate_0' }})</span>
-                    @if(!empty($images['frame_image']))
-                    <img src="{{ $images['frame_image'] }}" alt="Frame Image">
-                    @else
-                    <div class="no-image">No frame_image</div>
-                    @endif
-                </div>
-                <div class="img-container bottom {{ $rotations['overlay_image'] ?? 'rotate_0' }}">
-                    <span class="img-label">overlay_image ({{ $rotations['overlay_image'] ?? 'rotate_0' }})</span>
-                    @if(!empty($images['overlay_image']))
-                    <img src="{{ $images['overlay_image'] }}" alt="Overlay Image">
-                    @else
-                    <div class="no-image">No overlay_image</div>
-                    @endif
-                </div>
+            <!-- Page 2 -->
+            <div>
+                <div class="page-label">Page 2</div>
+                <div class="pdf-page" style="width: {{ $displayWidth }}px; height: {{ $displayHeight }}px;">
+                    <div class="fold-line"></div>
+                    <div class="img-container top {{ $rotations['frame_image'] ?? 'rotate_0' }}">
+                        <span class="img-label">frame_image ({{ $rotations['frame_image'] ?? 'rotate_0' }})</span>
+                        @if (!empty($images['frame_image']))
+                            <img src="{{ $images['frame_image'] }}" alt="Frame Image">
+                        @else
+                            <div class="no-image">No frame_image</div>
+                        @endif
+                    </div>
+                    <div class="img-container bottom {{ $rotations['overlay_image'] ?? 'rotate_0' }}">
+                        <span class="img-label">overlay_image ({{ $rotations['overlay_image'] ?? 'rotate_0' }})</span>
+                        @if (!empty($images['overlay_image']))
+                            <img src="{{ $images['overlay_image'] }}" alt="Overlay Image">
+                        @else
+                            <div class="no-image">No overlay_image</div>
+                        @endif
+                    </div>
 
+                </div>
             </div>
-        </div>
         @endif
     </div>
 
@@ -457,25 +461,27 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach(['frame_image', 'sample_image', 'background_image', 'overlay_image'] as $key)
-                <tr>
-                    <td>
-                        @if(!empty($images[$key]))
-                        <img src="{{ $images[$key] }}" class="thumb" alt="{{ $key }}">
-                        @else
-                        <div class="thumb" style="background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:10px;color:#475569;">—</div>
-                        @endif
-                    </td>
-                    <td><code>{{ $key }}</code></td>
-                    <td><code>{{ $images[$key] ?? '(empty)' }}</code></td>
-                    <td>
-                        @if(!empty($images[$key]))
-                        <span style="color:#22c55e;">✓ loaded</span>
-                        @else
-                        <span style="color:#ef4444;">✗ missing</span>
-                        @endif
-                    </td>
-                </tr>
+                @foreach (['frame_image', 'sample_image', 'background_image', 'overlay_image'] as $key)
+                    <tr>
+                        <td>
+                            @if (!empty($images[$key]))
+                                <img src="{{ $images[$key] }}" class="thumb" alt="{{ $key }}">
+                            @else
+                                <div class="thumb"
+                                    style="background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:10px;color:#475569;">
+                                    —</div>
+                            @endif
+                        </td>
+                        <td><code>{{ $key }}</code></td>
+                        <td><code>{{ $images[$key] ?? '(empty)' }}</code></td>
+                        <td>
+                            @if (!empty($images[$key]))
+                                <span style="color:#0ea5e9;">✓ loaded</span>
+                            @else
+                                <span style="color:#ef4444;">✗ missing</span>
+                            @endif
+                        </td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>

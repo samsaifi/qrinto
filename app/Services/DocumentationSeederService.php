@@ -96,8 +96,8 @@ HTML,
             <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl">
                 <span class="font-bold text-purple-800">Processing:</span> <span class="text-purple-700">Design is currently printing or being prepared.</span>
             </div>
-            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                <span class="font-bold text-emerald-800">Shipped / Delivered:</span> <span class="text-emerald-700">Order dispatched or handed to customer.</span>
+            <div class="p-3  bg-gray-50 border  border-gray-200 rounded-xl">
+                <span class="font-bold  text-gray-800">Shipped / Delivered:</span> <span class=" text-gray-700">Order dispatched or handed to customer.</span>
             </div>
             <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl">
                 <span class="font-bold text-rose-800">Cancelled / Refunded:</span> <span class="text-rose-700">Order cancelled or payment refunded.</span>
@@ -184,9 +184,9 @@ HTML,
         </div>
     </section>
 
-    <section class="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl space-y-3">
-        <h4 class="font-bold text-emerald-950 text-base">Step 6: Paper Choice, Review, & Mobile Checkout</h4>
-        <ol class="list-decimal list-inside space-y-2 text-sm text-emerald-900 font-medium">
+    <section class=" bg-gray-50 border  border-gray-200 p-5 rounded-2xl space-y-3">
+        <h4 class="font-bold  text-gray-950 text-base">Step 6: Paper Choice, Review, & Mobile Checkout</h4>
+        <ol class="list-decimal list-inside space-y-2 text-sm  text-gray-900 font-medium">
             <li><strong>Select Paper Stock:</strong> Choose paper finish (e.g., Ultra-Glossy Photo Paper, Silk Matte, Premium Linen Stock).</li>
             <li><strong>Choose Quantity:</strong> Select number of printed copies needed with live instant price calculation.</li>
             <li><strong>Preview Card:</strong> Tap <strong>Full Preview</strong> to double-check spelling, layout alignment, and picture placement.</li>
@@ -262,9 +262,9 @@ HTML,
         </div>
     </section>
 
-    <section class="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl space-y-3">
-        <h4 class="font-bold text-emerald-950 text-base">Step 6: Paper Choice, Review & Desktop Checkout</h4>
-        <ol class="list-decimal list-inside space-y-2 text-sm text-emerald-900 font-medium">
+    <section class=" bg-gray-50 border  border-gray-200 p-5 rounded-2xl space-y-3">
+        <h4 class="font-bold  text-gray-950 text-base">Step 6: Paper Choice, Review & Desktop Checkout</h4>
+        <ol class="list-decimal list-inside space-y-2 text-sm  text-gray-900 font-medium">
             <li><strong>Paper Finish & Stock:</strong> Choose paper weight and finish (e.g. Matte Cardstock, Premium Glossy, Linen Finish).</li>
             <li><strong>Quantity & Pricing:</strong> Select quantity (e.g., 25, 50, 100 cards) with live instant price calculation.</li>
             <li><strong>Checkout:</strong> Click <strong>Proceed to Checkout</strong>. Enter customer name, email, and mobile phone.</li>

@@ -1,4 +1,4 @@
-@extends('layouts.quick-flow')
+﻿@extends('layouts.quick-flow')
 
 @section('title', 'Review & Pay')
 @section('header_title', 'Review & Pay')
@@ -64,7 +64,7 @@
             width: 48px;
             height: 48px;
             border: 4px solid #e2e8f0;
-            border-top: 4px solid #6FBA3B;
+            border-top: 4px solid #38bdf8;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -78,7 +78,7 @@
         .success-check {
             width: 64px;
             height: 64px;
-            background: #22c55e;
+            background: #0ea5e9;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -222,7 +222,7 @@
 @endpush
 
 @section('content')
-    <div x-data="checkoutFlow()" class="space-y-6 pb-48 font-sans text-slate-900">
+    <div x-data="checkoutFlow()" class="space-y-6 pb-48 font-sans text-slate-900 px-6">
         <div class="space-y-1">
             <h1 class="text-2xl font-extrabold flex items-center gap-3">
                 <a href="javascript:history.back()"
@@ -241,9 +241,9 @@
                     'frame_image' => 'Page 1',
                     'sample_image' => 'Page 2',
                 ];
-            }elseif (($product->no_of_pages ?? null) == 1) {
+            } elseif (($product->no_of_pages ?? null) == 1) {
                 $types = [
-                    'frame_image' => 'Page 1', 
+                    'frame_image' => 'Page 1',
                 ];
             } else {
                 $types = [
@@ -284,7 +284,7 @@
             <div class="space-y-4 py-6 bg-gray-100 border-2 border-slate-50 rounded-[2rem] p-5 shadow-premium">
                 <div class="text-center space-y-1">
                     <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Interactive Preview</h3>
-                    <p id="page-indicator" class="text-xs font-extrabold text-brand-500 uppercase tracking-wider">Showing
+                    <p id="page-indicator" class="text-xs font-extrabold text-mobile-500 uppercase tracking-wider">Showing
                         Page 1</p>
                 </div>
 
@@ -318,14 +318,16 @@
             <div class="py-6 bg-gray-100 border-2 border-slate-50 rounded-[2rem] p-5 shadow-premium">
                 <div class="text-center space-y-1 mb-4">
                     <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Your Design</h3>
-                    <p class="text-xs font-extrabold text-brand-500 uppercase tracking-wider">Page 1 &amp; Page 2</p>
+                    <p class="text-xs font-extrabold text-mobile-500 uppercase tracking-wider">Page 1 &amp; Page 2</p>
                 </div>
                 <div class="flex justify-center gap-4 flex-wrap">
                     @foreach ($flipPages as $i => $pageUrl)
-                        <div class="flex flex-col items-center gap-1.5" style="width: {{ $baseWidth }}px; max-width: 42%;">
+                        <div class="flex flex-col items-center gap-1.5"
+                            style="width: {{ $baseWidth }}px; max-width: 42%;">
                             <img src="{{ $pageUrl }}" alt="Page {{ $i + 1 }}"
                                 class="w-full h-auto rounded-xl shadow-lg border border-slate-200 {{ $orientation }}">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Page {{ $i + 1 }}</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Page
+                                {{ $i + 1 }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -335,7 +337,7 @@
             <div class="py-6 bg-gray-100 border-2 border-slate-50 rounded-[2rem] p-5 shadow-premium">
                 <div class="text-center space-y-1 mb-4">
                     <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Your Design</h3>
-                    <p class="text-xs font-extrabold text-brand-500 uppercase tracking-wider">Preview </p>
+                    <p class="text-xs font-extrabold text-mobile-500 uppercase tracking-wider">Preview </p>
 
                 </div>
                 <div class="flex justify-center">
@@ -354,11 +356,11 @@
                 <div class="flex items-start justify-between">
                     <div class="space-y-1">
                         <span
-                            class="text-[10px] font-black text-brand-600 uppercase tracking-[0.2em]">{{ session('quick_flow_data.type_name', 'Custom Product') }}</span>
+                            class="text-[10px] font-black text-mobile-600 uppercase tracking-[0.2em]">{{ session('quick_flow_data.type_name', 'Custom Product') }}</span>
                         <h3 class="font-black text-xl text-slate-900 leading-tight">{{ $product->name }}</h3>
                     </div>
                     <div
-                        class="bg-brand-50 text-brand-600 px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest">
+                        class="bg-mobile-50 text-mobile-600 px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest">
                         <span x-text="quantity"></span> Units
                     </div>
                 </div>
@@ -397,12 +399,12 @@
                 </div>
                 <div class="flex items-center gap-2 bg-white p-1 rounded-2xl border border-slate-200">
                     <button type="button" @click="quantity > 1 ? quantity-- : null"
-                        class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-brand-50 text-slate-600 hover:text-brand-600 transition-all active:scale-90 flex items-center justify-center">
+                        class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-mobile-50 text-slate-600 hover:text-mobile-600 transition-all active:scale-90 flex items-center justify-center">
                         <i data-lucide="minus" class="w-4 h-4"></i>
                     </button>
                     <div class="w-12 text-center font-black text-slate-900 text-lg" x-text="quantity"></div>
                     <button type="button" @click="quantity++"
-                        class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-brand-50 text-slate-600 hover:text-brand-600 transition-all active:scale-90 flex items-center justify-center">
+                        class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-mobile-50 text-slate-600 hover:text-mobile-600 transition-all active:scale-90 flex items-center justify-center">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -423,18 +425,19 @@
                         <div class="relative flex-1">
                             <i data-lucide="ticket"
                                 class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                            <input type="text" x-model="couponInput" :disabled="appliedCoupon" placeholder="Enter code"
-                                class="w-full bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl py-2.5 pl-10 pr-3 text-sm font-bold uppercase transition-all outline-none"
+                            <input type="text" x-model="couponInput" :disabled="appliedCoupon"
+                                placeholder="Enter code"
+                                class="w-full bg-slate-50 border-2 border-transparent focus:border-mobile-500 rounded-xl py-2.5 pl-10 pr-3 text-sm font-bold uppercase transition-all outline-none"
                                 @keydown.enter.prevent="applyCoupon()">
                         </div>
                         <button type="button" @click="applyCoupon()" :disabled="appliedCoupon || !couponInput"
-                            class="px-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-brand-600 disabled:opacity-50 transition-all active:scale-95">
+                            class="px-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-mobile-600 disabled:opacity-50 transition-all active:scale-95">
                             Apply
                         </button>
                     </div>
                     <p x-show="couponMessage" x-text="couponMessage"
-                        :class="appliedCoupon ? 'text-emerald-600' : 'text-red-500'"
-                        class="text-[10px] font-bold mt-1 ml-1" style="display:none"></p>
+                        :class="appliedCoupon ? ' text-gray-600' : 'text-red-500'" class="text-[10px] font-bold mt-1 ml-1"
+                        style="display:none"></p>
                 </div>
             </div>
 
@@ -447,7 +450,7 @@
 
                 <template x-if="discountAmount > 0">
                     <div
-                        class="flex justify-between items-center text-emerald-600 text-xs font-bold uppercase tracking-[0.2em]">
+                        class="flex justify-between items-center  text-gray-600 text-xs font-bold uppercase tracking-[0.2em]">
                         <span x-text="'Discount (' + appliedCoupon + ')'"></span>
                         <span x-text="'-' + __price(discountAmount)"></span>
                     </div>
@@ -455,7 +458,7 @@
 
                 <div class="flex justify-between items-center border-t border-slate-100 pt-4">
                     <span class="text-lg font-black text-slate-900">Total Amount</span>
-                    <span class="text-2xl font-black text-brand-600" x-text="__price(calculateTotal())"></span>
+                    <span class="text-2xl font-black text-mobile-600" x-text="__price(calculateTotal())"></span>
                 </div>
             </div>
         </div>
@@ -466,29 +469,29 @@
             <div class="space-y-3">
                 <div class="relative group">
                     <div
-                        class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors">
+                        class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-mobile-500 transition-colors">
                         <i data-lucide="user" class="w-5 h-5"></i>
                     </div>
                     <input type="text" x-model="pickupName"
-                        class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-brand-500 focus:ring-0 transition-all outline-none shadow-sm"
+                        class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-mobile-500 focus:ring-0 transition-all outline-none shadow-sm"
                         placeholder="Pickup Name" style="padding-left: 3rem;">
                 </div>
                 <div class="relative group">
                     <div
-                        class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors">
+                        class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-mobile-500 transition-colors">
                         <i data-lucide="mail" class="w-5 h-5"></i>
                     </div>
                     <input type="email" x-model="pickupEmail"
-                        class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-brand-500 focus:ring-0 transition-all outline-none shadow-sm"
+                        class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-mobile-500 focus:ring-0 transition-all outline-none shadow-sm"
                         placeholder="Email Address (For Updates)" style="padding-left: 3rem;">
                 </div>
                 <div class="relative group">
                     <div
-                        class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors">
+                        class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-mobile-500 transition-colors">
                         <i data-lucide="phone" class="w-5 h-5"></i>
                     </div>
                     <input type="tel" x-model="contactNumber"
-                        class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-brand-500 focus:ring-0 transition-all outline-none shadow-sm"
+                        class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-mobile-500 focus:ring-0 transition-all outline-none shadow-sm"
                         placeholder="Contact Number" style="padding-left: 3rem;">
                 </div>
             </div>
@@ -498,25 +501,25 @@
         <div class="space-y-3">
             <h3 class="text-base font-extrabold">Special Notes</h3>
             <div class="relative group">
-                <div
-                    class="absolute left-5 top-4 text-slate-400 group-focus-within:text-brand-500 transition-colors">
+                <div class="absolute left-5 top-4 text-slate-400 group-focus-within:text-mobile-500 transition-colors">
                     <i data-lucide="message-square-text" class="w-5 h-5"></i>
                 </div>
                 <textarea x-model="specialInstructions" rows="3"
-                    class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-brand-500 focus:ring-0 transition-all outline-none shadow-sm resize-none"
+                    class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-mobile-500 focus:ring-0 transition-all outline-none shadow-sm resize-none"
                     placeholder="Rush requests, return address info, or other notes…" style="padding-left: 3rem;"></textarea>
             </div>
-            <p class="text-xs text-slate-400 font-medium ml-1">Optional — add any special requests or notes for your order</p>
+            <p class="text-xs text-slate-400 font-medium ml-1">Optional — add any special requests or notes for your order
+            </p>
         </div>
 
         <!-- Secure Payment Notice -->
-        <div class="bg-brand-50 border-2 border-brand-100 p-4 rounded-2xl flex items-start gap-3">
-            <div class="w-9 h-9 bg-brand-100 rounded-lg flex items-center justify-center text-brand-600 flex-shrink-0">
+        <div class="bg-mobile-50 border-2 border-mobile-100 p-4 rounded-2xl flex items-start gap-3">
+            <div class="w-9 h-9 bg-mobile-100 rounded-lg flex items-center justify-center text-mobile-600 flex-shrink-0">
                 <i data-lucide="shield-check" class="w-4 h-4"></i>
             </div>
             <div>
-                <h4 class="font-bold text-brand-800 text-sm">Secure Payment via PayPal</h4>
-                <p class="text-brand-600 text-xs font-medium">Pay safely with PayPal, cards, or your PayPal balance.</p>
+                <h4 class="font-bold text-mobile-800 text-sm">Secure Payment via PayPal</h4>
+                <p class="text-mobile-600 text-xs font-medium">Pay safely with PayPal, cards, or your PayPal balance.</p>
             </div>
         </div>
 
@@ -585,17 +588,17 @@
             <!-- Terms and Conditions Checkbox -->
             <div class="flex items-center gap-3 px-1 mb-1">
                 <input type="checkbox" x-model="acceptedTerms" id="terms-checkbox"
-                    class="w-5 h-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                    class="w-5 h-5 rounded border-slate-300 text-mobile-600 focus:ring-mobile-500 cursor-pointer">
                 <label for="terms-checkbox"
                     class="text-[11px] font-bold text-slate-600 cursor-pointer select-none leading-tight">
                     I have read and accept the <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}"
-                        target="_blank" class="text-brand-600 underline">Terms and Conditions</a>
+                        target="_blank" class="text-mobile-600 underline">Terms and Conditions</a>
                 </label>
-            </div> 
+            </div>
 
             <button type="button" @click="openPaypal()"
                 :disabled="!pickupName || !contactNumber || !pickupEmail || !acceptedTerms"
-                class="w-full bg-brand-500 disabled:bg-slate-300 hover:bg-brand-600 text-white font-extrabold py-3.5 rounded-2xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 text-base">
+                class="w-full bg-mobile-500 disabled:bg-slate-300 hover:bg-mobile-600 text-white font-extrabold py-3.5 rounded-2xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 text-base">
                 <i data-lucide="credit-card" class="w-5 h-5"></i>
                 <span
                     x-text="pickupName && contactNumber && pickupEmail && acceptedTerms ? 'Pay Now — ' + __price(calculateTotal()) : (acceptedTerms ? 'Complete All Info' : 'Accept Terms to Continue')"></span>

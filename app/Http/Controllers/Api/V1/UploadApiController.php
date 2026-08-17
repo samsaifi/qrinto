@@ -37,7 +37,7 @@ class UploadApiController extends Controller
             'session_id'    => session()->getId(),
             'original_name' => $file->getClientOriginalName(),
             'file_path'     => $path,
-            'file_type'     => $file->getClientMimeType(),
+            'mime_type'     => $file->getClientMimeType(),
             'file_size'     => $file->getSize(),
         ]);
 
@@ -59,36 +59,43 @@ class UploadApiController extends Controller
      */
     public function uploadComposite(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'composite_image' => 'required|string', // Data URL base64 string
-        ]);
+        $dataUrl = $request->input('composite_image') ?? $request->input('image_data') ?? $request->input('image');
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        if (!$dataUrl) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No image data provided. Please send composite_image, image_data, or image field.',
+            ], 422);
         }
 
-        $dataUrl = $request->input('composite_image');
-        if (preg_match('/^data:image\/(\w+);base64,/', $dataUrl, $type)) {
+        $type = 'png';
+        if (preg_match('/^data:image\/([\w\+\-]+);base64,/', $dataUrl, $matches)) {
             $data = substr($dataUrl, strpos($dataUrl, ',') + 1);
-            $type = strtolower($type[1]);
+            $rawType = strtolower($matches[1]);
+            $type = (str_contains($rawType, 'jpeg') || str_contains($rawType, 'jpg')) ? 'jpg' : ($rawType === 'svg+xml' ? 'svg' : $rawType);
             $data = base64_decode($data);
             if ($data === false) {
                 return response()->json(['success' => false, 'message' => 'Base64 decode failed.'], 400);
             }
         } else {
-            return response()->json(['success' => false, 'message' => 'Invalid data URL format.'], 400);
+            $data = base64_decode($dataUrl, true);
+            if ($data === false) {
+                return response()->json(['success' => false, 'message' => 'Invalid data URL or base64 format.'], 400);
+            }
         }
 
         $filename = 'composites/' . uniqid('comp_', true) . '.' . $type;
         Storage::disk('public')->put($filename, $data);
         $fullUrl = asset('storage/' . $filename);
 
+        $mimeType = 'image/' . ($type === 'jpg' ? 'jpeg' : $type);
+
         $upload = CustomerUpload::create([
             'user_id'       => auth()->id(),
             'session_id'    => session()->getId(),
             'original_name' => basename($filename),
             'file_path'     => $filename,
-            'file_type'     => 'image/' . $type,
+            'mime_type'     => $mimeType,
             'file_size'     => strlen($data),
         ]);
 

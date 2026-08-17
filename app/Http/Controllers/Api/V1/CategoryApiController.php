@@ -23,11 +23,34 @@ class CategoryApiController extends Controller
             'base_price'         => (float) $product->base_price,
             'compare_price'      => $product->compare_price ? (float) $product->compare_price : null,
             'formatted_price'    => \App\Services\CurrencyService::format($product->base_price),
-            'featured_image_url' => $product->featured_image_url ?? $product->sample_image_url ?? $product->frame_image_url,
+            'thumbnail_image_url' => $product->frame_image_thumbnail ??  $product->featured_image,
+            'featured_image_url' => $product->featured_image_url ?? null,
+            'second_image' => $product->sample_image_url ?? null,
+            'third_image' => $product->background_image_url ?? null,
+            'fourth_image' => $product->overlay_image_url ?? null,
             'no_of_pages'        => $product->no_of_pages ?? 1,
             'is_featured'        => (bool) $product->is_featured,
             'category_id'        => $product->category?->id,
             'category_name'      => $product->category?->name, 
+        ];
+    }
+    // 
+ 
+    private function formatCategory($category)
+    {
+        return [
+            'id'                 => $category->id,
+            'name'               => $category->name,
+            'slug'               => $category->slug,
+            'title'              => $category->title ?? null,
+            'description'        => $category->description ?? null,
+            'icon'               => $category->icon_svg ?? $category->icon ?? null,
+            'price'              => $category->price,
+            'old_price'          => $category->old_price,
+            'width'              => $category->width,
+            'height'             => $category->height,
+            'unit'               => $category->unit,
+            'sort_order'         => $category->sort_order,
         ];
     }
 
@@ -62,8 +85,8 @@ class CategoryApiController extends Controller
      */
     public function index()
     {
-        $productTypes = ProductType::where('is_active', true)
-            ->with(['children' => fn ($q) => $q->where('is_active', true)])
+        $productTypes = ProductType::where('is_active', true)->where('parent_id', null)
+            ->with(['children' => fn ($q) => $q->where('is_active', true) ])
             ->orderBy('sort_order')
             ->get();
 
@@ -79,6 +102,7 @@ class CategoryApiController extends Controller
                 'icon'           => $pt->icon_svg ?? $pt->icon ?? null,
                 'image_url'      => $pt->image_path ? asset('storage/' . $pt->image_path) : null,
                 'products_count' => $products->count(),
+                'sizes'          => $pt->children->map(fn ($c) => $c->is_active == true ? $this->formatCategory($c) : null)->values(),
                 'products'       => $products->map(fn ($p) => $this->formatProduct($p))->values(),
             ];
         });

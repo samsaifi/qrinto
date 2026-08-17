@@ -93,7 +93,7 @@ class Order extends Model
             'printing' => '#8b5cf6', // Indigo
             'shipped' => '#8b5cf6',
             'delivered_store' => '#10b981', // Emerald
-            'delivered' => '#22c55e',
+            'delivered' => '#0ea5e9',
             'cancelled' => '#ef4444',
             'refunded' => '#6b7280',
             default => '#6b7280',

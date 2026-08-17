@@ -43,20 +43,20 @@
         transform: translateY(-1px);
     }
 
-    .shape-mask-btn.shape-mask-active > div,
+    .shape-mask-btn.shape-mask-active>div,
     .shape-mask-btn.shape-mask-active i[data-lucide] {
         color: #059669;
         background-color: #059669;
         /* solid-fill thumbnails (rect/circle/etc.) turn accent-green when active */
     }
 
-    .shape-mask-btn.shape-mask-active .shape-mask-check > div,
+    .shape-mask-btn.shape-mask-active .shape-mask-check>div,
     .shape-mask-btn.shape-mask-active .shape-mask-check i[data-lucide] {
         background-color: transparent;
         color: #fff;
     }
 
-    .shape-mask-btn.shape-mask-active > span {
+    .shape-mask-btn.shape-mask-active>span {
         color: #047857 !important;
     }
 
@@ -257,7 +257,7 @@
         font-weight: 700;
         border: 1.5px solid #e2e8f0;
         background: #f8fafc;
-        color: #64748b;
+        color: #0ea5e9;
         cursor: pointer;
         transition: all .2s;
         white-space: nowrap;

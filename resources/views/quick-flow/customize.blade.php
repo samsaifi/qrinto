@@ -22,12 +22,12 @@
     @if ($product->category?->parent)
         <i data-lucide="chevron-right" class="w-4 h-4 text-surface-300 shrink-0"></i>
         <a href="{{ route('flow.category', $product->category->parent->slug) }}"
-            class="text-surface-600 hover:text-brand-500 font-medium truncate max-w-[100px] transition-colors">{{ $product->category->parent->name }}</a>
+            class="text-surface-600 hover:text-mobile-500 font-medium truncate max-w-[100px] transition-colors">{{ $product->category->parent->name }}</a>
     @endif
     @if ($product->category)
         <i data-lucide="chevron-right" class="w-4 h-4 text-surface-300 shrink-0"></i>
         <a href="{{ route('flow.category', $product->category->slug) }}"
-            class="text-surface-600 hover:text-brand-500 font-medium truncate max-w-[100px] transition-colors">{{ $product->category->name }}</a>
+            class="text-surface-600 hover:text-mobile-500 font-medium truncate max-w-[100px] transition-colors">{{ $product->category->name }}</a>
     @endif
     <i data-lucide="chevron-right" class="w-4 h-4 text-surface-300 shrink-0"></i>
     <span class="text-surface-900 font-bold max-w-[100px] truncate">Customize</span>
@@ -55,7 +55,7 @@
         }
 
         .thumb-nav-item.active {
-            border-color: #6FBA3B;
+            border-color: #38bdf8;
             box-shadow: 0 0 0 3px rgba(111, 186, 59, .2);
         }
 
@@ -97,11 +97,31 @@
             justify-content: center;
         }
 
+        .editor-workspace-stage {
+            background-color: #f6f8fc;
+            background-image: radial-gradient(#94a3b8 .25px, transparent 1.75px);
+            background-size: 22px 22px;
+            background-position: 0 0;
+            padding: 1.25rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 2px 8px rgba(15, 23, 42, 0.03);
+        }
+
         .canvas-wrapper {
             position: relative;
             background: #fff;
             border-radius: 1.5rem;
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, .1);
+            margin: 0.75rem auto;
+            border: 1.5px dashed #cbd5e1;
+        }
+
+        .canvas-wrapper.canvas-portrait {
+            width: 70%;
+        }
+
+        .canvas-wrapper.canvas-landscape {
+            width: 100%;
         }
 
         .canvas-hidden {
@@ -118,8 +138,8 @@
         }
 
         .upload-zone:hover {
-            border-color: #6FBA3B;
-            background: #F5FAF1;
+            border-color: #38bdf8;
+            background: #e0f2fe;
             transform: translateY(-2px);
         }
 
@@ -154,7 +174,7 @@
 
         .text-toolbar input[type="text"]:focus,
         .text-toolbar textarea:focus {
-            border-color: #6FBA3B;
+            border-color: #38bdf8;
             box-shadow: 0 0 0 3px rgba(111, 186, 59, 0.1);
             outline: none;
         }
@@ -470,6 +490,16 @@
             background: #f1f5f9;
             border-radius: 1rem;
             touch-action: none;
+            margin: 1.25rem auto;
+            border: 1.5px dashed #cbd5e1;
+        }
+
+        .canvas-wrapper.canvas-portrait {
+            width: 70%;
+        }
+
+        .canvas-wrapper.canvas-landscape {
+            width: 100%;
         }
 
         /* ── Floating Text Layer Action Icons ── */
@@ -597,7 +627,7 @@
         .template-chip i {
             width: 14px;
             height: 14px;
-            color: #6FBA3B;
+            color: #38bdf8;
         }
 
         .template-chip-label {
@@ -638,7 +668,7 @@
             font-weight: 700;
             border: 1.5px solid #e2e8f0;
             background: #f8fafc;
-            color: #64748b;
+            color: #0ea5e9;
             cursor: pointer;
             transition: all .2s;
             white-space: nowrap;
@@ -649,8 +679,8 @@
         }
 
         .template-cat-chip.active {
-            background: #6FBA3B;
-            border-color: #6FBA3B;
+            background: #38bdf8;
+            border-color: #38bdf8;
             color: #fff;
         }
     </style>
@@ -680,7 +710,12 @@
 
         $galleryImages = $product->images->values();
         $galleryIndex = 0;
-        $fallbackUrl = $product->featured_image_url ?? $product->sample_image_url ?? $product->frame_image_url ?? $product->background_image_url ?? 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>';
+        $fallbackUrl =
+            $product->featured_image_url ??
+            ($product->sample_image_url ??
+                ($product->frame_image_url ??
+                    ($product->background_image_url ??
+                        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>')));
 
         foreach ($slots as $field => $label) {
             $url = $product->{$field . '_url'};
@@ -703,11 +738,17 @@
         if (is_string($maskData)) {
             $maskData = json_decode($maskData, true) ?? [];
         }
+        $sharedMaskConfig = collect($maskData)->first(
+            fn($c) => is_array($c) && !empty($c['canvasWidth']) && !empty($c['canvasHeight']),
+        );
+        $isPortrait = $sharedMaskConfig
+            ? $sharedMaskConfig['canvasHeight'] > $sharedMaskConfig['canvasWidth']
+            : ($product->pdf_orientation ?? 'portrait') === 'portrait';
     @endphp
 
     <div id="customizer-app" class="container mx-auto mb-12">
 
-        <div class="space-y-2 mb-2 text-left">
+        <div class="space-y-2 mb-2 text-left px-6">
             <h1 class="text-lg lg:text-2xl font-display font-black tracking-tight flex items-start justify-start gap-3">
                 <a href="javascript:history.back()"
                     class="w-6 h-6 bg-white border border-slate-200 shadow-sm rounded-full hover:bg-slate-50 transition-colors text-slate-500 hover:text-slate-900 inline-flex items-center justify-center">
@@ -724,57 +765,63 @@
             <!-- ═══ SECTION 1: Design & Preview Area ═══ -->
             <div class="space-y-1">
                 <!-- Thumbnail Navigation -->
-                <div class="thumb-nav" id="thumb-nav">
-                    @foreach ($imageTypes as $key => $img)
-                        @php
-                            $config = $maskData[$key] ?? [];
-                            $enabled = ($config['enabled'] ?? true) !== false;
-                        @endphp
-                        <div class="thumb-nav-item {{ !$enabled ? 'disabled-tab' : '' }}" data-key="{{ $key }}"
-                            onclick="customizer.switchCanvas('{{ $key }}')">
-                            <img src="{{ $img['url'] }}" onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;100&quot; height=&quot;100&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;%2394a3b8&quot; stroke-width=&quot;1.5&quot;><rect width=&quot;18&quot; height=&quot;18&quot; x=&quot;3&quot; y=&quot;3&quot; rx=&quot;2&quot;/><path d=&quot;m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21&quot;/><circle cx=&quot;9&quot; cy=&quot;9&quot; r=&quot;2&quot;/></svg>';">
-                            <span class="thumb-label">Page {{ $loop->iteration }}</span>
-                            @if (!$enabled)
-                                <div class="thumb-lock">
-                                    <i data-lucide="lock" class="w-3 h-3 text-white"></i>
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
+                <div class="px-6">
+                    <div class="thumb-nav" id="thumb-nav">
+                        @foreach ($imageTypes as $key => $img)
+                            @php
+                                $config = $maskData[$key] ?? [];
+                                $enabled = ($config['enabled'] ?? true) !== false;
+                            @endphp
+                            <div class="thumb-nav-item {{ !$enabled ? 'disabled-tab' : '' }}"
+                                data-key="{{ $key }}" onclick="customizer.switchCanvas('{{ $key }}')">
+                                <img src="{{ $img['url'] }}"
+                                    onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;100&quot; height=&quot;100&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;%2394a3b8&quot; stroke-width=&quot;1.5&quot;><rect width=&quot;18&quot; height=&quot;18&quot; x=&quot;3&quot; y=&quot;3&quot; rx=&quot;2&quot;/><path d=&quot;m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21&quot;/><circle cx=&quot;9&quot; cy=&quot;9&quot; r=&quot;2&quot;/></svg>';">
+                                <span class="thumb-label">Page {{ $loop->iteration }}</span>
+                                @if (!$enabled)
+                                    <div class="thumb-lock">
+                                        <i data-lucide="lock" class="w-3 h-3 text-white"></i>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
 
-                    <!-- Clear All Button -->
-                    <div class="thumb-nav-clear" onclick="customizer.clearAll()">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        <span>Clear All</span>
+                        <!-- Clear All Button -->
+                        <div class="thumb-nav-clear" onclick="customizer.clearAll()">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            <span>Clear All</span>
+                        </div>
                     </div>
                 </div>
 
 
-                <!-- Main Workspace Canvas -->
-                <div class="canvas-wrapper" id="canvas-container">
-                    @foreach ($imageTypes as $key => $img)
-                        @php
-                            $config = $maskData[$key] ?? [];
-                            $enabled = ($config['enabled'] ?? true) !== false;
-                        @endphp
-                        <div id="canvas-wrapper-{{ $key }}" class="canvas-layer"
-                            style="position:absolute;top:0;left:0;width:100%;visibility:hidden;pointer-events:none;z-index:-1;">
-                            <canvas id="canvas-{{ $key }}"></canvas>
-                            @if (!$enabled)
-                                <div class="canvas-disabled-overlay"></div>
-                            @endif
-                        </div>
-                    @endforeach
+                <!-- Main Workspace Stage with Dotted Grid Background -->
+                <div class="editor-workspace-stage my-3">
+                    <div class="canvas-wrapper mx-auto border border-dashed border-slate-300 {{ $isPortrait ? 'canvas-portrait w-[70%]' : 'canvas-landscape w-full' }}"
+                        id="canvas-container">
+                        @foreach ($imageTypes as $key => $img)
+                            @php
+                                $config = $maskData[$key] ?? [];
+                                $enabled = ($config['enabled'] ?? true) !== false;
+                            @endphp
+                            <div id="canvas-wrapper-{{ $key }}" class="canvas-layer"
+                                style="position:absolute;top:0;left:0;width:100%;visibility:hidden;pointer-events:none;z-index:-1;">
+                                <canvas id="canvas-{{ $key }}"></canvas>
+                                @if (!$enabled)
+                                    <div class="canvas-disabled-overlay"></div>
+                                @endif
+                            </div>
+                        @endforeach
 
-                    <!-- Floating Action Icon for Active Text Layer -->
-                    <div id="text-layer-actions" class="text-layer-actions">
-                        <button class="text-layer-action-btn edit-btn" id="text-action-edit" title="Edit Text">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                <path d="m15 5 4 4" />
-                            </svg>
-                        </button>
+                        <!-- Floating Action Icon for Active Text Layer -->
+                        <div id="text-layer-actions" class="text-layer-actions">
+                            <button class="text-layer-action-btn edit-btn" id="text-action-edit" title="Edit Text">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                    <path d="m15 5 4 4" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 @if ($product->store_id)
@@ -794,7 +841,7 @@
 
                     {{-- ── Store-Reserved Product Notice ─────────────────────── --}}
                     <div
-                        class="flex items-start gap-2.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 my-2 text-xs leading-relaxed shadow-sm">
+                        class="flex px-6 items-start gap-2.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 my-2 text-xs leading-relaxed shadow-sm">
 
                         {{-- Warning icon --}}
                         <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-3.5 w-3.5 shrink-0 fill-amber-500"
@@ -829,7 +876,7 @@
                 @endif
 
                 <!-- ═══ Ready-made Template Strip ═══ -->
-                <div class="pt-1">
+                <div class="pt-1 px-6">
                     <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 px-1 mb-1">Templates
                     </div>
                     <!-- Category Filter -->
@@ -868,7 +915,7 @@
                             class="w-11 h-11 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:scale-95 transition flex items-center justify-center shadow-sm text-slate-600 relative">
                             <i data-lucide="type" class="w-5 h-5"></i>
                             <span id="text-edit-indicator"
-                                class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white hidden"></span>
+                                class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-mobile-500 rounded-full border-2 border-white hidden"></span>
                         </button>
 
                         <!-- Quick Color Picker Button -->
@@ -922,7 +969,7 @@
                 <!-- Header -->
                 <div class="px-6 pb-3 flex items-center justify-between border-b border-slate-50">
                     <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                        <i data-lucide="type" class="w-4 h-4 text-brand-500"></i>
+                        <i data-lucide="type" class="w-4 h-4 text-mobile-500"></i>
                         <span id="drawer-title-label">Add Text Layer</span>
                     </h3>
                     <button onclick="customizer.closeTextDrawer()"
@@ -938,7 +985,7 @@
                         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Type Your Text</label>
                         <div class="relative">
                             <textarea id="text-input" placeholder="Type here..."
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-500 focus:bg-white transition-all resize-none font-medium text-slate-700"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-mobile-500 focus:bg-white transition-all resize-none font-medium text-slate-700"
                                 oninput="customizer.onTextInputChange(this.value)" rows="2"></textarea>
                             <button id="clear-text-btn" onclick="customizer.clearSelection()"
                                 class="hidden absolute right-3 top-3 text-slate-300 hover:text-slate-500 transition-colors">
@@ -953,7 +1000,7 @@
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Font Style</label>
                             <select id="font-family-select"
                                 onchange="customizer._updateSelectedStyle('fontFamily', this.value)"
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500 focus:bg-white transition-all">
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-mobile-500 focus:bg-white transition-all">
                                 <option style="font-family: 'Inter'">Inter</option>
                                 <option style="font-family: 'Roboto'">Roboto</option>
                                 <option style="font-family: 'Open Sans'">Open Sans</option>
@@ -991,7 +1038,7 @@
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Font Size</label>
                             <select id="font-size-select"
                                 onchange="customizer._updateSelectedStyle('fontSize', parseInt(this.value))"
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500 focus:bg-white transition-all">
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-mobile-500 focus:bg-white transition-all">
                                 @for ($i = 8; $i <= 96; $i += 2)
                                     <option value="{{ $i }}" {{ $i == 16 ? 'selected' : '' }}>
                                         {{ $i }} px</option>
@@ -1023,7 +1070,7 @@
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alignment</label>
                             <select id="text-align-select"
                                 onchange="customizer._updateSelectedStyle('textAlign', this.value)"
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-brand-500 focus:bg-white transition-all">
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-mobile-500 focus:bg-white transition-all">
                                 <option value="left">Left</option>
                                 <option value="center" selected>Center</option>
                                 <option value="right">Right</option>
@@ -1035,11 +1082,11 @@
                     <!-- Button Actions inside Drawer -->
                     <div class="pt-3">
                         <button id="add-text-btn" onclick="customizer.addTextAndClose()"
-                            class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-brand-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                            class="w-full bg-mobile-500 hover:bg-mobile-600 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-mobile-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                             <i data-lucide="plus" class="w-4 h-4"></i> Add to Card
                         </button>
                         <div id="editing-badge"
-                            class="hidden w-full flex items-center justify-center gap-2 py-3.5 bg-brand-50 text-brand-600 rounded-xl border border-brand-100">
+                            class="hidden w-full flex items-center justify-center gap-2 py-3.5 bg-mobile-50 text-mobile-600 rounded-xl border border-mobile-100">
                             <i data-lucide="type" class="w-4 h-4 shrink-0"></i>
                             <span class="text-xs font-black uppercase tracking-wider">Active Layer Editing</span>
                         </div>
@@ -1282,7 +1329,7 @@
                     for (const spec of (tpl.images || [])) {
                         await this._addTemplateImage(fc, {
                             ...spec,
-                            ignoreMask: tpl.ignoreMask
+                            ignoreMask: spec.ignoreMask === true
                         }, sf, key);
                     }
 
@@ -1290,7 +1337,7 @@
                     for (const spec of (tpl.svgs || [])) {
                         await this._addTemplateSvg(fc, {
                             ...spec,
-                            ignoreMask: tpl.ignoreMask
+                            ignoreMask: spec.ignoreMask === true
                         }, sf, key);
                     }
 
@@ -1319,9 +1366,9 @@
                             hasRotatingPoint: true
                         });
 
-                        // Apply the photo mask clip to Page 1 unless the template opts out
+                        // Apply the photo mask clip to Page 1 unless the template layer opts out explicitly
                         this._maybeClip(t, {
-                            ignoreMask: tpl.ignoreMask
+                            ignoreMask: spec.ignoreMask === true
                         }, sf, key);
 
                         fc.add(t);
@@ -1438,7 +1485,7 @@
 
             // ── Shared mask-clip helper (Page 1 only, unless the spec opts out) ──────
             _maybeClip(obj, spec, sf, key) {
-                if (spec.ignoreMask) return;
+                if (spec && spec.ignoreMask === true) return;
                 const clipGroup = this._createCombinedClipPath(key, sf);
                 if (clipGroup) obj.set('clipPath', clipGroup);
             },
@@ -1478,12 +1525,12 @@
                 if (statusCard && statusIconBg && statusBadge && statusLabel) {
                     if (enabled) {
                         statusCard.className =
-                            'border-2 rounded-2xl p-4 flex items-center h-full bg-gradient-to-r from-brand-50 to-sky-50 border-brand-100';
+                            'border-2 rounded-2xl p-4 flex items-center h-full bg-gradient-to-r from-mobile-50 to-sky-50 border-mobile-100';
                         statusIconBg.className =
-                            'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-brand-500';
-                        statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-brand-700';
+                            'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-mobile-500';
+                        statusBadge.className = 'text-[9px] font-bold uppercase tracking-wider text-mobile-700';
                         statusBadge.textContent = 'Editing';
-                        statusLabel.className = 'text-xs font-black truncate text-brand-900';
+                        statusLabel.className = 'text-xs font-black truncate text-mobile-900';
                     } else {
                         statusCard.className =
                             'border-2 rounded-2xl p-4 flex items-center h-full bg-slate-50 border-slate-200';
@@ -1507,7 +1554,7 @@
                     uploadZone.classList.toggle('has-image', hasImg);
                     if (hasImg) {
                         uploadIconBg.className =
-                            'w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0 bg-emerald-100 text-emerald-600';
+                            'w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0  bg-gray-100  text-gray-600';
                         uploadText.textContent = 'Uploaded';
                     } else {
                         uploadIconBg.className =
@@ -1542,22 +1589,26 @@
             _initAllCanvases() {
                 const containerEl = document.getElementById('canvas-container');
                 if (!containerEl) return;
-                const displayWidth = containerEl.offsetWidth;
 
                 const isPortrait = <?php echo ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false'; ?>;
 
-                // All 4 product images share the same dimensions, so every page must use a
-                // single canvas aspect ratio. The admin mask editor only records canvasWidth/
-                // canvasHeight for tabs that were actually visited — unvisited tabs keep the
-                // default 600×400 (landscape). Trusting each page's own saved dims therefore
-                // squishes portrait pages that were never masked. Derive one shared ratio from
-                // the first page whose config has real dimensions (the masked page), so every
-                // canvas matches the actual product image instead of the stale default.
                 const sharedConfig = Object.keys(this.imageTypes)
                     .map(k => this.allMaskData[k] || {})
                     .find(c => c.canvasWidth && c.canvasHeight) || {};
                 const adminW = sharedConfig.canvasWidth || (isPortrait ? 400 : 560);
                 const adminH = sharedConfig.canvasHeight || (isPortrait ? 560 : 400);
+
+                if (adminW >= adminH) {
+                    containerEl.classList.remove('w-[70%]', 'canvas-portrait');
+                    containerEl.classList.add('w-full', 'canvas-landscape');
+                    containerEl.style.width = '100%';
+                } else {
+                    containerEl.classList.remove('w-full', 'canvas-landscape');
+                    containerEl.classList.add('w-[70%]', 'canvas-portrait');
+                    containerEl.style.width = '70%';
+                }
+
+                const displayWidth = containerEl.offsetWidth;
 
                 Object.keys(this.imageTypes).forEach(key => {
                     const canvasEl = document.getElementById('canvas-' + key);
@@ -1641,8 +1692,8 @@
                         masks.forEach((m, idx) => {
                             const guide = this._createMaskObject(m, scaleFactor, {
                                 fill: 'transparent',
-                                stroke: 'rgba(0, 80, 220, 0.5)',
-                                strokeWidth: 1,
+                                stroke: 'transparent',
+                                strokeWidth: 0,
                                 selectable: false,
                                 evented: false,
                                 name: 'mask_guide_' + idx
@@ -1832,6 +1883,7 @@
                                         cornerColor: '#378ADD',
                                         cornerStyle: 'circle'
                                     });
+                                    this._maybeClip(obj, {}, cv.scaleFactor, key);
                                     this.canvasImages[key] = true;
                                 }
                                 if (obj._isUserText) {
@@ -1847,6 +1899,10 @@
                                         cornerColor: '#378ADD',
                                         cornerStyle: 'circle'
                                     });
+                                    this._maybeClip(obj, {}, cv.scaleFactor, key);
+                                }
+                                if (obj._isTemplateText || obj._isTemplateImage || obj._isTemplateSvg) {
+                                    this._maybeClip(obj, {}, cv.scaleFactor, key);
                                 }
 
 
@@ -2035,13 +2091,27 @@
                     fabric.Image.fromURL(url, img => {
                         const canvasW = cv.fabricCanvas.width;
                         const canvasH = cv.fabricCanvas.height;
+                        const sf = cv.scaleFactor;
+                        const mData = this.allMaskData[key] || {};
+                        const masks = mData.masks || this.allMaskData.masks;
+                        let posX = canvasW / 2;
+                        let posY = canvasH / 2;
+                        let targetW = canvasW * 0.7;
 
-                        // Initial size must be 1/3 width of canvas
-                        const s = canvasW / (3 * img.width);
+                        if (Array.isArray(masks) && masks.length > 0) {
+                            const m = masks[0];
+                            posX = (m.left + m.width / 2) * sf;
+                            posY = (m.top + m.height / 2) * sf;
+                            targetW = m.width * sf;
+                        }
+
+                        const s = Math.max(0.1, targetW / img.width);
 
                         img.set({
-                            left: (canvasW - img.width * s) / 2,
-                            top: (canvasH - img.height * s) / 2,
+                            originX: 'center',
+                            originY: 'center',
+                            left: posX,
+                            top: posY,
                             scaleX: s,
                             scaleY: s,
                             cornerStyle: 'circle',
@@ -2059,7 +2129,7 @@
                             centeredScaling: false
                         });
 
-
+                        this._maybeClip(img, {}, sf, key);
 
                         cv.fabricCanvas.add(img);
 
@@ -2184,11 +2254,25 @@
                 const color = document.getElementById('text-color-input').value;
                 const align = document.getElementById('text-align-select').value;
 
+                const sf = cv.scaleFactor;
+                const mData = this.allMaskData[key] || {};
+                const masks = mData.masks || this.allMaskData.masks;
+                let leftPos = cv.fabricCanvas.width * 0.1;
+                let topPos = cv.fabricCanvas.height / 3;
+                let widthPos = cv.fabricCanvas.width * 0.8;
+
+                if (Array.isArray(masks) && masks.length > 0) {
+                    const m = masks[0];
+                    leftPos = (m.left + m.width * 0.1) * sf;
+                    topPos = (m.top + m.height * 0.3) * sf;
+                    widthPos = (m.width * 0.8) * sf;
+                }
+
                 // 1. Create the Textbox immediately (synchronously) to prevent duplication
                 const t = new fabric.Textbox(textVal, {
-                    left: cv.fabricCanvas.width * 0.1,
-                    top: cv.fabricCanvas.height / 3,
-                    width: cv.fabricCanvas.width * 0.8,
+                    left: leftPos,
+                    top: topPos,
+                    width: widthPos,
                     fontSize: fontSize,
                     fontFamily: fontFamily,
                     fill: color,
@@ -2204,10 +2288,11 @@
                     hasRotatingPoint: true
                 });
 
+                // Apply mask clipping to user text so it cannot overflow outside mask area
+                this._maybeClip(t, {}, sf, key);
+
                 // 2. Set as selected immediately! This prevents the "new layer on every character" bug.
                 this.selectedObject = t;
-
-
 
                 cv.fabricCanvas.add(t);
 
@@ -2272,7 +2357,7 @@
                 const hasContent = Object.values(this.uploadIds).some(id => id !== null) ||
                     Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.backgroundImage ||
                         this.canvases[k].fabricCanvas.getObjects().some(o =>
-                        o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg));
+                            o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg));
 
                 if (!hasContent) {
                     document.getElementById('upload_ids_field').value = JSON.stringify({});
@@ -2290,10 +2375,11 @@
                 const uploadPromises = Object.keys(this.canvases).map(async key => {
                     const cv = this.canvases[key];
                     if (!cv || !this.canvasEnabled[key]) return;
-                    const hasCanvasContent = this.canvasImages[key] !== null || cv.fabricCanvas.backgroundImage ||
+                    const hasCanvasContent = this.canvasImages[key] !== null || cv.fabricCanvas
+                        .backgroundImage ||
                         cv.fabricCanvas.getObjects().some(
-                        o => o._isUserText || o._isTemplateText || o._isTemplateImage || o
-                        ._isTemplateSvg);
+                            o => o._isUserText || o._isTemplateText || o._isTemplateImage || o
+                            ._isTemplateSvg);
                     if (!hasCanvasContent) return;
 
                     cv.fabricCanvas.discardActiveObject();
@@ -2477,7 +2563,9 @@
 
                 if (clipObjects.length === 0) return null;
                 if (clipObjects.length === 1) {
-                    clipObjects[0].set({ absolutePositioned: true });
+                    clipObjects[0].set({
+                        absolutePositioned: true
+                    });
                     return clipObjects[0];
                 }
 
@@ -2516,7 +2604,8 @@
                         o.scaleY *= ratio;
 
                         // Update Mask on Resize
-                        if (o.clipPath) {
+                        if (o.clipPath || o._isUserImage || o._isUserText || o._isTemplateText || o
+                            ._isTemplateImage || o._isTemplateSvg) {
                             const newClip = this._createCombinedClipPath(key, newSf);
                             if (newClip) {
                                 newClip.canvas = cv.fabricCanvas;
@@ -2537,8 +2626,8 @@
                             masks.forEach((m, idx) => {
                                 const guide = this._createMaskObject(m, newSf, {
                                     fill: 'transparent',
-                                    stroke: 'rgba(0, 80, 220, 0.5)',
-                                    strokeWidth: 1,
+                                    stroke: 'transparent',
+                                    strokeWidth: 0,
                                     selectable: false,
                                     evented: false,
                                     name: 'mask_guide_' + idx

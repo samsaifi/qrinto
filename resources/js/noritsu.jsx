@@ -1523,7 +1523,7 @@ const OrderDone = () => {
             }}>
                 <div style={{
                     width: isDesktop ? '96px' : '80px', height: isDesktop ? '96px' : '80px',
-                    borderRadius: '50%', background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                    borderRadius: '50%', background: 'linear-gradient(135deg, #0ea5e9, #16a34a)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     marginBottom: '24px', boxShadow: '0 8px 24px rgba(34,197,94,0.3)',
                     animation: 'scaleIn 0.5s ease-out'
@@ -1552,7 +1552,7 @@ const OrderDone = () => {
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                             <div style={{
                                 width: '22px', height: '22px', borderRadius: '50%',
-                                background: step.active ? '#22c55e' : '#e5e7eb',
+                                background: step.active ? '#0ea5e9' : '#e5e7eb',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                             }}>
                                 {step.active && <svg width="10" height="10" fill="white" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" /></svg>}

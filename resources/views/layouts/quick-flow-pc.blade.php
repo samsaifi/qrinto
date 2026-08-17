@@ -245,8 +245,9 @@
             <div class="pb-16 border-b border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 <div class="lg:col-span-6">
                     <a href="{{ route('flow-pc.index') }}" class="flex items-center gap-3 mb-4 shrink-0 group w-fit">
-                        <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto Logo"
-                            class="h-10 sm:h-12 w-auto object-contain brightness-0 invert group-hover:scale-105 transition-transform duration-300">
+                        <img src="{{ asset('images/svg-logo/Qrinto-logo-one-color-white-only.svg') }}"
+                            alt="Qrinto Logo"
+                            class="h-10 sm:h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-300">
                     </a>
                     <p class="text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed font-medium">
                         Next-generation print studio combining real-time vector editing tools with museum-quality
@@ -255,21 +256,51 @@
                 </div>
 
                 <div class="lg:col-span-6">
-                    <div class="bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10 shadow-xl">
+                    <div x-data="footerSubscribeComponent()"
+                        class="bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10 shadow-xl transition-all">
                         <h4 class="text-base font-extrabold text-white mb-2">
                             Get Special Studio Offers & Print Guides
                         </h4>
                         <p class="text-xs text-slate-400 mb-4">Join over 50,000+ creators getting exclusive discounts &
                             design tutorials.</p>
 
-                        <form onsubmit="event.preventDefault();" class="flex flex-col sm:flex-row gap-3">
-                            <input type="email" placeholder="Enter your email address..."
-                                class="bg-white/10 border border-white/20 text-white placeholder-slate-400 text-sm px-4.5 py-3 rounded-xl focus:outline-none focus:border-brand-400 flex-1 backdrop-blur-md">
-                            <button type="submit"
-                                class="bg-brand-500 hover:bg-brand-600 text-white font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xl transition-all shadow-lg shrink-0">
-                                Subscribe
-                            </button>
-                        </form>
+                        <div x-show="subscribed" x-transition.duration.300ms
+                            class=" bg-gray-500/20 border border-emerald-400/40  text-gray-300 font-bold p-4 rounded-xl text-center flex items-center justify-center gap-2.5 shadow-lg">
+                            <i data-lucide="check-circle" class="w-5 h-5  text-gray-400 shrink-0"></i>
+                            <span x-text="successMessage || 'Thanks for subscribing!'"
+                                class="text-sm font-extrabold tracking-wide"></span>
+                        </div>
+
+                        <div x-show="!subscribed">
+                            <form @submit.prevent="submitSubscribe()" class="flex flex-col gap-2">
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <input type="email" x-model="email" @input="errorMessage = ''"
+                                        placeholder="Enter your email address..." required
+                                        class="bg-white/10 border text-white placeholder-slate-400 text-sm px-4.5 py-3 rounded-xl focus:outline-none flex-1 backdrop-blur-md transition-all"
+                                        :class="errorMessage ? 'border-red-400 focus:border-red-400 ring-2 ring-red-400/20' :
+                                            'border-white/20 focus:border-brand-400'">
+                                    <button type="submit" :disabled="loading"
+                                        class="bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xl transition-all shadow-lg shrink-0 flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                                        <span x-show="!loading">Subscribe</span>
+                                        <span x-show="loading" class="flex items-center gap-2" x-cloak>
+                                            <svg class="animate-spin h-4 w-4 text-white"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                </path>
+                                            </svg>
+                                            Subscribing...
+                                        </span>
+                                    </button>
+                                </div>
+                                <p x-show="errorMessage" x-text="errorMessage" x-cloak
+                                    class="text-xs text-red-400 font-semibold px-1 mt-1 flex items-center gap-1.5">
+                                </p>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -374,6 +405,63 @@
             var converted = parseFloat(amount) * (window.__currency.rate || 1);
             return window.__currency.symbol + converted.toFixed(decimals);
         };
+
+        function footerSubscribeComponent() {
+            return {
+                email: '',
+                loading: false,
+                subscribed: false,
+                successMessage: '',
+                errorMessage: '',
+                validateEmail(email) {
+                    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return re.test(String(email).toLowerCase());
+                },
+                async submitSubscribe() {
+                    this.errorMessage = '';
+                    const cleanEmail = (this.email || '').trim();
+                    if (!cleanEmail) {
+                        this.errorMessage = 'Please enter your email address.';
+                        return;
+                    }
+                    if (!this.validateEmail(cleanEmail)) {
+                        this.errorMessage = 'Please enter a valid email address.';
+                        return;
+                    }
+
+                    this.loading = true;
+                    try {
+                        const response = await fetch('{{ route('flow-pc.subscribe') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                email: cleanEmail
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (response.ok && data.success) {
+                            this.subscribed = true;
+                            this.successMessage = data.message || 'Thanks for subscribing!';
+                            if (typeof lucide !== 'undefined') {
+                                this.$nextTick(() => lucide.createIcons());
+                            }
+                        } else {
+                            this.errorMessage = data.message || 'Validation failed. Please check your email.';
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        this.errorMessage = 'An error occurred. Please try again.';
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            };
+        }
     </script>
     @stack('scripts')
 </body>

@@ -133,10 +133,10 @@ function customizerBase(config) {
                             .forEach(o => fc.remove(o));
                     }
                     for (const spec of (tpl.images || [])) {
-                        await this._addTemplateImage(fc, { ...spec, ignoreMask: tpl.ignoreMask }, sf, key);
+                        await this._addTemplateImage(fc, { ...spec, ignoreMask: spec.ignoreMask === true }, sf, key);
                     }
                     for (const spec of (tpl.svgs || [])) {
-                        await this._addTemplateSvg(fc, { ...spec, ignoreMask: tpl.ignoreMask }, sf, key);
+                        await this._addTemplateSvg(fc, { ...spec, ignoreMask: spec.ignoreMask === true }, sf, key);
                     }
                     (tpl.texts || tpl.layers || []).forEach(spec => {
                         const align = spec.textAlign || 'center';
@@ -155,7 +155,7 @@ function customizerBase(config) {
                             cornerSize: 12, transparentCorners: false, borderColor: '#378ADD',
                             cornerColor: '#378ADD', cornerStyle: 'circle', lockScalingFlip: true, hasRotatingPoint: true
                         });
-                        if (this._config.hasMasks) this._maybeClip(t, { ignoreMask: tpl.ignoreMask }, sf, key);
+                        if (this._config.hasMasks) this._maybeClip(t, { ignoreMask: spec.ignoreMask === true }, sf, key);
                         fc.add(t);
                     });
                     if (this._enforceZOrder) this._enforceZOrder(key);
@@ -341,7 +341,7 @@ function customizerBase(config) {
         async _updateSelectedStyle(property, value) {
             if (!this.selectedObject) return;
             if (property === 'fontFamily') {
-                try { await document.fonts.load('1em "' + value + '"'); } catch (e) {}
+                try { await document.fonts.load('1em "' + value + '"'); } catch (e) { }
             }
             this.selectedObject.set(property, value);
             const cv = this.canvases[this.activeCanvas];
@@ -404,7 +404,7 @@ function customizerBase(config) {
                 this.selectedObject = t;
                 this.updateUI();
                 if (t.canvas) { t.set('fontFamily', fontFamily); t.setCoords(); t.canvas.requestRenderAll(); }
-            }).catch(() => {});
+            }).catch(() => { });
         },
 
         // ═══════════════════════════════════════════════
@@ -670,7 +670,7 @@ function customizerBase(config) {
 
                 cv.fabricCanvas.discardActiveObject();
                 if (cv.maskGuides) cv.maskGuides.forEach(g => g.set('visible', false));
-                
+
                 cv.fabricCanvas.calcOffset();
                 cv.fabricCanvas.renderAll();
 
@@ -1861,12 +1861,12 @@ function customizerBase(config) {
                         { x: 0, y: -halfH }, { x: halfW, y: 0 }, { x: 0, y: halfH }, { x: -halfW, y: 0 }
                     ], { originX: 'center', originY: 'center' });
                 case 'pentagon':
-                    return new fabric.Polygon(Array.from({length:5}, (_,i) => {
+                    return new fabric.Polygon(Array.from({ length: 5 }, (_, i) => {
                         const a = (Math.PI * 2 * i / 5) - Math.PI / 2;
                         return { x: halfW * Math.cos(a), y: halfH * Math.sin(a) };
                     }), { originX: 'center', originY: 'center' });
                 case 'hexagon':
-                    return new fabric.Polygon(Array.from({length:6}, (_,i) => {
+                    return new fabric.Polygon(Array.from({ length: 6 }, (_, i) => {
                         const a = (Math.PI * 2 * i / 6);
                         return { x: halfW * Math.cos(a), y: halfH * Math.sin(a) };
                     }), { originX: 'center', originY: 'center' });
@@ -1977,7 +1977,7 @@ function customizerBase(config) {
                 let check = btn.querySelector('.shape-mask-check');
                 if (isActive && !check) {
                     check = document.createElement('span');
-                    check.className = 'shape-mask-check absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md border border-white z-10';
+                    check.className = 'shape-mask-check absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full  bg-gray-500 text-white flex items-center justify-center shadow-md border border-white z-10';
                     check.innerHTML = '<i data-lucide="check" class="w-2.5 h-2.5"></i>';
                     btn.appendChild(check);
                 } else if (!isActive && check) {
@@ -2237,9 +2237,9 @@ function customizerBase(config) {
                     break;
                 case 'star':
                     const points = [
-                        {x: 0, y: -50}, {x: 14, y: -20}, {x: 47, y: -15}, {x: 23, y: 7},
-                        {x: 29, y: 40}, {x: 0, y: 25}, {x: -29, y: 40}, {x: -23, y: 7},
-                        {x: -47, y: -15}, {x: -14, y: -20}
+                        { x: 0, y: -50 }, { x: 14, y: -20 }, { x: 47, y: -15 }, { x: 23, y: 7 },
+                        { x: 29, y: 40 }, { x: 0, y: 25 }, { x: -29, y: 40 }, { x: -23, y: 7 },
+                        { x: -47, y: -15 }, { x: -14, y: -20 }
                     ];
                     shapeObj = new fabric.Polygon(points, { left: center.left, top: center.top, fill });
                     break;
@@ -2294,7 +2294,7 @@ function customizerBase(config) {
         // ═══════════════════════════════════════════════
         addQrCode(text, color) {
             if (!text) return;
-            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(text) + '&color=' + (color || '000000').replace('#','');
+            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(text) + '&color=' + (color || '000000').replace('#', '');
             const key = this.activeCanvas; const cv = this.canvases[key]; if (!cv || !cv.fabricCanvas) return;
             const fc = cv.fabricCanvas;
             const center = fc.getCenter();
@@ -2428,11 +2428,11 @@ function customizerBase(config) {
                 case 'triangle':
                     return new fabric.Triangle(Object.assign(base, { width: (m.width || 100), height: (m.height || 100) }));
                 case 'pentagon':
-                    return new fabric.Polygon(Array.from({length:5},(_,i)=>{const a=(Math.PI*2*i/5)-Math.PI/2;return{x:55*Math.cos(a),y:55*Math.sin(a)};}), base);
+                    return new fabric.Polygon(Array.from({ length: 5 }, (_, i) => { const a = (Math.PI * 2 * i / 5) - Math.PI / 2; return { x: 55 * Math.cos(a), y: 55 * Math.sin(a) }; }), base);
                 case 'hexagon':
-                    return new fabric.Polygon(Array.from({length:6},(_,i)=>{const a=Math.PI*2*i/6;return{x:55*Math.cos(a),y:55*Math.sin(a)};}), base);
+                    return new fabric.Polygon(Array.from({ length: 6 }, (_, i) => { const a = Math.PI * 2 * i / 6; return { x: 55 * Math.cos(a), y: 55 * Math.sin(a) }; }), base);
                 case 'star':
-                    return new fabric.Polygon(Array.from({length:10},(_,i)=>{const r=(i%2===0)?55:25;const a=(Math.PI*2*i/10)-Math.PI/2;return{x:r*Math.cos(a),y:r*Math.sin(a)};}), base);
+                    return new fabric.Polygon(Array.from({ length: 10 }, (_, i) => { const r = (i % 2 === 0) ? 55 : 25; const a = (Math.PI * 2 * i / 10) - Math.PI / 2; return { x: r * Math.cos(a), y: r * Math.sin(a) }; }), base);
                 case 'heart':
                     const heartPathData = 'M 50 90 C 25 70 0 50 0 30 C 0 12 12 0 25 0 C 35 0 45 7 50 18 C 55 7 65 0 75 0 C 88 0 100 12 100 30 C 100 50 75 70 50 90 Z';
                     const hScaleX = ((m.width || 100) / 100) * (m.scaleX || 1) * sf;
@@ -2471,7 +2471,7 @@ function customizerBase(config) {
 
         _maybeClip(obj, spec, sf, key) {
             if (!obj) return;
-            if (spec && spec.ignoreMask) return;
+            if (spec && spec.ignoreMask === true) return;
             if (!this._config.hasMasks) return;
             key = key || this.activeCanvas;
             const cv = this.canvases[key];
@@ -2494,7 +2494,7 @@ function customizerBase(config) {
         // ═══════════════════════════════════════════════
         _debounce(fn, delay) {
             var t;
-            return function() { var a = arguments; clearTimeout(t); t = setTimeout(function() { fn.apply(this, a); }.bind(this), delay); }.bind(this);
+            return function () { var a = arguments; clearTimeout(t); t = setTimeout(function () { fn.apply(this, a); }.bind(this), delay); }.bind(this);
         }
     };
 }

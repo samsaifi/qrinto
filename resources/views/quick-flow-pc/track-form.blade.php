@@ -1,7 +1,18 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Track Your Order — Qrinto Print Studio')
+@section('title', 'Track Your Print Order | Qrinto Order Lookup')
 @section('header_title', 'Track Order')
+@section('meta_description',
+    'Track your Qrinto custom print order status online. Enter your order number or email to
+    check real-time printing and pickup progress.')
+@section('meta_keywords', 'track print order, Qrinto order status, check order status, order lookup, print status')
+@section('canonical_url', route('flow-pc.track.form'))
+@section('og_type', 'website')
+@section('og_title', 'Track Your Print Order | Qrinto Order Lookup')
+@section('og_description',
+    'Track your Qrinto custom print order status online. Enter your order number or email to
+    check real-time printing and pickup progress.')
+@section('og_image', asset('logo/Qrinto-logo-small.png'))
 
 @push('styles')
     <style>
@@ -160,7 +171,7 @@
 
                 <div class="glass-card p-6 rounded-3xl border border-slate-200/80 shadow-xs flex items-start gap-4">
                     <div
-                        class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        class="w-12 h-12 rounded-2xl  bg-gray-50 border  border-gray-100  text-gray-600 flex items-center justify-center shrink-0">
                         <i data-lucide="store" class="w-6 h-6"></i>
                     </div>
                     <div>

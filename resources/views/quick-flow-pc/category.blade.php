@@ -1,7 +1,14 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', $type->name . ' — Choose Your Size')
+@section('title', 'Custom ' . $type->name . ' Printing & Sizes | Qrinto')
 @section('header_title', $type->name)
+@section('meta_description', 'Explore custom ' . $type->name . ' sizes, templates, and printing options. High quality printing with instant online editor & fast store pickup at Qrinto.')
+@section('meta_keywords', 'custom ' . strtolower($type->name) . ', ' . strtolower($type->name) . ' printing, photo ' . strtolower($type->name) . ', custom size prints, Qrinto print studio')
+@section('canonical_url', route('flow-pc.category', $type->slug))
+@section('og_type', 'product')
+@section('og_title', 'Custom ' . $type->name . ' Printing & Sizes | Qrinto')
+@section('og_description', 'Explore custom ' . $type->name . ' sizes, templates, and printing options. High quality printing with instant online editor & fast store pickup at Qrinto.')
+@section('og_image', asset('logo/Qrinto-logo-small.png'))
 
 @push('styles')
     <style>

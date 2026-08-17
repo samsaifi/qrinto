@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Print Design - {{ $order->order_number }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,7 +50,7 @@
 
         .print-header p {
             font-size: 0.875rem;
-            color: #64748b;
+            color: #0ea5e9;
             margin-top: 0.25rem;
         }
 
@@ -95,7 +95,7 @@
         .preview-info .store-name {
             font-weight: 600;
             font-size: 0.75rem;
-            color: #64748b;
+            color: #0ea5e9;
         }
 
         /* Buttons */

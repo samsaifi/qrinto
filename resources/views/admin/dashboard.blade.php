@@ -143,7 +143,7 @@
                                                     'pending' => 'bg-yellow-400/20 text-yellow-200',
                                                     'processing' => 'bg-brand-400/20 text-brand-200',
                                                     'completed' => 'bg-green-400/20 text-green-200',
-                                                    'delivered' => 'bg-emerald-400/20 text-emerald-200',
+                                                    'delivered' => ' bg-gray-400/20  text-gray-200',
                                                     'cancelled' => 'bg-red-400/20 text-red-200',
                                                 ];
                                                 $sClass =
@@ -581,6 +581,7 @@
             }
 
             const currencySymbol = @json(\App\Services\CurrencyService::getSymbol());
+
             function fmtNum(v) {
                 return currencySymbol + Number(v).toLocaleString('en-US', {
                     minimumFractionDigits: 2,
@@ -630,7 +631,7 @@
                         <td class="px-4 py-3 text-sm font-semibold text-surface-800">${escHtml(s.store_name)}</td>
                         <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.total_orders > 0 ? 'bg-brand-100 text-brand-700' : 'bg-surface-100 text-surface-400'}">${s.total_orders}</span></td>
                         <td class="px-4 py-3 text-right text-sm font-medium text-brand-700">${fmtNum(s.online_amount)}</td>
-                        <td class="px-4 py-3 text-right text-sm font-medium text-emerald-700">${fmtNum(s.cash_amount)}</td>
+                        <td class="px-4 py-3 text-right text-sm font-medium  text-gray-700">${fmtNum(s.cash_amount)}</td>
                         <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.pending_orders > 0 ? 'bg-amber-100 text-amber-700' : 'bg-surface-100 text-surface-400'}">${s.pending_orders}</span></td>
                         <td class="px-4 py-3 text-right text-sm font-medium text-amber-700">${fmtNum(s.pending_amount)}</td>
                         <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.paid_orders > 0 ? 'bg-accent-100 text-accent-700' : 'bg-surface-100 text-surface-400'}">${s.paid_orders}</span></td>
@@ -647,7 +648,7 @@
                     <td class="px-4 py-3 text-sm text-surface-900">Grand Total</td>
                     <td class="px-4 py-3 text-right text-sm text-surface-900">${t.total_orders}</td>
                     <td class="px-4 py-3 text-right text-sm text-brand-800">${fmtNum(t.online_amount)}</td>
-                    <td class="px-4 py-3 text-right text-sm text-emerald-800">${fmtNum(t.cash_amount)}</td>
+                    <td class="px-4 py-3 text-right text-sm  text-gray-800">${fmtNum(t.cash_amount)}</td>
                     <td class="px-4 py-3 text-right text-sm text-surface-900">${t.pending_orders}</td>
                     <td class="px-4 py-3 text-right text-sm text-amber-800">${fmtNum(t.pending_amount)}</td>
                     <td class="px-4 py-3 text-right text-sm text-surface-900">${t.paid_orders}</td>

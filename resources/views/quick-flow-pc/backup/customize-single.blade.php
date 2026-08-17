@@ -10,291 +10,455 @@
     <style>
         /* Upload Zone */
         .upload-zone {
-            border: 2px dashed #e2e8f0; border-radius: 1rem; padding: 1rem;
-            background: #f8fafc; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            border: 2px dashed #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
+
         .upload-zone:hover {
-            border-color: var(--color-brand-500, #ec4899); background: #fdf2f8; transform: translateY(-1px);
+            border-color: var(--color-brand-500, #ec4899);
+            background: #fdf2f8;
+            transform: translateY(-1px);
         }
-        .upload-zone.has-image { border-style: solid; border-color: #10b981; background: #f0fdf4; }
+
+        .upload-zone.has-image {
+            border-style: solid;
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
 
         /* Text Toolbar */
-        .text-toolbar { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-        .text-toolbar input[type="text"], .text-toolbar textarea {
-            border: 1px solid #e2e8f0; border-radius: 0.625rem; padding: 10px 14px; font-size: 14px;
-            background: #f8fafc; transition: all 0.2s; width: 100%; resize: none; min-height: 44px;
+        .text-toolbar {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 12px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
-        .text-toolbar input[type="text"]:focus, .text-toolbar textarea:focus {
-            border-color: var(--color-brand-500, #ec4899); box-shadow: 0 0 0 3px rgba(236,72,153,0.1); outline: none; background: #fff;
+
+        .text-toolbar input[type="text"],
+        .text-toolbar textarea {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.625rem;
+            padding: 10px 14px;
+            font-size: 14px;
+            background: #f8fafc;
+            transition: all 0.2s;
+            width: 100%;
+            resize: none;
+            min-height: 44px;
         }
+
+        .text-toolbar input[type="text"]:focus,
+        .text-toolbar textarea:focus {
+            border-color: var(--color-brand-500, #ec4899);
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+            outline: none;
+            background: #fff;
+        }
+
         .text-toolbar select {
-            border: 1px solid #e2e8f0; border-radius: 0.625rem; padding: 8px 12px; font-size: 13px; font-weight: 600;
-            background: #f8fafc; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.625rem;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            background: #f8fafc;
+            cursor: pointer;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; transition: border-color 0.2s;
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 32px;
+            transition: border-color 0.2s;
         }
-        .text-toolbar select:focus { border-color: var(--color-brand-500, #ec4899); }
-        .text-toolbar button { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+
+        .text-toolbar select:focus {
+            border-color: var(--color-brand-500, #ec4899);
+        }
+
+        .text-toolbar button {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
         /* Mockup Preview */
-        .preview-toggle-btn { color: #64748b; transition: all 0.2s ease; cursor: pointer; border: none; background: transparent; }
-        .preview-toggle-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 3px rgba(15,23,42,0.08); }
-        .mockup-stage {
-            border-radius: 16px; overflow: hidden; transition: background 0.35s ease, padding 0.35s ease;
-            display: flex; align-items: center; justify-content: center; min-height: 200px;
+        .preview-toggle-btn {
+            color: #0ea5e9;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            background: transparent;
         }
-        .mockup-stage.flat { background: #f8fafc; padding: 24px; }
+
+        .preview-toggle-btn.active {
+            background: #fff;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+        }
+
+        .mockup-stage {
+            border-radius: 16px;
+            overflow: hidden;
+            transition: background 0.35s ease, padding 0.35s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .mockup-stage.flat {
+            background: #f8fafc;
+            padding: 24px;
+        }
+
         .mockup-stage.room {
             background: linear-gradient(180deg, #eef2f7 0%, #e6ebf2 62%, #dfe5ee 62%, #d3dae4 100%);
-            padding: 24px 24px 40px; position: relative;
+            padding: 24px 24px 40px;
+            position: relative;
         }
+
         .mockup-stage.room::after {
-            content: ""; position: absolute; left: 0; right: 0; bottom: 26px; height: 2px; background: rgba(15,23,42,0.08);
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 26px;
+            height: 2px;
+            background: rgba(15, 23, 42, 0.08);
         }
-        .mockup-scene { display: flex; align-items: center; justify-content: center; width: 100%; }
+
+        .mockup-scene {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
         .mockup-frame {
-            position: relative; display: inline-block; background: #fff;
-            transition: max-width 0.35s cubic-bezier(0.4,0,0.2,1), border 0.35s ease, box-shadow 0.35s ease, padding 0.35s ease;
+            position: relative;
+            display: inline-block;
+            background: #fff;
+            transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), border 0.35s ease, box-shadow 0.35s ease, padding 0.35s ease;
         }
-        .mockup-stage.flat .mockup-frame { max-width: 100%; border-radius: 6px; padding: 0; box-shadow: 0 10px 30px -12px rgba(15,23,42,0.28); }
-        .mockup-stage.room .mockup-frame { max-width: 74%; border: 10px solid #fff; border-radius: 2px; padding: 4px; box-shadow: 0 2px 3px rgba(0,0,0,0.1), 0 22px 44px -14px rgba(15,23,42,0.48); }
-        .mockup-frame img { display: block; width: 100%; height: auto; border-radius: 2px; }
+
+        .mockup-stage.flat .mockup-frame {
+            max-width: 100%;
+            border-radius: 6px;
+            padding: 0;
+            box-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.28);
+        }
+
+        .mockup-stage.room .mockup-frame {
+            max-width: 74%;
+            border: 10px solid #fff;
+            border-radius: 2px;
+            padding: 4px;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1), 0 22px 44px -14px rgba(15, 23, 42, 0.48);
+        }
+
+        .mockup-frame img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 2px;
+        }
+
         .mockup-empty {
-            position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 6px; min-height: 160px; color: #94a3b8; font-size: 12px; font-weight: 600;
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 160px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
         }
     </style>
 @endpush
 
 @section('content')
-@php
-    $imageTypes = [];
-    $slots = ['frame_image' => 'Page 1'];
-    $galleryImages = $product->images->values();
-    $galleryIndex = 0;
-    $fallbackUrl = $product->featured_image_url ?? $product->sample_image_url ?? $product->frame_image_url ?? $product->background_image_url ?? 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>';
-    foreach ($slots as $field => $label) {
-        $url = $product->{$field . '_url'};
-        if (!$url && isset($galleryImages[$galleryIndex])) {
-            $url = \App\Models\Product::formatStorageUrl($galleryImages[$galleryIndex]->image_path);
-            $galleryIndex++;
+    @php
+        $imageTypes = [];
+        $slots = ['frame_image' => 'Page 1'];
+        $galleryImages = $product->images->values();
+        $galleryIndex = 0;
+        $fallbackUrl =
+            $product->featured_image_url ??
+            ($product->sample_image_url ??
+                ($product->frame_image_url ??
+                    ($product->background_image_url ??
+                        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>')));
+        foreach ($slots as $field => $label) {
+            $url = $product->{$field . '_url'};
+            if (!$url && isset($galleryImages[$galleryIndex])) {
+                $url = \App\Models\Product::formatStorageUrl($galleryImages[$galleryIndex]->image_path);
+                $galleryIndex++;
+            }
+            if (!$url) {
+                $url = $fallbackUrl;
+            }
+            $imageTypes[$field] = ['label' => $label, 'url' => $url];
         }
-        if (!$url) {
-            $url = $fallbackUrl;
-        }
-        $imageTypes[$field] = ['label' => $label, 'url' => $url];
-    }
-    $maskData = [];
-    $flowData = session('quick_flow_data', []);
+        $maskData = [];
+        $flowData = session('quick_flow_data', []);
 
-    $bcStoreName = session('active_store_name') 
-        ?? (session('active_store_id') ? \App\Models\Store::find(session('active_store_id'))?->name : null)
-        ?? ($product->store->name ?? null)
-        ?? ($flowData['store_name'] ?? 'Store');
+        $bcStoreName =
+            session('active_store_name') ??
+            ((session('active_store_id') ? \App\Models\Store::find(session('active_store_id'))?->name : null) ??
+                ($product->store->name ?? (null ?? ($flowData['store_name'] ?? 'Store'))));
 
-    $bcProductType = $flowData['type_name'] 
-        ?? ($product->productType->name ?? ($flowData['category_name'] ?? 'Product Type'));
+        $bcProductType =
+            $flowData['type_name'] ?? ($product->productType->name ?? ($flowData['category_name'] ?? 'Product Type'));
 
-    $bcTypeSlug = $flowData['type_slug'] ?? ($product->productType->slug ?? null);
+        $bcTypeSlug = $flowData['type_slug'] ?? ($product->productType->slug ?? null);
 
-    $bcPageSizeSide = $flowData['size_name'] 
-        ?? ($flowData['size_title'] ?? null)
-        ?? (isset($flowData['size_width'], $flowData['size_height']) ? $flowData['size_width'].'×'.$flowData['size_height'].($flowData['size_unit'] ?? '') : null)
-        ?? ($product->no_of_pages ? ($product->no_of_pages == 1 ? 'Single Side' : ($product->no_of_pages == 2 ? 'Double Side' : $product->no_of_pages.' Pages')) : 'Single Canvas');
+        $bcPageSizeSide =
+            $flowData['size_name'] ??
+            ($flowData['size_title'] ??
+                (null ??
+                    ((isset($flowData['size_width'], $flowData['size_height'])
+                        ? $flowData['size_width'] . '×' . $flowData['size_height'] . ($flowData['size_unit'] ?? '')
+                        : null) ??
+                        ($product->no_of_pages
+                            ? ($product->no_of_pages == 1
+                                ? 'Single Side'
+                                : ($product->no_of_pages == 2
+                                    ? 'Double Side'
+                                    : $product->no_of_pages . ' Pages'))
+                            : 'Single Canvas'))));
 
-    $bcTemplateName = $product->name ?? 'Custom Template';
-@endphp
+        $bcTemplateName = $product->name ?? 'Custom Template';
+    @endphp
 
-<div id="customizer-app" class="w-full pb-24">
+    <div id="customizer-app" class="w-full pb-24">
 
-    {{-- ── Breadcrumb Navigation (Home >> Store >> Product Type >> Page Size/Side >> Template Name) ── --}}
-    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5">
-        <nav class="cust-breadcrumb flex items-center flex-wrap gap-2 text-xs font-semibold">
-            {{-- 1. Home --}}
-            <a href="{{ route('flow-pc.index') }}"
-                class="text-slate-500 hover:text-brand-600 transition-colors">Home</a>
+        {{-- ── Breadcrumb Navigation (Home >> Store >> Product Type >> Page Size/Side >> Template Name) ── --}}
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5">
+            <nav class="cust-breadcrumb flex items-center flex-wrap gap-2 text-xs font-semibold">
+                {{-- 1. Home --}}
+                <a href="{{ route('flow-pc.index') }}"
+                    class="text-slate-500 hover:text-brand-600 transition-colors">Home</a>
 
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
-            {{-- 2. Selected Store --}}
-            <span class="text-slate-500 font-medium">{{ $bcStoreName }}</span>
+                {{-- 2. Selected Store --}}
+                <span class="text-slate-500 font-medium">{{ $bcStoreName }}</span>
 
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
-            {{-- 3. Product Type --}}
-            @if ($bcTypeSlug)
-                <a href="{{ route('flow-pc.category', $bcTypeSlug) }}"
-                    class="text-slate-500 hover:text-brand-600 transition-colors">{{ $bcProductType }}</a>
-            @else
-                <span class="text-slate-500 font-medium">{{ $bcProductType }}</span>
-            @endif
+                {{-- 3. Product Type --}}
+                @if ($bcTypeSlug)
+                    <a href="{{ route('flow-pc.category', $bcTypeSlug) }}"
+                        class="text-slate-500 hover:text-brand-600 transition-colors">{{ $bcProductType }}</a>
+                @else
+                    <span class="text-slate-500 font-medium">{{ $bcProductType }}</span>
+                @endif
 
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
-            {{-- 4. Page Size / Side --}}
-            <span class="text-slate-500 font-medium">
-                {{ $bcPageSizeSide }}
-            </span>
+                {{-- 4. Page Size / Side --}}
+                <span class="text-slate-500 font-medium">
+                    {{ $bcPageSizeSide }}
+                </span>
 
-            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
-            {{-- 5. Template Name --}}
-            <span class="text-slate-900 font-extrabold max-w-[280px] sm:max-w-xs truncate" title="{{ $bcTemplateName }}">
-                {{ $bcTemplateName }}
-            </span>
-        </nav>
-    </div>
+                {{-- 5. Template Name --}}
+                <span class="text-slate-900 font-extrabold max-w-[280px] sm:max-w-xs truncate"
+                    title="{{ $bcTemplateName }}">
+                    {{ $bcTemplateName }}
+                </span>
+            </nav>
+        </div>
 
-    {{-- ── 1. STUDIO EDITOR WORKSPACE (DOTTED BACKGROUND) ── --}}
-    <section class="w-full relative py-8 px-4 sm:px-6 lg:px-10 border-b border-slate-200/80"
-        style="background-color: #f8fafc; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
+        {{-- ── 1. STUDIO EDITOR WORKSPACE (DOTTED BACKGROUND) ── --}}
+        <section class="w-full relative py-8 px-4 sm:px-6 lg:px-10 border-b border-slate-200/80"
+            style="background-color: #f8fafc; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
 
-        <div class="max-w-[1400px] mx-auto">
-            <div class="relative w-full min-h-[80vh] flex items-center justify-center">
+            <div class="max-w-[1400px] mx-auto">
+                <div class="relative w-full min-h-[80vh] flex items-center justify-center">
 
-                {{-- ═══ LEFT: FLOATING DOCK (Templates & Layers only — NO page buttons) ═══ --}}
-                <div class="absolute left-1 lg:left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
-                    {{-- Templates --}}
-                    <button type="button" onclick="toggleTemplatesDrawer()"
-                        class="group flex flex-col items-center gap-1 cursor-pointer" title="Ready-Made Templates">
-                        <div id="templates-dock-btn"
-                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-brand-500 group-hover:bg-brand-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
-                            <i data-lucide="layout-template" class="w-5 h-5"></i>
-                        </div>
-                        <span class="text-[10px] font-black text-slate-600 group-hover:text-brand-600 transition-colors">Templates</span>
-                    </button>
-                    {{-- Layers --}}
-                    <button type="button" onclick="toggleLayersDrawer()"
-                        class="group flex flex-col items-center gap-1 cursor-pointer" title="Canvas Layers Panel">
-                        <div id="layers-dock-btn"
-                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
-                            <i data-lucide="layers" class="w-5 h-5"></i>
-                        </div>
-                        <span class="text-[10px] font-black text-slate-600 group-hover:text-emerald-600 transition-colors">Layers</span>
-                    </button>
-                    {{-- Clear All --}}
-                    <button type="button" onclick="customizer.clearAll()"
-                        class="group flex flex-col items-center gap-1 cursor-pointer" title="Clear All Designs">
-                        <div id="clear-dock-btn"
-                            class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
-                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                        </div>
-                        <span class="text-[10px] font-black text-red-600">Clear All</span>
-                    </button>
-                </div>
-
-                {{-- Shared Flyout Drawers (Templates, Layers, Typography) --}}
-                @include('quick-flow-pc.partials.customizer-drawers')
-
-                {{-- ═══ CENTER: CANVAS WORKSPACE ═══ --}}
-                <div class="w-full flex flex-col items-center justify-center min-w-0 space-y-6">
-                    <div class="w-full flex items-center justify-center min-h-[80vh] py-6 relative" id="canvas-stage">
-                        <div class="canvas-wrapper bg-white shadow-2xl rounded-2xl overflow-hidden relative mx-auto flex items-center justify-center transition-all duration-200"
-                            id="canvas-container">
-                            <div id="canvas-loading-overlay"
-                                class="hidden absolute inset-0 bg-white/80 backdrop-blur-xs z-50 flex flex-col items-center justify-center space-y-3 rounded-2xl transition-all duration-300">
-                                <div class="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center shadow-lg shadow-brand-500/10">
-                                    <i data-lucide="loader-2" class="w-6 h-6 text-brand-600 animate-spin"></i>
-                                </div>
-                                <span class="text-xs font-black text-slate-800 tracking-wider uppercase">Loading Template...</span>
+                    {{-- ═══ LEFT: FLOATING DOCK (Templates & Layers only — NO page buttons) ═══ --}}
+                    <div
+                        class="absolute left-1 lg:left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
+                        {{-- Templates --}}
+                        <button type="button" onclick="toggleTemplatesDrawer()"
+                            class="group flex flex-col items-center gap-1 cursor-pointer" title="Ready-Made Templates">
+                            <div id="templates-dock-btn"
+                                class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-brand-500 group-hover:bg-brand-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                                <i data-lucide="layout-template" class="w-5 h-5"></i>
                             </div>
-                            @foreach ($imageTypes as $key => $img)
-                                <div id="canvas-wrapper-{{ $key }}" class="canvas-layer"
-                                    style="position:absolute;top:0;left:0;width:100%;height:100%;visibility:hidden;pointer-events:none;z-index:-1;">
-                                    <canvas id="canvas-{{ $key }}"></canvas>
-                                </div>
-                            @endforeach
-                        </div>
+                            <span
+                                class="text-[10px] font-black text-slate-600 group-hover:text-brand-600 transition-colors">Templates</span>
+                        </button>
+                        {{-- Layers --}}
+                        <button type="button" onclick="toggleLayersDrawer()"
+                            class="group flex flex-col items-center gap-1 cursor-pointer" title="Canvas Layers Panel">
+                            <div id="layers-dock-btn"
+                                class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center  text-gray-500 group-hover: bg-gray-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                                <i data-lucide="layers" class="w-5 h-5"></i>
+                            </div>
+                            <span
+                                class="text-[10px] font-black text-slate-600 group-hover: text-gray-600 transition-colors">Layers</span>
+                        </button>
+                        {{-- Clear All --}}
+                        <button type="button" onclick="customizer.clearAll()"
+                            class="group flex flex-col items-center gap-1 cursor-pointer" title="Clear All Designs">
+                            <div id="clear-dock-btn"
+                                class="w-12 h-12 rounded-2xl bg-white shadow-2xs border border-slate-200/90 flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white group-hover:scale-105 transition-all duration-200">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-[10px] font-black text-red-600">Clear All</span>
+                        </button>
                     </div>
 
-                    {{-- Hidden Mockup Preview Elements --}}
-                    <div style="display: none !important;">
-                        <div id="zoom-control">
-                            <input type="range" id="zoom-slider" min="0.1" max="3" step="0.01" value="1">
+                    {{-- Shared Flyout Drawers (Templates, Layers, Typography) --}}
+                    @include('quick-flow-pc.partials.customizer-drawers')
+
+                    {{-- ═══ CENTER: CANVAS WORKSPACE ═══ --}}
+                    <div class="w-full flex flex-col items-center justify-center min-w-0 space-y-6">
+                        <div class="w-full flex items-center justify-center min-h-[80vh] py-6 relative" id="canvas-stage">
+                            <div class="canvas-wrapper bg-white shadow-2xl rounded-2xl overflow-hidden relative mx-auto flex items-center justify-center transition-all duration-200"
+                                id="canvas-container">
+                                <div id="canvas-loading-overlay"
+                                    class="hidden absolute inset-0 bg-white/80 backdrop-blur-xs z-50 flex flex-col items-center justify-center space-y-3 rounded-2xl transition-all duration-300">
+                                    <div
+                                        class="w-12 h-12 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center shadow-lg shadow-brand-500/10">
+                                        <i data-lucide="loader-2" class="w-6 h-6 text-brand-600 animate-spin"></i>
+                                    </div>
+                                    <span class="text-xs font-black text-slate-800 tracking-wider uppercase">Loading
+                                        Template...</span>
+                                </div>
+                                @foreach ($imageTypes as $key => $img)
+                                    <div id="canvas-wrapper-{{ $key }}" class="canvas-layer"
+                                        style="position:absolute;top:0;left:0;width:100%;height:100%;visibility:hidden;pointer-events:none;z-index:-1;">
+                                        <canvas id="canvas-{{ $key }}"></canvas>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
-                        <div id="mockup-preview-card">
-                            <div id="mockup-stage" class="mockup-stage flat">
-                                <div class="mockup-scene">
-                                    <div id="mockup-frame" class="mockup-frame">
-                                        <img id="mockup-image" alt="Live preview">
-                                        <div id="mockup-empty" class="mockup-empty"></div>
+
+                        {{-- Hidden Mockup Preview Elements --}}
+                        <div style="display: none !important;">
+                            <div id="zoom-control">
+                                <input type="range" id="zoom-slider" min="0.1" max="3" step="0.01"
+                                    value="1">
+                            </div>
+                            <div id="mockup-preview-card">
+                                <div id="mockup-stage" class="mockup-stage flat">
+                                    <div class="mockup-scene">
+                                        <div id="mockup-frame" class="mockup-frame">
+                                            <img id="mockup-image" alt="Live preview">
+                                            <div id="mockup-empty" class="mockup-empty"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {{-- ═══ RIGHT: Shared Floating Studio Dock ═══ --}}
+                    @include('quick-flow-pc.partials.customizer-right-dock', ['multiUpload' => true])
+
                 </div>
-
-                {{-- ═══ RIGHT: Shared Floating Studio Dock ═══ --}}
-                @include('quick-flow-pc.partials.customizer-right-dock', ['multiUpload' => true])
-
             </div>
-        </div>
-    </section>
+        </section>
 
-    {{-- ── 2. HERO HEADER SECTION (BELOW EDITOR SECTION) ── --}}
-    <section class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 mt-8 mb-6">
-        <div class="hero-glass-card hero-cust-pattern relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/80 transition-all duration-300">
-            {{-- Ambient lighting blobs --}}
-            <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-            <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-fuchsia-400/15 via-purple-400/15 to-violet-400/15 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="hero-dots opacity-40"></div>
-
-            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div class="flex items-center gap-5">
-                    <a href="javascript:history.back()"
-                        class="w-12 h-12 bg-white/90 hover:bg-white text-slate-600 hover:text-brand-600 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center shrink-0 group active:scale-95"
-                        title="Go Back">
-                        <i data-lucide="arrow-left" class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform"></i>
-                    </a>
-                    <div class="space-y-1">
-                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-purple-200/80 text-purple-600 text-[11px] font-black shadow-2xs backdrop-blur-md tracking-wider uppercase">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-500 animate-spin-slow"></i>
-                            Studio Canvas Customizer
-                        </div>
-                        <h1 class="text-2xl lg:text-3xl xl:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                            Customize <span class="text-slate-900 italic" style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span>
-                        </h1>
-                        <p class="text-xs lg:text-sm text-slate-500 font-semibold flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                            Upload your photo and add custom typography to personalize your design canvas.
-                        </p>
-                    </div>
+        {{-- ── 2. HERO HEADER SECTION (BELOW EDITOR SECTION) ── --}}
+        <section class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 mt-8 mb-6">
+            <div
+                class="hero-glass-card hero-cust-pattern relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/80 transition-all duration-300">
+                {{-- Ambient lighting blobs --}}
+                <div
+                    class="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none animate-pulse">
                 </div>
+                <div
+                    class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-fuchsia-400/15 via-purple-400/15 to-violet-400/15 rounded-full blur-3xl pointer-events-none">
+                </div>
+                <div class="hero-dots opacity-40"></div>
 
-                @if (isset($flowData['size_width']) && isset($flowData['size_height']))
-                    <div class="flex items-center gap-3 shrink-0 self-start lg:self-center">
-                        <div class="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-slate-800">
-                            <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                                <i data-lucide="ruler" class="w-4.5 h-4.5"></i>
+                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div class="flex items-center gap-5">
+                        <a href="javascript:history.back()"
+                            class="w-12 h-12 bg-white/90 hover:bg-white text-slate-600 hover:text-brand-600 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center shrink-0 group active:scale-95"
+                            title="Go Back">
+                            <i data-lucide="arrow-left"
+                                class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform"></i>
+                        </a>
+                        <div class="space-y-1">
+                            <div
+                                class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-purple-200/80 text-purple-600 text-[11px] font-black shadow-2xs backdrop-blur-md tracking-wider uppercase">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-500 animate-spin-slow"></i>
+                                Studio Canvas Customizer
                             </div>
-                            <div>
-                                <span class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Dimensions</span>
-                                <span class="text-xs font-black text-slate-900">{{ $flowData['size_width'] }}&times;{{ $flowData['size_height'] }}{{ $flowData['size_unit'] ?? '' }}</span>
-                            </div>
+                            <h1
+                                class="text-2xl lg:text-3xl xl:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                                Customize <span class="text-slate-900 italic"
+                                    style="font-family: 'Playfair Display', serif;">{{ $product->name }}</span>
+                            </h1>
+                            <p class="text-xs lg:text-sm text-slate-500 font-semibold flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full  bg-gray-500 animate-ping"></span>
+                                Upload your photo and add custom typography to personalize your design canvas.
+                            </p>
                         </div>
+                    </div>
 
-                        @if (isset($flowData['size_price']))
-                            <div class="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-emerald-50/90 backdrop-blur-md border border-emerald-200/90 shadow-sm text-emerald-800">
-                                <div class="w-9 h-9 rounded-xl bg-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0">
-                                    <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+                    @if (isset($flowData['size_width']) && isset($flowData['size_height']))
+                        <div class="flex items-center gap-3 shrink-0 self-start lg:self-center">
+                            <div
+                                class="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-sm text-slate-800">
+                                <div
+                                    class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                    <i data-lucide="ruler" class="w-4.5 h-4.5"></i>
                                 </div>
                                 <div>
-                                    <span class="block text-[10px] font-black uppercase tracking-wider text-emerald-600">Unit Price</span>
-                                    <span class="text-xs font-black text-emerald-900">{{ \App\Services\CurrencyService::format($flowData['size_price']) }}</span>
+                                    <span
+                                        class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Dimensions</span>
+                                    <span
+                                        class="text-xs font-black text-slate-900">{{ $flowData['size_width'] }}&times;{{ $flowData['size_height'] }}{{ $flowData['size_unit'] ?? '' }}</span>
                                 </div>
                             </div>
-                        @endif
-                    </div>
-                @endif
+
+                            @if (isset($flowData['size_price']))
+                                <div
+                                    class="flex items-center gap-3 px-4 py-2.5 rounded-2xl  bg-gray-50/90 backdrop-blur-md border  border-gray-200/90 shadow-sm  text-gray-800">
+                                    <div
+                                        class="w-9 h-9 rounded-xl  bg-gray-100/80  text-gray-600 flex items-center justify-center shrink-0">
+                                        <i data-lucide="tag" class="w-4.5 h-4.5"></i>
+                                    </div>
+                                    <div>
+                                        <span
+                                            class="block text-[10px] font-black uppercase tracking-wider  text-gray-600">Unit
+                                            Price</span>
+                                        <span
+                                            class="text-xs font-black  text-gray-900">{{ \App\Services\CurrencyService::format($flowData['size_price']) }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    {{-- ── 3. HOW TO USE TOOL INSTRUCTION GUIDE ── --}}
-    @include('quick-flow-pc.partials.customizer-instructions')
+        {{-- ── 3. HOW TO USE TOOL INSTRUCTION GUIDE ── --}}
+        @include('quick-flow-pc.partials.customizer-instructions')
 
-</div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -308,8 +472,8 @@
             templates: @json($activeTemplates ?? ($product->templates ?? [])),
             templateCategories: @json($templateCategories ?? []),
             csrfToken: '<?php echo csrf_token(); ?>',
-            uploadRoute: '<?php echo route("flow-pc.upload"); ?>',
-            uploadCompositeRoute: '<?php echo route("flow-pc.upload_composite"); ?>',
+            uploadRoute: '<?php echo route('flow-pc.upload'); ?>',
+            uploadCompositeRoute: '<?php echo route('flow-pc.upload_composite'); ?>',
             isPortrait: <?php echo ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false'; ?>,
             storagePrefix: 'qrinto_single_v1',
             multiCanvas: false,
@@ -318,11 +482,19 @@
 
             // ── Override init: no mask parsing, no lock state ──
             init() {
-                this.canvasEnabled = { 'frame_image': true };
-                this.canvasImages  = { 'frame_image': null };
-                this.uploadIds     = { 'frame_image': null };
-                this.imgScales     = { 'frame_image': 1 };
-                this.activeCanvas  = 'frame_image';
+                this.canvasEnabled = {
+                    'frame_image': true
+                };
+                this.canvasImages = {
+                    'frame_image': null
+                };
+                this.uploadIds = {
+                    'frame_image': null
+                };
+                this.imgScales = {
+                    'frame_image': 1
+                };
+                this.activeCanvas = 'frame_image';
 
                 const waitForLayout = () => {
                     const cont = document.getElementById('canvas-container');
@@ -342,15 +514,20 @@
                 document.getElementById('preview-toggle')?.addEventListener('click', (e) => {
                     const btn = e.target.closest('[data-mode]');
                     if (!btn) return;
-                    document.querySelectorAll('.preview-toggle-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.preview-toggle-btn').forEach(b => b.classList.remove(
+                        'active'));
                     btn.classList.add('active');
                     document.getElementById('mockup-stage').className = 'mockup-stage ' + btn.dataset.mode;
                 });
 
                 // Keyboard delete
                 window.addEventListener('keydown', (e) => {
-                    if ((e.key === 'Delete' || e.key === 'Backspace') && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-                        if (this.selectedObject) { e.preventDefault(); this.handleRemove(); }
+                    if ((e.key === 'Delete' || e.key === 'Backspace') && !['INPUT', 'TEXTAREA'].includes(
+                            document.activeElement.tagName)) {
+                        if (this.selectedObject) {
+                            e.preventDefault();
+                            this.handleRemove();
+                        }
                     }
                 });
 
@@ -377,10 +554,13 @@
                 const uploadIconBg = document.getElementById('upload-icon-bg');
                 const uploadText = document.getElementById('upload-text');
                 if (hasImg) {
-                    if (uploadIconBg) uploadIconBg.className = 'w-12 h-12 rounded-full bg-emerald-500 text-white shadow-xl flex items-center justify-center border border-emerald-400';
-                    if (uploadText) uploadText.textContent = userImagesCount > 1 ? `Photo (${userImagesCount})` : 'Photo';
+                    if (uploadIconBg) uploadIconBg.className =
+                        'w-12 h-12 rounded-full  bg-gray-500 text-white shadow-xl flex items-center justify-center border  border-gray-400';
+                    if (uploadText) uploadText.textContent = userImagesCount > 1 ? `Photo (${userImagesCount})` :
+                        'Photo';
                 } else {
-                    if (uploadIconBg) uploadIconBg.className = 'w-12 h-12 rounded-full bg-white text-pink-500 shadow-xl flex items-center justify-center border border-slate-200';
+                    if (uploadIconBg) uploadIconBg.className =
+                        'w-12 h-12 rounded-full bg-white text-pink-500 shadow-xl flex items-center justify-center border border-slate-200';
                     if (uploadText) uploadText.textContent = 'Photo';
                 }
 
@@ -394,8 +574,10 @@
                 if (removeBtn) removeBtn.classList.toggle('hidden', !showRemove);
                 const removeBtnText = document.getElementById('remove-btn-text');
                 if (showRemove && removeBtnText) {
-                    if (this.selectedObject && this.selectedObject._isUserText) removeBtnText.textContent = 'Remove Text';
-                    else if (this.selectedObject && this.selectedObject._isUserImage) removeBtnText.textContent = 'Remove Image';
+                    if (this.selectedObject && this.selectedObject._isUserText) removeBtnText.textContent =
+                        'Remove Text';
+                    else if (this.selectedObject && this.selectedObject._isUserImage) removeBtnText.textContent =
+                        'Remove Image';
                     else removeBtnText.textContent = 'Remove';
                 }
 
@@ -405,9 +587,10 @@
 
             // ── Responsive canvas dimension calculator ──
             _calcCanvasDimensions(stageEl, customConfig) {
-                const stageH = (stageEl && stageEl.offsetHeight > 200) ? stageEl.offsetHeight : Math.round(window.innerHeight * 0.8);
+                const stageH = (stageEl && stageEl.offsetHeight > 200) ? stageEl.offsetHeight : Math.round(window
+                    .innerHeight * 0.8);
                 const stageW = (stageEl && stageEl.offsetWidth > 200) ? stageEl.offsetWidth - 180 : 900;
-                
+
                 const isPortrait = this._config.isPortrait;
                 const adminW = (customConfig && customConfig.canvasWidth) || (isPortrait ? 400 : 560);
                 const adminH = (customConfig && customConfig.canvasHeight) || (isPortrait ? 560 : 400);
@@ -422,7 +605,13 @@
                     targetH = Math.round(adminH * scaleFactor);
                 }
 
-                return { displayWidth: targetW, displayHeight: targetH, scaleFactor, adminW, adminH };
+                return {
+                    displayWidth: targetW,
+                    displayHeight: targetH,
+                    scaleFactor,
+                    adminW,
+                    adminH
+                };
             },
 
             // ── Override _initAllCanvases: backgroundColor '#ffffff', left:0/top:0 bg, no mask guides ──
@@ -431,7 +620,12 @@
                 const stageEl = document.getElementById('canvas-stage');
                 if (!containerEl) return;
 
-                const { displayWidth, displayHeight, adminW, adminH } = this._calcCanvasDimensions(stageEl);
+                const {
+                    displayWidth,
+                    displayHeight,
+                    adminW,
+                    adminH
+                } = this._calcCanvasDimensions(stageEl);
                 const scaleFactor = displayWidth / adminW;
 
                 containerEl.style.width = displayWidth + 'px';
@@ -450,19 +644,43 @@
                         allowTouchScrolling: true
                     });
 
-                    this.canvases[key] = { fabricCanvas: fc, imgObj: null, scaleFactor, adminW, adminH };
+                    this.canvases[key] = {
+                        fabricCanvas: fc,
+                        imgObj: null,
+                        scaleFactor,
+                        adminW,
+                        adminH
+                    };
 
                     const url = this.imageTypes[key]?.url;
                     if (url) {
                         fabric.Image.fromURL(url, img => {
-                            img.set({ left: 0, top: 0, scaleX: displayWidth / img.width, scaleY: displayHeight / img.height, selectable: false, evented: false });
+                            img.set({
+                                left: 0,
+                                top: 0,
+                                scaleX: displayWidth / img.width,
+                                scaleY: displayHeight / img.height,
+                                selectable: false,
+                                evented: false
+                            });
                             fc.setBackgroundImage(img, fc.requestRenderAll.bind(fc));
-                        }, { crossOrigin: 'anonymous' });
+                        }, {
+                            crossOrigin: 'anonymous'
+                        });
                     }
 
-                    fc.on('selection:created', (e) => { this.selectedObject = e.selected[0]; this.updateUI(); });
-                    fc.on('selection:updated', (e) => { this.selectedObject = e.selected[0]; this.updateUI(); });
-                    fc.on('selection:cleared', () => { this.selectedObject = null; this.updateUI(); });
+                    fc.on('selection:created', (e) => {
+                        this.selectedObject = e.selected[0];
+                        this.updateUI();
+                    });
+                    fc.on('selection:updated', (e) => {
+                        this.selectedObject = e.selected[0];
+                        this.updateUI();
+                    });
+                    fc.on('selection:cleared', () => {
+                        this.selectedObject = null;
+                        this.updateUI();
+                    });
                     fc.on('object:modified', () => this._saveCanvasState(key));
                     fc.on('object:added', () => this._saveCanvasState(key));
                     fc.on('object:removed', () => this._saveCanvasState(key));
@@ -484,7 +702,10 @@
                 const containerEl = document.getElementById('canvas-container');
                 const stageEl = document.getElementById('canvas-stage');
                 if (!containerEl) return;
-                const { displayWidth, displayHeight } = this._calcCanvasDimensions(stageEl);
+                const {
+                    displayWidth,
+                    displayHeight
+                } = this._calcCanvasDimensions(stageEl);
                 containerEl.style.width = displayWidth + 'px';
                 containerEl.style.height = displayHeight + 'px';
                 Object.keys(this.canvases).forEach(key => {
@@ -509,12 +730,20 @@
                     img.set({
                         left: (canvasW - img.width * s) / 2 + offset,
                         top: (canvasH - img.height * s) / 2 + offset,
-                        scaleX: s, scaleY: s,
-                        cornerStyle: 'circle', cornerSize: 12, transparentCorners: false,
-                        borderColor: '#378ADD', cornerColor: '#378ADD',
-                        hasControls: true, hasBorders: true, selectable: true,
-                        _isUserImage: true, objectCaching: true,
-                        lockScalingFlip: true, uniformScaling: true
+                        scaleX: s,
+                        scaleY: s,
+                        cornerStyle: 'circle',
+                        cornerSize: 12,
+                        transparentCorners: false,
+                        borderColor: '#378ADD',
+                        cornerColor: '#378ADD',
+                        hasControls: true,
+                        hasBorders: true,
+                        selectable: true,
+                        _isUserImage: true,
+                        objectCaching: true,
+                        lockScalingFlip: true,
+                        uniformScaling: true
                     });
                     cv.fabricCanvas.add(img);
                     cv.fabricCanvas.setActiveObject(img);
@@ -524,7 +753,9 @@
                     this.imgScales[key] = s;
                     this.selectedObject = img;
                     this.updateUI();
-                }, { crossOrigin: 'anonymous' });
+                }, {
+                    crossOrigin: 'anonymous'
+                });
             },
 
             // ── Override handleFileUpload: uses 'image' field, sends blob, no canvas_key ──
@@ -542,7 +773,10 @@
                         const fd = new FormData();
                         fd.append('image', optimized.blob, 'upload.webp');
                         fd.append('_token', this._config.csrfToken);
-                        const res = await fetch(this._config.uploadRoute, { method: 'POST', body: fd });
+                        const res = await fetch(this._config.uploadRoute, {
+                            method: 'POST',
+                            body: fd
+                        });
                         const dat = await res.json();
                         if (dat.success) this.uploadIds[key] = dat.upload_id;
                     }
@@ -561,17 +795,26 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        let w = img.width, h = img.height;
+                        let w = img.width,
+                            h = img.height;
                         const maxDim = 1200;
                         if (w > maxDim || h > maxDim) {
-                            if (w > h) { h *= maxDim / w; w = maxDim; }
-                            else { w *= maxDim / h; h = maxDim; }
+                            if (w > h) {
+                                h *= maxDim / w;
+                                w = maxDim;
+                            } else {
+                                w *= maxDim / h;
+                                h = maxDim;
+                            }
                         }
                         canvas.width = w;
                         canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                         const dataUrl = canvas.toDataURL('image/webp', 0.85);
-                        canvas.toBlob((blob) => resolve({ blob, dataUrl }), 'image/webp', 0.85);
+                        canvas.toBlob((blob) => resolve({
+                            blob,
+                            dataUrl
+                        }), 'image/webp', 0.85);
                     };
                     img.onerror = reject;
                     img.src = URL.createObjectURL(file);
@@ -593,11 +836,18 @@
                     left: cv.fabricCanvas.width * 0.1,
                     top: cv.fabricCanvas.height / 3,
                     width: cv.fabricCanvas.width * 0.8,
-                    fontSize, fontFamily, fill: color, textAlign: align,
-                    _isUserText: true, objectCaching: false,
-                    cornerSize: 12, transparentCorners: false,
-                    borderColor: '#378ADD', cornerColor: '#378ADD',
-                    cornerStyle: 'circle', lockScalingFlip: true
+                    fontSize,
+                    fontFamily,
+                    fill: color,
+                    textAlign: align,
+                    _isUserText: true,
+                    objectCaching: false,
+                    cornerSize: 12,
+                    transparentCorners: false,
+                    borderColor: '#378ADD',
+                    cornerColor: '#378ADD',
+                    cornerStyle: 'circle',
+                    lockScalingFlip: true
                 });
                 this.selectedObject = t;
                 cv.fabricCanvas.add(t);
@@ -605,7 +855,11 @@
                 cv.fabricCanvas.setActiveObject(t);
                 cv.fabricCanvas.renderAll();
                 document.fonts.load(`${fontSize}px "${fontFamily}"`).then(() => {
-                    if (t.canvas) { t.set('fontFamily', fontFamily); t.setCoords(); t.canvas.requestRenderAll(); }
+                    if (t.canvas) {
+                        t.set('fontFamily', fontFamily);
+                        t.setCoords();
+                        t.canvas.requestRenderAll();
+                    }
                 }).catch(() => {});
                 this.updateUI();
             },
@@ -637,12 +891,21 @@
                         fabric.util.enlivenObjects(data.objects, (objs) => {
                             objs.forEach(obj => {
                                 obj.set({
-                                    selectable: true, evented: true, hasControls: true,
-                                    lockScalingFlip: true, uniformScaling: true,
-                                    cornerSize: 12, transparentCorners: false,
-                                    borderColor: '#378ADD', cornerColor: '#378ADD', cornerStyle: 'circle'
+                                    selectable: true,
+                                    evented: true,
+                                    hasControls: true,
+                                    lockScalingFlip: true,
+                                    uniformScaling: true,
+                                    cornerSize: 12,
+                                    transparentCorners: false,
+                                    borderColor: '#378ADD',
+                                    cornerColor: '#378ADD',
+                                    cornerStyle: 'circle'
                                 });
-                                if (obj._isUserImage) { cv.imgObj = obj; this.canvasImages[key] = true; }
+                                if (obj._isUserImage) {
+                                    cv.imgObj = obj;
+                                    this.canvasImages[key] = true;
+                                }
                                 fc.add(obj);
                             });
                             fc.renderAll();
@@ -656,7 +919,8 @@
             clearAll() {
                 const cv = this.canvases[this.activeCanvas];
                 if (!cv) return;
-                cv.fabricCanvas.getObjects().filter(o => o._isUserImage || o._isUserText).forEach(o => cv.fabricCanvas.remove(o));
+                cv.fabricCanvas.getObjects().filter(o => o._isUserImage || o._isUserText).forEach(o => cv
+                    .fabricCanvas.remove(o));
                 cv.imgObj = null;
                 this.canvasImages[this.activeCanvas] = null;
                 this.selectedObject = null;
@@ -668,7 +932,8 @@
             submitAllCanvases() {
                 if (this.isSavingComposite) return;
                 const hasUpload = Object.values(this.uploadIds).some(id => id !== null) ||
-                    Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.getObjects().some(o => o._isUserText));
+                    Object.keys(this.canvases).some(k => this.canvases[k].fabricCanvas.getObjects().some(o => o
+                        ._isUserText));
                 if (!hasUpload) {
                     document.getElementById('upload_ids_field').value = JSON.stringify({});
                     document.getElementById('checkout-form').submit();
@@ -684,14 +949,25 @@
                 const uploadPromises = Object.keys(this.canvases).map(async key => {
                     const cv = this.canvases[key];
                     if (!cv) return;
-                    const hasEdit = this.canvasImages[key] !== null || cv.fabricCanvas.getObjects().some(o => o._isUserText);
+                    const hasEdit = this.canvasImages[key] !== null || cv.fabricCanvas.getObjects()
+                        .some(o => o._isUserText);
                     if (!hasEdit) return;
                     cv.fabricCanvas.discardActiveObject();
-                    const b64 = cv.fabricCanvas.toDataURL({ format: 'jpeg', quality: 0.9, multiplier: 2 });
+                    const b64 = cv.fabricCanvas.toDataURL({
+                        format: 'jpeg',
+                        quality: 0.9,
+                        multiplier: 2
+                    });
                     const res = await fetch(this._config.uploadCompositeRoute, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': this._config.csrfToken },
-                        body: JSON.stringify({ image_data: b64, canvas_key: key }),
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': this._config.csrfToken
+                        },
+                        body: JSON.stringify({
+                            image_data: b64,
+                            canvas_key: key
+                        }),
                     });
                     const dat = await res.json();
                     if (dat.success) ids[key] = dat.upload_id;
@@ -719,7 +995,11 @@
                     const key = customizer.activeCanvas;
                     const cv = customizer.canvases[key];
                     if (!cv) return;
-                    const data = cv.fabricCanvas.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.6 });
+                    const data = cv.fabricCanvas.toDataURL({
+                        format: 'jpeg',
+                        quality: 0.6,
+                        multiplier: 0.6
+                    });
                     if (data && data.length > 100) {
                         const img = document.getElementById('mockup-image');
                         const frame = document.getElementById('mockup-frame');
