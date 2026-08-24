@@ -20,6 +20,6 @@ class QuickFlowPcController extends QuickFlowController
      */
     protected function getRoutePrefix()
     {
-        return 'flow-pc.';
+        return 'flow.';
     }
 }

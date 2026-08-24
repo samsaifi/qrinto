@@ -108,10 +108,10 @@
     <div id="customizer-app">
 
         {{-- ── Breadcrumb Navigation (Home >> Store >> Product Type >> Page Size/Side >> Template Name) ── --}}
-        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-1.5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-1.5">
             <nav class="cust-breadcrumb flex items-center flex-wrap gap-2 text-xs font-semibold">
                 {{-- 1. Home --}}
-                <a href="{{ route('flow-pc.index') }}" class="text-slate-500 hover:text-brand-600 transition-colors">Home</a>
+                <a href="{{ route('flow.index') }}" class="text-slate-500 hover:text-brand-600 transition-colors">Home</a>
 
                 <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
 
@@ -122,7 +122,7 @@
 
                 {{-- 3. Product Type --}}
                 @if ($bcTypeSlug)
-                    <a href="{{ route('flow-pc.category', $bcTypeSlug) }}"
+                    <a href="{{ route('flow.category', $bcTypeSlug) }}"
                         class="text-slate-500 hover:text-brand-600 transition-colors">{{ $bcProductType }}</a>
                 @else
                     <span class="text-slate-500 font-medium">{{ $bcProductType }}</span>
@@ -149,7 +149,7 @@
         <section class="w-full relative py-3 px-3 sm:px-6 border-b border-slate-200/80"
             style="background-color: #f8fafc; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
 
-            <div class="max-w-[1400px] mx-auto">
+            <div class="max-w-7xl mx-auto">
 
                 {{-- Studio Independent Floating Layout --}}
                 <div class="relative w-full min-h-[70vh] flex items-center justify-center">
@@ -511,95 +511,6 @@
             </div>
         </section>
 
-        {{-- ── 2. HERO HEADER SECTION (BELOW EDITOR SECTION) ── --}}
-        <section class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 mt-8 mb-6">
-            <div
-                class="hero-glass-card hero-cust-pattern relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/80 transition-all duration-300">
-                {{-- Ambient lighting blobs --}}
-                <div
-                    class="absolute -top-24 -right-24 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl pointer-events-none animate-pulse">
-                </div>
-                <div
-                    class="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-violet-400/15 via-fuchsia-400/15 to-pink-400/15 rounded-full blur-3xl pointer-events-none">
-                </div>
-                <div class="hero-dots opacity-40"></div>
-
-                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div class="flex items-center gap-5">
-                        <a href="javascript:history.back()"
-                            class="w-12 h-12 bg-white/90 hover:bg-white text-slate-600 hover:text-brand-600 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center shrink-0 group active:scale-95"
-                            title="Go Back">
-                            <i data-lucide="arrow-left"
-                                class="w-5 h-5 group-hover:-translate-x-0.5 transition-transform"></i>
-                        </a>
-                        <div class="space-y-1">
-
-                            <h1
-                                class="text-base sm:text-lg lg:text-2xl font-semibold text-slate-900 tracking-tight leading-tight">
-                                Customize <span class="text-slate-800 font-semibold">{{ $product->name }}</span>
-                            </h1>
-                            <p class="text-xs text-slate-500 font-semibold flex items-center gap-2">
-                                <span class="w-1.5 h-1.5 rounded-full  bg-gray-500 animate-ping"></span>
-                                @if (count($imageTypes) == 1)
-                                    Customize your design elements using the tools on the right dock.
-                                @elseif (count($imageTypes) == 2)
-                                    Switch between Page 1 and Page 2 from the left dock to design both sides.
-                                @else
-                                    Switch between pages from the left dock to design all {{ count($imageTypes) }} sides.
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-
-                    @if (isset($flowData['size_width']) && isset($flowData['size_height']))
-                        <div class="flex flex-col items-end gap-2.5 shrink-0 self-start lg:self-center">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 shadow-2xs text-slate-800">
-                                    <div
-                                        class="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-                                        <i data-lucide="ruler" class="w-4 h-4"></i>
-                                    </div>
-                                    <div>
-                                        <span
-                                            class="block text-[10px] font-black uppercase tracking-wider text-slate-400">Dimensions</span>
-                                        <span
-                                            class="text-xs font-black text-slate-900">{{ $flowData['size_width'] }}&times;{{ $flowData['size_height'] }}{{ $flowData['size_unit'] ?? '' }}</span>
-                                    </div>
-                                </div>
-
-                                @if (isset($flowData['size_price']))
-                                    <div
-                                        class="flex items-center gap-3 px-4 py-2 rounded-2xl  bg-gray-50/90 backdrop-blur-md border  border-gray-200/90 shadow-2xs  text-gray-800">
-                                        <div
-                                            class="w-8 h-8 rounded-xl  bg-gray-100/80  text-gray-600 flex items-center justify-center shrink-0">
-                                            <i data-lucide="tag" class="w-4 h-4"></i>
-                                        </div>
-                                        <div>
-                                            <span
-                                                class="block text-[10px] font-black uppercase tracking-wider  text-gray-600">Unit
-                                                Price</span>
-                                            <span
-                                                class="text-xs font-black  text-gray-900">{{ \App\Services\CurrencyService::format($flowData['size_price']) }}</span>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-
-                            {{-- Add to Cart Button on Blue Marked Area --}}
-                            <button type="button" onclick="customizer.submitAllCanvases()"
-                                class="w-full inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-black text-xs uppercase tracking-wider px-5 py-2.5 rounded-2xl shadow-md hover:shadow-lg transition-all cursor-pointer">
-                                <i data-lucide="shopping-cart" class="w-4 h-4 text-white"></i>
-                                <span>Add to Cart</span>
-                            </button>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </section>
-
-        {{-- ── 3. HOW TO USE TOOL INSTRUCTION GUIDE ── --}}
-        @include('quick-flow-pc.partials.customizer-instructions')
     </div>
 @endsection
 
@@ -617,8 +528,8 @@
             templates: @json($activeTemplates ?? ($product->templates ?? [])),
             templateCategories: @json($templateCategories ?? []),
             csrfToken: '{{ csrf_token() }}',
-            uploadRoute: '{{ route('flow-pc.upload') }}',
-            uploadCompositeRoute: '{{ route('flow-pc.upload_composite') }}',
+            uploadRoute: '{{ route('flow.upload') }}',
+            uploadCompositeRoute: '{{ route('flow.upload_composite') }}',
             isPortrait: {{ ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false' }}
         }), {
             init() {

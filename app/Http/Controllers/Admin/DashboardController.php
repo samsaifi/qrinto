@@ -49,7 +49,9 @@ class DashboardController extends Controller
                 ->count();
         }
 
-        $stores = Store::all();
+        $stores = Store::where(function($q) {
+            $q->where('is_test', false)->orWhereNull('is_test');
+        })->get();
 
         $recentOrders = collect();
         if ($store) {
@@ -76,10 +78,18 @@ class DashboardController extends Controller
         $orderQuery = DB::table('orders')
             ->join('stores', 'stores.id', '=', 'orders.store_id')
             ->whereNull('orders.deleted_at')
+            ->whereNull('stores.deleted_at')
+            ->where(function ($q) {
+                $q->where('stores.is_test', false)->orWhereNull('stores.is_test');
+            })
             ->select(
                 'orders.store_id',
                 'stores.store_name',
                 DB::raw('COUNT(*) as total_orders'),
+                DB::raw("SUM(CASE WHEN LOWER(orders.status) IN ('done', 'completed', 'delivered', 'picked_up') THEN 1 ELSE 0 END) as picked_up_orders"),
+                DB::raw("SUM(CASE WHEN LOWER(orders.status) IN ('ready', 'ready_for_pickup', 'delivered_store') THEN 1 ELSE 0 END) as ready_orders"),
+                DB::raw("SUM(CASE WHEN LOWER(orders.status) IN ('processing', 'printing', 'in_production', 'shipped') THEN 1 ELSE 0 END) as printing_orders"),
+                DB::raw("SUM(CASE WHEN LOWER(orders.status) NOT IN ('done', 'completed', 'delivered', 'picked_up', 'ready', 'ready_for_pickup', 'delivered_store', 'processing', 'printing', 'in_production', 'shipped', 'cancelled', 'refunded') OR LOWER(orders.status) IN ('new', 'pending', 'confirmed') THEN 1 ELSE 0 END) as new_orders"),
                 DB::raw("SUM(CASE WHEN orders.payment_gateway != 'cash' AND orders.payment_gateway IS NOT NULL THEN orders.total ELSE 0 END) as online_amount"),
                 DB::raw("SUM(CASE WHEN orders.payment_gateway = 'cash' THEN orders.total ELSE 0 END) as cash_amount"),
                 DB::raw("SUM(CASE WHEN orders.payment_status = 'pending' THEN 1 ELSE 0 END) as pending_orders"),
@@ -97,10 +107,14 @@ class DashboardController extends Controller
 
         $aggregated = $orderQuery->get()->keyBy('store_id');
 
-        // Get all stores (or filtered) so stores with 0 orders still appear
+        // Get all stores (or filtered) so stores with 0 orders still appear (excluding test stores)
         $storesQuery = Store::query();
         if ($request->filled('store_id')) {
             $storesQuery->where('id', $request->store_id);
+        } else {
+            $storesQuery->where(function ($q) {
+                $q->where('is_test', false)->orWhereNull('is_test');
+            });
         }
 
         $rows = $storesQuery->get()->map(function ($store) use ($aggregated) {
@@ -109,6 +123,10 @@ class DashboardController extends Controller
                 'id' => $store->id,
                 'store_name' => $store->store_name,
                 'total_orders' => (int) ($agg->total_orders ?? 0),
+                'new_orders' => (int) ($agg->new_orders ?? 0),
+                'printing_orders' => (int) ($agg->printing_orders ?? 0),
+                'ready_orders' => (int) ($agg->ready_orders ?? 0),
+                'picked_up_orders' => (int) ($agg->picked_up_orders ?? 0),
                 'online_amount' => round((float) ($agg->online_amount ?? 0), 2),
                 'cash_amount' => round((float) ($agg->cash_amount ?? 0), 2),
                 'pending_orders' => (int) ($agg->pending_orders ?? 0),
@@ -120,6 +138,10 @@ class DashboardController extends Controller
 
         $totals = [
             'total_orders' => $rows->sum('total_orders'),
+            'new_orders' => $rows->sum('new_orders'),
+            'printing_orders' => $rows->sum('printing_orders'),
+            'ready_orders' => $rows->sum('ready_orders'),
+            'picked_up_orders' => $rows->sum('picked_up_orders'),
             'online_amount' => round($rows->sum('online_amount'), 2),
             'cash_amount' => round($rows->sum('cash_amount'), 2),
             'pending_orders' => $rows->sum('pending_orders'),
@@ -137,7 +159,7 @@ class DashboardController extends Controller
 
         $sortBy = $request->input('sort_by', 'total_orders');
         $sortDir = $request->input('sort_dir', 'desc');
-        $allowed = ['total_orders', 'online_amount', 'cash_amount', 'pending_orders', 'pending_amount', 'paid_orders', 'paid_amount', 'store_name'];
+        $allowed = ['total_orders', 'new_orders', 'printing_orders', 'ready_orders', 'picked_up_orders', 'online_amount', 'cash_amount', 'pending_orders', 'pending_amount', 'paid_orders', 'paid_amount', 'store_name'];
         if (!in_array($sortBy, $allowed)) $sortBy = 'total_orders';
 
         $rows = $sortDir === 'asc'
@@ -167,15 +189,15 @@ class DashboardController extends Controller
 
         return response()->streamDownload(function () use ($rows, $totals) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Store Name', 'Total Orders', 'Online Payment', 'Cash Payment', 'Pending Orders', 'Pending Amount', 'Paid Orders', 'Paid Amount']);
+            fputcsv($handle, ['Store Name', 'Total Orders', 'New Orders', 'Printing Orders', 'Ready for Pickup', 'Picked Up', 'Online Payment', 'Cash Payment', 'Pending Orders', 'Pending Amount', 'Paid Orders', 'Paid Amount']);
             foreach ($rows as $row) {
                 fputcsv($handle, [
-                    $row['store_name'], $row['total_orders'], $row['online_amount'],
+                    $row['store_name'], $row['total_orders'], $row['new_orders'], $row['printing_orders'], $row['ready_orders'], $row['picked_up_orders'], $row['online_amount'],
                     $row['cash_amount'], $row['pending_orders'], $row['pending_amount'], $row['paid_orders'], $row['paid_amount'],
                 ]);
             }
             fputcsv($handle, [
-                'TOTAL', $totals['total_orders'], $totals['online_amount'],
+                'TOTAL', $totals['total_orders'], $totals['new_orders'], $totals['printing_orders'], $totals['ready_orders'], $totals['picked_up_orders'], $totals['online_amount'],
                 $totals['cash_amount'], $totals['pending_orders'], $totals['pending_amount'], $totals['paid_orders'], $totals['paid_amount'],
             ]);
             fclose($handle);
@@ -211,14 +233,14 @@ class DashboardController extends Controller
         $storeFilter = $request->input('store_id');
 
         // Direct store_id tables: products, coupons
-        $productCounts = DB::table('products')->select('store_id', DB::raw('COUNT(*) as cnt'));
+        $productCounts = DB::table('products')->whereNull('deleted_at')->select('store_id', DB::raw('COUNT(*) as cnt'));
         $this->applyDateFilter($productCounts, $request);
         if ($storeFilter && $storeFilter !== 'admin') {
             $productCounts->where('store_id', $storeFilter);
         }
         $productCounts = $productCounts->groupBy('store_id')->pluck('cnt', 'store_id');
 
-        $couponCounts = DB::table('coupons')->select('store_id', DB::raw('COUNT(*) as cnt'));
+        $couponCounts = DB::table('coupons')->whereNull('deleted_at')->select('store_id', DB::raw('COUNT(*) as cnt'));
         $this->applyDateFilter($couponCounts, $request);
         if ($storeFilter && $storeFilter !== 'admin') {
             $couponCounts->where('store_id', $storeFilter);
@@ -228,6 +250,7 @@ class DashboardController extends Controller
         // Pivot tables: events (event_store), paper_types (paper_type_store)
         $eventCountsQuery = DB::table('event_store')
             ->join('events', 'events.id', '=', 'event_store.event_id')
+            ->whereNull('events.deleted_at')
             ->select('event_store.store_id', DB::raw('COUNT(DISTINCT events.id) as cnt'));
         $this->applyDateFilter($eventCountsQuery, $request, 'events.created_at');
         if ($storeFilter && $storeFilter !== 'admin') {
@@ -237,6 +260,7 @@ class DashboardController extends Controller
 
         $paperTypeCountsQuery = DB::table('paper_type_store')
             ->join('paper_types', 'paper_types.id', '=', 'paper_type_store.paper_type_id')
+            ->whereNull('paper_types.deleted_at')
             ->select('paper_type_store.store_id', DB::raw('COUNT(DISTINCT paper_types.id) as cnt'));
         $this->applyDateFilter($paperTypeCountsQuery, $request, 'paper_types.created_at');
         if ($storeFilter && $storeFilter !== 'admin') {
@@ -245,15 +269,15 @@ class DashboardController extends Controller
         $paperTypeCounts = $paperTypeCountsQuery->groupBy('paper_type_store.store_id')->pluck('cnt', 'store_id');
 
         // Global tables (no store_id): categories, templates, product_types
-        $categoriesQuery = DB::table('categories');
+        $categoriesQuery = DB::table('categories')->whereNull('deleted_at');
         $this->applyDateFilter($categoriesQuery, $request);
         $globalCategories = $categoriesQuery->count();
 
-        $templatesQuery = DB::table('templates');
+        $templatesQuery = DB::table('templates')->whereNull('deleted_at');
         $this->applyDateFilter($templatesQuery, $request);
         $globalTemplates = $templatesQuery->count();
 
-        $productTypesQuery = DB::table('product_types');
+        $productTypesQuery = DB::table('product_types')->whereNull('deleted_at');
         $this->applyDateFilter($productTypesQuery, $request);
         $globalProductTypes = $productTypesQuery->count();
 
@@ -278,7 +302,9 @@ class DashboardController extends Controller
         if ($storeFilter && $storeFilter !== 'admin') {
             $storesQuery = Store::where('id', $storeFilter);
         } else {
-            $storesQuery = Store::query();
+            $storesQuery = Store::where(function ($q) {
+                $q->where('is_test', false)->orWhereNull('is_test');
+            });
         }
 
         foreach ($storesQuery->get() as $s) {

@@ -648,7 +648,7 @@
 
                     const subtotal = this.unitPrice * this.quantity;
 
-                    fetch('<?php echo route(Route::currentRouteName() === 'flow-pc.checkout' ? 'flow-pc.apply-coupon' : 'flow.apply-coupon'); ?>', {
+                    fetch('<?php echo route(Route::currentRouteName() === 'flow.checkout' ? 'flow.apply-coupon' : 'flow.apply-coupon'); ?>', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -702,7 +702,7 @@
                     if (!this.pickupName || !this.contactNumber || !this.pickupEmail) return;
                     this.isProcessing = true;
 
-                    fetch('<?php echo route(Route::currentRouteName() === 'flow-pc.checkout' ? 'flow-pc.checkout.cash' : 'flow.checkout.cash'); ?>', {
+                    fetch('<?php echo route(Route::currentRouteName() === 'flow.checkout' ? 'flow.checkout.cash' : 'flow.checkout.cash'); ?>', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -759,7 +759,7 @@
 
                         // 1) Create PayPal Order
                         createOrder: function(data, actions) {
-                            return fetch('<?php echo route(Route::currentRouteName() === 'flow-pc.checkout' ? 'flow-pc.paypal.create' : 'flow.paypal.create'); ?>', {
+                            return fetch('<?php echo route(Route::currentRouteName() === 'flow.checkout' ? 'flow.paypal.create' : 'flow.paypal.create'); ?>', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
@@ -791,7 +791,7 @@
                             self.showPaypal = false;
                             self.isProcessing = true;
 
-                            return fetch('<?php echo route(Route::currentRouteName() === 'flow-pc.checkout' ? 'flow-pc.paypal.capture' : 'flow.paypal.capture'); ?>', {
+                            return fetch('<?php echo route(Route::currentRouteName() === 'flow.checkout' ? 'flow.paypal.capture' : 'flow.paypal.capture'); ?>', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',

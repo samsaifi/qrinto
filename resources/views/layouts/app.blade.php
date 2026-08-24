@@ -25,7 +25,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -106,9 +106,23 @@
                         </button>
                         <div x-show="open" @click.away="open = false" x-transition
                              class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-premium border border-surface-100 py-2 z-50">
-                            @if(auth()->user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-600 hover:bg-brand-50 hover:text-brand-600">
-                                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Admin Panel
+                            @if(auth()->user()->canAccessAdmin())
+                            @php
+                                $panelUrl = match(auth()->user()->role ?? '') {
+                                    'admin' => url('/admin/dashboard'),
+                                    'store_admin', 'storeadmin' => url('/store-admin/dashboard'),
+                                    'staff' => url('/staff/dashboard'),
+                                    default => url('/admin/dashboard'),
+                                };
+                                $panelName = match(auth()->user()->role ?? '') {
+                                    'admin' => 'Admin Panel',
+                                    'store_admin', 'storeadmin' => 'Store Panel',
+                                    'staff' => 'Staff Panel',
+                                    default => 'Admin Panel',
+                                };
+                            @endphp
+                            <a href="{{ $panelUrl }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-surface-600 hover:bg-brand-50 hover:text-brand-600">
+                                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> {{ $panelName }}
                             </a>
                             <div class="border-t border-surface-100 my-1"></div>
                             @endif

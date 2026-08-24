@@ -34,9 +34,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,700;1,700&family=Space+Mono:wght@700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -98,132 +96,115 @@
 
     {{-- Main Desktop Header --}}
     <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
-        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
             <div class="flex h-20 items-center justify-between gap-6">
                 {{-- Left Side: Logo --}}
                 <div class="flex items-center gap-5 shrink-0">
-                    {{-- Logo --}}
-                    <a href="{{ route('flow-pc.index') }}" class="flex items-center gap-3 shrink-0 group">
+                    {{-- Logo (returns to store search from every screen) --}}
+                    <a href="{{ route('flow.find-store') }}" class="flex items-center gap-3 shrink-0 group">
                         <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto Logo"
                             class="h-10 sm:h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-300">
                     </a>
                 </div>
 
-                {{-- Right Side: Location + Cart + Menu --}}
+                {{-- Right Side: Pickup store + Menu --}}
                 <div class="flex items-center gap-3 shrink-0">
                     {{-- Active Store Selector --}}
                     @include('layouts.pc.store')
 
-                    {{-- Cart Button --}}
-                    <a href="{{ route('flow-pc.cart.index') }}" id="cart-btn-pc"
-                        class="relative h-11 flex items-center gap-2 px-4 rounded-xl hover:bg-slate-100 text-slate-800 hover:text-brand-600 font-bold text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95">
-                        <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-600"></i>
-                        <span>Cart</span>
-                        @if ($cartCount > 0)
-                            <span id="cart-count-pc"
-                                class="bg-brand-500 text-white text-[11px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
-                                {{ $cartCount }}
-                            </span>
-                        @endif
-                    </a>
+                    {{-- Menu Dropdown Container --}}
+                    <div class="relative" x-data="{ menuOpen: false }" @click.outside="menuOpen = false">
+                        {{-- Menu Toggle Button --}}
+                        <button type="button"
+                            @click="menuOpen = !menuOpen; $nextTick(() => { if (window.lucide) lucide.createIcons(); })"
+                            class="h-11 flex items-center gap-2 px-4 rounded-xl hover:bg-slate-100 text-slate-800 hover:text-brand-600 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-95">
+                            <i data-lucide="menu" class="w-4 h-4 text-slate-600"></i>
+                            <span>Menu</span>
+                            <i data-lucide="chevron-down"
+                                class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                                :class="{ 'rotate-180': menuOpen }"></i>
+                        </button>
 
-                    {{-- Menu Icon Button --}}
-                    <button type="button" @click="pcMenu = true; $nextTick(() => lucide.createIcons())"
-                        class="h-11 flex items-center gap-2 px-4 rounded-xl hover:bg-slate-100 text-slate-800 hover:text-brand-600 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-95">
-                        <i data-lucide="menu" class="w-4 h-4 text-slate-600"></i>
-                        <span>Menu</span>
-                    </button>
+                        {{-- Dropdown Menu Panel --}}
+                        <div x-show="menuOpen" x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                            class="absolute right-0 mt-2 w-56 bg-white border border-slate-200/90 rounded-2xl shadow-xl py-2 z-50 overflow-hidden"
+                            style="display: none;" x-cloak>
+
+                            <a href="{{ route('flow.find-store') }}" @click="menuOpen = false"
+                                class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
+                                <span>Print at a store near you</span>
+                            </a>
+
+                            <a href="{{ route('flow.qrinto') }}" @click="menuOpen = false"
+                                class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
+                                <i data-lucide="printer" class="w-4 h-4 text-slate-400"></i>
+                                <span>Print on your own 931BL</span>
+                            </a>
+
+                            <a href="{{ route('flow.track.form') }}" @click="menuOpen = false"
+                                class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
+                                <i data-lucide="package" class="w-4 h-4 text-slate-400"></i>
+                                <span>Track an order</span>
+                            </a>
+
+                            <div class="my-1 border-t border-slate-100"></div>
+
+                            <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
+                                @click="menuOpen = false"
+                                class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                                <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+                                <span>Terms and privacy</span>
+                            </a>
+
+                            {{-- Auth-aware entry: login when signed out; store panel /
+                                 admin dashboard when signed in. --}}
+                            @auth
+                                @php
+                                    $u = auth()->user();
+                                    $isAdmin = method_exists($u, 'isAdmin') ? $u->isAdmin() : ($u->role ?? '') === 'admin';
+                                    $isStoreStaff = in_array($u->role ?? '', ['store_admin', 'storeadmin', 'staff']);
+                                    $storeLabel = $u->store->store_name ?? null;
+                                @endphp
+                                @if ($isAdmin)
+                                    <a href="{{ url('/admin/dashboard') }}" @click="menuOpen = false"
+                                        class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                                        <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i>
+                                        <span>Admin dashboard</span>
+                                    </a>
+                                @elseif ($isStoreStaff)
+                                    <a href="{{ route('storepanel.orders') }}" @click="menuOpen = false"
+                                        class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                                        <i data-lucide="briefcase" class="w-4 h-4 text-slate-400"></i>
+                                        <span class="truncate max-w-[160px]" title="{{ $storeLabel ?? 'Store panel' }}">
+                                            {{ $storeLabel ?? 'Store panel' }}
+                                        </span>
+                                    </a>
+                                @else
+                                    <a href="{{ url('/store') }}" @click="menuOpen = false"
+                                        class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                                        <i data-lucide="briefcase" class="w-4 h-4 text-slate-400"></i>
+                                        <span>For stores</span>
+                                    </a>
+                                @endif
+                            @else
+                                <a href="{{ route('login') }}" @click="menuOpen = false"
+                                    class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                                    <i data-lucide="log-in" class="w-4 h-4 text-slate-400"></i>
+                                    <span>For stores · Log in</span>
+                                </a>
+                            @endauth
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </header>
-
-    {{-- Luxury Sentina-Style Full-Screen Overlay Menu --}}
-    <div x-show="pcMenu" x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 scale-98" x-transition:enter-end="opacity-100 scale-100"
-        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
-        x-transition:leave-end="opacity-0 scale-98"
-        class="fixed inset-0 w-screen h-screen min-h-screen z-[9999] bg-gradient-to-br from-slate-950 via-slate-900 to-brand-950 text-white flex flex-col justify-between p-6 sm:p-12 overflow-y-auto"
-        style="display: none;" x-cloak>
-
-        <!-- Giant MENU Watermark Background Text -->
-        <div
-            class="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden z-0">
-            <span
-                class="text-[140px] sm:text-[240px] xl:text-[340px] font-black text-white/[0.04] uppercase tracking-widest leading-none">MENU</span>
-        </div>
-
-        {{-- Top Bar: Logo + Pill CLOSE Button --}}
-        <div class="max-w-7xl mx-auto w-full flex items-center justify-between relative z-10">
-            <a href="{{ route('flow-pc.index') }}" @click="pcMenu = false"
-                class="flex items-center gap-3 shrink-0 group">
-                <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto Logo"
-                    class="h-10 sm:h-12 w-auto object-contain brightness-0 invert group-hover:scale-105 transition-transform duration-300">
-            </a>
-
-            <button @click="pcMenu = false" type="button"
-                class="flex items-center gap-2.5 px-6 py-2.5 rounded-full border border-white/30 hover:border-white hover:bg-white hover:text-slate-900 text-white text-xs font-black uppercase tracking-widest transition-all duration-300 shadow-lg cursor-pointer group active:scale-95">
-                <i data-lucide="x"
-                    class="w-4 h-4 text-slate-300 group-hover:text-slate-900 group-hover:rotate-90 transition-all duration-300"></i>
-                <span>Close</span>
-            </button>
-        </div>
-
-        {{-- Centered Large Typography Navigation Links --}}
-        <div
-            class="flex-1 flex flex-col items-center justify-center text-center my-6 relative z-10 space-y-5 sm:space-y-7">
-            <a href="{{ route('flow-pc.index') }}" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-white hover:text-brand-400 hover:scale-105 transition-all duration-300 tracking-tight block">
-                Home Studio
-            </a>
-
-            <a href="{{ route('flow-pc.qrinto') }}" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-brand-400 hover:scale-105 transition-all duration-300 tracking-tight block">
-                Custom Upload & Print
-            </a>
-
-            <a href="{{ route('flow-pc.index') }}#products" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-brand-300 hover:scale-105 transition-all duration-300 tracking-tight block">
-                Print Categories
-            </a>
-
-            <a href="{{ route('flow-pc.index') }}#how-it-works" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-brand-400 hover:scale-105 transition-all duration-300 tracking-tight block">
-                How It Works
-            </a>
-
-            <a href="{{ route('flow-pc.find-store') }}" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-brand-400 hover:scale-105 transition-all duration-300 tracking-tight block">
-                Find Store Locations
-            </a>
-
-            <a href="{{ route('flow-pc.track.form') }}" @click="pcMenu = false"
-                class="text-3xl sm:text-5xl xl:text-6xl font-extrabold text-slate-200 hover:text-amber-400 hover:scale-105 transition-all duration-300 tracking-tight block">
-                Track Order
-            </a>
-        </div>
-
-        {{-- Bottom Utility Bar --}}
-        <div
-            class="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-400 border-t border-white/10 pt-6 relative z-10">
-            <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-slate-300">
-                <a href="#products" @click="pcMenu = false" class="hover:text-white transition-colors">Canvas Art</a>
-                <span>•</span>
-                <a href="#products" @click="pcMenu = false" class="hover:text-white transition-colors">Photo
-                    Books</a>
-                <span>•</span>
-                <a href="#products" @click="pcMenu = false" class="hover:text-white transition-colors">Custom
-                    Apparel</a>
-                <span>•</span>
-                <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
-                    class="hover:text-white transition-colors">Terms & Privacy</a>
-            </div>
-
-            <div class="flex items-center gap-4 text-slate-400">
-                <span>&copy; {{ date('Y') }} Qrinto Custom Print Studio</span>
-            </div>
-        </div>
-    </div>
 
     {{-- Main Content --}}
     <main class="flex-1  ">
@@ -231,163 +212,37 @@
     </main>
 
     {{-- ===== PREMIUM LUXURY FOOTER ===== --}}
-    <footer
-        class="w-full bg-gradient-to-br from-slate-950 via-slate-900 to-brand-950 text-white relative overflow-hidden border-t border-white/10 pt-20 pb-10">
+    <footer class="w-full bg-slate-950   text-white relative overflow-hidden  ">
         <!-- Ambient Glowing Background Orbs -->
-        <div class="absolute -top-32 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-[120px] pointer-events-none">
-        </div>
-        <div
-            class="absolute -bottom-32 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none">
-        </div>
 
-        <div class="max-w-[1400px] mx-auto px-6 sm:px-10 relative z-10">
-            <!-- Top Section: Brand Callout & Newsletter -->
-            <div class="pb-16 border-b border-white/10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-                <div class="lg:col-span-6">
-                    <a href="{{ route('flow-pc.index') }}" class="flex items-center gap-3 mb-4 shrink-0 group w-fit">
+
+        <div class="max-w-7xl mx-auto px-6 sm:px-10 relative z-10">
+
+
+            <!-- Bottom Copyright, Centered Noritsu Logo & Legal Links Bar -->
+            <div
+                class="  flex flex-col md:flex-row items-center justify-between gap-6 text-xs font-medium text-slate-400">
+                <p> <a href="{{ route('flow.index') }}" class="flex items-center gap-3 mb-4 shrink-0 group w-fit">
                         <img src="{{ asset('images/svg-logo/Qrinto-logo-one-color-white-only.svg') }}"
                             alt="Qrinto Logo"
                             class="h-10 sm:h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-300">
+                    </a></p>
+
+                <!-- Orange marked Noritsu Logo in Center (Yellow Mark) -->
+                <div class="flex items-center gap-2.5 bg-white/5   px-4 py-2 rounded-xl  ">
+                    <span class="text-[11px] text-slate-300 font-semibold">Powered by </span>
+                    <a href="https://www.noritsu.com/" target="_blank" class="hover:opacity-90 transition-opacity">
+                        <img src="{{ asset('nortisu.webp') }}" alt="Noritsu"
+                            class="h-5 w-auto object-contain bg-white/90 px-1.5 py-0.5 rounded">
                     </a>
-                    <p class="text-slate-400 text-sm sm:text-base max-w-lg leading-relaxed font-medium">
-                        Next-generation print studio combining real-time vector editing tools with museum-quality
-                        archival printing and fast local store pickup.
-                    </p>
                 </div>
 
-                <div class="lg:col-span-6">
-                    <div x-data="footerSubscribeComponent()"
-                        class="bg-white/5 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-white/10 shadow-xl transition-all">
-                        <h4 class="text-base font-extrabold text-white mb-2">
-                            Get Special Studio Offers & Print Guides
-                        </h4>
-                        <p class="text-xs text-slate-400 mb-4">Join over 50,000+ creators getting exclusive discounts &
-                            design tutorials.</p>
-
-                        <div x-show="subscribed" x-transition.duration.300ms
-                            class=" bg-gray-500/20 border border-emerald-400/40  text-gray-300 font-bold p-4 rounded-xl text-center flex items-center justify-center gap-2.5 shadow-lg">
-                            <i data-lucide="check-circle" class="w-5 h-5  text-gray-400 shrink-0"></i>
-                            <span x-text="successMessage || 'Thanks for subscribing!'"
-                                class="text-sm font-extrabold tracking-wide"></span>
-                        </div>
-
-                        <div x-show="!subscribed">
-                            <form @submit.prevent="submitSubscribe()" class="flex flex-col gap-2">
-                                <div class="flex flex-col sm:flex-row gap-3">
-                                    <input type="email" x-model="email" @input="errorMessage = ''"
-                                        placeholder="Enter your email address..." required
-                                        class="bg-white/10 border text-white placeholder-slate-400 text-sm px-4.5 py-3 rounded-xl focus:outline-none flex-1 backdrop-blur-md transition-all"
-                                        :class="errorMessage ? 'border-red-400 focus:border-red-400 ring-2 ring-red-400/20' :
-                                            'border-white/20 focus:border-brand-400'">
-                                    <button type="submit" :disabled="loading"
-                                        class="bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xl transition-all shadow-lg shrink-0 flex items-center justify-center gap-2 cursor-pointer active:scale-95">
-                                        <span x-show="!loading">Subscribe</span>
-                                        <span x-show="loading" class="flex items-center gap-2" x-cloak>
-                                            <svg class="animate-spin h-4 w-4 text-white"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10"
-                                                    stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                                </path>
-                                            </svg>
-                                            Subscribing...
-                                        </span>
-                                    </button>
-                                </div>
-                                <p x-show="errorMessage" x-text="errorMessage" x-cloak
-                                    class="text-xs text-red-400 font-semibold px-1 mt-1 flex items-center gap-1.5">
-                                </p>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Middle Section: 4 Links Columns -->
-            <div class="py-16 grid grid-cols-2 md:grid-cols-4 gap-8 xl:gap-12 border-b border-white/10">
-                <!-- Column 1: Print Products -->
-                <div>
-                    <h5 class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
-                        Print Products
-                    </h5>
-                    <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
-                        <li><a href="#products" class="hover:text-white transition-colors">Custom Canvas Prints</a>
-                        </li>
-                        <li><a href="#products" class="hover:text-white transition-colors">Hardcover Photo Books</a>
-                        </li>
-                        <li><a href="#products" class="hover:text-white transition-colors">Custom T-Shirts &
-                                Apparel</a></li>
-                        <li><a href="#products" class="hover:text-white transition-colors">Greeting Cards & Gifts</a>
-                        </li>
-                        <li><a href="#products" class="hover:text-white transition-colors">Acrylic Wall Art</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 2: Design Editor -->
-                <div>
-                    <h5 class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
-                        Design Studio
-                    </h5>
-                    <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
-                        <li><a href="#products" class="hover:text-white transition-colors">Vector Editor Suite</a>
-                        </li>
-                        <li><a href="{{ route('flow-pc.track.form') }}"
-                                class="hover:text-white transition-colors">Track Your Order</a></li>
-                        <li><a href="{{ route('flow-pc.find-store') }}"
-                                class="hover:text-white transition-colors">Local Store Pickup</a></li>
-                        <li><a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
-                                class="hover:text-white transition-colors">Print Quality Guide</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 3: Store & Support -->
-                <div>
-                    <h5 class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
-                        Stores & Service
-                    </h5>
-                    <ul class="space-y-3 text-xs sm:text-sm font-medium text-slate-400">
-                        <li><a href="{{ route('flow-pc.find-store') }}"
-                                class="hover:text-white transition-colors">Find Nearby Studio</a></li>
-                        <li><a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
-                                class="hover:text-white transition-colors">Terms & Privacy Notice</a></li>
-                        <li><a href="{{ route('flow-pc.track.form') }}"
-                                class="hover:text-white transition-colors">Order Lookup</a></li>
-                        <li><a href="mailto:info@qrinto.com" class="hover:text-white transition-colors">Customer
-                                Support</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 4: Quick Guarantees & Noritsu Badge -->
-                <div>
-                    <h5 class="text-xs font-black uppercase tracking-widest text-slate-200 mb-5">
-                        Quality Standard
-                    </h5>
-                    <div class="space-y-3 text-xs text-slate-400 font-medium">
-                        <div
-                            class="bg-white/5 border border-white/10 p-3.5 rounded-xl flex items-center justify-between">
-                            <span class="text-[11px] text-slate-300">Powered by high precision</span>
-                            <a href="https://www.noritsu.com/" target="_blank"
-                                class="hover:opacity-80 transition-opacity">
-                                <img src="{{ asset('nortisu.webp') }}" alt="Noritsu"
-                                    class="w-20 bg-white/90 p-1 rounded">
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bottom Copyright & Legal Links Bar -->
-            <div
-                class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-400">
-                <p>&copy; {{ date('Y') }} Qrinto Custom Print Studio. All rights reserved.</p>
                 <div class="flex items-center gap-6">
                     <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
                         class="hover:text-white transition-colors">Terms & Privacy</a>
-                    <a href="{{ route('flow-pc.find-store') }}" class="hover:text-white transition-colors">Store
+                    <a href="{{ route('flow.find-store') }}" class="hover:text-white transition-colors">Store
                         Locations</a>
-                    <a href="{{ route('flow-pc.track.form') }}" class="hover:text-white transition-colors">Track
+                    <a href="{{ route('flow.track.form') }}" class="hover:text-white transition-colors">Track
                         Order</a>
                 </div>
             </div>
@@ -431,7 +286,7 @@
 
                     this.loading = true;
                     try {
-                        const response = await fetch('{{ route('flow-pc.subscribe') }}', {
+                        const response = await fetch('{{ route('flow.subscribe') }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

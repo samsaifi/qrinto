@@ -31,6 +31,7 @@ class UpdateStoreRequest extends FormRequest
             'lon'                => 'nullable|numeric',
 
             'is_active'          => 'nullable|boolean',
+            'is_test'            => 'nullable|boolean',
             'opening_time'       => 'nullable|date_format:H:i',
             'closing_time'       => 'nullable|date_format:H:i',
             'gst_number'         => 'nullable|string|max:50',

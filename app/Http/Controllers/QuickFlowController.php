@@ -27,15 +27,33 @@ use Illuminate\Support\Facades\File;
 class QuickFlowController extends Controller
 {
     /**
-     * Default to the mobile view folder.
+     * Detect a small/mobile screen from the request user agent.
+     * Same heuristic as the DetectDevice middleware.
      */
-    protected function getViewPath($viewName)
+    protected function isMobileRequest(): bool
     {
-        return "quick-flow.{$viewName}";
+        $userAgent = strtolower(request()->userAgent() ?? '');
+
+        return (bool) preg_match(
+            '/android|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/',
+            $userAgent
+        );
     }
 
     /**
-     * Default to the mobile route prefix.
+     * Device-aware view folder: mobile screens get resources/views/quick-flow,
+     * everything else gets resources/views/quick-flow-pc. Both folders expose
+     * the same view names, so one controller serves both.
+     */
+    protected function getViewPath($viewName)
+    {
+        $folder = $this->isMobileRequest() ? 'quick-flow' : 'quick-flow-pc';
+
+        return "{$folder}.{$viewName}";
+    }
+
+    /**
+     * A single unified route-name prefix for the consumer flow.
      */
     protected function getRoutePrefix()
     {
@@ -56,6 +74,32 @@ class QuickFlowController extends Controller
             ->get();
 
         return view($this->getViewPath('index'), compact('productTypes'));
+    }
+
+    /**
+     * Cards entry point (shared by both the mobile and PC flows).
+     */
+    public function cards(Request $request)
+    {
+        $type = \App\Models\ProductType::whereIn('slug', ['cards', 'greeting-cards', 'custom-cards'])
+            ->orWhere('name', 'like', '%card%')
+            ->parents()
+            ->first() ?? \App\Models\ProductType::parents()->first();
+
+        return $this->category($type);
+    }
+
+    /**
+     * Magnets entry point (shared by both the mobile and PC flows).
+     */
+    public function magnets(Request $request)
+    {
+        $type = \App\Models\ProductType::whereIn('slug', ['photo-magnets', 'magnets', 'fridge-magnets'])
+            ->orWhere('name', 'like', '%magnet%')
+            ->parents()
+            ->first() ?? \App\Models\ProductType::parents()->skip(1)->first();
+
+        return $this->category($type);
     }
 
     /**
@@ -88,12 +132,16 @@ class QuickFlowController extends Controller
             'categoryIds' => $categoryIds,
         ];
     }
-    public function category(ProductType $type)
+    public function category($type, $title = null, $size = null)
     {
+        if (is_string($type)) {
+            $type = ProductType::where('slug', $type)
+                ->orWhere('name', 'like', "%{$type}%")
+                ->firstOrFail();
+        }
+
         $flowData = session('quick_flow_data', []);
         $active_store_id = session('active_store_id', null);
-
-         
 
         if (!$type->parent_id) {
             $flowData = [
@@ -117,12 +165,49 @@ class QuickFlowController extends Controller
 
         session(['quick_flow_data' => $flowData]);
 
+        // If product type is Magnets and size/title is requested, skip template gallery and open editor directly
+        $isMagnetType = \Illuminate\Support\Str::contains(strtolower($type->slug ?? ''), 'magnet') || \Illuminate\Support\Str::contains(strtolower($type->name ?? ''), 'magnet');
+        if ($isMagnetType && ($title || $size)) {
+            $rawSize = $size ?? $title;
+            $sizeCode = str_replace([' ', '×', '-'], ['', 'x', 'x'], strtolower($rawSize));
+            return redirect()->to(url("/magnets/{$sizeCode}/design"));
+        }
+
+        // If title and size are passed directly (e.g. /products/cards/folded/5x7/templates)
+        if ($title && $size) {
+            [$w, $h] = array_pad(explode('x', strtolower($size)), 2, null);
+            $cleanTitle = str_replace('-', ' ', strtolower($title));
+            
+            $targetChild = ProductType::where('parent_id', $type->id)
+                ->where(function ($q) use ($cleanTitle) {
+                    $q->where('title', 'like', "%{$cleanTitle}%")
+                      ->orWhere('name', 'like', "%{$cleanTitle}%")
+                      ->orWhere('slug', 'like', "%{$cleanTitle}%");
+                })
+                ->when($w && $h, function ($q) use ($w, $h) {
+                    $q->where('width', (float)$w)->where('height', (float)$h);
+                })
+                ->first();
+
+            if ($targetChild) {
+                $flowData['size_id']     = $targetChild->id;
+                $flowData['size_name']   = $targetChild->name;
+                $flowData['size_slug']   = $targetChild->slug;
+                $flowData['size_width']  = $targetChild->width;
+                $flowData['size_height'] = $targetChild->height;
+                $flowData['size_unit']   = $targetChild->unit;
+                $flowData['size_price']  = $targetChild->price;
+                $flowData['size_title']  = $targetChild->title;
+                session(['quick_flow_data' => $flowData]);
+            }
+        }
+
         $subTypes = $type->children()
             ->where('is_active', 1)
             ->orderBy('sort_order')
             ->get();
 
-        if ($subTypes->isNotEmpty()) {
+        if (empty($title) && empty($size) && $subTypes->isNotEmpty()) {
             return view($this->getViewPath('category'), compact('type', 'subTypes'));
         }
 
@@ -135,17 +220,14 @@ class QuickFlowController extends Controller
                 $query->where('store_id', $active_store_id)
                     ->orWhereNull('store_id');
             });
+        $targetTitle = strtolower(($flowData['size_title'] ?? '') . ' ' . ($title ?? ''));
 
-        switch ($flowData['size_title'] ?? '') {
-            case 'Flat':
-                $q->where('no_of_pages', 1);
-                break;
-            case 'Flat - double':
-                $q->where('no_of_pages', 2);
-                break;
-            case 'Folded':
-                $q->where('no_of_pages', 4);
-                break;
+        if (str_contains($targetTitle, 'double')) {
+            $q->where('no_of_pages', 2);
+        } elseif (str_contains($targetTitle, 'folded')) {
+            $q->where('no_of_pages', 4);
+        } elseif (str_contains($targetTitle, 'flat')) {
+            $q->where('no_of_pages', 1);
         }
 
         // Priority 1: Event Templates
@@ -188,10 +270,10 @@ class QuickFlowController extends Controller
         $categories = Category::parents()
             ->orderBy('sort_order')
             ->get();
-
+        $flowData = session()->get('quick_flow_data');
         return view(
             $this->getViewPath('templates'),
-            compact('type', 'templates', 'categories')
+            compact('type', 'templates', 'categories','flowData')
         );
     } 
 
@@ -206,18 +288,99 @@ class QuickFlowController extends Controller
     /**
      * Step 4: Customization
      */
-    public function customize(Product $product)
+    public function customize($product, $title = null, $size = null, $template = null)
     {
-        if (!$product->is_active) {
-            abort(404);
+        if (is_string($product)) {
+            $foundProduct = Product::where('slug', $product)->orWhere('id', $product)->first();
+            
+            if (!$foundProduct) {
+                $productType = ProductType::where('slug', $product)->orWhere('name', 'like', "%{$product}%")->first();
+                if ($productType) {
+                    $foundProduct = Product::where('is_active', 1)
+                        ->where(function ($q) use ($productType) {
+                            $q->where('product_type_id', $productType->id)
+                              ->orWhere('product_type_id', $productType->parent_id);
+                        })
+                        ->first() ?? Product::where('is_active', 1)->first();
+                } else {
+                    $foundProduct = Product::where('is_active', 1)->first();
+                }
+            }
+            $product = $foundProduct;
+        }
+
+        if (!$product || !$product->is_active) {
+            $product = Product::where('is_active', 1)->firstOrFail();
         }
        
         $product->load('images', 'productType');
-
-        // Use sub-type price from session if available
         $flowData = session('quick_flow_data', []);
+
+        $effectiveSize = $size ?? ($title && str_contains($title, 'x') ? $title : null);
+
+        if ($effectiveSize || ($title && $size)) {
+            $sizeStr = $effectiveSize ?? $size;
+            [$w, $h] = array_pad(explode('x', str_replace([' ', '-'], '', strtolower($sizeStr))), 2, null);
+            $cleanTitle = $title ? str_replace('-', ' ', strtolower($title)) : null;
+
+            $parentType = $product->productType;
+            if ($parentType) {
+                $targetChild = ProductType::where(function ($q) use ($parentType) {
+                        $q->where('parent_id', $parentType->id)
+                          ->orWhere('id', $parentType->id)
+                          ->orWhere('parent_id', $parentType->parent_id);
+                    })
+                    ->when($cleanTitle, function ($q) use ($cleanTitle) {
+                        $q->where(function ($sq) use ($cleanTitle) {
+                            $sq->where('title', 'like', "%{$cleanTitle}%")
+                              ->orWhere('name', 'like', "%{$cleanTitle}%")
+                              ->orWhere('slug', 'like', "%{$cleanTitle}%");
+                        });
+                    })
+                    ->when($w && $h, function ($q) use ($w, $h) {
+                        $q->where('width', (float)$w)->where('height', (float)$h);
+                    })
+                    ->first();
+
+                if ($targetChild) {
+                    $flowData['size_id']     = $targetChild->id;
+                    $flowData['size_name']   = $targetChild->name;
+                    $flowData['size_slug']   = $targetChild->slug;
+                    $flowData['size_width']  = (float)$targetChild->width;
+                    $flowData['size_height'] = (float)$targetChild->height;
+                    $flowData['size_unit']   = $targetChild->unit ?? 'in';
+                    $flowData['size_price']  = (float)$targetChild->price;
+                    $flowData['size_title']  = $targetChild->title;
+                    session(['quick_flow_data' => $flowData]);
+                }
+            }
+        }
+
+        if ($template) {
+            if (is_string($template)) {
+                $tplProduct = Product::where('slug', $template)
+                    ->orWhere('name', 'like', "%{$template}%")
+                    ->first();
+                if ($tplProduct) {
+                    $product = $tplProduct;
+                    $flowData['template_id']   = $tplProduct->id;
+                    $flowData['template_slug'] = $tplProduct->slug;
+                    $flowData['template_name'] = $tplProduct->name;
+                    session(['quick_flow_data' => $flowData]);
+                } else {
+                    $tplModel = Template::where('slug', $template)
+                        ->orWhere('name', 'like', "%{$template}%")
+                        ->first();
+                    if ($tplModel) {
+                        $flowData['template_id']   = $tplModel->id;
+                        $flowData['template_slug'] = $tplModel->slug;
+                        $flowData['template_name'] = $tplModel->name;
+                        session(['quick_flow_data' => $flowData]);
+                    }
+                }
+            }
+        }
         
-        // $unitPrice = isset($flowData['size_price']) ? $flowData['size_price'] : $product->base_price;
         if (!empty($product->store_id)) {
             $unitPrice = (float) $product->base_price;
         } else {
@@ -229,10 +392,8 @@ class QuickFlowController extends Controller
         
         $activeTemplates     = $this->buildTemplatesForJs();
         $templateCategories  = $this->buildTemplateCategoriesForJs();
-          
-        return view($this->getViewPath('customize'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories'));
-
-
+    
+        return view($this->getViewPath('customize'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories', 'template'));
     }
 
     /**
@@ -810,6 +971,22 @@ class QuickFlowController extends Controller
 
         $cartService = app(\App\Services\CartService::class);
         $cart = $cartService->getCart();
+
+        if ($cart->items->isEmpty()) {
+            $backupCart = \App\Models\Cart::where(function ($q) {
+                    if (\Auth::check()) {
+                        $q->where('user_id', \Auth::id());
+                    }
+                    $q->orWhere('session_id', \Illuminate\Support\Facades\Session::getId());
+                })
+                ->whereHas('items')
+                ->latest()
+                ->first();
+
+            if ($backupCart) {
+                $cart = $backupCart->fresh(['items.product', 'coupon']);
+            }
+        }
 
         if ($cart->items->isEmpty()) {
             return response()->json(['success' => false, 'error' => 'Cart is empty.']);
@@ -1561,11 +1738,43 @@ class QuickFlowController extends Controller
     {
         $request->validate([
             'order_number' => 'required|string',
+            'contact' => 'required|string',
         ]);
 
         $orderNumber = trim($request->input('order_number'));
+        $contact = trim(strtolower($request->input('contact')));
+        $cleanDigits = preg_replace('/[^0-9]/', '', $contact);
 
-        return redirect()->route($this->getRoutePrefix() . 'track.order', ['orderNumber' => $orderNumber]);
+        $order = Order::where('order_number', $orderNumber)
+            ->where(function ($q) use ($contact, $cleanDigits) {
+                $q->where('guest_email', 'like', "%{$contact}%")
+                  ->orWhere('guest_phone', 'like', "%{$contact}%")
+                  ->orWhere('billing_address->email', 'like', "%{$contact}%")
+                  ->orWhere('billing_address->phone', 'like', "%{$contact}%")
+                  ->orWhere('shipping_address->email', 'like', "%{$contact}%")
+                  ->orWhere('shipping_address->phone', 'like', "%{$contact}%")
+                  ->orWhereHas('user', function ($uq) use ($contact, $cleanDigits) {
+                      $uq->where('email', 'like', "%{$contact}%")
+                         ->orWhere('phone', 'like', "%{$contact}%");
+                      if (!empty($cleanDigits)) {
+                          $uq->orWhere('phone', 'like', "%{$cleanDigits}%");
+                      }
+                  });
+                if (!empty($cleanDigits)) {
+                    $q->orWhere('guest_phone', 'like', "%{$cleanDigits}%")
+                      ->orWhere('billing_address->phone', 'like', "%{$cleanDigits}%")
+                      ->orWhere('shipping_address->phone', 'like', "%{$cleanDigits}%");
+                }
+            })
+            ->first();
+
+        if (!$order) {
+            return redirect()->route($this->getRoutePrefix() . 'track.form')
+                ->withInput()
+                ->with('error', 'No order found matching that order number and email/phone number.');
+        }
+
+        return redirect()->route($this->getRoutePrefix() . 'track.order', ['orderNumber' => $order->order_number]);
     }
 
     /**
@@ -1609,6 +1818,9 @@ class QuickFlowController extends Controller
 
         if ($query) {
             $stores = \App\Models\Store::where('is_active', true)
+                ->where(function($q) {
+                    $q->where('is_test', false)->orWhereNull('is_test');
+                })
                 ->where(function ($q) use ($query) {
                     $q->where('store_name', 'like', "%{$query}%")
                         ->orWhere('store_code', 'like', "%{$query}%")
@@ -1641,18 +1853,20 @@ class QuickFlowController extends Controller
                             $searchLon = $geocodeData[0]['lon'];
 
                             $stores = \App\Models\Store::where('is_active', true)
+                                ->where(function($q) {
+                                    $q->where('is_test', false)->orWhereNull('is_test');
+                                })
                                 ->whereNotNull('lat')
                                 ->whereNotNull('lon')
                                 ->selectRaw("*,
-                                ( 3959 * acos( cos( radians(?) ) *
+                                ( 3959 * acos( LEAST(1.0, GREATEST(-1.0, cos( radians(?) ) *
                                 cos( radians( lat ) ) *
                                 cos( radians( lon ) - radians(?) ) +
                                 sin( radians(?) ) *
-                                sin( radians( lat ) ) )
+                                sin( radians( lat ) ) )) )
                                 ) AS distance", [$searchLat, $searchLon, $searchLat])
-                                ->having('distance', '<=', 300)
                                 ->orderBy('distance')
-                                ->take(3)
+                                ->take(5)
                                 ->get();
                         }
                     }
@@ -1660,6 +1874,12 @@ class QuickFlowController extends Controller
                     \Log::error("Geocoding search error: " . $e->getMessage());
                 }
             }
+        } else {
+            $stores = \App\Models\Store::where('is_active', true)
+                ->where(function($q) {
+                    $q->where('is_test', false)->orWhereNull('is_test');
+                })
+                ->get();
         }
 
         if ($request->wantsJson()) {
@@ -1672,23 +1892,33 @@ class QuickFlowController extends Controller
     private function getNearbyStoresFromCoords($lat, $lon)
     {
         try {
-            return \App\Models\Store::where('is_active', true)
+            $baseQuery = \App\Models\Store::where('is_active', true)
+                ->where(function($q) {
+                    $q->where('is_test', false)->orWhereNull('is_test');
+                })
                 ->whereNotNull('lat')
                 ->whereNotNull('lon')
                 ->selectRaw("*,
-                ( 3959 * acos( cos( radians(?) ) *
+                ( 3959 * acos( LEAST(1.0, GREATEST(-1.0, cos( radians(?) ) *
                 cos( radians( lat ) ) *
                 cos( radians( lon ) - radians(?) ) +
                 sin( radians(?) ) *
-                sin( radians( lat ) ) )
-                ) AS distance", [$lat, $lon, $lat])
-                ->having('distance', '<=', 300)
-                ->orderBy('distance')
-                ->take(3)
-                ->get();
+                sin( radians( lat ) ) )) )
+                ) AS distance", [$lat, $lon, $lat]);
+
+            $withinRadius = (clone $baseQuery)->having('distance', '<=', 300)->orderBy('distance')->take(5)->get();
+
+            if ($withinRadius->count() > 0) {
+                return $withinRadius;
+            }
+
+            return $baseQuery->orderBy('distance')->take(5)->get();
         } catch (\Exception $e) {
             \Log::error("Nearby coords error: " . $e->getMessage());
-            return collect();
+            return \App\Models\Store::where('is_active', true)
+                ->where(function($q) {
+                    $q->where('is_test', false)->orWhereNull('is_test');
+                })->get();
         }
     }
 
@@ -1710,7 +1940,7 @@ class QuickFlowController extends Controller
         }
 
         if (!$store) {
-            $store = \App\Models\Store::where('is_active', true)->first();
+            $store = \App\Models\Store::where('is_active', true)->where('is_test', false)->first();
         }
 
         return response()->json([

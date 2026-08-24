@@ -73,6 +73,7 @@ class StoreController extends Controller
                     'city'               => $store->city,
                     'printer_ip_address' => $store->printer_ip_address,
                     'is_active'          => $store->is_active,
+                    'is_test'            => (bool)$store->is_test,
                     'orders_count'       => $store->orders_count,
                     'id'                 => $store->id,
                 ];
@@ -107,6 +108,7 @@ class StoreController extends Controller
     {
         $data = $request->validated();
         $data['is_active'] = $request->has('is_active');
+        $data['is_test']   = $request->has('is_test');
 
         if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('stores/logos', 'public');
@@ -161,6 +163,7 @@ class StoreController extends Controller
         $store = Store::findOrFail($id);
         $data = $request->validated();
         $data['is_active'] = $request->has('is_active');
+        $data['is_test']   = $request->has('is_test');
 
         if ($request->hasFile('logo')) {
             // Delete old logo

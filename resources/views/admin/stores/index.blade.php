@@ -227,10 +227,17 @@
                         orderable: true,
                         render: function(data, type, row) {
                             const active = data ? true : false;
-                            return `<button onclick="toggleStatus(${row.id}, this)"
-                        class="status-toggle inline-flex px-3 py-1 text-xs font-bold rounded-lg cursor-pointer ${active ? 'bg-accent-100 text-accent-700 hover:bg-accent-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}">
-                        ${active ? 'Active' : 'Inactive'}
-                    </button>`;
+                            const isTest = row.is_test ? true : false;
+                            let html = `<div class="flex items-center justify-center gap-1.5">
+                                <button onclick="toggleStatus(${row.id}, this)"
+                                    class="status-toggle inline-flex px-2.5 py-1 text-xs font-bold rounded-lg cursor-pointer ${active ? 'bg-accent-100 text-accent-700 hover:bg-accent-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}">
+                                    ${active ? 'Active' : 'Inactive'}
+                                </button>`;
+                            if (isTest) {
+                                html += `<span class="px-2 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-800 rounded-md border border-amber-200" title="Test Store Environment">TEST</span>`;
+                            }
+                            html += `</div>`;
+                            return html;
                         }
                     },
                     {

@@ -10,18 +10,8 @@ class DetectDevice
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $userAgent = strtolower($request->userAgent() ?? '');
-
-        $isMobile = preg_match(
-            '/android|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/',
-            $userAgent
-        );
-
-        // Desktop → PC flow
-        if (!$isMobile && $request->is('/')) {
-            return redirect()->route('flow-pc.index');
-        }
-
+        // The consumer flow controller now selects the mobile vs desktop view
+        // folder from the request device itself, so no redirect is needed here.
         return $next($request);
     }
 }

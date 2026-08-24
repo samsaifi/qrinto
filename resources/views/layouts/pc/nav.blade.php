@@ -4,10 +4,10 @@
 
 <nav aria-label="Primary Navigation" class="hidden lg:flex items-center gap-1.5">
     {{-- Home --}}
-    <a href="{{ route('flow-pc.index') }}"
-        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow-pc.index') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+    <a href="{{ route('flow.index') }}"
+        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow.index') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
         <i data-lucide="home"
-            class="w-4 h-4 text-slate-400 shrink-0 {{ request()->routeIs('flow-pc.index') ? 'text-brand-600' : '' }}"></i>
+            class="w-4 h-4 text-slate-400 shrink-0 {{ request()->routeIs('flow.index') ? 'text-brand-600' : '' }}"></i>
         <span>Home</span>
     </a>
 
@@ -33,14 +33,14 @@
                 <span class="text-xs font-black text-brand-600 uppercase tracking-widest flex items-center gap-2">
                     <i data-lucide="layers" class="w-3.5 h-3.5"></i> Printing Categories
                 </span>
-                <a href="{{ route('flow-pc.find-store') }}"
+                <a href="{{ route('flow.find-store') }}"
                     class="text-xs font-bold text-slate-400 hover:text-brand-600 transition-colors flex items-center gap-1">
                     Find Stores <i data-lucide="arrow-right" class="w-3 h-3"></i>
                 </a>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <a href="{{ route('flow-pc.qrinto') }}"
+                <a href="{{ route('flow.qrinto') }}"
                     class="p-3 rounded-2xl bg-slate-50/80 hover:bg-brand-50/60 border border-slate-100 hover:border-brand-200 transition-all group flex items-start gap-3">
                     <div
                         class="w-9 h-9 rounded-xl bg-brand-100/80 text-brand-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -53,7 +53,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('flow-pc.find-store') }}"
+                <a href="{{ route('flow.find-store') }}"
                     class="p-3 rounded-2xl bg-slate-50/80 hover:bg-violet-50/60 border border-slate-100 hover:border-violet-200 transition-all group flex items-start gap-3">
                     <div
                         class="w-9 h-9 rounded-xl bg-violet-100/80 text-violet-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -66,7 +66,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('flow-pc.find-store') }}"
+                <a href="{{ route('flow.find-store') }}"
                     class="p-3 rounded-2xl bg-slate-50/80 hover:bg-rose-50/60 border border-slate-100 hover:border-rose-200 transition-all group flex items-start gap-3">
                     <div
                         class="w-9 h-9 rounded-xl bg-rose-100/80 text-rose-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -79,7 +79,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('flow-pc.find-store') }}"
+                <a href="{{ route('flow.find-store') }}"
                     class="p-3 rounded-2xl bg-slate-50/80 hover: bg-gray-50/60 border border-slate-100 hover: border-gray-200 transition-all group flex items-start gap-3">
                     <div
                         class="w-9 h-9 rounded-xl  bg-gray-100/80  text-gray-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -97,15 +97,15 @@
                 class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500">
                 <span class="flex items-center gap-1.5 text-slate-600"><i data-lucide="zap"
                         class="w-3.5 h-3.5 text-amber-500"></i> Fast 24-48hr turnaround</span>
-                <a href="{{ route('flow-pc.index') }}" class="text-brand-600 font-bold hover:underline">Start New Custom
+                <a href="{{ route('flow.index') }}" class="text-brand-600 font-bold hover:underline">Start New Custom
                     Print &rarr;</a>
             </div>
         </div>
     </div>
 
     {{-- Direct Upload / Custom Print CTA --}}
-    <a href="{{ route('flow-pc.qrinto') }}"
-        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow-pc.qrinto') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+    <a href="{{ route('flow.qrinto') }}"
+        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow.qrinto') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
         <i data-lucide="upload-cloud" class="w-4 h-4 text-slate-400 shrink-0"></i>
         <span>Custom Print</span>
         <span
@@ -113,18 +113,18 @@
     </a>
 
     {{-- Find Stores --}}
-    <a href="{{ route('flow-pc.find-store') }}"
-        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow-pc.find-store') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+    <a href="{{ route('flow.find-store') }}"
+        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow.find-store') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
         <i data-lucide="map-pin"
-            class="w-4 h-4 text-slate-400 shrink-0 {{ request()->routeIs('flow-pc.find-store') ? 'text-brand-600' : '' }}"></i>
+            class="w-4 h-4 text-slate-400 shrink-0 {{ request()->routeIs('flow.find-store') ? 'text-brand-600' : '' }}"></i>
         <span>Find Stores</span>
     </a>
 
     {{-- Track Order --}}
-    <a href="{{ route('flow-pc.track.form') }}"
-        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow-pc.track.form') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+    <a href="{{ route('flow.track.form') }}"
+        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow.track.form') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
         <i data-lucide="package"
-            class="w-4 h-4 text-slate-400 shrink-0 {{ request()->routeIs('flow-pc.track.form') ? 'text-brand-600' : '' }}"></i>
+            class="w-4 h-4 text-slate-400 shrink-0 {{ request()->routeIs('flow.track.form') ? 'text-brand-600' : '' }}"></i>
         <span>Track Order</span>
     </a>
 </nav>

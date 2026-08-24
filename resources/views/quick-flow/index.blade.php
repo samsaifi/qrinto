@@ -90,8 +90,7 @@
             font-weight: 800;
             padding: 4px 10px;
             border-radius: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
         @media (max-width: 640px) {
@@ -159,7 +158,7 @@
                 </a>
             @else
                 <div class="flow-card disabled">
-                    <div class="paused-badge">PAUSED</div>
+                    <div class="paused-badge">Coming soon</div>
                     <div class="icon-box">
                         @if ($type->icon_svg)
                             {!! $type->icon_svg !!}

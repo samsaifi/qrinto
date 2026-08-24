@@ -3,6 +3,17 @@
 @section('title', 'Choose a template')
 @section('header_title', $type->name)
 
+@php
+    // Rebuild the hierarchical design URL segments (same logic as the PC flow),
+    // so templates open the card editor at /{type}/{title}/{size}/design/{template}.
+    $sizeWidth = isset($flowData['size_width']) ? $flowData['size_width'] + 0 : ($type->width ? $type->width + 0 : 5);
+    $sizeHeight = isset($flowData['size_height']) ? $flowData['size_height'] + 0 : ($type->height ? $type->height + 0 : 7);
+    $sizeCode = "{$sizeWidth}x{$sizeHeight}";
+    $titleLabel = $flowData['size_title'] ?? ($type->title ?? ($type->name ?? 'Folded'));
+    $titleSlug = \Illuminate\Support\Str::slug($titleLabel);
+    $typeSlug = $type->slug ?? 'cards';
+@endphp
+
 @section('content')
     <div class="space-y-6 px-6" x-data="templateBookmarks()">
         <div class="flex items-center justify-between">
@@ -59,7 +70,7 @@
 
         <div class="template-grid grid grid-cols-2 gap-4  " data-tour="template-grid">
             @forelse($templates as $tpl)
-                <a href="{{ route('flow.customize', $tpl->slug) }}" data-tpl-id="{{ $tpl->id }}"
+                <a href="{{ url($typeSlug . '/' . $titleSlug . '/' . $sizeCode . '/design/' . $tpl->slug) }}" data-tpl-id="{{ $tpl->id }}"
                     x-show="activeCategory === 'all' || activeCategory === {{ $tpl->category_id }}"
                     class="group relative bg-slate-50 aspect-[5/7] max-h-[145px] w-full overflow-hidden border-2 border-transparent hover:border-slate-400 transition-all duration-300 shadow-sm hover:shadow-premium"
                     style="aspect-ratio: {{ $tpl->aspect_ratio }};">

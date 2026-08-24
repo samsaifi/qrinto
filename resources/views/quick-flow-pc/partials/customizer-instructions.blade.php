@@ -1,4 +1,4 @@
-<section class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 mt-6 mb-12">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 mt-6 mb-12">
     <div
         class="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl shadow-slate-200/40">
 
@@ -143,7 +143,7 @@
                         class="text-sm font-extrabold text-slate-900 group-hover:text-brand-hover transition-colors mb-1.5">
                         Save & Checkout</h3>
                     <p class="text-xs text-slate-500 leading-relaxed">When done, click <span
-                            class="font-bold text-slate-700">Add to cart</span> to finalize your custom print order.</p>
+                            class="font-bold text-slate-700">Continue</span> to finalize your custom print order.</p>
                 </div>
                 <div
                     class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[11px] font-bold text-pink-600">

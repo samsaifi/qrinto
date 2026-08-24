@@ -23,9 +23,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,700;1,700&family=Space+Mono:wght@700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -303,14 +301,14 @@
                 <!-- Modal Scrollable Content -->
                 <div class="flex-1 px-6 pb-8 space-y-6 overflow-y-auto">
                     <!-- Main Call to Action -->
-                    <a href="{{ route('flow.index') }}" @click="mobileMenu = false"
+                    <a href="{{ route('flow.find-store') }}" @click="mobileMenu = false"
                         class="block w-full group relative overflow-hidden bg-mobile-600 p-6 rounded-[32px] shadow-lg shadow-mobile-100 transition-all hover:bg-mobile-700 active:scale-[0.98]">
                         <div class="relative z-10 flex items-center justify-between">
                             <div class="flex flex-col text-left">
                                 <span
                                     class="text-[10px] font-black text-mobile-200 uppercase tracking-[0.2em] mb-1">Start
                                     New Flow</span>
-                                <span class="text-xl font-black text-white leading-tight">Create Custom Print</span>
+                                <span class="text-xl font-black text-white leading-tight">Print at a store near you</span>
                             </div>
                             <div
                                 class="w-12 h-12 flex-shrink-0 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
@@ -332,7 +330,7 @@
                                     <span
                                         class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Already
                                         have a design?</span>
-                                    <span class="text-lg font-black text-slate-900 leading-tight">Custom Print</span>
+                                    <span class="text-lg font-black text-slate-900 leading-tight">Print on your own 931BL</span>
                                 </div>
                             </div>
                             <div
@@ -441,6 +439,44 @@
                             </div>
                         </div>
                     </button>
+
+                    <!-- Auth-aware quiet link: login when signed out; store panel /
+                         admin dashboard when signed in. -->
+                    @auth
+                        @php
+                            $u = auth()->user();
+                            $isAdmin = method_exists($u, 'isAdmin') ? $u->isAdmin() : ($u->role ?? '') === 'admin';
+                            $isStoreStaff = in_array($u->role ?? '', ['store_admin', 'storeadmin', 'staff']);
+                            $storeLabel = $u->store->store_name ?? null;
+                        @endphp
+                        @if ($isAdmin)
+                            <a href="{{ url('/admin/dashboard') }}" @click="mobileMenu = false"
+                                class="flex items-center justify-center gap-2 text-[11px] font-bold text-slate-400 hover:text-mobile-600 uppercase tracking-widest py-2 transition-colors">
+                                <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+                                Admin dashboard
+                            </a>
+                        @elseif ($isStoreStaff)
+                            <a href="{{ route('storepanel.orders') }}" @click="mobileMenu = false"
+                                class="flex items-center justify-center gap-2 text-[11px] font-bold text-slate-400 hover:text-mobile-600 uppercase tracking-widest py-2 transition-colors">
+                                <i data-lucide="briefcase" class="w-3.5 h-3.5"></i>
+                                <span class="truncate max-w-[180px]" title="{{ $storeLabel ?? 'Store panel' }}">
+                                    {{ $storeLabel ?? 'Store panel' }}
+                                </span>
+                            </a>
+                        @else
+                            <a href="{{ url('/store') }}" @click="mobileMenu = false"
+                                class="flex items-center justify-center gap-2 text-[11px] font-bold text-slate-400 hover:text-mobile-600 uppercase tracking-widest py-2 transition-colors">
+                                <i data-lucide="briefcase" class="w-3.5 h-3.5"></i>
+                                For stores
+                            </a>
+                        @endif
+                    @else
+                        <a href="{{ route('login') }}" @click="mobileMenu = false"
+                            class="flex items-center justify-center gap-2 text-[11px] font-bold text-slate-400 hover:text-mobile-600 uppercase tracking-widest py-2 transition-colors">
+                            <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+                            For stores · Log in
+                        </a>
+                    @endauth
                 </div>
 
                 <!-- Modal Footer -->
@@ -464,8 +500,8 @@
         <header
             class="sticky top-0 z-50 bg-mobile-600 border-b border-mobile-700/50 px-5   shadow-lg shadow-mobile-900/10">
             <div class="flex items-center justify-between">
-                <!-- Branding -->
-                <a href="{{ url('/') }}" class="flex items-center gap-2.5 group">
+                <!-- Branding (returns to store search from every screen) -->
+                <a href="{{ route('flow.find-store') }}" class="flex items-center gap-2.5 group">
                     <img src="{{ asset('/images/svg-logo/Qrinto-logo-one-color-white-only.svg') }}" class="w-32" />
                 </a>
 
@@ -473,7 +509,7 @@
                 <div class="flex items-center gap-3">
                     @php
                         $currentRoute = Route::currentRouteName();
-                        $pcRoute = $currentRoute ? str_replace('flow.', 'flow-pc.', $currentRoute) : null;
+                        $pcRoute = $currentRoute ? str_replace('flow.', 'flow.', $currentRoute) : null;
                         $params = Route::current() ? Route::current()->parameters() : [];
                         $cartCount = 0;
                         try {
@@ -486,15 +522,6 @@
                         <i data-lucide="monitor" class="w-5 h-5"></i>
                     </a> -->
                     @endif
-
-                    <a href="{{ route('flow.cart.index') }}" id="cart-btn"
-                        class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95 relative">
-                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-                        @if ($cartCount > 0)
-                            <span id="cart-count"
-                                class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg">{{ $cartCount }}</span>
-                        @endif
-                    </a>
 
                     <button @click="mobileMenu = true; $nextTick(() => lucide.createIcons())"
                         class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/20 active:scale-95">

@@ -10,7 +10,7 @@ use App\Mail\OrderStatusUpdateMail;
 
 class OrderController extends Controller
 {
-    public function index(Request $request)
+     public function index(Request $request)
     {
         $query = Order::with('user', 'items', 'store');
 
@@ -41,6 +41,66 @@ class OrderController extends Controller
         $orders = $query->latest()->paginate(20)->withQueryString();
 
         return view('admin.orders.index', compact('orders'));
+    }
+
+    /**
+     * Advance an order one step along the shared pickup state machine
+     * (New -> Printing -> Ready for pickup -> Picked up). This is the single
+     * action button on each store-queue card. Only the transition into
+     * "Ready for pickup" notifies the customer.
+     */
+    public function advanceStatus(Request $request, Order $order)
+    {
+        // Store Isolation
+        if (auth()->user()->store_id && $order->store_id !== auth()->user()->store_id) {
+            abort(403, 'Unauthorized access to this store\'s order.');
+        }
+
+        $action = $order->forward_action;
+
+        if (!$action) {
+            return redirect()->back()->with('error', 'This order has no further step to advance.');
+        }
+
+        $oldStatus = $order->status;
+        $newStatus = $action['to'];
+
+        $order->update(['status' => $newStatus]);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id'   => $order->id,
+            'user_id'    => auth()->id(),
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'notes'      => 'Advanced to ' . ($action['label'] ?? $newStatus) . ' via store queue',
+        ]);
+
+        $mailFailed = false;
+
+        // Only the "Ready for pickup" transition sends the customer email.
+        if (!empty($action['email'])) {
+            $customerEmail = $order->guest_email
+                ?? ($order->shipping_address['pickup_email'] ?? ($order->shipping_address['email'] ?? ($order->user->email ?? null)));
+
+            if ($customerEmail) {
+                try {
+                    Mail::to($customerEmail)->send(new OrderStatusUpdateMail($order, null));
+                } catch (\Throwable $e) {
+                    $mailFailed = true;
+                    \Log::error('Order ready email failed to send', [
+                        'order_id' => $order->id,
+                        'email'    => $customerEmail,
+                        'error'    => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        if ($mailFailed) {
+            return redirect()->back()->with('warning', 'Order marked ready, but the customer email could not be sent.');
+        }
+
+        return redirect()->back()->with('success', 'Order moved to ' . ($action['label'] ?? ucfirst($newStatus)) . '.');
     }
 
     /**
@@ -253,6 +313,41 @@ class OrderController extends Controller
         return view('admin.orders.show', compact('order'));
     }
 
+    /**
+     * Download the print-ready PDF for an order (generated at placement).
+     * Ensures the file exists first, then streams it as an attachment.
+     */
+    public function downloadPdf(Order $order)
+    {
+        // Store Isolation
+        if (auth()->user()->store_id && $order->store_id !== auth()->user()->store_id) {
+            abort(403, 'Unauthorized access to this store\'s order.');
+        }
+
+        // Make sure the PDF(s) exist (self-heals if missing).
+        try {
+            app(\App\Services\OrderPdfService::class)->ensureOrderPdfsExist($order);
+        } catch (\Throwable $e) {
+            \Log::error('Order PDF download self-heal failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
+        }
+
+        $order->loadMissing('items');
+
+        $item = $order->items->firstWhere(fn($i) => !empty($i->pdf_path));
+
+        if (!$item || empty($item->pdf_path)) {
+            return redirect()->back()->with('error', 'No print-ready PDF is available for this order yet.');
+        }
+
+        $absPath = storage_path('app/public/' . ltrim($item->pdf_path, '/'));
+
+        if (!is_file($absPath)) {
+            return redirect()->back()->with('error', 'The print-ready PDF could not be found on disk.');
+        }
+
+        return response()->download($absPath, 'Design_' . $order->order_number . '.pdf');
+    }
+
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
@@ -322,6 +417,42 @@ class OrderController extends Controller
         }
 
         return $redirect->with('success', 'Order status updated successfully');
+    }
+
+    /**
+     * Undo steps the order back exactly ONE canonical pickup stage
+     * (Done → Ready, Ready → Printing, Printing → New) — per the spec.
+     * Never sends a retraction email.
+     */
+    public function undoStatus(Request $request, Order $order)
+    {
+        $currentStage = $order->queue_stage;
+
+        // Target DB status for one stage back. Values must be members of the
+        // orders.status ENUM.
+        $target = match ($currentStage) {
+            Order::STAGE_DONE     => 'delivered_store', // Done → Ready
+            Order::STAGE_READY    => 'printing',        // Ready → Printing
+            Order::STAGE_PRINTING => 'pending',         // Printing → New
+            default               => null,
+        };
+
+        if (!$target) {
+            return redirect()->back()->with('error', 'Nothing to undo from this state.');
+        }
+
+        $oldStatus = $order->status;
+        $order->update(['status' => $target]);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id'   => $order->id,
+            'user_id'    => auth()->id(),
+            'old_status' => $oldStatus,
+            'new_status' => $target,
+            'notes'      => 'Status undone via store panel (no retraction email sent)',
+        ]);
+
+        return redirect()->back()->with('success', 'Order moved back one step.');
     }
 
     private function physicallyRotateImage($sourcePath, $rotationString)

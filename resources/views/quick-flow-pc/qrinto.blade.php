@@ -1,64 +1,18 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Custom Photo Upload & Direct Printing Studio | Qrinto')
-@section('header_title', 'Custom Print')
-@section('meta_description',
-    'Upload your own images and photos for high quality custom printing. Select custom sizes,
-    paper finishes, and local store pickup options with Qrinto.')
-@section('meta_keywords',
-    'custom photo upload, direct photo printing, custom size photo print, upload photo print,
-    Qrinto print studio')
-@section('canonical_url', route('flow-pc.qrinto'))
-@section('og_type', 'website')
-@section('og_title', 'Custom Photo Upload & Direct Printing Studio | Qrinto')
-@section('og_description',
-    'Upload your own images and photos for high quality custom printing. Select custom sizes,
-    paper finishes, and local store pickup options with Qrinto.')
-@section('og_image', asset('logo/Qrinto-logo-small.png'))
+@section('title', 'Local Print Studio | Qrinto')
+@section('header_title', 'Local Print')
+@section('meta_description', 'Upload your photo or artwork for direct local print and fast store pickup.')
+@section('canonical_url', route('flow.qrinto'))
 
 @push('styles')
     <style>
-        .glass-card {
-            background: rgba(255, 255, 255, 0.94);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-
-        .shimmer-cta {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .shimmer-cta::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -60%;
-            width: 50%;
-            height: 200%;
-            background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: rotate(25deg);
-            transition: all 0.75s ease;
-        }
-
-        .shimmer-cta:hover::after {
-            left: 140%;
-        }
-
-        .ambient-bg {
-            background-color: #FCFBF9;
-            background-image:
-                radial-gradient(at 0% 0%, rgba(214, 95, 50, 0.06) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(185, 79, 40, 0.06) 0px, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(250, 247, 244, 0.5) 0px, transparent 100%);
-        }
-
         .paypal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 80;
             display: flex;
             align-items: center;
@@ -68,47 +22,34 @@
 
         .paypal-sheet {
             width: 100%;
-            max-width: 480px;
-            background: #fff;
-            border-radius: 2rem;
-            padding: 2rem;
+            max-width: 460px;
+            background: #ffffff;
+            border-radius: 1.5rem;
+            padding: 1.75rem;
             max-height: 88vh;
             overflow-y: auto;
-            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.3);
-            animation: modalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes modalIn {
-            from {
-                transform: scale(0.94);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.25);
         }
 
         .processing-overlay {
             position: fixed;
             inset: 0;
             background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             z-index: 10000;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 1.5rem;
+            gap: 1.25rem;
         }
 
         .processing-overlay .spinner {
-            width: 56px;
-            height: 56px;
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #ec4899;
+            width: 48px;
+            height: 48px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #287d3c;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -118,36 +59,11 @@
                 transform: rotate(360deg);
             }
         }
-
-        .success-check {
-            width: 76px;
-            height: 76px;
-            background: #0ea5e9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.4);
-            animation: popScale 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes popScale {
-            0% {
-                transform: scale(0);
-                opacity: 0;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
     </style>
 @endpush
 
 @section('content')
-    <div class="ambient-bg min-h-screen py-8 -mt-6 font-sans text-slate-900" x-data="qrintoFlow()">
+    <div class="bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans text-slate-900" x-data="qrintoFlow()">
 
         {{-- Fullscreen Processing Overlay --}}
         <div x-show="isProcessing" class="processing-overlay" style="display: none;"
@@ -155,113 +71,65 @@
             x-transition:enter-end="opacity-100">
             <template x-if="!paymentSuccess">
                 <div class="text-center">
-                    <div class="spinner mx-auto mb-6"></div>
-                    <h3 class="text-2xl font-black text-slate-900 tracking-tight">Processing Payment</h3>
-                    <p class="text-slate-500 font-semibold text-sm mt-1.5">Please wait while we confirm your custom print
-                        order...</p>
+                    <div class="spinner mx-auto mb-5"></div>
+                    <h3 class="text-xl font-extrabold text-slate-900">Processing Order</h3>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Please wait while your order is being sent...</p>
                 </div>
             </template>
             <template x-if="paymentSuccess">
                 <div class="text-center">
-                    <div class="success-check mx-auto mb-6">
-                        <i data-lucide="check" class="w-10 h-10 text-white"></i>
+                    <div class="w-14 h-14 bg-[#eaf3ea] text-[#287d3c] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="check" class="w-8 h-8"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-slate-900 tracking-tight">Order Confirmed!</h3>
-                    <p class="text-slate-500 font-semibold text-sm mt-1.5">Redirecting to your order confirmation details...
-                    </p>
+                    <h3 class="text-xl font-extrabold text-slate-900">Order Confirmed</h3>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Redirecting to order confirmation details...</p>
                 </div>
             </template>
         </div>
 
-        <div class="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-[1240px] mx-auto">
 
-            {{-- Breadcrumb Navigation & Interactive Step Bar --}}
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    <a href="{{ route('flow-pc.index') }}"
-                        class="text-slate-400 font-medium hover:text-brand-600 transition-colors flex items-center gap-1.5">
-                        <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+            {{-- Quiet Step Navigation Bar --}}
+            <div class="flex items-center justify-between gap-4 mb-8">
+                <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
+                    <a href="{{ route('flow.index') }}" class="hover:text-slate-700 transition-colors">
+                        Shop
                     </a>
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-                    <span class="text-slate-900 font-bold">Quick Custom Print</span>
-                </nav>
+                    <span>/</span>
+                    <span class="text-slate-900 font-bold">Local Print</span>
+                </div>
 
-                {{-- Floating 3-Step Indicator Bar --}}
-                <div
-                    class="flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/80 shadow-2xs">
-                    <div class="flex items-center gap-1.5 text-xs font-bold"
-                        :class="currentStep >= 1 ? (currentStep > 1 ? ' text-gray-600' :
-                            'text-brand-600 font-black bg-brand-50 px-3 py-1 rounded-full border border-brand-200/60'
-                        ) : 'text-slate-400'">
-                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
-                            :class="currentStep > 1 ? ' bg-gray-100  text-gray-600 font-bold' : (currentStep === 1 ?
-                                'bg-brand-600 text-white font-black' : 'bg-slate-100 text-slate-400')">
-                            <template x-if="currentStep > 1"><span>✓</span></template>
-                            <template x-if="currentStep <= 1"><span>1</span></template>
-                        </span>
-                        <span>Upload Design</span>
-                    </div>
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-
-                    <div class="flex items-center gap-1.5 text-xs font-bold"
-                        :class="currentStep >= 2 ? (currentStep > 2 ? ' text-gray-600' :
-                            'text-brand-600 font-black bg-brand-50 px-3 py-1 rounded-full border border-brand-200/60'
-                        ) : 'text-slate-400'">
-                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
-                            :class="currentStep > 2 ? ' bg-gray-100  text-gray-600 font-bold' : (currentStep === 2 ?
-                                'bg-brand-600 text-white font-black' : 'bg-slate-100 text-slate-400')">
-                            <template x-if="currentStep > 2"><span>✓</span></template>
-                            <template x-if="currentStep <= 2"><span>2</span></template>
-                        </span>
-                        <span>Dimensions & Size</span>
-                    </div>
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300"></i>
-
-                    <div class="flex items-center gap-1.5 text-xs font-bold"
-                        :class="currentStep === 3 ?
-                            'text-brand-600 font-black bg-brand-50 px-3 py-1 rounded-full border border-brand-200/60' :
-                            'text-slate-400'">
-                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
-                            :class="currentStep === 3 ? 'bg-brand-600 text-white font-black' : 'bg-slate-100 text-slate-400'">3</span>
-                        <span>Review & Pay</span>
-                    </div>
+                {{-- Quiet Step Indicator --}}
+                <div class="flex items-center gap-3 text-xs font-semibold">
+                    <span :class="currentStep === 1 ? 'text-[#287d3c] font-extrabold' : 'text-slate-400'">Upload</span>
+                    <span class="text-slate-300">→</span>
+                    <span :class="currentStep === 2 ? 'text-[#287d3c] font-extrabold' : 'text-slate-400'">Dimensions</span>
+                    <span class="text-slate-300">→</span>
+                    <span :class="currentStep === 3 ? 'text-[#287d3c] font-extrabold' : 'text-slate-400'">Review & Pay</span>
                 </div>
             </div>
 
-            {{-- Main Page Header Bar --}}
-            <div
-                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-white/70 backdrop-blur-md p-6 rounded-3xl border border-slate-200/70 shadow-xs">
-                <div>
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-brand-50 border border-brand-100 text-brand-600 text-xs font-extrabold mb-1">
-                        <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i> Direct Upload Print Service
-                    </div>
-                    <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Direct Custom Print Studio
-                    </h1>
-                </div>
-                <div
-                    class="flex items-center gap-3 text-xs font-bold text-slate-500 bg-slate-100/80 px-4 py-2 rounded-2xl border border-slate-200/60">
-                    <i data-lucide="sparkles" class="w-4 h-4 text-brand-600"></i>
-                    <span>High-Resolution Photo & Document Printing</span>
-                </div>
+            {{-- Title Header --}}
+            <div class="mb-8">
+                <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
+                    Local Print Studio
+                </h1>
+                <p class="text-sm text-slate-500 font-normal mt-1">
+                    Upload photo artwork and select print dimensions for same-day store pickup.
+                </p>
             </div>
 
             {{-- STEP 1: UPLOAD DESIGN --}}
-            <div x-show="currentStep === 1" x-transition:enter="transition ease-out duration-300" class="max-w-2xl mx-auto">
-                <div
-                    class="glass-card border border-slate-200/90 rounded-3xl p-6 sm:p-10 text-center shadow-xl shadow-slate-200/40 relative overflow-hidden">
-                    <div
-                        class="w-16 h-16 bg-brand-50 border border-brand-100 rounded-3xl flex items-center justify-center text-brand-600 mx-auto mb-5 shadow-2xs">
-                        <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+            <div x-show="currentStep === 1" x-transition:enter="transition ease-out duration-200" class="max-w-xl mx-auto">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center shadow-2xs space-y-6">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-slate-900">Upload Image</h2>
+                        <p class="text-xs text-slate-500 font-normal mt-1">
+                            Upload a photo or design file (JPG, PNG, or WebP up to 10MB).
+                        </p>
                     </div>
 
-                    <h2 class="text-2xl font-black text-slate-900 tracking-tight mb-1.5">Upload Your Image or Design</h2>
-                    <p class="text-xs sm:text-sm text-slate-500 font-medium mb-8 leading-relaxed">
-                        Upload your high-resolution artwork or photo (JPG, PNG, or WebP up to 10MB). We will print it
-                        exactly as provided with true colors!
-                    </p>
-
-                    <div class="relative group" @dragover.prevent="isDragging = true"
+                    <div class="relative" @dragover.prevent="isDragging = true"
                         @dragleave.prevent="isDragging = false" @drop.prevent="handleDrop($event)">
 
                         <input type="file" x-ref="fileInput" class="hidden" accept="image/*"
@@ -269,213 +137,157 @@
 
                         <div @click="$refs.fileInput.click()"
                             :class="[
-                                isDragging ? 'border-brand-500 bg-brand-50/50 scale-[1.01]' :
-                                'border-slate-300/80 bg-slate-50/50 hover:bg-white hover:border-brand-400',
-                                previewUrl ? 'p-0 border-solid overflow-hidden bg-slate-900' : 'p-10 border-dashed'
+                                isDragging ? 'border-slate-400 bg-slate-50' : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300',
+                                previewUrl ? 'p-0 border-solid overflow-hidden bg-slate-900' : 'p-8 border-dashed'
                             ]"
-                            class="border-2 rounded-3xl transition-all duration-300 cursor-pointer relative min-h-[280px] flex items-center justify-center shadow-inner">
+                            class="border-2 rounded-xl transition-all cursor-pointer min-h-[220px] flex items-center justify-center">
 
                             <template x-if="!previewUrl">
-                                <div class="space-y-3">
-                                    <div
-                                        class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto text-slate-400 group-hover:text-brand-600 group-hover:scale-110 transition-all shadow-2xs border border-slate-200/80">
-                                        <i data-lucide="plus" class="w-7 h-7"></i>
+                                <div class="space-y-2">
+                                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto text-slate-400 border border-slate-200 shadow-2xs">
+                                        <i data-lucide="upload-cloud" class="w-5 h-5"></i>
                                     </div>
                                     <div>
-                                        <p class="font-extrabold text-slate-900 text-base">Click to browse or drag & drop
-                                        </p>
-                                        <p class="text-xs text-slate-400 font-semibold mt-1">Supports JPG, PNG, WEBP (Max
-                                            10MB)</p>
+                                        <p class="text-xs font-bold text-slate-800">Click to browse or drag image here</p>
+                                        <p class="text-[11px] text-slate-400 font-normal mt-0.5">JPG, PNG, WebP up to 10MB</p>
                                     </div>
                                 </div>
                             </template>
 
                             <template x-if="previewUrl">
-                                <div class="w-full h-[320px] relative group/img">
-                                    <img :src="previewUrl" class="w-full h-full object-contain rounded-3xl">
-                                    <div
-                                        class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-black px-3 py-1 rounded-xl shadow-md flex items-center gap-1.5">
-                                        <i data-lucide="check-circle" class="w-3.5 h-3.5  text-gray-400"></i> Ready for
-                                        Print
-                                    </div>
+                                <div class="w-full h-[260px] relative">
+                                    <img :src="previewUrl" class="w-full h-full object-contain rounded-xl">
                                     <button type="button" @click.stop="removeFile()"
-                                        class="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-md shadow-xl text-red-500 rounded-2xl flex items-center justify-center transition-all hover:bg-red-50 hover:scale-110 active:scale-95 z-20 border border-slate-200/80"
-                                        title="Remove uploaded image">
-                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                        class="absolute top-3 right-3 w-8 h-8 bg-white/90 shadow-xs text-rose-600 rounded-lg flex items-center justify-center hover:bg-rose-50 cursor-pointer border border-slate-200"
+                                        title="Remove image">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     </button>
                                 </div>
                             </template>
                         </div>
 
-                        {{-- Uploading Progress Bar --}}
-                        <div x-show="isUploading"
-                            class="absolute inset-0 bg-white/95 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center z-30">
-                            <div
-                                class="w-12 h-12 border-4 border-slate-200 border-t-brand-600 rounded-full animate-spin mb-4">
-                            </div>
-                            <p class="font-black text-slate-900 text-sm" x-text="`Uploading Image... ${uploadProgress}%`">
-                            </p>
+                        {{-- Upload Progress --}}
+                        <div x-show="isUploading" x-cloak
+                            class="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center z-30">
+                            <div class="w-8 h-8 border-2 border-slate-300 border-t-[#287d3c] rounded-full animate-spin mb-3"></div>
+                            <p class="text-xs font-bold text-slate-800" x-text="`Uploading... ${uploadProgress}%`"></p>
                         </div>
                     </div>
 
-                    <div class="pt-8">
-                        <button @click="currentStep = 2" :disabled="!uploadId"
-                            :class="!uploadId ? 'bg-slate-200 text-slate-400 cursor-not-allowed' :
-                                'shimmer-cta bg-brand-500 hover:bg-brand-600 text-white shadow-xl shadow-brand-500/20 active:scale-[0.99] cursor-pointer'"
-                            class="w-full py-4 rounded-2xl font-black text-base transition-all duration-300 flex items-center justify-center gap-2">
-                            <span>Continue to Select Sizes</span>
-                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                        </button>
-                    </div>
+                    <button @click="currentStep = 2" :disabled="!uploadId"
+                        :class="!uploadId ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' :
+                            'bg-[#287d3c] hover:bg-[#1e5e2d] text-white shadow-2xs cursor-pointer active:scale-95'"
+                        class="w-full py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
+                        <span>Continue to Dimensions</span>
+                        <span>→</span>
+                    </button>
                 </div>
             </div>
 
             {{-- STEP 2: SIZE & CATEGORY SELECTION --}}
-            <div x-show="currentStep === 2" x-transition:enter="transition ease-out duration-300"
-                class="max-w-4xl mx-auto space-y-6">
-                <div class="text-center max-w-xl mx-auto mb-6">
-                    <h2 class="text-2xl font-black text-slate-900 tracking-tight"
-                        x-text="!selectedParent ? 'Select Print Category' : 'Choose Dimensions'"></h2>
-                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1"
-                        x-text="!selectedParent ? 'Pick the style of product you want to print.' : `Select custom paper dimensions for your ${selectedParent.name}.`">
+            <div x-show="currentStep === 2" x-transition:enter="transition ease-out duration-200"
+                class="max-w-3xl mx-auto space-y-6">
+                <div class="mb-4">
+                    <h2 class="text-lg font-extrabold text-slate-900"
+                        x-text="!selectedParent ? 'Select Print Category' : 'Select Paper Dimensions'"></h2>
+                    <p class="text-xs text-slate-500 font-normal mt-1"
+                        x-text="!selectedParent ? 'Choose product style.' : `Choose paper size for ${selectedParent.name}.`">
                     </p>
                 </div>
 
                 {{-- Category Grid --}}
-                <div x-show="!selectedParent" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div x-show="!selectedParent" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <template x-for="parent in productTypes" :key="parent.id">
                         <button @click="selectedParent = parent"
-                            class="glass-card flex items-center justify-between p-6 rounded-3xl border border-slate-200/90 hover:border-brand-400 transition-all duration-300 group shadow-2xs hover:shadow-xl text-left active:scale-[0.98]">
-                            <div class="flex items-center gap-4">
-                                <div
-                                    class="w-12 h-12 bg-slate-100 text-slate-500 group-hover:bg-brand-50 group-hover:text-brand-600 rounded-2xl flex items-center justify-center transition-colors overflow-hidden shrink-0 border border-slate-200/80">
+                            class="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 flex items-center justify-between transition-all text-left cursor-pointer group shadow-2xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/80">
                                     <template x-if="parent.icon_svg">
-                                        <div class="w-6 h-6 fill-current" x-html="parent.icon_svg"></div>
+                                        <div class="w-5 h-5 fill-current" x-html="parent.icon_svg"></div>
                                     </template>
                                     <template x-if="!parent.icon_svg">
-                                        <i data-lucide="layers" class="w-6 h-6"></i>
+                                        <i data-lucide="layers" class="w-5 h-5"></i>
                                     </template>
                                 </div>
                                 <div>
-                                    <h3 class="font-black text-slate-900 text-base group-hover:text-brand-600 transition-colors"
+                                    <h3 class="font-bold text-slate-900 text-sm group-hover:text-[#287d3c] transition-colors"
                                         x-text="parent.name"></h3>
-                                    <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mt-0.5"
-                                        x-text="parent.title || 'Various Sizes'"></p>
+                                    <p class="text-[11px] text-slate-400 font-normal mt-0.5"
+                                        x-text="parent.title || 'Dimensions'"></p>
                                 </div>
                             </div>
-                            <div
-                                class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-brand-600 group-hover:text-white transition-all shrink-0">
-                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                            </div>
+                            <span class="text-slate-400 group-hover:text-slate-800 transition-colors">→</span>
                         </button>
                     </template>
                 </div>
 
                 {{-- Subtype Sizes Grid --}}
-                <div x-show="selectedParent" class="space-y-5">
+                <div x-show="selectedParent" class="space-y-4">
                     <button @click="selectedParent = null; selectedSize = null"
-                        class="inline-flex items-center gap-2 text-xs font-black text-brand-600 bg-brand-50 hover:bg-brand-100 px-3.5 py-2 rounded-xl border border-brand-200/60 transition-colors">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Categories
+                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+                        <span>← Back to Categories</span>
                     </button>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <template x-for="size in selectedParent?.subtypes || []" :key="size.id">
                             <button @click="selectedSize = { ...size, label: `${selectedParent.name}: ${size.name}` }"
                                 :class="selectedSize?.id === size.id ?
-                                    'border-brand-500 bg-brand-50/70 shadow-md ring-2 ring-brand-100' :
-                                    'border-slate-200/90 bg-white hover:border-brand-300'"
-                                class="glass-card flex items-center justify-between p-5 rounded-3xl border-2 transition-all duration-200 group text-left">
-                                <div class="flex items-center gap-4">
-                                    <div :class="selectedSize?.id === size.id ? 'bg-brand-600 text-white' :
-                                        'bg-slate-100 text-slate-500'"
-                                        class="w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shrink-0">
-                                        <i data-lucide="maximize" class="w-5 h-5"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-black text-slate-900 text-base" x-text="size.name"></h4>
-                                        <span
-                                            class="inline-block text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded mt-1"
-                                            x-text="size.dimensions"></span>
-                                        <template x-if="size.title">
-                                            <p class="text-[10px] font-semibold text-slate-400 mt-1" x-text="size.title">
-                                            </p>
-                                        </template>
-                                    </div>
+                                    'border-2 border-slate-900 bg-slate-50' :
+                                    'border border-slate-200 bg-white hover:border-slate-300'"
+                                class="p-4 rounded-2xl transition-all text-left cursor-pointer flex items-center justify-between shadow-2xs">
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-xs sm:text-sm" x-text="size.name"></h4>
+                                    <p class="text-xs font-mono text-slate-500 mt-1" x-text="size.dimensions"></p>
                                 </div>
                                 <div class="text-right shrink-0">
-                                    <p class="font-black text-lg text-slate-900" x-text="__price(size.price)"></p>
-                                    <template x-if="size.popular">
-                                        <span
-                                            class="text-[9px] font-black  bg-gray-100  text-gray-700 px-2 py-0.5 rounded-md uppercase tracking-wider">Popular</span>
-                                    </template>
+                                    <span class="font-mono font-bold text-sm text-slate-900" x-text="__price(size.price)"></span>
                                 </div>
                             </button>
                         </template>
                     </div>
                 </div>
 
-                <div class="pt-6 flex gap-4">
+                <div class="pt-4 flex items-center gap-3">
                     <button @click="currentStep = 1"
-                        class="flex-1 py-4 rounded-2xl bg-white border border-slate-200 text-slate-700 font-extrabold text-sm hover:bg-slate-50 transition-colors">
+                        class="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors cursor-pointer">
                         Back to Upload
                     </button>
                     <button @click="currentStep = 3" :disabled="!selectedSize"
-                        :class="!selectedSize ? 'bg-slate-200 text-slate-400 cursor-not-allowed' :
-                            'shimmer-cta bg-brand-500 hover:bg-brand-600 text-white shadow-xl shadow-brand-500/20 active:scale-[0.99] cursor-pointer'"
-                        class="flex-[2] py-4 rounded-2xl font-black text-base transition-all duration-300 flex items-center justify-center gap-2">
+                        :class="!selectedSize ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' :
+                            'bg-[#287d3c] hover:bg-[#1e5e2d] text-white shadow-2xs cursor-pointer active:scale-95'"
+                        class="flex-1 py-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
                         <span>Review Order</span>
-                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        <span>→</span>
                     </button>
                 </div>
             </div>
 
             {{-- STEP 3: FINAL REVIEW & CHECKOUT GRID --}}
-            <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-300"
-                class="max-w-[1360px] mx-auto">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-200" class="max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
                     {{-- Left Column: Product & Pickup Info --}}
                     <div class="lg:col-span-7 space-y-6">
 
-                        {{-- Order Item Specifications Card --}}
-                        <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-sm">
-                            <div class="flex items-center gap-2.5 pb-4 border-b border-slate-200/80 mb-5">
-                                <div
-                                    class="w-8 h-8 rounded-xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center">
-                                    <i data-lucide="package" class="w-4.5 h-4.5"></i>
-                                </div>
-                                <h2 class="text-base font-black text-slate-900 tracking-tight">Print Item Specifications
-                                </h2>
-                            </div>
+                        {{-- Specifications Card --}}
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
+                            <h2 class="font-extrabold text-slate-900 text-sm">Print Item Details</h2>
 
-                            <div class="flex flex-col sm:flex-row items-center gap-5">
-                                <div
-                                    class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-900 shrink-0 border border-slate-200 shadow-sm relative">
+                            <div class="flex items-center gap-4">
+                                <div class="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
                                     <img :src="previewUrl" class="w-full h-full object-cover">
-                                    <span
-                                        class="absolute bottom-1 right-1 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-black px-1.5 py-0.5 rounded">HD
-                                        PRINT</span>
                                 </div>
-                                <div class="flex-1 text-center sm:text-left min-w-0">
-                                    <h3 class="font-black text-slate-900 text-lg" x-text="selectedSize?.label"></h3>
-                                    <div class="flex items-center justify-center sm:justify-start gap-2 mt-1.5">
-                                        <span
-                                            class="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/80"
-                                            x-text="selectedSize?.dimensions"></span>
-                                        <span
-                                            class="text-xs font-bold  text-gray-700  bg-gray-50 px-2.5 py-1 rounded-lg border  border-gray-200/60">High
-                                            Resolution</span>
-                                    </div>
-                                    <div class="mt-3 flex items-center justify-center sm:justify-start gap-3">
-                                        <span class="text-xs font-bold text-slate-400 uppercase">Quantity:</span>
-                                        <div
-                                            class="inline-flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="font-bold text-slate-900 text-sm" x-text="selectedSize?.label"></h3>
+                                    <p class="text-xs font-mono text-slate-500 mt-0.5" x-text="selectedSize?.dimensions"></p>
+                                    <div class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
+                                        <span>Quantity:</span>
+                                        <div class="inline-flex items-center bg-slate-50 rounded-lg border border-slate-200">
                                             <button type="button" @click="quantity = Math.max(1, quantity - 1)"
-                                                class="w-7 h-7 rounded-lg bg-white text-slate-800 flex items-center justify-center font-black text-sm shadow-2xs active:scale-95">−</button>
-                                            <span class="w-10 text-center font-black text-slate-900 text-sm"
-                                                x-text="quantity"></span>
+                                                class="w-6 h-6 flex items-center justify-center text-slate-700 font-bold text-xs hover:bg-slate-100 cursor-pointer">−</button>
+                                            <span class="w-7 text-center font-mono font-bold text-slate-900 text-xs" x-text="quantity"></span>
                                             <button type="button" @click="quantity = Math.min(10, quantity + 1)"
-                                                class="w-7 h-7 rounded-lg bg-white text-slate-800 flex items-center justify-center font-black text-sm shadow-2xs active:scale-95">+</button>
+                                                class="w-6 h-6 flex items-center justify-center text-slate-700 font-bold text-xs hover:bg-slate-100 cursor-pointer">+</button>
                                         </div>
                                     </div>
                                 </div>
@@ -483,219 +295,83 @@
                         </div>
 
                         {{-- Pickup Contact Details Form --}}
-                        <div class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-sm">
-                            <div class="flex items-center gap-3.5 mb-6 pb-4 border-b border-slate-200/80">
-                                <div
-                                    class="w-11 h-11 bg-brand-50 border border-brand-100 rounded-2xl flex items-center justify-center text-brand-600 flex-shrink-0 shadow-2xs">
-                                    <i data-lucide="user-check" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-black text-slate-900 tracking-tight">Pickup Information</h3>
-                                    <p class="text-xs text-slate-500 font-medium">Details of the person collecting this
-                                        print order</p>
-                                </div>
-                            </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
+                            <h2 class="font-extrabold text-slate-900 text-sm">Pickup Information</h2>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div class="md:col-span-2">
-                                    <label
-                                        class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-2">Full
-                                        Name <span class="text-red-500">*</span></label>
-                                    <div class="relative group">
-                                        <div
-                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors">
-                                            <i data-lucide="user" class="w-5 h-5"></i>
-                                        </div>
-                                        <input type="text" x-model="pickupName" placeholder="Enter your full name"
-                                            class="w-full bg-white border-2 border-slate-200/90 focus:border-brand-500 rounded-2xl py-3.5 pl-12 pr-4 font-bold text-slate-900 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-sm shadow-2xs">
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
+                                    <input type="text" x-model="pickupName" placeholder="Full name for pickup counter"
+                                        class="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none transition-all">
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
+                                        <input type="email" x-model="pickupEmail" placeholder="Email for confirmation"
+                                            class="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none transition-all">
                                     </div>
-                                </div>
 
-                                <div>
-                                    <label
-                                        class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-2">Email
-                                        Address <span class="text-red-500">*</span></label>
-                                    <div class="relative group">
-                                        <div
-                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors">
-                                            <i data-lucide="mail" class="w-5 h-5"></i>
-                                        </div>
-                                        <input type="email" x-model="pickupEmail" placeholder="name@example.com"
-                                            class="w-full bg-white border-2 border-slate-200/90 focus:border-brand-500 rounded-2xl py-3.5 pl-12 pr-4 font-bold text-slate-900 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-sm shadow-2xs">
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label
-                                        class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-2">Phone
-                                        Number <span class="text-red-500">*</span></label>
-                                    <div class="relative group">
-                                        <div
-                                            class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors">
-                                            <i data-lucide="phone" class="w-5 h-5"></i>
-                                        </div>
-                                        <input type="tel" x-model="contactNumber"
-                                            placeholder="Phone number (e.g. 555-123-4567)"
-                                            class="w-full bg-white border-2 border-slate-200/90 focus:border-brand-500 rounded-2xl py-3.5 pl-12 pr-4 font-bold text-slate-900 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-sm shadow-2xs">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Phone Number</label>
+                                        <input type="tel" x-model="contactNumber" placeholder="Phone number"
+                                            class="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none transition-all">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Right Column: Payment Summary Sidebar (Hero Card) --}}
-                    <div class="lg:col-span-5 sticky top-24 space-y-6">
-                        <div
-                            class="glass-card border border-slate-200/90 rounded-3xl p-6 lg:p-7 shadow-2xl shadow-slate-200/50 relative overflow-hidden space-y-6">
+                    {{-- Right Column: Payment Summary --}}
+                    <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
+                        <h2 class="font-extrabold text-slate-900 text-sm border-b border-slate-100 pb-3">Order Summary</h2>
 
-                            {{-- Top Multi-Color Gradient Line --}}
-                            <div class="absolute top-0 left-0 right-0 h-1.5 bg-brand-500"></div>
-
-                            {{-- Summary Header --}}
-                            <div class="flex items-center justify-between pb-4 border-b border-slate-200/80">
-                                <h3 class="text-xl font-black text-slate-900 tracking-tight">Payment Summary</h3>
-                                <span
-                                    class="inline-flex items-center gap-1 text-[11px] font-black  text-gray-700  bg-gray-50 px-2.5 py-1 rounded-full border  border-gray-200/60">
-                                    <i data-lucide="shield-check" class="w-3.5 h-3.5  text-gray-500"></i> Encrypted
-                                </span>
+                        <div class="space-y-2 text-xs font-medium text-slate-600">
+                            <div class="flex justify-between items-center">
+                                <span>Unit Price</span>
+                                <span class="font-mono font-bold text-slate-900" x-text="__price(selectedSize?.price)"></span>
                             </div>
-
-                            {{-- Price Breakdown --}}
-                            <div class="space-y-3 pb-5 border-b border-slate-200/80">
-                                <div class="flex justify-between items-center text-sm">
-                                    <span class="text-slate-500 font-semibold">Unit Price</span>
-                                    <span class="font-extrabold text-slate-800"
-                                        x-text="__price(selectedSize?.price)"></span>
-                                </div>
-                                <div class="flex justify-between items-center text-sm">
-                                    <span class="text-slate-500 font-semibold">Quantity</span>
-                                    <span class="font-extrabold text-slate-800" x-text="quantity"></span>
-                                </div>
-                                <div class="flex justify-between items-center text-sm">
-                                    <span class="text-slate-500 font-semibold">Setup & Printing</span>
-                                    <span
-                                        class="text-xs font-black  text-gray-600  bg-gray-50 px-2.5 py-0.5 rounded-full border  border-gray-200/60">FREE
-                                        Included</span>
-                                </div>
+                            <div class="flex justify-between items-center">
+                                <span>Quantity</span>
+                                <span class="font-mono font-bold text-slate-900" x-text="quantity"></span>
                             </div>
-
-                            {{-- Dark Luxury Grand Total Card --}}
-                            <div
-                                class="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 shadow-xl relative overflow-hidden">
-                                <div
-                                    class="absolute -right-4 -bottom-4 w-20 h-20 bg-brand-500/20 rounded-full blur-xl pointer-events-none">
-                                </div>
-                                <div class="flex justify-between items-baseline mb-1 relative z-10">
-                                    <span class="text-sm font-bold text-slate-300">Total Amount</span>
-                                    <span class="text-3xl font-black text-white tracking-tight"
-                                        x-text="__price(selectedSize?.price * quantity)"></span>
-                                </div>
-                                <p class="text-[11px] font-medium text-slate-400 text-right relative z-10">Includes taxes &
-                                    setup</p>
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-sm font-extrabold text-slate-900">
+                                <span>Total Amount</span>
+                                <span class="font-mono text-base font-extrabold text-slate-900" x-text="__price(selectedSize?.price * quantity)"></span>
                             </div>
+                        </div>
 
-                            {{-- Checkout Action Buttons --}}
-                            <div class="space-y-3 pt-1">
-                                <button type="button" @click="openPaypal()" :disabled="isProcessing || !isValid"
-                                    class="shimmer-cta w-full bg-brand-500 hover:bg-brand-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-black py-4 rounded-2xl shadow-xl shadow-brand-500/25 disabled:shadow-none transition-all active:scale-[0.99] flex items-center justify-center gap-3 text-base cursor-pointer">
-                                    <i data-lucide="credit-card" class="w-5 h-5"></i>
-                                    <span
-                                        x-text="isValid ? 'Pay Now — ' + __price(selectedSize?.price * quantity) : 'Complete Pickup Info'"></span>
-                                    <i data-lucide="arrow-right" class="w-5 h-5" x-show="isValid"></i>
-                                </button>
+                        <div class="space-y-2 pt-2">
+                            <button type="button" @click="processCheckout('cash')" :disabled="isProcessing || !isValid"
+                                :class="!isValid ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' :
+                                    'bg-[#287d3c] hover:bg-[#1e5e2d] text-white shadow-2xs cursor-pointer active:scale-95'"
+                                class="w-full py-3 rounded-xl font-bold text-xs transition-all">
+                                Pay at Store & Pick Up
+                            </button>
 
-                                <button type="button" @click="processCheckout('cash')"
-                                    :disabled="isProcessing || !isValid"
-                                    class="w-full bg-white disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 font-extrabold py-3.5 rounded-2xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-sm cursor-pointer">
-                                    <i data-lucide="banknote" class="w-5 h-5  text-gray-600"></i>
-                                    <span>Pay by Cash at Store Counter</span>
-                                </button>
-
-                                <button @click="currentStep = 2" :disabled="isProcessing"
-                                    class="w-full pt-2 text-center text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
-                                    <i data-lucide="arrow-left" class="w-3.5 h-3.5 inline-block mr-1"></i> Back to
-                                    Dimensions
-                                </button>
-                            </div>
-
-                            {{-- Security & Trust Highlights --}}
-                            <div
-                                class="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-500">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5  text-gray-500 shrink-0"></i>
-                                    <span>Print Guarantee</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="truck" class="w-3.5 h-3.5 text-brand-500 shrink-0"></i>
-                                    <span>Store Pickup</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="shield" class="w-3.5 h-3.5 text-brand-500 shrink-0"></i>
-                                    <span>SSL Security</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="headphones" class="w-3.5 h-3.5 text-purple-500 shrink-0"></i>
-                                    <span>Store Support</span>
-                                </div>
-                            </div>
-
+                            <button type="button" @click="openPaypal()" :disabled="isProcessing || !isValid"
+                                class="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white font-bold py-3 rounded-xl text-xs transition-all cursor-pointer">
+                                Pay Online via PayPal
+                            </button>
                         </div>
                     </div>
+
                 </div>
             </div>
 
         </div>
 
-        {{-- PayPal Modal Teleport --}}
-        <template x-teleport="body">
-            <div x-cloak>
-                <div x-show="showPaypal" class="paypal-overlay" @click.self="showPaypal = false">
-                    <div class="paypal-sheet" @click.stop>
-                        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-                            <div class="flex items-center gap-2.5">
-                                <div
-                                    class="w-10 h-10 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600">
-                                    <i data-lucide="credit-card" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-black text-slate-900">Pay with PayPal</h3>
-                                    <p class="text-xs text-slate-400 font-semibold">Instant & secure 256-Bit transaction
-                                    </p>
-                                </div>
-                            </div>
-                            <button @click="showPaypal = false"
-                                class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors cursor-pointer">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-
-                        <div
-                            class="bg-gradient-to-r from-slate-900 to-brand-950 text-white rounded-2xl p-4 mb-5 flex items-center justify-between shadow-lg">
-                            <div>
-                                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Amount to
-                                    Pay</p>
-                                <p class="text-2xl font-black text-white"
-                                    x-text="__price(selectedSize?.price * quantity)"></p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Pickup For
-                                </p>
-                                <p class="text-sm font-bold text-slate-200 truncate max-w-[140px]"
-                                    x-text="pickupName || 'Guest'"></p>
-                            </div>
-                        </div>
-
-                        <div id="paypal-button-container" class="mb-2"></div>
-
-                        <p
-                            class="text-center text-xs text-slate-400 font-medium mt-4 flex items-center justify-center gap-1.5">
-                            <i data-lucide="lock" class="w-3.5 h-3.5  text-gray-500"></i>
-                            Payments are processed securely by PayPal
-                        </p>
-                    </div>
+        {{-- PayPal Modal Sheet --}}
+        <div x-show="showPaypal" class="paypal-overlay" style="display: none;" x-cloak>
+            <div class="paypal-sheet text-center space-y-4">
+                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-900">Complete Online Payment</h3>
+                    <button @click="showPaypal = false" class="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
                 </div>
+                <div id="paypal-button-container" class="pt-2"></div>
             </div>
-        </template>
+        </div>
+
     </div>
 @endsection
 
@@ -726,24 +402,17 @@
                 paypalRendered: false,
 
                 get isValid() {
-                    return this.uploadId && this.selectedSize && this.pickupName && this
-                        .pickupEmail && this.contactNumber;
+                    return this.uploadId && this.selectedSize && this.pickupName && this.pickupEmail && this.contactNumber;
                 },
 
                 init() {
                     this.loadState();
-
                     this.$nextTick(() => {
                         if (window.lucide) lucide.createIcons();
                     });
 
-                    this.$watch('currentStep', (val) => {
+                    this.$watch('currentStep', () => {
                         this.saveState();
-                        if (val === 3) {
-                            this.$nextTick(() => {
-                                if (typeof lucide !== 'undefined') lucide.createIcons();
-                            });
-                        }
                         this.$nextTick(() => {
                             if (window.lucide) lucide.createIcons();
                         });
@@ -761,13 +430,7 @@
                     this.$watch('pickupName', () => this.saveState());
                     this.$watch('pickupEmail', () => this.saveState());
                     this.$watch('contactNumber', () => this.saveState());
-
-                    this.$watch('previewUrl', () => {
-                        this.saveState();
-                        this.$nextTick(() => {
-                            if (window.lucide) lucide.createIcons();
-                        });
-                    });
+                    this.$watch('previewUrl', () => this.saveState());
                 },
 
                 saveState() {
@@ -799,11 +462,9 @@
                             this.currentStep = state.currentStep || 1;
 
                             if (state.selectedParentId) {
-                                this.selectedParent = this.productTypes.find(p => p.id === state
-                                    .selectedParentId);
+                                this.selectedParent = this.productTypes.find(p => p.id === state.selectedParentId);
                                 if (this.selectedParent && state.selectedSizeId) {
-                                    this.selectedSize = this.selectedParent.subtypes.find(s => s.id ===
-                                        state.selectedSizeId);
+                                    this.selectedSize = this.selectedParent.subtypes.find(s => s.id === state.selectedSizeId);
                                 }
                             }
                         }
@@ -849,8 +510,8 @@
                     xhr.addEventListener('load', () => {
                         if (xhr.status === 200) {
                             const data = JSON.parse(xhr.responseText);
-                            this.uploadId = data.upload.id;
-                            this.previewUrl = data.upload.url;
+                            this.uploadId = data.upload_id || (data.upload ? data.upload.id : data.id);
+                            this.previewUrl = data.url || (data.upload ? data.upload.url : '');
                             this.isUploading = false;
                         } else {
                             alert('Upload failed');
@@ -858,7 +519,7 @@
                         }
                     });
 
-                    xhr.open('POST', '{{ route('qrinto.upload') }}');
+                    xhr.open('POST', '{{ route('flow.upload') }}');
                     xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
                     xhr.send(formData);
                 },
@@ -866,7 +527,7 @@
                 removeFile() {
                     this.uploadId = null;
                     this.previewUrl = '';
-                    this.$refs.fileInput.value = '';
+                    if (this.$refs.fileInput) this.$refs.fileInput.value = '';
                 },
 
                 async processCheckout(mode) {
@@ -878,7 +539,7 @@
 
                     try {
                         const response = await fetch(
-                            '{{ route('flow-pc.qrinto.checkout.cash') }}', {
+                            '{{ route('flow.qrinto.checkout.cash') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -899,12 +560,9 @@
                         if (response.ok && data.success) {
                             this.paymentSuccess = true;
                             this.clearState();
-                            this.$nextTick(() => {
-                                if (window.lucide) lucide.createIcons();
-                            });
                             setTimeout(() => {
                                 window.location.href = data.redirect_url;
-                            }, 1500);
+                            }, 1200);
                         } else {
                             alert(data.error || data.message || 'Checkout failed');
                             this.isProcessing = false;
@@ -925,9 +583,6 @@
                             this.initPaypal();
                             this.paypalRendered = true;
                         }
-                        setTimeout(() => {
-                            if (window.lucide) lucide.createIcons();
-                        }, 200);
                     });
                 },
 
@@ -937,7 +592,7 @@
                     paypal.Buttons({
                         createOrder: async (data, actions) => {
                             const response = await fetch(
-                                '{{ route('flow-pc.qrinto.paypal.create') }}', {
+                                '{{ route('flow.qrinto.paypal.create') }}', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
@@ -959,7 +614,7 @@
                             this.paymentSuccess = false;
 
                             const response = await fetch(
-                                '{{ route('flow-pc.qrinto.paypal.capture') }}', {
+                                '{{ route('flow.qrinto.paypal.capture') }}', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
@@ -981,15 +636,11 @@
                             if (response.ok && result.success) {
                                 this.paymentSuccess = true;
                                 this.clearState();
-                                this.$nextTick(() => {
-                                    if (window.lucide) lucide.createIcons();
-                                });
                                 setTimeout(() => {
                                     window.location.href = result.redirect_url;
-                                }, 1500);
+                                }, 1200);
                             } else {
-                                alert(result.error || result.message ||
-                                    'Payment capture failed');
+                                alert(result.error || result.message || 'Payment capture failed');
                                 this.isProcessing = false;
                             }
                         }

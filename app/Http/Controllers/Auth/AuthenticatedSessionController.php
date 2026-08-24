@@ -30,9 +30,17 @@ class AuthenticatedSessionController extends Controller
 
         $cartService->mergeGuestCart($oldSessionId);
 
-        $request->session()->regenerate();
+        $user = Auth::user();
+        session()->forget('url.intended');
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if ($user->role === 'admin') {
+            return redirect('/admin/dashboard');
+        } elseif (in_array($user->role, ['store_admin', 'storeadmin', 'staff'])) {
+            // Store admins and staff land on the standalone store panel.
+            return redirect()->route('storepanel.orders');
+        }
+
+        return redirect()->route('customer.dashboard');
     }
 
     /**

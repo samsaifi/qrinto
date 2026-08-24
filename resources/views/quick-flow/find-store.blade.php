@@ -69,7 +69,8 @@
                         @csrf
                         <input type="hidden" name="store_id" :value="store.id">
                         <button type="submit"
-                            class="w-full text-left bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm hover:border-mobile-500 hover:shadow-md transition-all group flex items-start gap-4 active:scale-[0.98]">
+                            :class="store.id === activeStoreId ? 'border-mobile-500 ring-1 ring-mobile-500/30' : 'border-slate-100 hover:border-mobile-500'"
+                            class="w-full text-left bg-white border-2 p-4 rounded-2xl shadow-sm hover:shadow-md transition-all group flex items-start gap-4 active:scale-[0.98]">
                             <div
                                 class="w-10 h-10 bg-mobile-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-mobile-100 transition-colors">
                                 <template x-if="store.logo">
@@ -82,7 +83,13 @@
                                 </template>
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-bold text-slate-900 text-base mb-0.5" x-text="store.store_name"></h4>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <h4 class="font-bold text-slate-900 text-base" x-text="store.store_name"></h4>
+                                    <span x-show="store.id === activeStoreId"
+                                        class="shrink-0 text-[9px] font-black text-mobile-700 bg-mobile-50 border border-mobile-200 rounded-full px-2 py-0.5 uppercase tracking-wide">
+                                        Your store
+                                    </span>
+                                </div>
                                 <p class="text-slate-500 text-xs mb-1 line-clamp-1 flex items-center gap-1">
                                     <i data-lucide="navigation" class="w-3 h-3"></i> <span
                                         x-text="`${store.city || ''}, ${store.state || ''} ${store.zip_code || ''}`"></span>
@@ -231,7 +238,8 @@
                         @csrf
                         <input type="hidden" name="store_id" :value="store.id">
                         <button type="submit"
-                            class="w-full text-left bg-white border-2 border-slate-100 p-4 rounded-2xl shadow-sm hover:border-mobile-500 hover:shadow-md transition-all group flex items-start gap-4 active:scale-[0.98]">
+                            :class="store.id === activeStoreId ? 'border-mobile-500 ring-1 ring-mobile-500/30' : 'border-slate-100 hover:border-mobile-500'"
+                            class="w-full text-left bg-white border-2 p-4 rounded-2xl shadow-sm hover:shadow-md transition-all group flex items-start gap-4 active:scale-[0.98]">
                             <div
                                 class="w-10 h-10 bg-mobile-50 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden group-hover:bg-mobile-100 transition-colors">
 
@@ -246,7 +254,13 @@
 
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-bold text-slate-900 text-base mb-0.5" x-text="store.store_name"></h4>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <h4 class="font-bold text-slate-900 text-base" x-text="store.store_name"></h4>
+                                    <span x-show="store.id === activeStoreId"
+                                        class="shrink-0 text-[9px] font-black text-mobile-700 bg-mobile-50 border border-mobile-200 rounded-full px-2 py-0.5 uppercase tracking-wide">
+                                        Your store
+                                    </span>
+                                </div>
                                 <p class="text-slate-500 text-xs mb-1 line-clamp-1 flex items-center gap-1">
                                     <i data-lucide="navigation" class="w-3 h-3"></i> <span
                                         x-text="`${store.city || ''}, ${store.state || ''} ${store.zip_code || ''}`"></span>
@@ -283,6 +297,7 @@
             Alpine.data('storeAutocomplete', () => ({
                 query: '<?php echo request('q'); ?>',
                 stores: <?php echo json_encode(isset($stores) ? $stores : []); ?>,
+                activeStoreId: {{ session('active_store_id') ?? 'null' }},
                 isLoading: false,
                 hasSearched: <?php echo isset($query) && $query !== '' ? 'true' : 'false'; ?>,
                 nearbyStores: [],

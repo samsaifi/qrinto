@@ -101,7 +101,7 @@ class CheckoutApiController extends Controller
                 'order_number' => $order->order_number,
                 'total'        => (float) $order->total,
                 'formatted_total' => CurrencyService::format($order->total),
-                'confirmation_url' => route('flow-pc.confirmation', $order->id),
+                'confirmation_url' => route('flow.confirmation', $order->id),
             ], 201);
 
         } catch (\Exception $e) {

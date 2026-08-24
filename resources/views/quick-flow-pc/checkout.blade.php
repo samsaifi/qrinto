@@ -1,28 +1,51 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Secure Checkout | Qrinto Custom Print Studio')
-@section('header_title', 'Review & Pay')
+@section('title', 'Your order | Qrinto Custom Print Studio')
+@section('header_title', 'Your order')
 @section('meta_robots', 'noindex, nofollow')
+
+@php
+    $routePrefix = $routePrefix ?? 'flow.';
+    $flowData = session('quick_flow_data', []);
+    
+    $titleLabel = $flowData['size_title'] ?? 'Folded';
+    $sizeWidth = isset($flowData['size_width']) ? $flowData['size_width'] + 0 : 5;
+    $sizeHeight = isset($flowData['size_height']) ? $flowData['size_height'] + 0 : 7;
+    $sizeLabel = "{$sizeWidth} × {$sizeHeight}";
+    
+    $templateName = $flowData['template_name'] ?? ($product->name ?? 'Happy Anniversary');
+
+    $activeStoreId = session('active_store_id');
+    $activeStore = $activeStoreId ? \App\Models\Store::find($activeStoreId) : ($product->store ?? null);
+    $storeName = $activeStore->name ?? 'Billmeijer Camera';
+    $storeCity = $activeStore->city ?? 'Fenton';
+    $storeState = $activeStore->state ?? 'Michigan';
+
+    // First image thumbnail & edited pages collection
+    $editedImages = [];
+    if (!empty($uploads)) {
+        foreach ($uploads as $u) {
+            if (!empty($u->url)) {
+                $editedImages[] = $u->url;
+            }
+        }
+    }
+    if (empty($editedImages) && isset($upload) && !empty($upload->url)) {
+        $editedImages[] = $upload->url;
+    }
+    
+    $firstImg = $editedImages[0] ?? null;
+    if (!$firstImg && isset($product)) {
+        $firstImg = $product->frame_image_url ?? ($product->sample_image_url ?? ($product->image_url ?? null));
+    }
+@endphp
 
 @push('styles')
     <style>
-        .checkout-grid {
-            display: grid;
-            grid-template-columns: 1fr 420px;
-            gap: 32px;
-            align-items: start;
-        }
-
-        @media (max-width: 1024px) {
-            .checkout-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .paypal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(17, 36, 25, 0.6);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 80;
@@ -40,25 +63,12 @@
             max-height: 85vh;
             overflow-y: auto;
             box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.25);
-            animation: sheetIn 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-        }
-
-        @keyframes sheetIn {
-            from {
-                transform: translateY(24px) scale(0.97);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0) scale(1);
-                opacity: 1;
-            }
         }
 
         .processing-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(255, 255, 255, 0.97);
+            background: rgba(250, 252, 249, 0.97);
             z-index: 100;
             display: flex;
             flex-direction: column;
@@ -67,11 +77,11 @@
             gap: 1rem;
         }
 
-        .processing-overlay .spinner {
+        .spinner {
             width: 48px;
             height: 48px;
             border: 4px solid #e2e8f0;
-            border-top: 4px solid #6366f1;
+            border-top: 4px solid #287d3c;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -81,636 +91,351 @@
                 transform: rotate(360deg);
             }
         }
-
-        .success-check {
-            width: 64px;
-            height: 64px;
-            background: #0ea5e9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes popIn {
-            0% {
-                transform: scale(0);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        .checkout-input {
-            width: 100%;
-            background: #f8fafc;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 0.875rem;
-            padding: 14px 16px 14px 48px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #334155;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        .checkout-input:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-            background: #fff;
-        }
-
-        .checkout-input::placeholder {
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .preview-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .preview-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1);
-        }
-
-        .hero-checkout-gradient {
-            background: #FEF5F1;
-        }
-
-        .hero-checkout-pattern {
-            background-image: radial-gradient(circle at 1px 1px, rgba(214, 95, 50, 0.04) 1px, transparent 0);
-            background-size: 32px 32px;
-        }
-
-        .hero-blob-1 {
-            position: absolute;
-            top: -60px;
-            right: 15%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(40px);
-            pointer-events: none;
-        }
-
-        .hero-blob-2 {
-            position: absolute;
-            bottom: -40px;
-            right: 5%;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(249, 168, 212, 0.2) 0%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(30px);
-            pointer-events: none;
-        }
-
-        .hero-blob-3 {
-            position: absolute;
-            top: 20%;
-            right: 35%;
-            width: 80px;
-            height: 80px;
-            background: rgba(236, 72, 153, 0.15);
-            border-radius: 50%;
-            filter: blur(10px);
-            pointer-events: none;
-        }
-
-        .hero-dots {
-            position: absolute;
-            top: 10%;
-            right: 3%;
-            width: 80px;
-            height: 80px;
-            background-image: radial-gradient(circle, rgba(236, 72, 153, 0.2) 2px, transparent 2px);
-            background-size: 10px 10px;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .fade-up {
-            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(12px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
     </style>
 @endpush
 
 @section('content')
-    <div x-data="checkoutFlow()" class="pb-32">
+    <div x-data="checkoutFlow()" class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+        <div class="max-w-[1100px] mx-auto">
 
-        {{-- ── Hero Header ── --}}
-        <section
-            class="hero-checkout-gradient hero-checkout-pattern -mx-10 -mt-4 px-10 pt-10 pb-12 mb-10 relative overflow-hidden">
-            <div class="hero-blob-1"></div>
-            <div class="hero-blob-2"></div>
-            <div class="hero-blob-3"></div>
-            <div class="hero-dots"></div>
-
-            <div class="max-w-[1400px] mx-auto relative z-10">
-                <nav class="flex flex-wrap items-center gap-2 text-xs font-semibold mb-6 fade-up">
-                    <a href="{{ route('flow-pc.index') }}"
-                        class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-1">
-                        <i data-lucide="home" class="w-3.5 h-3.5 text-slate-400"></i>
-                        <span>Home</span>
-                    </a>
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                    <a href="{{ route('flow-pc.cart.index') }}"
-                        class="text-slate-500 hover:text-brand-600 transition-colors">Cart</a>
-                    <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                    <span class="text-slate-900 font-extrabold">Checkout</span>
-                </nav>
-
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-5 fade-up" style="animation-delay: 0.05s">
-                        <a href="javascript:history.back()"
-                            class="w-12 h-12 bg-white/90 shadow-sm border border-slate-200/80 rounded-2xl flex items-center justify-center hover:bg-white hover:border-brand-200 transition-all text-slate-500 hover:text-brand-600 shrink-0">
-                            <i data-lucide="arrow-left" class="w-5 h-5"></i>
-                        </a>
-                        <div>
-                            <div
-                                class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-xs font-semibold px-3.5 py-1 rounded-full mb-2 shadow-sm backdrop-blur-sm">
-                                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                                Final Step &bull; Secure Checkout
-                            </div>
-                            <h1 class="text-3xl xl:text-4xl font-extrabold text-slate-900 tracking-tight">Review & <span
-                                    class="text-slate-950 italic" style="font-family: 'Playfair Display', serif;">Pay</span>
-                            </h1>
-                            <p class="text-sm text-slate-500 mt-1">Review your order details and select your preferred
-                                payment method.</p>
-                        </div>
-                    </div>
-
-                    <div class="hidden lg:flex items-center gap-3 fade-up" style="animation-delay: 0.1s">
-                        <div
-                            class="flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-2xl px-5 py-3 shadow-sm">
-                            <div class="w-3 h-3 rounded-full  bg-gray-500 animate-pulse"></div>
-                            <span class="text-xs font-bold text-slate-700">SSL Encrypted Checkout</span>
-                        </div>
-                    </div>
-                </div>
+            {{-- Back Navigation --}}
+            <div class="mb-6">
+                <a href="javascript:history.back()"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
+                    <span>← Keep editing</span>
+                </a>
             </div>
-        </section>
 
-        <div class="max-w-[1400px] mx-auto">
+            {{-- Title Header --}}
+            <div class="mb-6">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-[#112419] tracking-tight">
+                    Your order
+                </h1>
+            </div>
 
-            {{-- ── Two-Column Layout ── --}}
-            <div class="checkout-grid">
+            {{-- Two Column Grid --}}
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                {{-- ═══ LEFT COLUMN ═══ --}}
-                <div class="space-y-6">
+                {{-- Left Main Card --}}
+                <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5">
 
-                    {{-- Design Preview --}}
-                    <div class="fade-up" style="animation-delay: 0.05s">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
-                            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Design Preview</h2>
-                        </div>
-
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            @php
-                                $types = [
-                                    'frame_image' => 'Page 1',
-                                    'sample_image' => 'Page 2',
-                                    'background_image' => 'Page 3',
-                                    'overlay_image' => 'Page 4',
-                                ];
-                            @endphp
-
-                            @foreach ($types as $key => $label)
-                                @php
-                                    $uploadId = $uploadIds[$key] ?? null;
-                                    $currentUpload =
-                                        $uploadId && isset($uploads[$uploadId]) ? $uploads[$uploadId] : null;
-                                    $defaultUrl = $product->{$key . '_url'} ?? null;
-                                    $displayUrl = $currentUpload ? $currentUpload->url : $defaultUrl;
-                                @endphp
-
-                                @if ($displayUrl)
-                                    <div class="preview-card bg-white border border-slate-200 rounded-2xl overflow-hidden">
-                                        <div class="relative bg-slate-50 overflow-hidden aspect-[4/5]">
-                                            <img src="{{ $displayUrl }}" class="w-full h-full object-cover"
-                                                alt="{{ $label }}">
-                                            @if ($currentUpload)
-                                                <div
-                                                    class="absolute top-2.5 right-2.5 w-6 h-6  bg-gray-500 rounded-full flex items-center justify-center shadow-sm">
-                                                    <i data-lucide="check" class="w-3 h-3 text-white"></i>
-                                                </div>
-                                            @endif
+                    {{-- Item Summary Row --}}
+                    <div class="flex items-center justify-between gap-4 pb-5 border-b border-slate-100">
+                        <div class="flex items-center gap-3.5">
+                            {{-- Image Thumbnail(s) --}}
+                            <div class="flex items-center gap-1.5">
+                                @if (!empty($editedImages))
+                                    @foreach (array_slice($editedImages, 0, 2) as $imgUrl)
+                                        <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+                                            <img src="{{ $imgUrl }}" alt="{{ $templateName }}" class="w-full h-full object-cover">
                                         </div>
-                                        <div class="px-3.5 py-3 flex items-center justify-between">
-                                            <span
-                                                class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">{{ $label }}</span>
-                                            @if ($currentUpload)
-                                                <span
-                                                    class="inline-flex items-center gap-1 text-[10px] font-bold  text-gray-600  bg-gray-50 px-2 py-0.5 rounded-full">
-                                                    <i data-lucide="pen-tool" class="w-2.5 h-2.5"></i> Custom
-                                                </span>
-                                            @else
-                                                <span class="text-[10px] font-bold text-slate-400">Default</span>
-                                            @endif
-                                        </div>
+                                    @endforeach
+                                @elseif ($firstImg)
+                                    <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+                                        <img src="{{ $firstImg }}" alt="{{ $templateName }}" class="w-full h-full object-cover">
                                     </div>
+                                @else
+                                    <div class="w-14 h-18 bg-pink-300 rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0">Card</div>
                                 @endif
-                            @endforeach
-                        </div>
-                    </div>
-
-                    {{-- Product Details --}}
-                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden fade-up"
-                        style="animation-delay: 0.1s">
-                        <div class="p-6">
-                            <div class="flex items-start justify-between mb-5">
-                                <div>
-                                    <p class="text-[10px] font-bold text-brand-600 uppercase tracking-widest mb-1">
-                                        {{ session('quick_flow_data.type_name', 'Custom Product') }}</p>
-                                    <h3 class="text-xl font-extrabold text-slate-900 leading-tight">{{ $product->name }}
-                                    </h3>
-                                </div>
-                                <span
-                                    class="inline-flex items-center bg-brand-50 text-brand-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-brand-100">
-                                    <span x-text="quantity"></span>&nbsp;Units
-                                </span>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
-                                    <div
-                                        class="w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-slate-200">
-                                        <i data-lucide="maximize" class="w-4 h-4 text-slate-400"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Size</p>
-                                        <p class="text-sm font-bold text-slate-700">
-                                            {{ session('quick_flow_data.size_name', 'Standard') }}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
-                                    <div
-                                        class="w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-slate-200">
-                                        <i data-lucide="ruler" class="w-4 h-4 text-slate-400"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dimensions
-                                        </p>
-                                        <p class="text-sm font-bold text-slate-700">
-                                            {{ session('quick_flow_data.size_width', '0') }}&times;{{ session('quick_flow_data.size_height', '0') }}{{ session('quick_flow_data.size_unit', '"') }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Quantity --}}
-                        <div class="border-t border-slate-100 px-6 py-4 flex items-center justify-between bg-slate-50/50">
+                            {{-- Product Title & Specs --}}
                             <div>
-                                <p class="text-sm font-bold text-slate-700">Quantity</p>
-                                <p class="text-xs text-slate-400 font-medium">Adjust number of prints</p>
+                                <h3 class="font-extrabold text-slate-900 text-sm">
+                                    {{ $templateName }}
+                                </h3>
+                                <p class="text-[11px] text-slate-500 font-normal mt-0.5">
+                                    {{ $titleLabel }} card · {{ $sizeLabel }} in · envelope included
+                                </p>
                             </div>
-                            <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1">
+                        </div>
+
+                        {{-- Quantity Stepper & Price --}}
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden bg-white">
                                 <button type="button" @click="quantity > 1 ? quantity-- : null"
-                                    class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-brand-50 text-slate-500 hover:text-brand-600 transition-all active:scale-90 flex items-center justify-center">
-                                    <i data-lucide="minus" class="w-4 h-4"></i>
+                                    class="w-7 h-7 flex items-center justify-center text-slate-600 font-bold hover:bg-slate-50 cursor-pointer text-xs">
+                                    -
                                 </button>
-                                <div class="w-10 text-center font-extrabold text-slate-900 text-lg" x-text="quantity"></div>
+                                <span class="w-7 text-center text-xs font-bold text-slate-900" x-text="quantity"></span>
                                 <button type="button" @click="quantity++"
-                                    class="w-9 h-9 rounded-lg bg-slate-50 hover:bg-brand-50 text-slate-500 hover:text-brand-600 transition-all active:scale-90 flex items-center justify-center">
-                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                    class="w-7 h-7 flex items-center justify-center text-slate-600 font-bold hover:bg-slate-50 cursor-pointer text-xs">
+                                    +
                                 </button>
                             </div>
+
+                            <span class="text-sm font-extrabold text-slate-900" x-text="__price(unitPrice * quantity)">
+                                {{ \App\Services\CurrencyService::format($unitPrice * $quantity) }}
+                            </span>
                         </div>
                     </div>
 
-                    {{-- Pickup Information --}}
-                    <div class="fade-up" style="animation-delay: 0.15s">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
-                            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pickup Information</h2>
-                        </div>
-
-                        <div class="space-y-3">
-                            <div class="relative">
-                                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                    <i data-lucide="user" class="w-4.5 h-4.5"></i>
-                                </div>
-                                <input type="text" x-model="pickupName" class="checkout-input"
-                                    placeholder="Full name for pickup">
-                            </div>
-                            <div class="relative">
-                                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                    <i data-lucide="mail" class="w-4.5 h-4.5"></i>
-                                </div>
-                                <input type="email" x-model="pickupEmail" class="checkout-input"
-                                    placeholder="Email address (for order updates)">
-                            </div>
-                            <div class="relative">
-                                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                    <i data-lucide="phone" class="w-4.5 h-4.5"></i>
-                                </div>
-                                <input type="tel" x-model="contactNumber" class="checkout-input"
-                                    placeholder="Contact number">
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Security Notice --}}
-                    <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 fade-up"
-                        style="animation-delay: 0.2s">
-                        <div
-                            class="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-200 flex-shrink-0">
-                            <i data-lucide="shield-check" class="w-5 h-5 text-brand-500"></i>
+                    {{-- Store Pickup Banner (Light Green Box) --}}
+                    <div class="bg-[#f2f7f2] rounded-2xl p-3.5 border border-emerald-100/80 flex items-start gap-2.5">
+                        <div class="w-4 h-4 text-emerald-800 mt-0.5 shrink-0">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
                         </div>
                         <div>
-                            <p class="text-sm font-semibold text-slate-700">Secure Payment</p>
-                            <p class="text-xs text-slate-400 mt-0.5">Pay safely with PayPal, cards, or cash at counter.</p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ═══ RIGHT COLUMN: Order Summary ═══ --}}
-                <div class="lg:sticky lg:top-20 space-y-5">
-
-                    {{-- Order Summary Card --}}
-                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden fade-up"
-                        style="animation-delay: 0.1s">
-                        <div class="p-5 border-b border-slate-100">
-                            <div class="flex items-center gap-2">
-                                <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
-                                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Summary</h2>
-                            </div>
-                        </div>
-
-                        {{-- Coupon --}}
-                        <div class="p-5 border-b border-slate-100">
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-xs font-bold text-slate-500">Promo Code</span>
-                                <template x-if="appliedCoupon">
-                                    <button @click="removeCoupon()"
-                                        class="text-[11px] font-bold text-red-500 hover:text-red-600 transition-colors">Remove</button>
-                                </template>
-                            </div>
-                            <div class="flex gap-2">
-                                <div class="relative flex-1">
-                                    <i data-lucide="ticket"
-                                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                                    <input type="text" x-model="couponInput" :disabled="appliedCoupon"
-                                        placeholder="Enter code"
-                                        class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-3 text-sm font-bold uppercase transition-all outline-none focus:border-brand-500 focus:ring-0"
-                                        @keydown.enter.prevent="applyCoupon()">
-                                </div>
-                                <button type="button" @click="applyCoupon()" :disabled="appliedCoupon || !couponInput"
-                                    class="px-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-brand-600 disabled:opacity-40 transition-all active:scale-95">
-                                    Apply
-                                </button>
-                            </div>
-                            <p x-show="couponMessage" x-text="couponMessage"
-                                :class="appliedCoupon ? ' text-gray-600' : 'text-red-500'"
-                                class="text-[11px] font-bold mt-2" style="display:none"></p>
-                        </div>
-
-                        {{-- Price Breakdown --}}
-                        <div class="p-5 space-y-3">
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-slate-500 font-medium">Subtotal</span>
-                                <span class="text-slate-700 font-semibold" x-text="__price(unitPrice * quantity)"></span>
-                            </div>
-
-                            <template x-if="discountAmount > 0">
-                                <div class="flex justify-between items-center text-sm">
-                                    <span class=" text-gray-600 font-medium"
-                                        x-text="'Discount (' + appliedCoupon + ')'"></span>
-                                    <span class=" text-gray-600 font-semibold"
-                                        x-text="'-' + __price(discountAmount)"></span>
-                                </div>
-                            </template>
-
-                            <div class="border-t border-slate-100 pt-4 flex justify-between items-center">
-                                <span class="text-lg font-extrabold text-slate-900">Total</span>
-                                <span class="text-2xl font-extrabold text-brand-600"
-                                    x-text="__price(calculateTotal())"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Terms & Payment Buttons --}}
-                    <div class="space-y-4 fade-up" style="animation-delay: 0.15s">
-                        <label
-                            class="flex items-start gap-3 cursor-pointer select-none p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-brand-200 transition-colors">
-                            <input type="checkbox" x-model="acceptedTerms" id="terms-checkbox"
-                                class="w-5 h-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 mt-0.5 cursor-pointer flex-shrink-0">
-                            <span class="text-xs font-medium text-slate-600 leading-relaxed">
-                                I have read and accept the <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}"
-                                    target="_blank"
-                                    class="text-brand-600 font-semibold underline underline-offset-2">Terms and
-                                    Conditions</a>
-                            </span>
-                        </label>
-
-                        <button type="button" @click="openPaypal()"
-                            :disabled="!pickupName || !contactNumber || !pickupEmail || !acceptedTerms"
-                            class="w-full bg-brand-600 disabled:bg-slate-200 disabled:text-slate-400 hover:bg-brand-700 text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-brand-600/20 disabled:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-[15px]">
-                            <i data-lucide="credit-card" class="w-5 h-5"></i>
-                            <span
-                                x-text="pickupName && contactNumber && pickupEmail && acceptedTerms ? 'Pay Now — ' + __price(calculateTotal()) : (acceptedTerms ? 'Complete All Fields' : 'Accept Terms to Continue')"></span>
-                        </button>
-
-                        <button type="button" @click="payByCash()"
-                            :disabled="!pickupName || !contactNumber || !pickupEmail || !acceptedTerms"
-                            class="w-full bg-white disabled:bg-slate-50 disabled:text-slate-300 border border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-4 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-[15px]">
-                            <i data-lucide="banknote" class="w-5 h-5"></i>
-                            <span>Pay by Cash at Counter</span>
-                        </button>
-                    </div>
-
-                    {{-- Trust Badges --}}
-                    <div class="grid grid-cols-3 gap-3 fade-up" style="animation-delay: 0.2s">
-                        <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <i data-lucide="lock" class="w-4 h-4 text-slate-400 mx-auto mb-1.5"></i>
-                            <p class="text-[10px] font-bold text-slate-500">Secure</p>
-                        </div>
-                        <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <i data-lucide="shield-check" class="w-4 h-4 text-slate-400 mx-auto mb-1.5"></i>
-                            <p class="text-[10px] font-bold text-slate-500">Protected</p>
-                        </div>
-                        <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-400 mx-auto mb-1.5"></i>
-                            <p class="text-[10px] font-bold text-slate-500">Refundable</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ═══ PayPal Modal ═══ --}}
-            <template x-teleport="body">
-                <div x-cloak>
-                    <div x-show="showPaypal" class="paypal-overlay" @click.self="showPaypal = false">
-                        <div class="paypal-sheet" @click.stop>
-                            <div class="flex items-center justify-between mb-5">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
-                                        <i data-lucide="credit-card" class="w-5 h-5 text-brand-600"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-extrabold text-slate-900">Pay with PayPal</h3>
-                                        <p class="text-xs text-slate-400 font-medium">Secure checkout</p>
-                                    </div>
-                                </div>
-                                <button @click="showPaypal = false"
-                                    class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
-                                    <i data-lucide="x" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-
-                            <div
-                                class="bg-slate-50 rounded-xl p-4 mb-5 flex items-center justify-between border border-slate-100">
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</p>
-                                    <p class="text-2xl font-extrabold text-slate-900" x-text="__price(calculateTotal())">
-                                    </p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pickup</p>
-                                    <p class="text-sm font-bold text-slate-700" x-text="pickupName"></p>
-                                </div>
-                            </div>
-
-                            <div id="paypal-button-container" class="mb-3"></div>
-
-                            <p
-                                class="text-center text-xs text-slate-400 font-medium mt-3 flex items-center justify-center gap-1.5">
-                                <i data-lucide="lock" class="w-3 h-3"></i>
-                                Payments processed securely by PayPal
+                            <h4 class="font-bold text-[#112419] text-xs">
+                                Pickup at {{ $storeName }}
+                            </h4>
+                            <p class="text-[11px] text-slate-500 font-normal mt-0.5">
+                                {{ $storeCity }}, {{ $storeState }} · usually ready the same day
                             </p>
                         </div>
                     </div>
 
-                    <div x-show="isProcessing" class="processing-overlay" x-cloak>
-                        <template x-if="!paymentSuccess">
-                            <div class="text-center">
-                                <div class="spinner mx-auto mb-4"></div>
-                                <h3 class="text-xl font-extrabold text-slate-900">Processing Payment</h3>
-                                <p class="text-slate-500 font-medium text-sm mt-1">Please wait while we confirm your
-                                    order...</p>
+                    {{-- Form: Who is picking it up --}}
+                    <div class="space-y-3.5 pt-1">
+                        <h3 class="font-bold text-[#112419] text-xs">
+                            Who is picking it up
+                        </h3>
+
+                        {{-- Name & Phone --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Name</label>
+                                <input type="text" x-model="pickupName"
+                                    class="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all">
                             </div>
-                        </template>
-                        <template x-if="paymentSuccess">
-                            <div class="text-center">
-                                <div class="success-check mx-auto mb-4">
-                                    <i data-lucide="check" class="w-8 h-8 text-white"></i>
-                                </div>
-                                <h3 class="text-xl font-extrabold text-slate-900">Payment Successful!</h3>
-                                <p class="text-slate-500 font-medium text-sm mt-1">Redirecting to your order...</p>
+
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-500 mb-1">Phone</label>
+                                <input type="tel" x-model="contactNumber"
+                                    class="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all">
                             </div>
-                        </template>
+                        </div>
+
+                        {{-- Email --}}
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Email, for the ready-for-pickup message</label>
+                            <input type="email" x-model="pickupEmail"
+                                class="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all">
+                        </div>
+
+                        {{-- Note to store --}}
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Note to the store, optional</label>
+                            <textarea x-model="storeNote" rows="2.5"
+                                class="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all resize-none"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                {{-- Right Column: Summary Card --}}
+                <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5">
+                    <h2 class="font-extrabold text-[#112419] text-sm">
+                        Total
+                    </h2>
+
+                    {{-- Lines --}}
+                    <div class="space-y-2.5 text-[11px] text-slate-600 font-medium">
+                        <div class="flex justify-between items-center">
+                            <span><span x-text="quantity"></span> × {{ $titleLabel }} card, {{ $sizeLabel }}</span>
+                            <span class="font-bold text-slate-900" x-text="__price(unitPrice * quantity)"></span>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <span>Pickup</span>
+                            <span class="font-bold text-slate-900">Free</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3 flex justify-between items-baseline">
+                        <span class="text-sm font-extrabold text-[#112419]">Due at pickup</span>
+                        <span class="text-lg font-extrabold text-[#112419]" x-text="__price(calculateTotal())"></span>
+                    </div>
+
+                    {{-- Action Buttons --}}
+                    <div class="space-y-2.5 pt-1">
+                        {{-- Place order, pay at counter --}}
+                        <button type="button" @click="payByCash()"
+                            :disabled="!pickupName || !contactNumber || !pickupEmail"
+                            class="w-full bg-[#287d3c] hover:bg-emerald-800 disabled:bg-slate-200 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-2xs active:scale-95 cursor-pointer disabled:cursor-not-allowed">
+                            Place order, pay at the counter
+                        </button>
+
+                        {{-- Pay online now --}}
+                        <button type="button" @click="openPaypal()"
+                            :disabled="!pickupName || !contactNumber || !pickupEmail"
+                            class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 disabled:bg-slate-50 disabled:text-slate-300 font-bold py-3 rounded-xl text-xs transition-all shadow-2xs active:scale-95 cursor-pointer disabled:cursor-not-allowed">
+                            Pay online now
+                        </button>
+
+                        <p class="text-[11px] text-slate-400 text-center font-normal pt-0.5">
+                            No shipping. You collect it at the store.
+                        </p>
                     </div>
                 </div>
-            </template>
+                            class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 disabled:bg-slate-50 disabled:text-slate-300 font-bold py-3.5 rounded-xl text-sm transition-all shadow-2xs active:scale-95 cursor-pointer disabled:cursor-not-allowed">
+                            Pay online now
+                        </button>
+
+                        <p class="text-xs text-slate-400 text-center font-normal pt-1">
+                            No shipping. You collect it at the store.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
-    @endsection
 
-    @push('scripts')
-        <!-- PayPal SDK -->
-        <script src="https://www.paypal.com/sdk/js?client-id=<?php echo $paypalClientId; ?>&currency=<?php echo \App\Services\CurrencyService::getCode(); ?>&intent=capture">
-        </script>
-        <script>
-            function checkoutFlow() {
-                return {
-                    unitPrice: {{ $unitPrice }},
-                    quantity: {{ $quantity }},
-                    pickupName: '',
-                    pickupEmail: '',
-                    contactNumber: '',
-                    showPaypal: false,
-                    isProcessing: false,
-                    paymentSuccess: false,
-                    paypalRendered: false,
-                    acceptedTerms: false,
+        {{-- PayPal Modal --}}
+        <template x-teleport="body">
+            <div x-cloak>
+                <div x-show="showPaypal" class="paypal-overlay" @click.self="showPaypal = false">
+                    <div class="paypal-sheet" @click.stop>
+                        <div class="flex items-center justify-between mb-5">
+                            <div>
+                                <h3 class="text-lg font-extrabold text-slate-900">Pay with PayPal</h3>
+                                <p class="text-xs text-slate-500">Fast & secure online payment</p>
+                            </div>
+                            <button @click="showPaypal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">
+                                ✕
+                            </button>
+                        </div>
 
-                    couponInput: '',
-                    appliedCoupon: null,
-                    discountAmount: 0,
-                    couponMessage: '',
+                        <div class="bg-[#f2f7f2] rounded-2xl p-4 mb-5 flex items-center justify-between border border-emerald-100">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</p>
+                                <p class="text-2xl font-extrabold text-slate-900" x-text="__price(calculateTotal())"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pickup</p>
+                                <p class="text-sm font-bold text-slate-700" x-text="pickupName"></p>
+                            </div>
+                        </div>
 
-                    calculateTotal() {
-                        const subtotal = this.unitPrice * this.quantity;
-                        return Math.max(0, subtotal - this.discountAmount).toFixed(2);
-                    },
+                        <div id="paypal-button-container" class="mb-3"></div>
+                    </div>
+                </div>
 
-                    applyCoupon() {
-                        if (!this.couponInput || this.appliedCoupon) return;
+                {{-- Processing Overlay --}}
+                <div x-show="isProcessing" class="processing-overlay" x-cloak>
+                    <template x-if="!paymentSuccess">
+                        <div class="text-center">
+                            <div class="spinner mx-auto mb-4"></div>
+                            <h3 class="text-xl font-extrabold text-slate-900">Processing Order</h3>
+                            <p class="text-slate-500 font-medium text-sm mt-1">Please wait while we confirm your print order...</p>
+                        </div>
+                    </template>
+                    <template x-if="paymentSuccess">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-700">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h3>
+                            <p class="text-slate-500 font-medium text-sm mt-1">Redirecting to your confirmation details...</p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+@endsection
 
-                        const subtotal = this.unitPrice * this.quantity;
+@push('scripts')
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=<?php echo $paypalClientId; ?>&currency=<?php echo \App\Services\CurrencyService::getCode(); ?>&intent=capture"></script>
+    <script>
+        function __price(val) {
+            return '$' + parseFloat(val || 0).toFixed(2);
+        }
 
-                        fetch('<?php echo route(Route::currentRouteName() === 'flow-pc.checkout' ? 'flow-pc.apply-coupon' : 'flow.apply-coupon'); ?>', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
-                                },
-                                body: JSON.stringify({
-                                    code: this.couponInput,
-                                    amount: subtotal
-                                }),
-                            })
-                            .then(res => res.json())
-                            .then(result => {
-                                if (result.success) {
-                                    this.appliedCoupon = result.code;
-                                    this.discountAmount = parseFloat(result.discount);
-                                    this.couponMessage = result.message;
-                                } else {
-                                    this.couponMessage = result.message;
-                                    this.discountAmount = 0;
-                                    this.appliedCoupon = null;
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Coupon error:', err);
-                                this.couponMessage = 'Error applying coupon.';
-                            });
-                    },
+        function checkoutFlow() {
+            return {
+                unitPrice: {{ $unitPrice }},
+                quantity: {{ $quantity }},
+                pickupName: '',
+                pickupEmail: '',
+                contactNumber: '',
+                storeNote: '',
+                showPaypal: false,
+                isProcessing: false,
+                paymentSuccess: false,
+                paypalRendered: false,
 
-                    removeCoupon() {
-                        this.appliedCoupon = null;
-                        this.discountAmount = 0;
-                        this.couponInput = '';
-                        this.couponMessage = '';
-                    },
+                calculateTotal() {
+                    return (this.unitPrice * this.quantity).toFixed(2);
+                },
 
-                    openPaypal() {
-                        if (!this.pickupName || !this.contactNumber || !this.pickupEmail) return;
-                        this.showPaypal = true;
+                openPaypal() {
+                    if (!this.pickupName || !this.contactNumber || !this.pickupEmail) return;
+                    this.showPaypal = true;
 
-                        this.$nextTick(() => {
-                            if (!this.paypalRendered) {
-                                this.renderPaypalButtons();
-                                this.paypalRendered = true;
-                            }
-                            setTimeout(() => lucide.createIcons(), 200);
-                        });
-                    },
+                    this.$nextTick(() => {
+                        if (!this.paypalRendered) {
+                            this.renderPaypalButtons();
+                            this.paypalRendered = true;
+                        }
+                    });
+                },
 
-                    payByCash() {
-                        if (!this.pickupName || !this.contactNumber || !this.pickupEmail) return;
-                        this.isProcessing = true;
+                payByCash() {
+                    if (!this.pickupName || !this.contactNumber || !this.pickupEmail) return;
+                    this.isProcessing = true;
 
-                        fetch('<?php echo route('flow-pc.checkout.cash'); ?>', {
+                    fetch('<?php echo route('flow.checkout.cash'); ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
+                        },
+                        body: JSON.stringify({
+                            product_id: <?php echo $product->id; ?>,
+                            quantity: this.quantity,
+                            message: <?php echo json_encode($message); ?>,
+                            style_data: <?php echo json_encode(json_encode($styleData)); ?>,
+                            upload_ids: <?php echo json_encode($uploadIds); ?>,
+                            pickup_name: this.pickupName,
+                            pickup_email: this.pickupEmail,
+                            contact_number: this.contactNumber,
+                            note: this.storeNote,
+                        }),
+                    })
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.success) {
+                            this.paymentSuccess = true;
+                            setTimeout(() => {
+                                window.location.href = result.redirect_url;
+                            }, 1800);
+                        } else {
+                            this.isProcessing = false;
+                            alert(result.error || result.message || 'Failed to process order. Please try again.');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Checkout error:', err);
+                        this.isProcessing = false;
+                        alert('An error occurred. Please try again.');
+                    });
+                },
+
+                renderPaypalButtons() {
+                    const self = this;
+                    const container = document.getElementById('paypal-button-container');
+                    if (!container) return;
+
+                    paypal.Buttons({
+                        style: {
+                            layout: 'vertical',
+                            color: 'gold',
+                            shape: 'rect',
+                            label: 'paypal',
+                            height: 48,
+                        },
+
+                        createOrder: function(data, actions) {
+                            return fetch('<?php echo route('flow.paypal.create'); ?>', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -719,131 +444,75 @@
                                 },
                                 body: JSON.stringify({
                                     product_id: <?php echo $product->id; ?>,
-                                    quantity: this.quantity,
+                                    quantity: self.quantity,
+                                    pickup_name: self.pickupName,
+                                    pickup_email: self.pickupEmail,
+                                    contact_number: self.contactNumber,
+                                    note: self.storeNote,
+                                }),
+                            })
+                            .then(res => res.json())
+                            .then(order => {
+                                if (order.error) {
+                                    alert(order.error);
+                                    throw new Error(order.error);
+                                }
+                                return order.id;
+                            });
+                        },
+
+                        onApprove: function(data, actions) {
+                            self.showPaypal = false;
+                            self.isProcessing = true;
+
+                            return fetch('<?php echo route('flow.paypal.capture'); ?>', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
+                                },
+                                body: JSON.stringify({
+                                    paypal_order_id: data.orderID,
+                                    product_id: <?php echo $product->id; ?>,
+                                    quantity: self.quantity,
                                     message: <?php echo json_encode($message); ?>,
                                     style_data: <?php echo json_encode(json_encode($styleData)); ?>,
                                     upload_ids: <?php echo json_encode($uploadIds); ?>,
-                                    pickup_name: this.pickupName,
-                                    pickup_email: this.pickupEmail,
-                                    contact_number: this.contactNumber,
-                                    coupon_code: this.appliedCoupon,
+                                    pickup_name: self.pickupName,
+                                    pickup_email: self.pickupEmail,
+                                    contact_number: self.contactNumber,
+                                    note: self.storeNote,
                                 }),
                             })
                             .then(res => res.json())
                             .then(result => {
                                 if (result.success) {
-                                    this.paymentSuccess = true;
-                                    setTimeout(() => lucide.createIcons(), 100);
+                                    self.paymentSuccess = true;
                                     setTimeout(() => {
                                         window.location.href = result.redirect_url;
                                     }, 1800);
                                 } else {
-                                    this.isProcessing = false;
-                                    alert(result.error || result.message || 'Failed to process order. Please try again.');
+                                    self.isProcessing = false;
+                                    alert(result.error || result.message || 'Payment failed. Please try again.');
                                 }
                             })
                             .catch(err => {
-                                console.error('Checkout error:', err);
-                                this.isProcessing = false;
+                                console.error('Capture error:', err);
+                                self.isProcessing = false;
                                 alert('An error occurred. Please try again.');
                             });
-                    },
+                        },
 
-                    renderPaypalButtons() {
-                        const self = this;
-                        const container = document.getElementById('paypal-button-container');
-                        if (!container) return;
+                        onCancel: function() {},
 
-                        paypal.Buttons({
-                            style: {
-                                layout: 'vertical',
-                                color: 'gold',
-                                shape: 'rect',
-                                label: 'paypal',
-                                height: 48,
-                            },
-
-                            createOrder: function(data, actions) {
-                                return fetch('<?php echo route('flow-pc.paypal.create'); ?>', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
-                                        },
-                                        body: JSON.stringify({
-                                            product_id: <?php echo $product->id; ?>,
-                                            quantity: self.quantity,
-                                            pickup_name: self.pickupName,
-                                            pickup_email: self.pickupEmail,
-                                            contact_number: self.contactNumber,
-                                            coupon_code: self.appliedCoupon,
-                                        }),
-                                    })
-                                    .then(res => res.json())
-                                    .then(order => {
-                                        if (order.error) {
-                                            alert(order.error);
-                                            throw new Error(order.error);
-                                        }
-                                        return order.id;
-                                    });
-                            },
-
-                            onApprove: function(data, actions) {
-                                self.showPaypal = false;
-                                self.isProcessing = true;
-
-                                return fetch('<?php echo route('flow-pc.paypal.capture'); ?>', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
-                                        },
-                                        body: JSON.stringify({
-                                            paypal_order_id: data.orderID,
-                                            product_id: <?php echo $product->id; ?>,
-                                            quantity: self.quantity,
-                                            message: <?php echo json_encode($message); ?>,
-                                            style_data: <?php echo json_encode(json_encode($styleData)); ?>,
-                                            upload_ids: <?php echo json_encode($uploadIds); ?>,
-                                            pickup_name: self.pickupName,
-                                            pickup_email: self.pickupEmail,
-                                            contact_number: self.contactNumber,
-                                            coupon_code: self.appliedCoupon,
-                                        }),
-                                    })
-                                    .then(res => res.json())
-                                    .then(result => {
-                                        if (result.success) {
-                                            self.paymentSuccess = true;
-                                            setTimeout(() => lucide.createIcons(), 100);
-                                            setTimeout(() => {
-                                                window.location.href = result.redirect_url;
-                                            }, 1800);
-                                        } else {
-                                            self.isProcessing = false;
-                                            alert(result.error || result.message ||
-                                                'Payment failed. Please try again.');
-                                        }
-                                    })
-                                    .catch(err => {
-                                        console.error('Capture error:', err);
-                                        self.isProcessing = false;
-                                        alert('An error occurred. Please try again.');
-                                    });
-                            },
-
-                            onCancel: function() {},
-
-                            onError: function(err) {
-                                console.error('PayPal Error:', err);
-                                alert('PayPal encountered an error. Please try again.');
-                            }
-                        }).render('#paypal-button-container');
-                    }
+                        onError: function(err) {
+                            console.error('PayPal Error:', err);
+                            alert('PayPal encountered an error. Please try again.');
+                        }
+                    }).render('#paypal-button-container');
                 }
             }
-        </script>
-    @endpush
+        }
+    </script>
+@endpush

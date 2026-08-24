@@ -1,4 +1,4 @@
-﻿@extends('layouts.quick-flow')
+@extends('layouts.quick-flow')
 
 @section('title', 'Custom Print')
 @section('header_title', 'Custom Print')
@@ -556,8 +556,8 @@
                         xhr.addEventListener('load', () => {
                             if (xhr.status === 200) {
                                 const data = JSON.parse(xhr.responseText);
-                                this.uploadId = data.upload.id;
-                                this.previewUrl = data.upload.url;
+                                this.uploadId = data.upload_id || (data.upload ? data.upload.id : data.id);
+                                this.previewUrl = data.url || (data.upload ? data.upload.url : '');
                                 this.isUploading = false;
                             } else {
                                 alert('Upload failed');

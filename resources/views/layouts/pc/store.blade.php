@@ -42,7 +42,7 @@
                         class="text-[10px] font-black uppercase  text-gray-400 tracking-wider flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full  bg-gray-400"></span> Active Pickup Store
                     </span>
-                    <a href="{{ route('flow-pc.find-store') }}"
+                    <a href="{{ route('flow.find-store') }}"
                         class="text-[11px] font-bold text-brand-400 hover:underline">Change</a>
                 </div>
                 <div>
@@ -51,7 +51,7 @@
                 </div>
                 <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
                     <span class="text-slate-400">Ready for instant pickup</span>
-                    <a href="{{ route('flow-pc.find-store') }}"
+                    <a href="{{ route('flow.find-store') }}"
                         class="font-extrabold text-white hover:text-brand-400 transition-colors flex items-center gap-1">
                         Select another store <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                     </a>
@@ -108,7 +108,7 @@
                                 <span>Pick This Store for Print</span>
                             </button>
 
-                            <a href="{{ route('flow-pc.find-store') }}"
+                            <a href="{{ route('flow.find-store') }}"
                                 class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
                                 <span>Choose Another Store</span>
                                 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
@@ -121,7 +121,7 @@
                 <template x-if="!isLoading && !suggestedStore">
                     <div class="py-3 text-center space-y-3">
                         <p class="text-xs font-bold text-slate-600">Please choose a store location for your order</p>
-                        <a href="{{ route('flow-pc.find-store') }}"
+                        <a href="{{ route('flow.find-store') }}"
                             class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-hover text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-1">
                             <span>Browse All Stores</span>
                         </a>
@@ -159,7 +159,7 @@
                 this.isLoading = true;
 
                 const fetchStore = async (lat = null, lon = null) => {
-                    let url = '{{ route('flow-pc.nearest-store') }}';
+                    let url = '{{ route('flow.nearest-store') }}';
                     if (lat && lon) {
                         url += `?lat=${lat}&lon=${lon}`;
                     }
@@ -205,7 +205,7 @@
                 formData.append('_token', '{{ csrf_token() }}');
 
                 try {
-                    const res = await fetch('{{ route('flow-pc.set-store') }}', {
+                    const res = await fetch('{{ route('flow.set-store') }}', {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -219,7 +219,7 @@
                         this.storeAddress = [this.suggestedStore.city, this.suggestedStore.state].filter(Boolean)
                             .join(', ');
                         this.isOpen = false;
-                        window.location.href = '{{ route('flow-pc.index') }}';
+                        window.location.href = '{{ route('flow.index') }}';
                     }
                 } catch (e) {
                     console.error("Set store error:", e);

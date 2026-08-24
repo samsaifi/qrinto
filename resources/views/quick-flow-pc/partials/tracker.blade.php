@@ -1,52 +1,55 @@
 @php
-    $statusArray = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
-
-    $mappedStatus = $order->status;
-    if ($mappedStatus === 'printing') {
-        $mappedStatus = 'processing';
-    } elseif ($mappedStatus === 'delivered_store') {
-        $mappedStatus = 'delivered';
-    }
-
-    $currentIndex = array_search($mappedStatus, $statusArray);
-    if ($currentIndex === false) {
-        $currentIndex = 0;
-    }
-
-    $progressWidth = ($currentIndex / (count($statusArray) - 1)) * 100;
-
-    $icons = [
-        'pending' => 'clock',
-        'confirmed' => 'check-circle',
-        'processing' => 'printer',
-        'shipped' => 'truck',
-        'delivered' => 'package-check',
+    $stages = [
+        ['key' => 'received', 'label' => 'Order received', 'icon' => 'clock'],
+        ['key' => 'printing', 'label' => 'Printing', 'icon' => 'printer'],
+        ['key' => 'ready', 'label' => 'Ready for pickup', 'icon' => 'package-check'],
+        ['key' => 'completed', 'label' => 'Picked up', 'icon' => 'check-circle-2'],
     ];
+
+    // Derive the active stage from the shared order state machine so the
+    // tracker, the store queue, and emails always agree.
+    $activeStageIndex = match ($order->queue_stage) {
+        \App\Models\Order::STAGE_DONE     => 3,
+        \App\Models\Order::STAGE_READY    => 2,
+        \App\Models\Order::STAGE_PRINTING => 1,
+        default                            => 0,
+    };
 @endphp
 
-<div class="relative flex justify-between items-start w-full pt-2">
-    <div class="absolute left-5 right-5 top-[22px] h-[3px] bg-slate-100 rounded-full z-0"></div>
-    <div class="absolute left-5 top-[22px] h-[3px] bg-brand-500 rounded-full z-0 transition-all duration-700 ease-out" style="width: calc({{ $progressWidth }}% - 10px)"></div>
+<div class="py-2 px-1">
+    <div class="space-y-6 relative before:absolute before:left-3.5 before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-200">
+        @foreach ($stages as $index => $stage)
+            @php
+                $isDone = $index <= $activeStageIndex;
+                $isCurrent = $index === $activeStageIndex;
+            @endphp
+            <div class="flex items-start gap-4 relative z-10">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 border-2 transition-all
+                    {{ $isDone ? 'bg-[#287d3c] border-[#287d3c] text-white shadow-sm' : 'bg-white border-slate-200 text-slate-400' }}">
+                    @if ($isDone)
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-3.5 h-3.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    @else
+                        <span class="text-[10px] font-bold">{{ $index + 1 }}</span>
+                    @endif
+                </div>
 
-    @foreach($statusArray as $index => $step)
-        @php
-            $isCompleted = $index < $currentIndex;
-            $isCurrent = $index === $currentIndex;
-        @endphp
-        <div class="relative z-10 flex flex-col items-center" style="width: 20%">
-            <div class="w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300
-                {{ $isCompleted ? 'bg-brand-500 text-white shadow-md shadow-brand-200' : '' }}
-                {{ $isCurrent ? 'bg-brand-600 text-white shadow-lg shadow-brand-200 ring-4 ring-brand-100' : '' }}
-                {{ !$isCompleted && !$isCurrent ? 'bg-white text-slate-400 border-2 border-slate-200' : '' }}">
-                @if($isCompleted)
-                    <i data-lucide="check" class="w-5 h-5"></i>
-                @else
-                    <i data-lucide="{{ $icons[$step] ?? 'circle' }}" class="w-4.5 h-4.5"></i>
-                @endif
+                <div class="pt-0.5">
+                    <h4 class="text-xs font-extrabold {{ $isDone ? 'text-slate-900' : 'text-slate-400' }}">
+                        {{ $stage['label'] }}
+                    </h4>
+                    <p class="text-[11px] {{ $isCurrent ? 'text-[#287d3c] font-bold' : 'text-slate-400 font-normal' }} mt-0.5">
+                        @if ($isCurrent)
+                            Current Status
+                        @elseif ($index < $activeStageIndex)
+                            Completed
+                        @else
+                            Upcoming
+                        @endif
+                    </p>
+                </div>
             </div>
-            <span class="mt-2.5 text-[11px] font-bold {{ $isCompleted || $isCurrent ? 'text-brand-600' : 'text-slate-400' }} tracking-wide text-center">
-                {{ ucfirst($step) }}
-            </span>
-        </div>
-    @endforeach
+        @endforeach
+    </div>
 </div>

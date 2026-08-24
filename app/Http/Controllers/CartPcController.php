@@ -11,6 +11,6 @@ class CartPcController extends CartController
 
     protected function getRoutePrefix()
     {
-        return 'flow-pc.';
+        return 'flow.';
     }
 }

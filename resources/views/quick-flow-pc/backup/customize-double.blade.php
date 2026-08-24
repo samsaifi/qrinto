@@ -70,7 +70,7 @@
     <div id="customizer-app" class="pb-16">
 
         {{-- ── Breadcrumb Navigation (Home >> Store >> Product Type >> Page Size/Side >> Template Name) ── --}}
-        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-2.5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-2.5">
             <nav class="cust-breadcrumb flex items-center flex-wrap gap-2 text-xs font-semibold">
                 {{-- 1. Home --}}
                 <a href="{{ route('flow-pc.index') }}" class="text-slate-500 hover:text-brand-600 transition-colors">Home</a>
@@ -111,7 +111,7 @@
         <section class="w-full relative py-8 px-4 sm:px-6 lg:px-10 border-b border-slate-200/80"
             style="background-color: #f8fafc; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
 
-            <div class="max-w-[1400px] mx-auto">
+            <div class="max-w-7xl mx-auto">
 
                 {{-- Studio Independent Floating Layout (Centered Canvas + Absolute Floating Tools Docks) --}}
                 <div class="relative w-full min-h-[80vh] flex items-center justify-center">
@@ -246,7 +246,7 @@
         </section>
 
         {{-- ── 2. HERO HEADER SECTION (BELOW EDITOR SECTION) ── --}}
-        <section class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 mt-8 mb-6">
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 mt-8 mb-6">
             <div
                 class="hero-glass-card hero-cust-pattern relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 border border-white/80 transition-all duration-300">
                 {{-- Ambient lighting blobs --}}

@@ -414,6 +414,14 @@
                                 data-col="store_name">Store <span class="sort-arrow"></span></th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col"
                                 data-col="total_orders">Total Orders <span class="sort-arrow">&#9662;</span></th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-blue-600 uppercase cursor-pointer select-none summary-sort-col"
+                                data-col="new_orders">New <span class="sort-arrow"></span></th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-purple-600 uppercase cursor-pointer select-none summary-sort-col"
+                                data-col="printing_orders">Printing <span class="sort-arrow"></span></th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-emerald-600 uppercase cursor-pointer select-none summary-sort-col"
+                                data-col="ready_orders">Ready for Pickup <span class="sort-arrow"></span></th>
+                            <th class="px-3 py-3 text-right text-xs font-semibold text-sky-600 uppercase cursor-pointer select-none summary-sort-col"
+                                data-col="picked_up_orders">Picked Up <span class="sort-arrow"></span></th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col"
                                 data-col="online_amount">Online Payment <span class="sort-arrow"></span></th>
                             <th class="px-4 py-3 text-right text-xs font-semibold text-surface-500 uppercase cursor-pointer select-none summary-sort-col"
@@ -430,7 +438,7 @@
                     </thead>
                     <tbody id="stores-summary-body" class="divide-y divide-surface-100">
                         <tr>
-                            <td colspan="9" class="px-6 py-12 text-center text-surface-400">Loading...</td>
+                            <td colspan="13" class="px-6 py-12 text-center text-surface-400">Loading...</td>
                         </tr>
                     </tbody>
                     <tfoot id="stores-summary-totals" class="border-t-2 border-surface-200">
@@ -622,7 +630,7 @@
                         const tbody = document.getElementById('stores-summary-body');
                         if (!data.data.length) {
                             tbody.innerHTML =
-                                '<tr><td colspan="9" class="px-6 py-12 text-center text-surface-400">No stores found.</td></tr>';
+                                '<tr><td colspan="13" class="px-6 py-12 text-center text-surface-400">No stores found.</td></tr>';
                         } else {
                             const si = (data.current_page - 1) * 10;
                             tbody.innerHTML = data.data.map((s, i) => `
@@ -630,8 +638,12 @@
                         <td class="px-4 py-3 text-sm text-surface-400">${si + i + 1}</td>
                         <td class="px-4 py-3 text-sm font-semibold text-surface-800">${escHtml(s.store_name)}</td>
                         <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.total_orders > 0 ? 'bg-brand-100 text-brand-700' : 'bg-surface-100 text-surface-400'}">${s.total_orders}</span></td>
+                        <td class="px-3 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[1.75rem] px-2 py-0.5 text-xs font-bold rounded-lg ${s.new_orders > 0 ? 'bg-blue-100 text-blue-700' : 'bg-surface-100 text-surface-400'}">${s.new_orders}</span></td>
+                        <td class="px-3 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[1.75rem] px-2 py-0.5 text-xs font-bold rounded-lg ${s.printing_orders > 0 ? 'bg-purple-100 text-purple-700' : 'bg-surface-100 text-surface-400'}">${s.printing_orders}</span></td>
+                        <td class="px-3 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[1.75rem] px-2 py-0.5 text-xs font-bold rounded-lg ${s.ready_orders > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-100 text-surface-400'}">${s.ready_orders}</span></td>
+                        <td class="px-3 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[1.75rem] px-2 py-0.5 text-xs font-bold rounded-lg ${s.picked_up_orders > 0 ? 'bg-sky-100 text-sky-700' : 'bg-surface-100 text-surface-400'}">${s.picked_up_orders}</span></td>
                         <td class="px-4 py-3 text-right text-sm font-medium text-brand-700">${fmtNum(s.online_amount)}</td>
-                        <td class="px-4 py-3 text-right text-sm font-medium  text-gray-700">${fmtNum(s.cash_amount)}</td>
+                        <td class="px-4 py-3 text-right text-sm font-medium text-gray-700">${fmtNum(s.cash_amount)}</td>
                         <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.pending_orders > 0 ? 'bg-amber-100 text-amber-700' : 'bg-surface-100 text-surface-400'}">${s.pending_orders}</span></td>
                         <td class="px-4 py-3 text-right text-sm font-medium text-amber-700">${fmtNum(s.pending_amount)}</td>
                         <td class="px-4 py-3 text-right"><span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-sm font-bold rounded-lg ${s.paid_orders > 0 ? 'bg-accent-100 text-accent-700' : 'bg-surface-100 text-surface-400'}">${s.paid_orders}</span></td>
@@ -647,8 +659,12 @@
                     <td class="px-4 py-3"></td>
                     <td class="px-4 py-3 text-sm text-surface-900">Grand Total</td>
                     <td class="px-4 py-3 text-right text-sm text-surface-900">${t.total_orders}</td>
+                    <td class="px-3 py-3 text-right text-xs text-blue-800">${t.new_orders}</td>
+                    <td class="px-3 py-3 text-right text-xs text-purple-800">${t.printing_orders}</td>
+                    <td class="px-3 py-3 text-right text-xs text-emerald-800">${t.ready_orders}</td>
+                    <td class="px-3 py-3 text-right text-xs text-sky-800">${t.picked_up_orders}</td>
                     <td class="px-4 py-3 text-right text-sm text-brand-800">${fmtNum(t.online_amount)}</td>
-                    <td class="px-4 py-3 text-right text-sm  text-gray-800">${fmtNum(t.cash_amount)}</td>
+                    <td class="px-4 py-3 text-right text-sm text-gray-800">${fmtNum(t.cash_amount)}</td>
                     <td class="px-4 py-3 text-right text-sm text-surface-900">${t.pending_orders}</td>
                     <td class="px-4 py-3 text-right text-sm text-amber-800">${fmtNum(t.pending_amount)}</td>
                     <td class="px-4 py-3 text-right text-sm text-surface-900">${t.paid_orders}</td>

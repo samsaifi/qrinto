@@ -50,7 +50,16 @@ class SocialiteController extends Controller
 
             $cartService->mergeGuestCart($oldSessionId);
 
-            return redirect()->intended(route('dashboard'));
+            session()->forget('url.intended');
+
+            if ($user->role === 'admin') {
+                return redirect('/admin/dashboard');
+            } elseif (in_array($user->role, ['store_admin', 'storeadmin', 'staff'])) {
+                // Store admins and staff land on the standalone store panel.
+                return redirect()->route('storepanel.orders');
+            }
+
+            return redirect()->route('customer.dashboard');
         } catch (Exception $e) {
             return redirect()->route('login')->withErrors(['email' => 'Unable to login using ' . ucfirst($provider) . '. Please try again.']);
         }

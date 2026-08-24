@@ -15,20 +15,37 @@ class CartService
     {
         if (Auth::check()) {
             $cart = Cart::with('items.product', 'coupon')
-                ->firstOrCreate(['user_id' => Auth::id()]);
+                ->where('user_id', Auth::id())
+                ->whereHas('items')
+                ->latest()
+                ->first();
+
+            if (!$cart) {
+                $cart = Cart::with('items.product', 'coupon')
+                    ->firstOrCreate(['user_id' => Auth::id()]);
+            }
 
             // Merge session cart if exists
             $sessionId = Session::getId();
-            $sessionCart = Cart::where('session_id', $sessionId)->whereNull('user_id')->first();
-            if ($sessionCart) {
+            $sessionCarts = Cart::where('session_id', $sessionId)->where('id', '!=', $cart->id)->get();
+            foreach ($sessionCarts as $sessionCart) {
                 foreach ($sessionCart->items as $item) {
                     $item->update(['cart_id' => $cart->id]);
                 }
                 $sessionCart->delete();
             }
         } else {
+            $sessionId = Session::getId();
             $cart = Cart::with('items.product', 'coupon')
-                ->firstOrCreate(['session_id' => Session::getId()]);
+                ->where('session_id', $sessionId)
+                ->whereHas('items')
+                ->latest()
+                ->first();
+
+            if (!$cart) {
+                $cart = Cart::with('items.product', 'coupon')
+                    ->firstOrCreate(['session_id' => $sessionId]);
+            }
         }
 
         return $cart->fresh(['items.product', 'coupon']);

@@ -944,8 +944,8 @@
                             <input type="hidden" name="upload_ids" id="upload_ids_field">
                             <button type="button" id="submit-btn" onclick="customizer.submitAllCanvases()"
                                 class="w-full bg-slate-900 hover:bg-black text-white font-display font-black py-3 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] shadow-md shadow-slate-100 text-xs">
-                                <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
-                                <span>Add to Cart</span>
+                                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                <span>Continue to order</span>
                             </button>
                         </form>
                     </div>

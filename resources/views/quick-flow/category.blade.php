@@ -172,8 +172,15 @@
 
     <div class="size-groups px-6" data-tour="size-list">
         @if (isset($subTypes))
+            @php
+                // Magnets skip the template gallery and open the editor directly
+                // (/magnets/{size}/design); cards go to the template gallery
+                // (/{type}/{title}/{size}/templates). Same hierarchical URLs as
+                // the PC flow.
+                $isMagnet = \Illuminate\Support\Str::contains(strtolower(($type->slug ?? '') . ' ' . ($type->name ?? '')), 'magnet');
+            @endphp
             @foreach ($subTypes->groupBy('name') as $groupName => $variants)
-                @php($first = $variants->first())
+                @php $first = $variants->first(); @endphp
                 <div class="size-group">
                     <div class="size-group-head">
                         <h2 class="size-group-name">{{ $groupName }}</h2>
@@ -184,7 +191,16 @@
                     </div>
 
                     @foreach ($variants as $sub)
-                        <a href="{{ route('flow.category', $sub->slug) }}" class="variant-row">
+                        @php
+                            $w = (($sub->width ?? $first->width) ?? 5) + 0;
+                            $h = (($sub->height ?? $first->height) ?? 7) + 0;
+                            $sizeCode = $w . 'x' . $h;
+                            $titleSlug = \Illuminate\Support\Str::slug($sub->title ?? ($sub->name ?? 'standard'));
+                            $variantHref = $isMagnet
+                                ? url('/magnets/' . $sizeCode . '/design')
+                                : url(($type->slug ?? 'cards') . '/' . $titleSlug . '/' . $sizeCode . '/templates');
+                        @endphp
+                        <a href="{{ $variantHref }}" class="variant-row">
                             <div class="variant-glyph">
                                 <i data-lucide="{{ \Illuminate\Support\Str::contains(strtolower($sub->title ?? ''), 'flat') ? 'square' : 'book-open' }}"
                                     style="width: 20px; height: 20px;"></i>

@@ -260,18 +260,19 @@
         <div class="scan-url">{{ $scanUrl }}</div>
 
         <br>
-        <button class="print-btn" onclick="window.print()">
+        <button class="print-btn" onclick="downloadQrPdf()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 9V2h12v7" />
-                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                <rect x="6" y="14" width="12" height="8" />
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Print QR Code
+            Download as PDF
         </button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         new QRCode(document.getElementById('qrcode'), {
             text: '{{ $scanUrl }}',
@@ -281,6 +282,48 @@
             colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.H,
         });
+
+        // Build a clean single-page PDF (store name, code, QR, scan URL) and
+        // download it. Falls back to the browser print dialog if jsPDF fails.
+        function downloadQrPdf() {
+            try {
+                const holder = document.getElementById('qrcode');
+                const canvas = holder.querySelector('canvas');
+                const img = holder.querySelector('img');
+                const dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
+                if (!dataUrl || !window.jspdf) return window.print();
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+                const pageW = doc.internal.pageSize.getWidth();
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(24);
+                doc.text(@json($store->store_name), pageW / 2, 90, { align: 'center' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(13);
+                doc.setTextColor(120);
+                doc.text('Store #' + @json($store->store_code), pageW / 2, 115, { align: 'center' });
+
+                const qrSize = 300;
+                doc.addImage(dataUrl, 'PNG', (pageW - qrSize) / 2, 150, qrSize, qrSize);
+
+                doc.setFontSize(15);
+                doc.setTextColor(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Scan to Start Ordering', pageW / 2, 500, { align: 'center' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.setTextColor(120);
+                doc.text(@json($scanUrl), pageW / 2, 522, { align: 'center' });
+
+                doc.save('Store-QR-' + @json($store->store_code) + '.pdf');
+            } catch (e) {
+                window.print();
+            }
+        }
     </script>
 </body>
 

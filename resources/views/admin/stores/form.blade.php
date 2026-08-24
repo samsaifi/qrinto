@@ -155,16 +155,29 @@
             <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
                 <h2 class="font-display font-semibold text-lg mb-5">Publish</h2>
                 @if(!$isStaff)
-                <label class="flex items-center gap-3 cursor-pointer mb-4">
-                    <div class="relative">
-                        <input type="checkbox" name="is_active" value="1"
-                            {{ old('is_active', $store->is_active ?? true) ? 'checked' : '' }}
-                            class="sr-only peer" id="activeToggle">
-                        <div class="w-11 h-6 bg-surface-300 rounded-full peer peer-checked:bg-brand-600 transition-colors"></div>
-                        <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
-                    </div>
-                    <span class="text-sm text-surface-700 font-medium">Store is Active</span>
-                </label>
+                <div class="space-y-4 mb-5">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" name="is_active" value="1"
+                                {{ old('is_active', $store->is_active ?? true) ? 'checked' : '' }}
+                                class="sr-only peer" id="activeToggle">
+                            <div class="w-11 h-6 bg-surface-300 rounded-full peer peer-checked:bg-brand-600 transition-colors"></div>
+                            <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
+                        </div>
+                        <span class="text-sm text-surface-700 font-medium">Store is Active</span>
+                    </label>
+
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" name="is_test" value="1"
+                                {{ old('is_test', $store->is_test ?? false) ? 'checked' : '' }}
+                                class="sr-only peer" id="testToggle">
+                            <div class="w-11 h-6 bg-surface-300 rounded-full peer peer-checked:bg-amber-500 transition-colors"></div>
+                            <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
+                        </div>
+                        <span class="text-sm text-surface-700 font-medium">Is Test Store</span>
+                    </label>
+                </div>
                 <button type="submit" class="w-full px-5 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
                     <span class="flex items-center justify-center gap-2">
                         <i data-lucide="{{ isset($store) ? 'save' : 'plus-circle' }}" class="w-4 h-4"></i>
@@ -172,9 +185,17 @@
                     </span>
                 </button>
                 @else
-                <div class="p-4 bg-surface-50 rounded-xl border border-surface-100 flex items-center gap-3 mb-4">
-                    <div class="w-2 h-2 rounded-full {{ ($store->is_active ?? true) ? 'bg-green-500' : 'bg-red-500' }}"></div>
-                    <span class="text-sm font-medium text-surface-700">Store is {{ ($store->is_active ?? true) ? 'Active' : 'Inactive' }}</span>
+                <div class="space-y-2 mb-4">
+                    <div class="p-3 bg-surface-50 rounded-xl border border-surface-100 flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full {{ ($store->is_active ?? true) ? 'bg-green-500' : 'bg-red-500' }}"></div>
+                        <span class="text-xs font-medium text-surface-700">Store is {{ ($store->is_active ?? true) ? 'Active' : 'Inactive' }}</span>
+                    </div>
+                    @if($store->is_test ?? false)
+                    <div class="p-3 bg-amber-50 rounded-xl border border-amber-200/60 flex items-center gap-2 text-amber-800">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span class="text-xs font-semibold">Test Store Environment</span>
+                    </div>
+                    @endif
                 </div>
                 @endif
                 <a href="{{ auth()->user()->isAdmin() ? route('admin.stores.index') : route('admin.dashboard') }}" class="block w-full mt-3 px-5 py-3 text-center bg-surface-100 text-surface-700 font-semibold rounded-xl hover:bg-surface-200 transition">

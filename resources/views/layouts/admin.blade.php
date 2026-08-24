@@ -14,9 +14,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -36,7 +34,13 @@
 <body class="font-sans antialiased bg-surface-50" x-data="{ sidebarOpen: true }">
     @php
         $isStoreAdmin = auth()->user()->isStoreAdmin();
-        $userStore = $isStoreAdmin && auth()->user()->store_id ? auth()->user()->store : null;
+        $userStore = auth()->user()->store_id ? auth()->user()->store : null;
+        $userRole = auth()->user()->role ?? '';
+        $rPrefix = match ($userRole) {
+            'store_admin', 'storeadmin' => 'store.',
+            'staff' => 'staff.',
+            default => 'admin.',
+        };
     @endphp
     <div class="flex min-h-screen">
         <!-- Sidebar -->
@@ -70,7 +74,9 @@
                         <i data-lucide="layout-dashboard" class="w-4 h-4 text-white"></i>
                     </div>
                     <span x-show="sidebarOpen" x-transition
-                        class="font-display font-bold text-white text-lg whitespace-nowrap">Admin Panel</span>
+                        class="font-display font-bold text-white text-lg whitespace-nowrap">
+                        {{ auth()->user()->role === 'staff' ? 'Staff Panel' : (auth()->user()->isStoreAdmin() ? 'Store Panel' : 'Admin Panel') }}
+                    </span>
                 </div>
             @endif
             @if (auth()->user()->isAdmin())
@@ -104,138 +110,33 @@
             <!-- Nav -->
             <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto no-scrollbar">
                 @php
-                    $topItems = [
-                        [
-                            'route' => 'admin.dashboard',
-                            'icon' => 'layout-dashboard',
-                            'label' => 'Dashboard',
-                            'match' => 'admin.dashboard',
-                        ],
-                        [
-                            'route' => 'admin.orders.index',
-                            'icon' => 'package',
-                            'label' => 'Orders',
-                            'match' => 'admin.orders*',
-                        ],
-                    ];
+                    $roleKey = match ($userRole) {
+                        'store_admin', 'storeadmin' => 'store_admin',
+                        'staff' => 'staff',
+                        default => 'admin',
+                    };
 
-                    $catalogItems = [];
-                    $bottomItems = [];
+                    $navConfig = config("admin_routes.{$roleKey}", config('admin_routes.admin', []));
+                    $storeCode = $userStore ? ($userStore->store_code ?? $userStore->id) : '';
 
-                    if (auth()->user()->isAdmin()) {
-                        $catalogItems = [
-                            [
-                                'route' => 'admin.products.index',
-                                'icon' => 'box',
-                                'label' => 'Products',
-                                'match' => 'admin.products*',
-                            ],
-                            [
-                                'route' => 'admin.categories.index',
-                                'icon' => 'grid-2x2',
-                                'label' => 'Categories',
-                                'match' => 'admin.categories*',
-                            ],
-                            [
-                                'route' => 'admin.product-types.index',
-                                'icon' => 'layers',
-                                'label' => 'Card Types/Sizes',
-                                'match' => 'admin.product-types*',
-                            ],
-                            [
-                                'route' => 'admin.templates.index',
-                                'icon' => 'layout-template',
-                                'label' => 'Templates',
-                                'match' => 'admin.templates*',
-                            ],
-                            [
-                                'route' => 'admin.coupons.index',
-                                'icon' => 'tag',
-                                'label' => 'Coupons',
-                                'match' => 'admin.coupons*',
-                            ],
-                            [
-                                'route' => 'admin.events.index',
-                                'icon' => 'calendar',
-                                'label' => 'Events',
-                                'match' => 'admin.events*',
-                            ],
-                            [
-                                'route' => 'admin.paper-types.index',
-                                'icon' => 'scroll-text',
-                                'label' => 'Paper Types',
-                                'match' => 'admin.paper-types*',
-                            ],
-                        ];
-                        $bottomItems = [
-                            [
-                                'route' => 'admin.stores.index',
-                                'icon' => 'store',
-                                'label' => 'Stores',
-                                'match' => 'admin.stores*',
-                            ],
-                            [
-                                'route' => 'admin.users.index',
-                                'icon' => 'users',
-                                'label' => 'Users',
-                                'match' => 'admin.users*',
-                            ],
-                        ];
-                    } elseif (auth()->user()->isStoreAdmin() && auth()->user()->store_id) {
-                        $catalogItems = [
-                            [
-                                'route' => 'admin.products.index',
-                                'icon' => 'box',
-                                'label' => 'Products',
-                                'match' => 'admin.products*',
-                            ],
-                            [
-                                'route' => 'admin.categories.index',
-                                'icon' => 'grid-2x2',
-                                'label' => 'Categories',
-                                'match' => 'admin.categories*',
-                            ],
-                            [
-                                'route' => 'admin.coupons.index',
-                                'icon' => 'tag',
-                                'label' => 'Coupons',
-                                'match' => 'admin.coupons*',
-                            ],
-                            [
-                                'route' => 'admin.events.index',
-                                'icon' => 'calendar',
-                                'label' => 'Events',
-                                'match' => 'admin.events*',
-                            ],
-                            [
-                                'route' => 'admin.paper-types.index',
-                                'icon' => 'scroll-text',
-                                'label' => 'Paper Types',
-                                'match' => 'admin.paper-types*',
-                            ],
-                            [
-                                'route' => 'admin.kiosks.index',
-                                'icon' => 'monitor',
-                                'label' => 'Kiosk Items',
-                                'match' => 'admin.kiosks*',
-                            ],
-                        ];
-                        $bottomItems = [
-                            [
-                                'route' => 'admin.stores.edit',
-                                'params' => [auth()->user()->store_id],
-                                'icon' => 'store',
-                                'label' => 'Store Details',
-                                'match' => 'admin.stores.edit',
-                            ],
-                        ];
-                    }
+                    $formatNavItems = function ($items) use ($storeCode) {
+                        return array_map(function ($item) use ($storeCode) {
+                            if (isset($item['params_from']) && $item['params_from'] === 'store_code') {
+                                $item['params'] = [$storeCode];
+                            }
+                            return $item;
+                        }, $items);
+                    };
+
+                    $topItems = $formatNavItems($navConfig['top'] ?? []);
+                    $catalogItems = $formatNavItems($navConfig['catalog'] ?? []);
+                    $bottomItems = $formatNavItems($navConfig['bottom'] ?? []);
 
                     $catalogOpen = collect($catalogItems)->contains(fn($item) => request()->routeIs($item['match']));
                 @endphp
 
                 @foreach ($topItems as $item)
-                    <a href="{{ route($item['route'], $item['params'] ?? []) }}"
+                    <a href="{{ $item['url'] ?? route($item['route'], $item['params'] ?? []) }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {{ request()->routeIs($item['match']) ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
                         <i data-lucide="{{ $item['icon'] }}"
                             class="w-5 h-5 flex-shrink-0 {{ request()->routeIs($item['match']) ? 'text-white' : 'text-brand-500' }}"></i>
@@ -284,9 +185,10 @@
                     </a>
                 @endforeach
 
-                {{-- Documentations Accordion --}}
+                {{-- Documentations Accordion (NAC admin only; hidden from store/staff nav) --}}
+                @if (auth()->user()->isAdmin())
                 @php
-                    $docOpen = request()->routeIs('admin.docs*');
+                    $docOpen = request()->routeIs('*.docs*');
                 @endphp
 
                 <div x-data="{ docOpen: {{ $docOpen ? 'true' : 'false' }} }">
@@ -308,24 +210,24 @@
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 -translate-y-1"
                         class="ml-3 pl-3 border-l border-surface-700 space-y-0.5 mt-0.5">
-                        <a href="{{ route('admin.docs.index') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all {{ request()->routeIs('admin.docs.index') ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                        <a href="{{ route($rPrefix . 'docs.index') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all {{ request()->routeIs('*.docs.index') ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
                             <i data-lucide="help-circle"
-                                class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('admin.docs.index') ? 'text-white' : 'text-brand-500' }}"></i>
+                                class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('*.docs.index') ? 'text-white' : 'text-brand-500' }}"></i>
                             <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">Help Center Home</span>
                         </a>
 
-                        <a href="{{ route('admin.docs.show', 'getting-started') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all {{ request()->is('admin/docs/getting-started*') || request()->is('admin/docs/understanding*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                        <a href="{{ route($rPrefix . 'docs.show', 'getting-started') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all {{ request()->is('*/docs/getting-started*') || request()->is('*/docs/understanding*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
                             <i data-lucide="compass"
-                                class="w-4 h-4 flex-shrink-0 {{ request()->is('admin/docs/getting-started*') || request()->is('admin/docs/understanding*') ? 'text-white' : 'text-brand-500' }}"></i>
+                                class="w-4 h-4 flex-shrink-0 {{ request()->is('*/docs/getting-started*') || request()->is('*/docs/understanding*') ? 'text-white' : 'text-brand-500' }}"></i>
                             <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">Getting Started</span>
                         </a>
 
-                        <a href="{{ route('admin.docs.show', 'orders') }}"
-                            class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all {{ request()->is('admin/docs/orders*') || request()->is('admin/docs/how-to-process-an-order*') || request()->is('admin/docs/order*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                        <a href="{{ route($rPrefix . 'docs.show', 'orders') }}"
+                            class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all {{ request()->is('*/docs/orders*') || request()->is('*/docs/how-to-process-an-order*') || request()->is('*/docs/order*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
                             <i data-lucide="package"
-                                class="w-4 h-4 flex-shrink-0 {{ request()->is('admin/docs/orders*') || request()->is('admin/docs/how-to-process-an-order*') || request()->is('admin/docs/order*') ? 'text-white' : 'text-brand-500' }}"></i>
+                                class="w-4 h-4 flex-shrink-0 {{ request()->is('*/docs/orders*') || request()->is('*/docs/how-to-process-an-order*') || request()->is('*/docs/order*') ? 'text-white' : 'text-brand-500' }}"></i>
                             <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">Orders</span>
                         </a>
 
@@ -437,6 +339,7 @@
                         @endif
                     </div>
                 </div>
+                @endif
             </nav>
 
             <!-- Footer -->
@@ -469,7 +372,8 @@
                         <i data-lucide="panel-left" class="w-5 h-5"></i>
                     </button>
                     <div class="flex items-center gap-4">
-                        {{-- Documentation Dropdown Menu --}}
+                        {{-- Documentation Dropdown Menu (NAC admin only) --}}
+                        @if (auth()->user()->isAdmin())
                         <div class="relative" x-data="{ docMenuOpen: false }">
                             <button @click="docMenuOpen = !docMenuOpen" @click.away="docMenuOpen = false"
                                 class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-100 hover:bg-surface-200 text-surface-700 text-xs font-semibold transition border border-surface-200/80 shadow-2xs cursor-pointer">
@@ -540,6 +444,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                         @if ($isStoreAdmin && $userStore)
                             {{-- Store admin: show store logo + owner name --}}
                             <div

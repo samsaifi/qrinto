@@ -169,14 +169,13 @@
     <div x-data="cartCheckoutFlow()" class="space-y-6 pb-48 px-6 font-sans text-slate-900">
         <div class="space-y-1">
             <h1 class="text-2xl font-extrabold flex items-center gap-3">
-                <a href="{{ route('flow.cart.index') }}"
+                <a href="{{ route('flow.index') }}"
                     class="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors shrink-0">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 </a>
-                Checkout
+                Your order
             </h1>
-            <p class="text-slate-500 font-medium text-xs ml-11">Review your {{ $cart->item_count }}
-                item{{ $cart->item_count > 1 ? 's' : '' }} and complete payment</p>
+            <p class="text-slate-500 font-medium text-xs ml-11">Review your order and complete pickup details</p>
         </div>
 
         {{-- Cart Items Summary --}}
@@ -335,15 +334,25 @@
                             <h4 class="font-extrabold text-xs text-slate-900 truncate">
                                 {{ $item->product->name ?? 'Custom Print' }}</h4>
                             <p class="text-[10px] font-bold text-slate-400 mt-0.5">
-                                Qty: {{ $item->quantity }}
                                 @if (!empty($customization['size_name']))
-                                    · {{ $customization['size_name'] }}
+                                    {{ $customization['size_name'] }}
                                     @if (!empty($customization['size_width']) && !empty($customization['size_height']))
                                         ·
                                         {{ $customization['size_width'] }}×{{ $customization['size_height'] }}{{ $customization['size_unit'] ?? '' }}
                                     @endif
                                 @endif
                             </p>
+
+                            {{-- Quantity stepper --}}
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <button type="button" @click="updateQty(-1)" :disabled="quantity <= 1 || updatingQty"
+                                    class="w-6 h-6 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm font-bold"
+                                    aria-label="Decrease quantity">−</button>
+                                <span class="text-xs font-black text-slate-900 w-5 text-center tabular-nums" x-text="quantity">{{ $item->quantity }}</span>
+                                <button type="button" @click="updateQty(1)" :disabled="quantity >= 100 || updatingQty"
+                                    class="w-6 h-6 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm font-bold"
+                                    aria-label="Increase quantity">+</button>
+                            </div>
 
                             {{-- Preview Design Button --}}
                             <button type="button"
@@ -361,34 +370,9 @@
                             </button>
                         </div>
                         <span class="font-extrabold text-sm text-slate-900 flex-shrink-0"
-                            x-text="__price({{ $item->unit_price }} * {{ $item->quantity }})"></span>
+                            x-text="__price(unitPrice * quantity)"></span>
                     </div>
                 @endforeach
-            </div>
-
-            {{-- Coupon --}}
-            <div class="p-5 bg-white border-t border-slate-100">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promo Code</span>
-                    <template x-if="appliedCoupon">
-                        <button @click="removeCoupon()"
-                            class="text-[10px] font-black text-red-500 uppercase">Remove</button>
-                    </template>
-                </div>
-                <div class="flex gap-2">
-                    <div class="relative flex-1">
-                        <i data-lucide="ticket" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                        <input type="text" x-model="couponInput" :disabled="appliedCoupon" placeholder="Enter code"
-                            class="w-full bg-slate-50 border-2 border-transparent focus:border-mobile-500 rounded-xl py-2.5 pl-10 pr-3 text-sm font-bold uppercase transition-all outline-none"
-                            @keydown.enter.prevent="applyCoupon()">
-                    </div>
-                    <button @click="applyCoupon()" :disabled="appliedCoupon || !couponInput"
-                        class="px-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-mobile-600 disabled:opacity-50 transition-all active:scale-95">
-                        Apply
-                    </button>
-                </div>
-                <p x-show="couponMessage" x-text="couponMessage" :class="appliedCoupon ? ' text-gray-600' : 'text-red-500'"
-                    class="text-[10px] font-bold mt-2 ml-1" style="display:none"></p>
             </div>
 
             {{-- Pricing --}}
@@ -650,6 +634,10 @@
         function cartCheckoutFlow() {
             return {
                 subtotal: {{ $cart->subtotal }},
+                itemId: {{ optional($cart->items->first())->id ?? 'null' }},
+                quantity: {{ (int) (optional($cart->items->first())->quantity ?? 1) }},
+                unitPrice: {{ (float) (optional($cart->items->first())->unit_price ?: (optional(optional($cart->items->first())->product)->base_price ?? 0)) }},
+                updatingQty: false,
                 pickupName: '',
                 pickupEmail: '',
                 contactNumber: '',
@@ -689,6 +677,34 @@
 
                 calculateTotal() {
                     return Math.max(0, this.subtotal - this.discountAmount).toFixed(2);
+                },
+
+                async updateQty(delta) {
+                    const next = Math.max(1, Math.min(100, this.quantity + delta));
+                    if (next === this.quantity || this.updatingQty || !this.itemId) return;
+                    this.quantity = next;
+                    this.subtotal = this.unitPrice * this.quantity;
+                    this.updatingQty = true;
+                    try {
+                        const res = await fetch('{{ url('/cart/update') }}/' + this.itemId, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ quantity: this.quantity })
+                        });
+                        const data = await res.json();
+                        if (data && typeof data.subtotal !== 'undefined') {
+                            this.subtotal = parseFloat(data.subtotal);
+                            if (typeof data.discount !== 'undefined') this.discountAmount = parseFloat(data.discount);
+                        }
+                    } catch (e) {
+                        // Optimistic value stands; server reconciles at checkout.
+                    } finally {
+                        this.updatingQty = false;
+                    }
                 },
 
                 async applyCoupon() {
@@ -741,7 +757,7 @@
                     if (!this.pickupName || !this.contactNumber || !this.pickupEmail) return;
                     this.isProcessing = true;
 
-                    fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow-pc.cart-checkout.cash' : 'flow.cart-checkout.cash'); ?>', {
+                    fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow.cart-checkout.cash' : 'flow.cart-checkout.cash'); ?>', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -788,7 +804,7 @@
                         },
 
                         createOrder(data, actions) {
-                            return fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow-pc.cart-checkout.paypal.create' : 'flow.cart-checkout.paypal.create'); ?>', {
+                            return fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow.cart-checkout.paypal.create' : 'flow.cart-checkout.paypal.create'); ?>', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
@@ -817,7 +833,7 @@
                             self.showPaypal = false;
                             self.isProcessing = true;
 
-                            return fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow-pc.cart-checkout.paypal.capture' : 'flow.cart-checkout.paypal.capture'); ?>', {
+                            return fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow.cart-checkout.paypal.capture' : 'flow.cart-checkout.paypal.capture'); ?>', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',

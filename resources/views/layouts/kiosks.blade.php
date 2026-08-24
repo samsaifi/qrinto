@@ -14,9 +14,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -37,6 +35,12 @@
     @php
         $isStoreAdmin = auth()->user()->isStoreAdmin();
         $userStore = $isStoreAdmin && auth()->user()->store_id ? auth()->user()->store : null;
+        $userRole = auth()->user()->role ?? '';
+        $rPrefix = match ($userRole) {
+            'store_admin', 'storeadmin' => 'store.',
+            'staff' => 'staff.',
+            default => 'admin.',
+        };
     @endphp
     <div class="flex min-h-screen">
         <!-- Sidebar -->
@@ -70,7 +74,9 @@
                         <i data-lucide="layout-dashboard" class="w-4 h-4 text-white"></i>
                     </div>
                     <span x-show="sidebarOpen" x-transition
-                        class="font-display font-bold text-white text-lg whitespace-nowrap">Admin Panel</span>
+                        class="font-display font-bold text-white text-lg whitespace-nowrap">
+                        {{ auth()->user()->role === 'staff' ? 'Staff Panel' : (auth()->user()->isStoreAdmin() ? 'Store Panel' : 'Admin Panel') }}
+                    </span>
                 </div>
             @endif
             <div class="relative    flex w-full gap-4 rounded-lg border border-white/[0.06] bg-white/[0.04] p-[3px]">
@@ -83,12 +89,12 @@
                 </div>
 
                 <!-- Admin -->
-                <a href="{{ route('admin.dashboard') }}"
+                <a href="{{ route($rPrefix . 'roleDashboard') }}"
                     class="relative z-10 flex flex-1 items-center justify-center gap-1.5
                         rounded-md py-[7px] text-[12.5px] font-medium
                         text-[#7A837A] hover:bg-brand-500 hover:text-white">
                     <span class="text-sm text-[#7A837A]">▦</span>
-                    <span>Admin Panel</span>
+                    <span>{{ auth()->user()->role === 'staff' ? 'Staff Panel' : (auth()->user()->isStoreAdmin() ? 'Store Panel' : 'Admin Panel') }}</span>
                 </a>
 
                 <!-- Kiosk - Active -->
@@ -106,10 +112,10 @@
                 @php
                     $topItems = [
                         [
-                            'route' => 'admin.dashboard',
+                            'route' => $rPrefix . 'kiosks.index',
                             'icon' => 'layout-dashboard',
-                            'label' => 'Dashboard',
-                            'match' => 'admin.dashboard',
+                            'label' => 'Kiosk Logs',
+                            'match' => '*.kiosks.index*',
                         ],
                     ];
                 @endphp
@@ -176,7 +182,7 @@
                                 <div class="px-4 py-2 bg-surface-50/70">
                                     <p class="text-[11px] font-bold text-surface-400 uppercase tracking-wider">
                                         Documentation Center</p>
-                                    <a href="{{ route('admin.docs.index') }}"
+                                    <a href="{{ route($rPrefix . 'docs.index') }}"
                                         class="text-xs font-bold text-brand-600 hover:text-brand-700 block mt-0.5">
                                         View Help Center Home →
                                     </a>
@@ -186,12 +192,12 @@
                                     <p
                                         class="px-4 py-1 text-[10px] font-bold text-surface-400 uppercase tracking-wider">
                                         Customer Flow</p>
-                                    <a href="{{ route('admin.docs.show', 'mobile-custom-editing-ordering-guide') }}"
+                                    <a href="{{ route($rPrefix . 'docs.show', 'mobile-custom-editing-ordering-guide') }}"
                                         class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
                                         <i data-lucide="smartphone" class="w-4 h-4 text-pink-500"></i>
                                         <span>Mobile Ordering Guide</span>
                                     </a>
-                                    <a href="{{ route('admin.docs.show', 'desktop-custom-editing-ordering-guide') }}"
+                                    <a href="{{ route($rPrefix . 'docs.show', 'desktop-custom-editing-ordering-guide') }}"
                                         class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
                                         <i data-lucide="monitor" class="w-4 h-4 text-indigo-500"></i>
                                         <span>Desktop PC Studio Guide</span>
@@ -202,22 +208,22 @@
                                     <p
                                         class="px-4 py-1 text-[10px] font-bold text-surface-400 uppercase tracking-wider">
                                         Admin Operations</p>
-                                    <a href="{{ route('admin.docs.show', 'getting-started') }}"
+                                    <a href="{{ route($rPrefix . 'docs.show', 'getting-started') }}"
                                         class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
                                         <i data-lucide="compass" class="w-4 h-4 text-brand-500"></i>
                                         <span>Getting Started</span>
                                     </a>
-                                    <a href="{{ route('admin.docs.show', 'orders') }}"
+                                    <a href="{{ route($rPrefix . 'docs.show', 'orders') }}"
                                         class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
                                         <i data-lucide="package" class="w-4 h-4  text-gray-500"></i>
                                         <span>Orders & Workflow</span>
                                     </a>
-                                    <a href="{{ route('admin.docs.show', 'products') }}"
+                                    <a href="{{ route($rPrefix . 'docs.show', 'products') }}"
                                         class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
                                         <i data-lucide="box" class="w-4 h-4 text-amber-500"></i>
                                         <span>Products & Masking</span>
                                     </a>
-                                    <a href="{{ route('admin.docs.show', 'stores') }}"
+                                    <a href="{{ route($rPrefix . 'docs.show', 'stores') }}"
                                         class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition">
                                         <i data-lucide="store" class="w-4 h-4 text-purple-500"></i>
                                         <span>Stores & Printers</span>

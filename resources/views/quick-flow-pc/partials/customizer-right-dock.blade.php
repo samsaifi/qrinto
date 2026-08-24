@@ -54,24 +54,24 @@
     <button type="button" id="qr-dock-trigger" onclick="toggleQrDrawer()"
         class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Generate QR Code">
         <div
-            class="w-12 h-12 rounded-full  bg-gray-50 border  border-gray-200 shadow-xl shadow-emerald-500/10 flex items-center justify-center  text-gray-600 group-hover: bg-gray-600 group-hover:text-white group-hover:scale-110 transition-all duration-200">
+            class="w-12 h-12 rounded-full bg-white border border-slate-200/90 shadow-xl shadow-slate-300/40 flex items-center justify-center text-slate-700 group-hover:bg-slate-900 group-hover:text-white group-hover:scale-110 transition-all duration-200">
             <i data-lucide="qr-code" class="w-5 h-5"></i>
         </div>
-        <span class="text-xs font-bold  text-gray-600 transition-colors">QR Code</span>
+        <span class="text-xs font-bold text-slate-600 group-hover:text-slate-900 transition-colors">QR Code</span>
     </button>
 
-    {{-- 6. Add to Cart Button --}}
-    <form action="{{ route('flow-pc.cart.add') }}" method="POST" id="checkout-form" class="flex justify-center">
+    {{-- 6. Continue to order (single design per order — replaces "Add to cart") --}}
+    <form action="{{ route('flow.cart.add') }}" method="POST" id="checkout-form" class="flex justify-center">
         @csrf
         <input type="hidden" name="product_id" value="{{ $product->id }}">
         <input type="hidden" name="upload_ids" id="upload_ids_field">
         <button type="button" id="submit-btn" onclick="customizer.submitAllCanvases()"
-            class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Add To Cart">
+            class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Continue to order">
             <div
                 class="w-12 h-12 rounded-full bg-brand-600 text-white shadow-2xl shadow-brand-600/30 flex items-center justify-center group-hover:bg-brand-700 transition-all duration-200">
-                <i data-lucide="shopping-bag" class="w-5 h-5 text-white"></i>
+                <i data-lucide="arrow-right" class="w-5 h-5 text-white"></i>
             </div>
-            <span class="text-xs font-black text-slate-900">Add to cart</span>
+            <span class="text-xs font-black text-slate-900">Continue</span>
         </button>
     </form>
 </div>

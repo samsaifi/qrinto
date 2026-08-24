@@ -18,7 +18,13 @@ class CartController extends Controller
 
     protected function getViewPath($viewName)
     {
-        return "quick-flow.{$viewName}";
+        $userAgent = strtolower(request()->userAgent() ?? '');
+        $isMobile = (bool) preg_match(
+            '/android|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/',
+            $userAgent
+        );
+
+        return ($isMobile ? 'quick-flow' : 'quick-flow-pc') . ".{$viewName}";
     }
 
     protected function getRoutePrefix()
@@ -27,6 +33,13 @@ class CartController extends Controller
     }
 
     public function index()
+    {
+        // One design per order: there is no standalone cart. Send anyone who
+        // lands on the old cart route straight to the merged order page.
+        return redirect()->route($this->getRoutePrefix() . 'cart-checkout');
+    }
+
+    public function legacyIndex()
     {
         $cart = $this->cartService->getCart();
 
@@ -85,6 +98,10 @@ class CartController extends Controller
             ? ['design_key' => md5(json_encode($uploadIds))]
             : null;
 
+        // One design per order: replace any existing design so the order only
+        // ever holds the current one, then go straight to the order page.
+        $this->cartService->clearCart();
+
         $this->cartService->addItem(
             $product->id,
             $quantity,
@@ -93,7 +110,7 @@ class CartController extends Controller
             $selectedOptions,
         );
 
-        return redirect()->route($this->getRoutePrefix() . 'cart.index')->with('success', 'Design added to cart!');
+        return redirect()->route($this->getRoutePrefix() . 'cart-checkout')->with('success', 'Design ready to order.');
     }
 
     public function update(Request $request, int $itemId)

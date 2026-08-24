@@ -1,279 +1,181 @@
 @extends('layouts.quick-flow-pc')
 
-@section('title', 'Custom ' . $type->name . ' Printing & Sizes | Qrinto')
-@section('header_title', $type->name)
-@section('meta_description', 'Explore custom ' . $type->name . ' sizes, templates, and printing options. High quality printing with instant online editor & fast store pickup at Qrinto.')
-@section('meta_keywords', 'custom ' . strtolower($type->name) . ', ' . strtolower($type->name) . ' printing, photo ' . strtolower($type->name) . ', custom size prints, Qrinto print studio')
-@section('canonical_url', route('flow-pc.category', $type->slug))
-@section('og_type', 'product')
-@section('og_title', 'Custom ' . $type->name . ' Printing & Sizes | Qrinto')
-@section('og_description', 'Explore custom ' . $type->name . ' sizes, templates, and printing options. High quality printing with instant online editor & fast store pickup at Qrinto.')
-@section('og_image', asset('logo/Qrinto-logo-small.png'))
-
-@push('styles')
-    <style>
-        .hero-pattern-bg {
-            background-color: #ffffff;
-            background-image:
-                radial-gradient(rgba(148, 163, 184, 0.28) 1.2px, transparent 1.2px),
-                linear-gradient(to right, rgba(241, 245, 249, 0.7) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(241, 245, 249, 0.7) 1px, transparent 1px);
-            background-size: 24px 24px, 48px 48px, 48px 48px;
-        }
-
-        .hero-gradient-overlay {
-            background: radial-gradient(circle at 85% 20%, rgba(111, 182, 58, 0.08) 0%, rgba(255, 255, 255, 0) 55%),
-                radial-gradient(circle at 15% 85%, rgba(16, 185, 129, 0.06) 0%, rgba(255, 255, 255, 0) 50%);
-        }
-
-        .size-card-premium {
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .size-card-premium:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(74, 133, 36, 0.2);
-            border-color: var(--color-brand-500, #6FB63A);
-        }
-
-        .size-card-premium:hover .size-arrow {
-            background-color: var(--color-brand-600, #4A8524);
-            color: white;
-            transform: translateX(4px);
-        }
-
-        .size-card-premium:hover .size-icon-box {
-            transform: scale(1.08);
-            background-color: var(--color-brand-100, #E0F0D0);
-        }
-
-        .size-arrow {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .size-icon-box {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .size-icon-box svg {
-            width: 100%;
-            height: 100%;
-            fill: currentColor !important;
-        }
-
-        .fade-up-cat {
-            animation: fadeUpCat 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        @keyframes fadeUpCat {
-            from {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
-@endpush
+@section('title', ($type->name ?? 'Category') . ' | Qrinto Custom Print Studio')
+@section('header_title', $type->name ?? 'Category')
+@section('meta_description', $type->title ?? $type->description ?? 'Custom print options and card selections.')
+@section('canonical_url', route('flow.category', ['type' => $type->slug ?? 'cards']))
 
 @section('content')
-    @php
-        $subTypesCount = isset($subTypes) ? $subTypes->count() : 0;
-        $activeStore = session()->has('active_store_id') ? \App\Models\Store::find(session('active_store_id')) : null;
+    <div class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+        <div class="max-w-[1240px] mx-auto">
 
-        $heroPills = [
-            ['icon' => 'ruler', 'text' => "{$subTypesCount} Sizes Available"],
-            ['icon' => 'award', 'text' => 'Studio Print Quality'],
-            ['icon' => 'truck', 'text' => 'Express Store Pickup'],
-        ];
-
-        $trustStats = [
-            ['val' => '100%', 'label' => 'Quality Guaranteed'],
-            ['val' => 'Live 3D', 'label' => 'Design Studio'],
-            ['val' => 'Same-Day', 'label' => 'Local Pickup'],
-        ];
-    @endphp
-
-    <div class="w-full overflow-hidden pb-24">
-
-        {{-- ===== HERO HEADER (WHITE PATTERN BACKGROUND HERO SECTION) ===== --}}
-        <section
-            class="hero-pattern-bg relative w-full px-6 lg:px-12 pt-8 sm:pt-10 pb-6 sm:pb-8 border-b border-slate-200/80 overflow-hidden">
-            <!-- Ambient Soft Radial Glow -->
-            <div class="absolute inset-0 pointer-events-none hero-gradient-overlay"></div>
-
-            <!-- Giant Background Watermark Text "Step 2" (Bottom Right) -->
-            <div
-                class="absolute right-4 sm:right-10 bottom-2 text-[140px] sm:text-[200px] font-black text-slate-200/40 select-none pointer-events-none tracking-tighter leading-none z-0">
-                Step 2
-            </div>
-
-            <div class="max-w-[1400px] mx-auto w-full relative z-10">
-                {{-- Top Navigation / Breadcrumbs --}}
-                <div class="flex items-center justify-between gap-3 mb-6 fade-up-cat" style="animation-delay:0s">
-                    <nav class="flex flex-wrap items-center gap-2 text-xs font-semibold">
-                        <a href="{{ route('flow-pc.index') }}"
-                            class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-1">
-                            <i data-lucide="home" class="w-3.5 h-3.5 text-slate-400"></i>
-                            <span>Home</span>
-                        </a>
-                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                        <span class="text-slate-900 font-extrabold">{{ $type->name }}</span>
-                    </nav>
-                </div>
-
-                <div class="max-w-3xl">
-                    <!-- Badge Tag -->
-                    <div class="mb-3">
-                        <span
-                            class="inline-flex items-center gap-2 bg-brand-50 text-brand-700 border border-brand-200/80 text-[10px] font-black px-3.5 py-1 rounded-full uppercase tracking-widest shadow-2xs">
-                            <i data-lucide="ruler" class="w-3.5 h-3.5 text-brand-600"></i>
-                            STEP 2 &bull; SIZE SELECTION
-                        </span>
-                    </div>
-
-                    <!-- Heading -->
-                    <h1 class="text-3xl sm:text-4xl xl:text-5xl font-black text-slate-900 leading-tight tracking-tight">
-                        {{ $type->name }} <span class="text-brand-600 italic"
-                            style="font-family: 'Playfair Display', serif;">Collection & Sizes.</span>
-                    </h1>
-
-                    <!-- Subtitle -->
-                    <p class="text-sm sm:text-base text-slate-600 font-medium mt-3 leading-relaxed max-w-2xl">
-                        @if ($type->title)
-                            {{ $type->title }} &mdash;
-                        @endif
-                        Choose your preferred dimensions to browse design templates and customize your
-                        {{ strtolower($type->name) }}.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        {{-- ===== SIZE SELECTION GRID (ULTRA-PREMIUM RICH CARD UI) ===== --}}
-        <section id="size-grid" class="max-w-[1400px] mx-auto pt-5 pb-16 px-6 sm:px-10">
-
-            {{-- Compact Toolbar Row (Clean & Non-Repetitive) --}}
-            <div
-                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-5 border-b border-slate-200/80">
-                <div class="flex items-center gap-3">
-                    <span class="text-xs font-black uppercase tracking-wider text-slate-500">Available Formats</span>
-                    <span class="text-slate-300 font-bold">&bull;</span>
-                    <span
-                        class="inline-flex items-center gap-1.5 bg-brand-50 text-brand-700 border border-brand-200/80 text-[11px] font-black px-3 py-1 rounded-full shadow-2xs">
-                        <i data-lucide="layers" class="w-3.5 h-3.5 text-brand-600"></i>
-                        {{ $subTypesCount }} Sizes Available
-                    </span>
-                </div>
-
-                <a href="{{ route('flow-pc.index') }}"
-                    class="inline-flex items-center gap-2 text-xs font-black text-slate-700 hover:text-white hover:bg-slate-900 bg-white border border-slate-200/90 px-4 py-2.5 rounded-xl transition-all duration-300 shadow-2xs hover:shadow-md cursor-pointer shrink-0 self-start sm:self-auto">
-                    <i data-lucide="arrow-left" class="w-4 h-4 text-brand-600"></i>
-                    <span>Back to {{ session()->get('quick_flow_data')['type_name'] ?? 'Cards' }}</span>
+            {{-- Back Navigation --}}
+            <div class="mb-6">
+                <a href="{{ route('flow.index') }}"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
+                    <span>← All products</span>
                 </a>
             </div>
 
-            @if (isset($subTypes) && $subTypes->isNotEmpty())
-                {{-- Size Cards Grid (Compact Half-Size Cards with Icon & Title side-by-side in one row) --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-                    @foreach ($subTypes as $index => $sub)
-                        <a href="{{ route('flow-pc.category', $sub->slug) }}"
-                            class="size-card-premium group relative bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-xl hover:border-brand-500 transition-all duration-300 cursor-pointer block"
-                            style="animation: fadeUpCat 0.5s cubic-bezier(0.16,1,0.3,1) {{ $index * 0.04 }}s both;">
+            {{-- Title Header (Dynamic from $type) --}}
+            <div class="mb-10">
+                <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
+                    @if (Str::contains(strtolower($type->name ?? ''), 'card'))
+                        Choose a {{ strtolower(Str::singular($type->name)) }}
+                    @else
+                        Choose {{ $type->name ?? 'a product' }}
+                    @endif
+                </h1>
+                @if ($type->title || $type->short_description)
+                    <p class="text-sm text-slate-500 font-normal mt-1.5">
+                        {{ $type->title ?? $type->short_description }}
+                    </p>
+                @endif
+            </div>
 
-                            <!-- Subtle Top Brand Glow Accent -->
-                            <div
-                                class="absolute top-0 inset-x-6 h-0.5 bg-brand-500 rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            </div>
+            @php
+                $groupedSubTypes = $subTypes->groupBy(fn($item) => trim($item->title ?? $item->name));
+            @endphp
 
+            {{-- Dynamic 3-Column Card Grouped Grid --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                @forelse ($groupedSubTypes as $groupTitle => $items)
+                    @php
+                        $firstItem = $items->first();
+                        $displayTitle = Str::replace(' - double', ', double-sided', $groupTitle);
+                        
+                        $desc = match(strtolower($groupTitle)) {
+                            'folded' => 'Opens upward. Cover and inside are printed.',
+                            'flat' => 'One sheet, front printed.',
+                            'flat - double', 'flat, double-sided' => 'One sheet, both sides printed.',
+                            'standard size' => 'Flexible photo magnets printed with crisp colors.',
+                            default => $firstItem->description ?? '',
+                        };
+
+                        if ($desc && (strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], $desc)) === strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], $displayTitle)) || strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], $desc)) === strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], $firstItem->title ?? '')))) {
+                            $desc = null;
+                        }
+
+                        $isFolded = Str::contains(strtolower($groupTitle), 'folded');
+                        $isDouble = Str::contains(strtolower($groupTitle), ['double', 'both']);
+                        $hasMultipleSizes = $items->count() > 1;
+                    @endphp
+
+                    <div x-data="{ 
+                            selectedId: '{{ $firstItem->id }}',
+                            selectedPrice: '{{ \App\Services\CurrencyService::formatWithCurrency($firstItem->price, $firstItem->currency ?? 'USD') }}',
+                            selectedTitleSlug: '{{ Str::slug($groupTitle) }}',
+                            selectedSizeCode: '{{ ($firstItem->width + 0) . 'x' . ($firstItem->height + 0) }}'
+                        }"
+                        class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+                        
+                        {{-- Top Image Area --}}
+                        <div class="bg-[#f2f7f2] h-48 sm:h-52 flex items-center justify-center p-6 border-b border-slate-100 relative">
+                            @if ($firstItem->icon_svg)
+                                <div class="w-24 h-24 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                    {!! $firstItem->icon_svg !!}
+                                </div>
+                            @elseif ($isFolded)
+                                <svg class="w-28 h-28 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform" viewBox="0 0 100 80">
+                                    <rect x="25" y="15" width="50" height="40" rx="3" stroke="currentColor" fill="none"/>
+                                    <rect x="30" y="20" width="40" height="30" rx="1" stroke="currentColor" fill="none"/>
+                                    <path d="M10 65 L25 55 L75 55 L90 65 Z" stroke="currentColor" fill="none"/>
+                                    <path d="M25 55 L25 15" stroke="currentColor" fill="none"/>
+                                    <path d="M75 55 L75 15" stroke="currentColor" fill="none"/>
+                                </svg>
+                            @elseif ($isDouble)
+                                <svg class="w-24 h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform" viewBox="0 0 90 90">
+                                    <rect x="15" y="15" width="35" height="50" rx="3" stroke="currentColor" fill="none"/>
+                                    <rect x="42" y="10" width="35" height="50" rx="3" stroke="currentColor" fill="none"/>
+                                    <line x1="49" y1="20" x2="68" y2="20" stroke="currentColor"/>
+                                    <line x1="49" y1="26" x2="65" y2="26" stroke="currentColor"/>
+                                    <path d="M60 62 C50 72 30 72 25 65" stroke="currentColor" stroke-dasharray="2 2"/>
+                                    <path d="M22 68 L25 65 L28 71" stroke="currentColor"/>
+                                </svg>
+                            @else
+                                <svg class="w-24 h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform" viewBox="0 0 80 90">
+                                    <rect x="20" y="12" width="40" height="60" rx="4" stroke="currentColor" fill="none"/>
+                                    <rect x="27" y="20" width="26" height="30" rx="2" stroke="currentColor" fill="none"/>
+                                    <line x1="27" y1="58" x2="47" y2="58" stroke="currentColor"/>
+                                </svg>
+                            @endif
+                        </div>
+
+                        {{-- Bottom Info & Action Area --}}
+                        <div class="p-6 flex-1 flex flex-col justify-between">
                             <div>
-                                {{-- Header Row: Icon + Title & Subtitle side-by-side in ONE ROW, plus Dimension Badge --}}
-                                <div class="flex items-start justify-between gap-3 mb-3">
-                                    <!-- Icon + Title & Subtitle side-by-side -->
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="size-icon-box w-11 h-11 bg-brand-100 border border-brand-200/80 rounded-xl flex items-center justify-center text-brand-700 shadow-2xs group-hover:scale-105 transition-transform duration-300 p-2.5 shrink-0">
-                                            @if ($type->icon_svg)
-                                                {!! $type->icon_svg !!}
-                                            @else
-                                                <i data-lucide="maximize-2" class="w-5 h-5 text-brand-700"></i>
-                                            @endif
-                                        </div>
-                                        <div>
-                                            <h3
-                                                class="text-base font-black text-slate-900 group-hover:text-brand-600 transition-colors leading-tight">
-                                                {{ $sub->name }}
-                                            </h3>
-                                            <p
-                                                class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mt-0.5">
-                                                {{ $sub->title ?: 'Custom Studio Dimension' }}
-                                            </p>
-                                        </div>
-                                    </div>
+                                {{-- Card Title from Product Title --}}
+                                <h3 class="font-extrabold text-slate-900 text-lg sm:text-xl group-hover:text-emerald-700 transition-colors">
+                                    {{ $displayTitle }}
+                                </h3>
+                                @if ($desc)
+                                    <p class="text-xs text-slate-500 font-normal mt-1.5 leading-relaxed">
+                                        {{ $desc }}
+                                    </p>
+                                @endif
 
-                                    @if ($sub->width && $sub->height)
-                                        <span
-                                            class="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200/90 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-2xs shrink-0">
-                                            <i data-lucide="ruler" class="w-3 h-3 text-slate-500"></i>
-                                            {{ $sub->width }}&times;{{ $sub->height }} {{ $sub->unit }}
-                                        </span>
+                                {{-- Dimension Pills (NO item name, dimensions only) --}}
+                                <div class="mt-4">
+                                    @if ($hasMultipleSizes)
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            @foreach ($items as $item)
+                                                @php
+                                                    $dimLabel = ($item->width + 0) . ' × ' . ($item->height + 0);
+                                                    $sizeCode = ($item->width + 0) . 'x' . ($item->height + 0);
+                                                    $itemPrice = \App\Services\CurrencyService::formatWithCurrency($item->price, $item->currency ?? 'USD');
+                                                @endphp
+                                                <button type="button" 
+                                                    @click="selectedId = '{{ $item->id }}'; selectedPrice = '{{ $itemPrice }}'; selectedSizeCode = '{{ $sizeCode }}'"
+                                                    :class="selectedId === '{{ $item->id }}' ? 'border-emerald-600 bg-emerald-50/80 text-emerald-900 font-bold' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 font-normal'"
+                                                    class="px-2.5 py-1 rounded-xl border text-[11px] transition-all cursor-pointer">
+                                                    {{ $dimLabel }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        @php
+                                            $singleDim = ($firstItem->width + 0) . ' × ' . ($firstItem->height + 0) . ' in';
+                                            $normTitle = str_replace([' ', 'in', '×'], ['', '', 'x'], strtolower($displayTitle));
+                                            $normDim = ($firstItem->width + 0) . 'x' . ($firstItem->height + 0);
+                                            $titleContainsDim = str_contains($normTitle, $normDim);
+                                        @endphp
+                                        @if (!$titleContainsDim)
+                                            <span class="text-xs text-slate-400 font-mono">{{ $singleDim }}</span>
+                                        @endif
                                     @endif
                                 </div>
-
                             </div>
 
-                            {{-- Bottom Card Footer: Price & CTA --}}
-                            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                                <div>
-                                    <span
-                                        class="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Starting
-                                        From</span>
-                                    <div class="flex items-baseline gap-1.5 mt-0.5">
-                                        @if ($sub->price)
-                                            <span class="text-lg font-black text-slate-900">
-                                                {{ \App\Services\CurrencyService::format($sub->price) }}
-                                            </span>
-                                            @if ($sub->old_price && $sub->old_price > $sub->price)
-                                                <span class="text-[11px] text-slate-400 line-through font-bold">
-                                                    {{ \App\Services\CurrencyService::format($sub->old_price) }}
-                                                </span>
-                                            @endif
-                                        @else
-                                            <span class="text-xs font-black text-brand-600">Studio Pricing</span>
-                                        @endif
-                                    </div>
-                                </div>
+                            {{-- Bottom Line: Price + Design Button --}}
+                            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                                <span class="text-xs text-slate-500 font-normal">
+                                    <strong class="font-extrabold text-slate-900 text-sm" x-text="selectedPrice"></strong> each
+                                </span>
 
-                                {{-- CTA Button --}}
-                                <div
-                                    class="size-arrow bg-slate-100 text-slate-700 border border-slate-200/80 group-hover:bg-brand-500 group-hover:text-white group-hover:border-brand-500 hover:!bg-brand-600 font-black text-[11px] px-3.5 py-2 rounded-xl shadow-2xs flex items-center gap-1.5 transition-all duration-300">
-                                    <span>Select Size</span>
-                                    <i data-lucide="arrow-right"
-                                        class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"></i>
-                                </div>
+                                @if (Str::contains(strtolower($type->slug ?? ''), 'magnet') || Str::contains(strtolower($type->name ?? ''), 'magnet'))
+                                    <a :href="'{{ url('/') }}/magnets/' + selectedSizeCode + '/design'"
+                                        class="bg-[#287d3c] hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-2xs inline-flex items-center gap-1 active:scale-95">
+                                        <span>Design →</span>
+                                    </a>
+                                @else
+                                    <a :href="'{{ url('/') }}/{{ $type->slug }}/' + selectedTitleSlug + '/' + selectedSizeCode + '/templates'"
+                                        class="bg-[#287d3c] hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-2xs inline-flex items-center gap-1 active:scale-95">
+                                        <span>Design →</span>
+                                    </a>
+                                @endif
                             </div>
-                        </a>
-                    @endforeach
-                </div>
-            @else
-                <div class="text-center py-20 bg-slate-50/80 rounded-[32px] border border-slate-200/90">
-                    <div
-                        class="w-16 h-16 bg-white shadow-xs rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
-                        <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
+                        </div>
+
                     </div>
-                    <h4 class="text-xl font-black text-slate-900">No sizes found</h4>
-                    <p class="text-sm text-slate-500 font-medium mt-2">No size subcategories configured for
-                        {{ $type->name }}.</p>
-                    <a href="{{ route('flow-pc.index') }}"
-                        class="inline-flex items-center gap-2 mt-6 text-xs font-black text-brand-600 hover:text-brand-700 bg-white border border-slate-200/90 px-4 py-2.5 rounded-xl shadow-2xs transition-all">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to product catalog
-                    </a>
-                </div>
-            @endif
-        </section>
+                @empty
+                    <div class="col-span-3 text-center py-12 bg-white rounded-3xl border border-slate-200">
+                        <p class="text-slate-500 text-sm font-medium">No sub-categories available for {{ $type->name }}.</p>
+                    </div>
+                @endforelse
 
+            </div>
+
+        </div>
     </div>
 @endsection

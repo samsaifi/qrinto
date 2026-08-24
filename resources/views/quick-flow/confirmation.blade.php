@@ -136,6 +136,12 @@
                     </span>
                 @endif
             </div>
+
+            {{-- Pickup QR (always visible; show at the counter) --}}
+            <div class="pt-3 flex flex-col items-center gap-2">
+                <div id="order-qr" class="w-40 h-40 bg-white rounded-2xl border border-slate-100 flex items-center justify-center p-2"></div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Show this at the counter</p>
+            </div>
         </div>
 
         {{-- Ordered Items Design Previews Card --}}
@@ -356,6 +362,7 @@
 @endsection
 
 @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Object.keys(localStorage).forEach(key => {
@@ -363,6 +370,17 @@
                     localStorage.removeItem(key);
                 }
             });
+
+            // Render an always-visible pickup QR of the order number.
+            var holder = document.getElementById('order-qr');
+            if (holder && window.QRCode) {
+                new QRCode(holder, {
+                    text: @json($order->order_number),
+                    width: 144, height: 144,
+                    colorDark: '#0f172a', colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H,
+                });
+            }
         });
     </script>
 @endpush

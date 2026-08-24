@@ -333,31 +333,6 @@
                 @endforeach
             </div>
 
-            {{-- Coupon Section --}}
-            <div class="bg-white border-2 border-slate-50 rounded-[2rem] shadow-premium p-5">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Promo Code</span>
-                    <template x-if="appliedCoupon">
-                        <button @click="removeCoupon()"
-                            class="text-[10px] font-black text-red-500 uppercase hover:text-red-600 transition-colors">Remove</button>
-                    </template>
-                </div>
-                <div class="flex gap-2">
-                    <div class="relative flex-1">
-                        <i data-lucide="ticket" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-                        <input type="text" x-model="couponInput" :disabled="appliedCoupon" placeholder="Enter code"
-                            class="w-full bg-slate-50 border-2 border-transparent focus:border-mobile-500 rounded-xl py-2.5 pl-10 pr-3 text-sm font-bold uppercase transition-all outline-none"
-                            @keydown.enter.prevent="applyCoupon()">
-                    </div>
-                    <button @click="applyCoupon()" :disabled="appliedCoupon || !couponInput"
-                        class="px-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-mobile-600 disabled:opacity-50 transition-all active:scale-95">
-                        Apply
-                    </button>
-                </div>
-                <p x-show="couponMessage" x-text="couponMessage" :class="appliedCoupon ? ' text-gray-600' : 'text-red-500'"
-                    class="text-[10px] font-bold mt-2 ml-1" style="display:none"></p>
-            </div>
-
             {{-- Order Summary --}}
             <div class="bg-white border-2 border-slate-50 rounded-[2rem] shadow-premium p-5 space-y-3">
                 <div class="flex justify-between items-center text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">
