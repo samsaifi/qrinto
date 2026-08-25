@@ -1,19 +1,22 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', 'Product Types & Sizes')
 
 @section('content')
+@php
+    $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+@endphp
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
     <div>
         <h1 class="font-display font-bold text-2xl text-surface-900">Product Types & Sizes</h1>
         <p class="text-sm text-surface-500">Manage product categories and their available sizes</p>
     </div>
-    <a href="{{ route('admin.product-types.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
+    <a href="{{ route($rPrefix . 'product-types.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
         <i data-lucide="plus" class="w-4 h-4"></i> Add Type/Size
     </a>
 </div>
 
 <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-5 mb-6">
-    <form action="{{ route('admin.product-types.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
+    <form action="{{ route($rPrefix . 'product-types.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
         <div>
             <label class="block text-xs font-semibold text-surface-500 mb-1">Search</label>
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Type name..."
@@ -28,7 +31,7 @@
             </select>
         </div>
         <button type="submit" class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition">Filter</button>
-        <a href="{{ route('admin.product-types.index') }}" class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
+        <a href="{{ route($rPrefix . 'product-types.index') }}" class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
     </form>
 </div>
 
@@ -94,10 +97,10 @@
                     </td>
                     <td class="px-3 py-3 text-center" onclick="event.stopPropagation()">
                         <div class="flex items-center justify-center gap-1">
-                            <a href="{{ route('admin.product-types.edit', $type) }}" class="inline-flex p-1.5 rounded-lg hover:bg-brand-50 text-surface-400 hover:text-brand-600 transition" title="Edit">
+                            <a href="{{ route($rPrefix . 'product-types.edit', $type) }}" class="inline-flex p-1.5 rounded-lg hover:bg-brand-50 text-surface-400 hover:text-brand-600 transition" title="Edit">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </a>
-                            <form action="{{ route('admin.product-types.destroy', $type) }}" method="POST" onsubmit="return confirm('Delete this type?')">
+                            <form action="{{ route($rPrefix . 'product-types.destroy', $type) }}" method="POST" onsubmit="return confirm('Delete this type?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="inline-flex p-1.5 rounded-lg hover:bg-red-50 text-surface-400 hover:text-red-600 transition" title="Delete">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -160,10 +163,10 @@
                                     </td>
                                     <td class="px-3 py-2.5 text-center w-28">
                                         <div class="flex items-center justify-center gap-1">
-                                            <a href="{{ route('admin.product-types.edit', $child) }}" class="inline-flex p-1.5 rounded-lg hover:bg-brand-50 text-surface-400 hover:text-brand-600 transition" title="Edit">
+                                            <a href="{{ route($rPrefix . 'product-types.edit', $child) }}" class="inline-flex p-1.5 rounded-lg hover:bg-brand-50 text-surface-400 hover:text-brand-600 transition" title="Edit">
                                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                                             </a>
-                                            <form action="{{ route('admin.product-types.destroy', $child) }}" method="POST" onsubmit="return confirm('Delete this size?')">
+                                            <form action="{{ route($rPrefix . 'product-types.destroy', $child) }}" method="POST" onsubmit="return confirm('Delete this size?')">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="inline-flex p-1.5 rounded-lg hover:bg-red-50 text-surface-400 hover:text-red-600 transition" title="Delete">
                                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -179,7 +182,7 @@
                 </tr>
                 @endif
                 @empty
-                <tr><td colspan="7" class="px-6 py-12 text-center text-surface-400">No product types yet. <a href="{{ route('admin.product-types.create') }}" class="text-brand-600 font-medium">Create your first one</a>.</td></tr>
+                <tr><td colspan="7" class="px-6 py-12 text-center text-surface-400">No product types yet. <a href="{{ route($rPrefix . 'product-types.create') }}" class="text-brand-600 font-medium">Create your first one</a>.</td></tr>
                 @endforelse
             </tbody>
         </table>

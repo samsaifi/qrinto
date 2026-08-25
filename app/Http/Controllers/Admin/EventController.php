@@ -64,7 +64,8 @@ class EventController extends Controller
 
         $this->syncStores($event, $request);
 
-        return redirect()->route('admin.events.index')
+        $route = request()->is('store*') ? 'storepanel_cat.events.index' : 'admin.events.index';
+        return redirect()->route($route)
             ->with('success', 'Event created!');
     }
 
@@ -109,7 +110,8 @@ class EventController extends Controller
 
         $this->syncStores($event, $request);
 
-        return redirect()->route('admin.events.index')
+        $route = request()->is('store*') ? 'storepanel_cat.events.index' : 'admin.events.index';
+        return redirect()->route($route)
             ->with('success', 'Event updated!');
     }
 
@@ -117,7 +119,8 @@ class EventController extends Controller
     {
         $event->delete();
 
-        return redirect()->route('admin.events.index')
+        $route = request()->is('store*') ? 'storepanel_cat.events.index' : 'admin.events.index';
+        return redirect()->route($route)
             ->with('success', 'Event deleted.');
     }
 

@@ -55,7 +55,8 @@ class ProductTypeController extends Controller
 
         ProductType::create($data);
 
-        return redirect()->route('admin.product-types.index')
+        $route = request()->is('store*') ? 'storepanel_cat.product-types.index' : 'admin.product-types.index';
+        return redirect()->route($route)
             ->with('success', 'Product Type/Size created!');
     }
 
@@ -86,21 +87,23 @@ class ProductTypeController extends Controller
 
         $productType->update($data);
 
-        return redirect()->route('admin.product-types.index')
+        $route = request()->is('store*') ? 'storepanel_cat.product-types.index' : 'admin.product-types.index';
+        return redirect()->route($route)
             ->with('success', 'Product Type/Size updated!');
     }
 
     public function destroy(ProductType $productType)
     {
         // For now, allow deletion even if it has children, as they will be cascaded or we can check
+        $route = request()->is('store*') ? 'storepanel_cat.product-types.index' : 'admin.product-types.index';
         if ($productType->children()->exists()) {
-            return redirect()->route('admin.product-types.index')
+            return redirect()->route($route)
                 ->with('error', 'Cannot delete type that has sizes. Delete sizes first.');
         }
 
         $productType->delete();
 
-        return redirect()->route('admin.product-types.index')
+        return redirect()->route($route)
             ->with('success', 'Product Type/Size deleted.');
     }
 }

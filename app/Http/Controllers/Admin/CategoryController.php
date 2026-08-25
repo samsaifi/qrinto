@@ -79,7 +79,8 @@ class CategoryController extends Controller
 
         Category::create($data);
 
-        return redirect()->route('admin.categories.index')
+        $route = request()->is('store*') ? 'storepanel_cat.categories.index' : 'admin.categories.index';
+        return redirect()->route($route)
             ->with('success', 'Category created!');
     }
 
@@ -120,7 +121,8 @@ class CategoryController extends Controller
 
         $category->update($data);
 
-        return redirect()->route('admin.categories.index')
+        $route = request()->is('store*') ? 'storepanel_cat.categories.index' : 'admin.categories.index';
+        return redirect()->route($route)
             ->with('success', 'Category updated!');
     }
 
@@ -128,15 +130,16 @@ class CategoryController extends Controller
     {
         $this->authorizeCategory($category);
 
+        $route = request()->is('store*') ? 'storepanel_cat.categories.index' : 'admin.categories.index';
         if ($category->products()->exists()) {
-            return redirect()->route('admin.categories.index')
+            return redirect()->route($route)
                 ->with('error', 'Cannot delete category with products.');
         }
 
         if ($category->image) Storage::disk('public')->delete($category->image);
         $category->delete();
 
-        return redirect()->route('admin.categories.index')
+        return redirect()->route($route)
             ->with('success', 'Category deleted.');
     }
 }

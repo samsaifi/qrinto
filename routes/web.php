@@ -74,6 +74,23 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Store-scoped kiosk logs listing (read-only, paginated).
     Route::get('/store/kiosks', [StorePanelController::class, 'kioskLogs'])
         ->name('storepanel.kioskLogs');
+    // Store panel catalog routes: /store/products, /store/categories, etc.
+    Route::resource('/store/products', AdminProductController::class, ['as' => 'storepanel_cat']);
+    Route::post('/store/products/bulk-delete', [AdminProductController::class, 'bulkDelete'])->name('storepanel_cat.products.bulkDelete');
+    Route::post('/store/products/{product}/options', [AdminProductController::class, 'storeOptionGroup'])->name('storepanel_cat.products.options.store');
+    Route::post('/store/option-groups/{optionGroup}/values', [AdminProductController::class, 'storeOptionValue'])->name('storepanel_cat.options.values.store');
+    Route::delete('/store/option-groups/{optionGroup}', [AdminProductController::class, 'deleteOptionGroup'])->name('storepanel_cat.options.destroy');
+    Route::delete('/store/option-values/{optionValue}', [AdminProductController::class, 'deleteOptionValue'])->name('storepanel_cat.optionValues.destroy');
+    Route::delete('/store/product-images/{imageId}', [AdminProductController::class, 'deleteImage'])->name('storepanel_cat.productImages.destroy');
+    Route::get('/store/products/{product}/mask', [AdminProductController::class, 'maskEditor'])->name('storepanel_cat.products.mask');
+    Route::post('/store/products/{product}/mask', [AdminProductController::class, 'saveMask'])->name('storepanel_cat.products.mask.save');
+
+    Route::resource('/store/categories', AdminCategoryController::class, ['as' => 'storepanel_cat']);
+    Route::resource('/store/product-types', \App\Http\Controllers\Admin\ProductTypeController::class, ['as' => 'storepanel_cat']);
+    Route::resource('/store/templates', AdminTemplateController::class, ['as' => 'storepanel_cat']);
+    Route::resource('/store/coupons', AdminCouponController::class, ['as' => 'storepanel_cat']);
+    Route::resource('/store/events', AdminEventController::class, ['as' => 'storepanel_cat']);
+
     // Persist "I already downloaded QZ Tray" for the current user, so the
     // onboarding modal on /store/orders is only shown once per user.
     Route::post('/store/qz-tray/confirm', [StorePanelController::class, 'confirmQzTray'])
@@ -319,6 +336,7 @@ $registerAdminRoutes = function ($prefix, $namePrefix) {
 $registerAdminRoutes('admin', 'admin.');
 $registerAdminRoutes('store-admin', 'store.');
 $registerAdminRoutes('staff', 'staff.');
+
 
 // NAC admin only: view-only print-logs (order_print_logs). Index + detail.
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {

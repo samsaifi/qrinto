@@ -135,7 +135,8 @@ class ProductController extends Controller
 
         $product = Product::create($validated);
 
-        return redirect()->route('admin.products.edit', $product)
+        $route = request()->is('store*') ? 'storepanel_cat.products.edit' : 'admin.products.edit';
+        return redirect()->route($route, $product)
             ->with('success', 'Product created successfully!');
     }
     public function authrised_check($product)
@@ -241,7 +242,8 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()->route('admin.products.edit', $product)
+        $route = request()->is('store*') ? 'storepanel_cat.products.edit' : 'admin.products.edit';
+        return redirect()->route($route, $product)
             ->with('success', 'Product updated successfully!');
     }
 
@@ -254,7 +256,8 @@ class ProductController extends Controller
         // Images are preserved so a developer can manually restore if needed
         $product->delete();
 
-        return redirect()->route('admin.products.index')
+        $route = request()->is('store*') ? 'storepanel_cat.products.index' : 'admin.products.index';
+        return redirect()->route($route)
             ->with('success', 'Product deleted.');
     }
 
@@ -276,7 +279,8 @@ class ProductController extends Controller
             $product->delete(); // soft delete
         });
 
-        return redirect()->route('admin.products.index')
+        $route = request()->is('store*') ? 'storepanel_cat.products.index' : 'admin.products.index';
+        return redirect()->route($route)
             ->with('success', count($request->ids) . ' product(s) deleted.');
     }
 

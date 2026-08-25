@@ -72,7 +72,8 @@ class CouponController extends Controller
 
         Coupon::create($data);
 
-        return redirect()->route('admin.coupons.index')
+        $route = request()->is('store*') ? 'storepanel_cat.coupons.index' : 'admin.coupons.index';
+        return redirect()->route($route)
             ->with('success', 'Coupon created!');
     }
 
@@ -113,7 +114,8 @@ class CouponController extends Controller
 
         $coupon->update($data);
 
-        return redirect()->route('admin.coupons.index')
+        $route = request()->is('store*') ? 'storepanel_cat.coupons.index' : 'admin.coupons.index';
+        return redirect()->route($route)
             ->with('success', 'Coupon updated!');
     }
 
@@ -122,7 +124,8 @@ class CouponController extends Controller
         $this->authorizeCoupon($coupon);
 
         $coupon->delete();
-        return redirect()->route('admin.coupons.index')
+        $route = request()->is('store*') ? 'storepanel_cat.coupons.index' : 'admin.coupons.index';
+        return redirect()->route($route)
             ->with('success', 'Coupon deleted.');
     }
 }

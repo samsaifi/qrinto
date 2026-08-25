@@ -1,12 +1,15 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', isset($event) ? 'Edit Event' : 'Create Event')
 
 @section('content')
+    @php
+        $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+    @endphp
     <div class="max-w-2xl">
         <h1 class="font-display font-bold text-2xl text-surface-900 mb-8">{{ isset($event) ? 'Edit Event' : 'Create Event' }}
         </h1>
 
-        <form action="{{ isset($event) ? route('admin.events.update', $event) : route('admin.events.store') }}" method="POST"
+        <form action="{{ isset($event) ? route($rPrefix . 'events.update', $event) : route($rPrefix . 'events.store') }}" method="POST"
             class="space-y-6">
             @csrf
             @if (isset($event))
@@ -139,7 +142,7 @@
                     class="px-6 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
                     {{ isset($event) ? 'Update' : 'Create' }} Event
                 </button>
-                <a href="{{ route('admin.events.index') }}"
+                <a href="{{ route($rPrefix . 'events.index') }}"
                     class="px-6 py-3 bg-surface-100 text-surface-600 font-semibold rounded-xl hover:bg-surface-200 transition">Cancel</a>
             </div>
         </form>

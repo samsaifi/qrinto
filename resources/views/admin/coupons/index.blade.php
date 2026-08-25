@@ -1,13 +1,16 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', 'Coupons')
 
 @section('content')
+@php
+    $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+@endphp
 <div class="flex items-center justify-between mb-8">
     <div>
         <h1 class="font-display font-bold text-2xl text-surface-900">Coupons</h1>
         <p class="text-sm text-surface-500">Manage discount codes</p>
     </div>
-    <a href="{{ route('admin.coupons.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
+    <a href="{{ route($rPrefix . 'coupons.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
         <i data-lucide="plus" class="w-4 h-4"></i> Add Coupon
     </a>
 </div>
@@ -49,10 +52,10 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('admin.coupons.edit', $coupon) }}" class="p-2 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-brand-600 transition">
+                            <a href="{{ route($rPrefix . 'coupons.edit', $coupon) }}" class="p-2 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-brand-600 transition">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </a>
-                            <form action="{{ route('admin.coupons.destroy', $coupon) }}" method="POST" onsubmit="return confirm('Delete this coupon?')">
+                            <form action="{{ route($rPrefix . 'coupons.destroy', $coupon) }}" method="POST" onsubmit="return confirm('Delete this coupon?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="p-2 rounded-lg hover:bg-red-50 text-surface-500 hover:text-red-600 transition">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>

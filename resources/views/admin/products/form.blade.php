@@ -1,14 +1,15 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', isset($product) ? 'Edit Product' : 'Create Product')
 
 @php
+    $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
     $isNotAdmin = !auth()->user()->isAdmin();
     $isAdmin = auth()->user()->isAdmin();
 @endphp
 @section('content')
     <div class="mb-8">
         <div class="flex items-center gap-3">
-            <a href="{{ route('admin.products.index') }}"
+            <a href="{{ route($rPrefix . 'products.index') }}"
                 class="p-2 rounded-xl hover:bg-surface-100 text-surface-500 transition">
                 <i data-lucide="arrow-left" class="w-5 h-5"></i>
             </a>
@@ -23,7 +24,7 @@
     </div>
 
 
-    <form action="{{ isset($product) ? route('admin.products.update', $product) : route('admin.products.store') }}"
+    <form action="{{ isset($product) ? route($rPrefix . 'products.update', $product) : route($rPrefix . 'products.store') }}"
         method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @if (isset($product))

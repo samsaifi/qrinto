@@ -77,6 +77,55 @@
                 </div>
 
                 <nav class="flex items-center gap-1">
+                    {{-- Catalog Dropdown --}}
+                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                        <button @click="open = !open"
+                            class="navlink flex items-center gap-1.5 {{ request()->is('*products*') || request()->is('*categories*') || request()->is('*product-types*') || request()->is('*templates*') || request()->is('*coupons*') || request()->is('*events*') ? 'active' : '' }}">
+                            <span>Catalog</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                        </button>
+
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute left-0 mt-2 w-52 rounded-2xl bg-white shadow-xl border border-slate-100 py-2 z-50 focus:outline-none"
+                            x-cloak>
+                            <a href="{{ url('/store/products') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                                <i data-lucide="box" class="w-4 h-4 text-emerald-600"></i>
+                                Products
+                            </a>
+                            <a href="{{ url('/store/categories') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                                <i data-lucide="grid-2x2" class="w-4 h-4 text-emerald-600"></i>
+                                Categories
+                            </a>
+                            <a href="{{ url('/store/product-types') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                                <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i>
+                                Card Types/Sizes
+                            </a>
+                            <a href="{{ url('/store/templates') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                                <i data-lucide="layout-template" class="w-4 h-4 text-emerald-600"></i>
+                                Templates
+                            </a>
+                            <a href="{{ url('/store/coupons') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                                <i data-lucide="tag" class="w-4 h-4 text-emerald-600"></i>
+                                Coupons
+                            </a>
+                            <a href="{{ url('/store/events') }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                                <i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i>
+                                Events
+                            </a>
+                        </div>
+                    </div>
+
                     <a href="{{ route('storepanel.orders') }}"
                         class="navlink {{ request()->routeIs('storepanel.orders') || request()->routeIs('storepanel.home') ? 'active' : '' }}">Orders</a>
                     <a href="{{ route('storepanel.qr') }}"

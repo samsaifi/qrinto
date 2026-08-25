@@ -1,16 +1,19 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', isset($productType) ? 'Edit Product Type/Size' : 'Create Product Type/Size')
 
 @section('content')
+@php
+    $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+@endphp
 <div class="max-w-2xl">
     <div class="mb-8">
-        <a href="{{ route('admin.product-types.index') }}" class="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-brand-600 transition mb-2">
+        <a href="{{ route($rPrefix . 'product-types.index') }}" class="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-brand-600 transition mb-2">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to list
         </a>
         <h1 class="font-display font-bold text-2xl text-surface-900">{{ isset($productType) ? 'Edit Product Type/Size' : 'Create Product Type/Size' }}</h1>
     </div>
 
-    <form action="{{ isset($productType) ? route('admin.product-types.update', $productType) : route('admin.product-types.store') }}"
+    <form action="{{ isset($productType) ? route($rPrefix . 'product-types.update', $productType) : route($rPrefix . 'product-types.store') }}"
           method="POST" class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
         @csrf
         @if(isset($productType)) @method('PUT') @endif
@@ -120,7 +123,7 @@
             <button type="submit" class="px-6 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
                 {{ isset($productType) ? 'Update' : 'Create' }} Type/Size
             </button>
-            <a href="{{ route('admin.product-types.index') }}" class="px-6 py-3 bg-surface-100 text-surface-600 font-semibold rounded-xl hover:bg-surface-200 transition">
+            <a href="{{ route($rPrefix . 'product-types.index') }}" class="px-6 py-3 bg-surface-100 text-surface-600 font-semibold rounded-xl hover:bg-surface-200 transition">
                 Cancel
             </a>
         </div>

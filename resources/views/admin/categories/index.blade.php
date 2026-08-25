@@ -1,19 +1,22 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', 'Categories')
 
 @section('content')
+@php
+    $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+@endphp
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
     <div>
         <h1 class="font-display font-bold text-2xl text-surface-900">Categories</h1>
         <p class="text-sm text-surface-500">Organize your product catalog</p>
     </div>
-    <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
+    <a href="{{ route($rPrefix . 'categories.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
         <i data-lucide="plus" class="w-4 h-4"></i> Add Category
     </a>
 </div>
 
 <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-5 mb-6">
-    <form action="{{ route('admin.categories.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
+    <form action="{{ route($rPrefix . 'categories.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
         <div>
             <label class="block text-xs font-semibold text-surface-500 mb-1">Search</label>
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Category name..."
@@ -28,7 +31,7 @@
             </select>
         </div>
         <button type="submit" class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition">Filter</button>
-        <a href="{{ route('admin.categories.index') }}" class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
+        <a href="{{ route($rPrefix . 'categories.index') }}" class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
     </form>
 </div>
 
@@ -85,10 +88,10 @@
                     </td>
                     <td class="px-3 py-3 text-center">
                         <div class="flex items-center justify-center gap-1">
-                            <a href="{{ route('admin.categories.edit', $category) }}" class="inline-flex p-1.5 rounded-lg hover:bg-brand-50 text-surface-400 hover:text-brand-600 transition" title="Edit">
+                            <a href="{{ route($rPrefix . 'categories.edit', $category) }}" class="inline-flex p-1.5 rounded-lg hover:bg-brand-50 text-surface-400 hover:text-brand-600 transition" title="Edit">
                                 <i data-lucide="pencil" class="w-4 h-4"></i>
                             </a>
-                            <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Delete this category?')">
+                            <form action="{{ route($rPrefix . 'categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Delete this category?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="inline-flex p-1.5 rounded-lg hover:bg-red-50 text-surface-400 hover:text-red-600 transition" title="Delete">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -98,7 +101,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="px-6 py-12 text-center text-surface-400">No categories yet. <a href="{{ route('admin.categories.create') }}" class="text-brand-600 font-medium">Add your first category</a>.</td></tr>
+                <tr><td colspan="8" class="px-6 py-12 text-center text-surface-400">No categories yet. <a href="{{ route($rPrefix . 'categories.create') }}" class="text-brand-600 font-medium">Add your first category</a>.</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -1,7 +1,10 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', 'Products')
 
 @section('content')
+    @php
+        $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+    @endphp
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
             <h1 class="font-display font-bold text-2xl text-surface-900">Products</h1>
@@ -14,14 +17,14 @@
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                 Delete <span id="selectedCount" class="bg-white/20 px-1.5 py-0.5 rounded text-xs ml-0.5">0</span>
             </button>
-            <a href="{{ route('admin.products.create') }}"
+            <a href="{{ route($rPrefix . 'products.create') }}"
                 class="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
                 <i data-lucide="plus" class="w-4 h-4"></i> Add Product
             </a>
         </div>
     </div>
     <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-5 mb-6">
-        <form action="{{ route('admin.products.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
+        <form action="{{ route($rPrefix . 'products.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
             <div>
                 <label class="block text-xs font-semibold text-surface-500 mb-1">Search</label>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Name #, customer..."
@@ -60,11 +63,11 @@
             </div>
             <button type="submit"
                 class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition">Filter</button>
-            <a href="{{ route('admin.products.index') }}" class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
+            <a href="{{ route($rPrefix . 'products.index') }}" class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
         </form>
     </div>
 
-    <form id="bulkDeleteForm" action="{{ route('admin.products.bulkDelete') }}" method="POST" class="hidden">@csrf</form>
+    <form id="bulkDeleteForm" action="{{ route($rPrefix . 'products.bulkDelete') }}" method="POST" class="hidden">@csrf</form>
 
     <div class="bg-white rounded-2xl border border-surface-100 shadow-card overflow-hidden">
         <div class="overflow-x-auto">
@@ -123,7 +126,7 @@
                                         @endif
                                     </div>
                                     <div class="min-w-0">
-                                        <a href="{{ route('admin.products.edit', $product) }}"
+                                        <a href="{{ route($rPrefix . 'products.edit', $product) }}"
                                             class="font-semibold text-sm text-surface-800 hover:text-brand-600 transition block">{{ $product->name }}</a>
 
                                     </div>
@@ -180,12 +183,12 @@
                             </td>
                             <td class="px-3 py-3 text-center">
                                 <div class="flex items-center justify-center gap-1">
-                                    <a href="{{ route('admin.products.edit', $product) }}"
+                                    <a href="{{ route($rPrefix . 'products.edit', $product) }}"
                                         class="inline-flex p-1.5 rounded-lg hover:bg-brand-50 text-surface-400 hover:text-brand-600 transition"
                                         title="Edit">
                                         <i data-lucide="pencil" class="w-4 h-4"></i>
                                     </a>
-                                    <a href="{{ route('admin.products.mask', $product) }}"
+                                    <a href="{{ route($rPrefix . 'products.mask', $product) }}"
                                         class="inline-flex p-1.5 rounded-lg hover: bg-gray-50 text-surface-400 hover: text-gray-600 transition"
                                         title="Mask Editor">
                                         <i data-lucide="layers" class="w-4 h-4"></i>
@@ -196,7 +199,7 @@
                         @empty
                             <tr>
                                 <td colspan="10" class="px-6 py-12 text-center text-surface-400">No products yet. <a
-                                        href="{{ route('admin.products.create') }}" class="text-brand-600 font-medium">Add
+                                        href="{{ route($rPrefix . 'products.create') }}" class="text-brand-600 font-medium">Add
                                         your first product</a>.</td>
                             </tr>
                         @endforelse

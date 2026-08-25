@@ -1,7 +1,10 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', $event->title)
 
 @section('content')
+    @php
+        $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+    @endphp
     <div class="max-w-2xl">
         <div class="flex items-center justify-between mb-8">
             <div>
@@ -9,11 +12,11 @@
                 <p class="text-sm text-surface-500">Created {{ $event->created_at->format('M d, Y \a\t h:i A') }}</p>
             </div>
             <div class="flex items-center gap-2">
-                <a href="{{ route('admin.events.edit', $event) }}"
+                <a href="{{ route($rPrefix . 'events.edit', $event) }}"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
                     <i data-lucide="pencil" class="w-4 h-4"></i> Edit
                 </a>
-                <form action="{{ route('admin.events.destroy', $event) }}" method="POST"
+                <form action="{{ route($rPrefix . 'events.destroy', $event) }}" method="POST"
                     onsubmit="return confirm('Delete this event?')">
                     @csrf @method('DELETE')
                     <button type="submit"
@@ -76,7 +79,7 @@
         </div>
 
         <div class="mt-6">
-            <a href="{{ route('admin.events.index') }}"
+            <a href="{{ route($rPrefix . 'events.index') }}"
                 class="text-sm text-surface-500 hover:text-brand-600 transition">&larr; Back to Events</a>
         </div>
     </div>

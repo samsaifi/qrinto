@@ -1,11 +1,14 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', isset($coupon) ? 'Edit Coupon' : 'Create Coupon')
 
 @section('content')
+@php
+    $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+@endphp
 <div class="max-w-2xl">
     <h1 class="font-display font-bold text-2xl text-surface-900 mb-8">{{ isset($coupon) ? 'Edit Coupon' : 'Create Coupon' }}</h1>
 
-    <form action="{{ isset($coupon) ? route('admin.coupons.update', $coupon) : route('admin.coupons.store') }}"
+    <form action="{{ isset($coupon) ? route($rPrefix . 'coupons.update', $coupon) : route($rPrefix . 'coupons.store') }}"
           method="POST" class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
         @csrf
         @if(isset($coupon)) @method('PUT') @endif
@@ -84,7 +87,7 @@
             <button type="submit" class="px-6 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
                 {{ isset($coupon) ? 'Update' : 'Create' }} Coupon
             </button>
-            <a href="{{ route('admin.coupons.index') }}" class="px-6 py-3 bg-surface-100 text-surface-600 font-semibold rounded-xl hover:bg-surface-200 transition">Cancel</a>
+            <a href="{{ route($rPrefix . 'coupons.index') }}" class="px-6 py-3 bg-surface-100 text-surface-600 font-semibold rounded-xl hover:bg-surface-200 transition">Cancel</a>
         </div>
     </form>
 </div>

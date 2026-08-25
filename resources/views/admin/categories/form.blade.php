@@ -1,11 +1,14 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', isset($category) ? 'Edit Category' : 'Create Category')
 
 @section('content')
+@php
+    $rPrefix = request()->is('store*') ? 'storepanel_cat.' : 'admin.';
+@endphp
 <div class="max-w-2xl">
     <h1 class="font-display font-bold text-2xl text-surface-900 mb-8">{{ isset($category) ? 'Edit Category' : 'Create Category' }}</h1>
 
-    <form action="{{ isset($category) ? route('admin.categories.update', $category) : route('admin.categories.store') }}"
+    <form action="{{ isset($category) ? route($rPrefix . 'categories.update', $category) : route($rPrefix . 'categories.store') }}"
           method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
         @csrf
         @if(isset($category)) @method('PUT') @endif
@@ -62,7 +65,7 @@
             <button type="submit" class="px-6 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-lg shadow-brand-200">
                 {{ isset($category) ? 'Update' : 'Create' }} Category
             </button>
-            <a href="{{ route('admin.categories.index') }}" class="px-6 py-3 bg-surface-100 text-surface-600 font-semibold rounded-xl hover:bg-surface-200 transition">
+            <a href="{{ route($rPrefix . 'categories.index') }}" class="px-6 py-3 bg-surface-100 text-surface-600 font-semibold rounded-xl hover:bg-surface-200 transition">
                 Cancel
             </a>
         </div>

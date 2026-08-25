@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends(request()->is('store*') ? 'layouts.store' : 'layouts.admin')
 @section('title', isset($template) ? 'Edit Template' : 'New Template')
 
 @push('styles')

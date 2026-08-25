@@ -51,7 +51,8 @@ class TemplateController extends Controller
             'sort_order'    => (int) $request->input('sort_order', 0),
         ]);
 
-        return redirect()->route('admin.templates.index')
+        $route = request()->is('store*') ? 'storepanel_cat.templates.index' : 'admin.templates.index';
+        return redirect()->route($route)
             ->with('success', 'Template created successfully!');
     }
 
@@ -86,7 +87,8 @@ class TemplateController extends Controller
             'sort_order'    => (int) $request->input('sort_order', 0),
         ]);
 
-        return redirect()->route('admin.templates.index')
+        $route = request()->is('store*') ? 'storepanel_cat.templates.index' : 'admin.templates.index';
+        return redirect()->route($route)
             ->with('success', 'Template updated successfully!');
     }
 
@@ -97,7 +99,8 @@ class TemplateController extends Controller
         }
         $template->delete();
 
-        return redirect()->route('admin.templates.index')
+        $route = request()->is('store*') ? 'storepanel_cat.templates.index' : 'admin.templates.index';
+        return redirect()->route($route)
             ->with('success', 'Template deleted.');
     }
 

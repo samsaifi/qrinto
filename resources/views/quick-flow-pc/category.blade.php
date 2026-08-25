@@ -77,12 +77,20 @@
                                     {!! $firstItem->icon_svg !!}
                                 </div>
                             @elseif ($isFolded)
-                                <svg class="w-28 h-28 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform" viewBox="0 0 100 80">
-                                    <rect x="25" y="15" width="50" height="40" rx="3" stroke="currentColor" fill="none"/>
-                                    <rect x="30" y="20" width="40" height="30" rx="1" stroke="currentColor" fill="none"/>
-                                    <path d="M10 65 L25 55 L75 55 L90 65 Z" stroke="currentColor" fill="none"/>
-                                    <path d="M25 55 L25 15" stroke="currentColor" fill="none"/>
-                                    <path d="M75 55 L75 15" stroke="currentColor" fill="none"/>
+                                <svg class="w-28 h-28 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform" viewBox="0 0 90 90">
+                                    {{-- Left panel (Inside page) --}}
+                                    <path d="M 21 22 L 45 16 L 45 74 L 21 80 A 3 3 0 0 1 18 77 L 18 25 A 3 3 0 0 1 21 22 Z" stroke="currentColor" fill="none"/>
+                                    {{-- Right panel (Front cover) --}}
+                                    <path d="M 45 16 L 69 22 A 3 3 0 0 1 72 25 L 72 77 A 3 3 0 0 1 69 80 L 45 74 Z" stroke="currentColor" fill="none"/>
+                                    {{-- Fold spine crease --}}
+                                    <line x1="45" y1="16" x2="45" y2="74" stroke="currentColor" stroke-dasharray="2 2"/>
+                                    {{-- Inside page lines --}}
+                                    <line x1="25" y1="36" x2="38" y2="33" stroke="currentColor"/>
+                                    <line x1="25" y1="44" x2="38" y2="41" stroke="currentColor"/>
+                                    <line x1="25" y1="52" x2="34" y2="50" stroke="currentColor"/>
+                                    {{-- Front cover heart icon & line --}}
+                                    <path d="M 58.5 37.5 C 56.5 35 52.5 36.5 54.5 40.5 L 58.5 44.5 L 62.5 40.5 C 64.5 36.5 60.5 35 58.5 37.5 Z" stroke="currentColor" fill="none"/>
+                                    <line x1="52" y1="54" x2="65" y2="57.25" stroke="currentColor"/>
                                 </svg>
                             @elseif ($isDouble)
                                 <svg class="w-24 h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform" viewBox="0 0 90 90">
