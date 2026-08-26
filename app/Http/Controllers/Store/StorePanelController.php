@@ -99,6 +99,70 @@ class StorePanelController extends Controller
         ]);
     }
 
+    public function ordersV2(Request $request)
+    {
+        $store = $this->currentStore();
+
+        if ($store) {
+            $hasEnabledTray = collect($store->trayRows())->contains('enabled', true);
+            if (!$hasEnabledTray) {
+                return redirect()
+                    ->route('storepanel.trays')
+                    ->with('warning', 'Set up at least one tray before printing orders.');
+            }
+        }
+
+        $query = Order::with('user', 'items.product', 'store')
+            ->where('created_at', '>=', now()->subDays(30));
+
+        if ($store) {
+            $query->where('store_id', $store->id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+            });
+        }
+
+        $orders = $query->latest()->get();
+
+        $queue = [
+            Order::STAGE_NEW      => collect(),
+            Order::STAGE_PRINTING => collect(),
+            Order::STAGE_READY    => collect(),
+        ];
+        $doneCollection = collect();
+
+        foreach ($orders as $order) {
+            $stage = $order->queue_stage;
+            if (isset($queue[$stage])) {
+                $queue[$stage]->push($order);
+            } elseif ($stage === Order::STAGE_DONE) {
+                $doneCollection->push($order);
+            }
+        }
+
+        $donePerPage = 5;
+        $donePageName = 'done_page';
+        $donePage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage($donePageName);
+        $recentlyDone = new \Illuminate\Pagination\LengthAwarePaginator(
+            $doneCollection->forPage($donePage, $donePerPage)->values(),
+            $doneCollection->count(),
+            $donePerPage,
+            $donePage,
+            ['path' => $request->url(), 'pageName' => $donePageName, 'query' => $request->query()]
+        );
+
+        return view('store.orders-v2', [
+            'store'        => $store,
+            'queue'        => $queue,
+            'recentlyDone' => $recentlyDone,
+        ]);
+    }
+
     /**
      * Store-scoped view of order_print_logs — 20 per page, current store
      * only. Read-only; the store panel never edits or deletes logs.

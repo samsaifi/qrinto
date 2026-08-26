@@ -59,6 +59,7 @@ Route::get('/storage-link', function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/store', [StorePanelController::class, 'orders'])->name('storepanel.home');
     Route::get('/store/orders', [StorePanelController::class, 'orders'])->name('storepanel.orders');
+    Route::get('/store/orders-v2', [StorePanelController::class, 'ordersV2'])->name('storepanel.orders-v2');
     Route::get('/store/qr', [StorePanelController::class, 'qr'])->name('storepanel.qr');
     Route::get('/store/trays', [StorePanelController::class, 'trays'])->name('storepanel.trays');
     Route::post('/store/trays', [StorePanelController::class, 'saveTrays'])->name('storepanel.trays.save');

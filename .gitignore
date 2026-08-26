@@ -8,6 +8,7 @@ public/agent/QrintoPrintAgent/obj/
 **/bin/
 *.log
 .DS_Store
+.playwright-cli
 .env
 .env.backup
 .env.production
