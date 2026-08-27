@@ -15,6 +15,19 @@ use Illuminate\Http\Request;
  */
 class StorePanelController extends Controller
 {
+    /**
+     * Sort rank for tray labels: Noritsu trays come first ordered by
+     * tray number (MP Tray → 0, Tray 1 → 1, …, Tray 5 → 5),
+     * everything else sorts after them (rank 100).
+     */
+    protected static function traySortRank(string $label): int
+    {
+        if (preg_match('/\(MP\s*Tray\)/i', $label)) return 0;
+        if (preg_match('/\(Tray\s*(\d+)\)/i', $label, $m)) return (int) $m[1];
+        if (stripos($label, 'Noritsu') !== false) return 50;
+        return 100;
+    }
+
     /** Resolve the store this staff member operates. */
     protected function currentStore(): ?Store
     {
@@ -306,6 +319,37 @@ class StorePanelController extends Controller
     }
 
     /**
+     * Return the QZ Tray signing certificate (PEM, public).
+     */
+    public function qzCertificate()
+    {
+        $path = storage_path('app/qz-certs/qz-cert.pem');
+        abort_if(!is_file($path), 404, 'QZ certificate not found.');
+        return response(file_get_contents($path))->header('Content-Type', 'text/plain');
+    }
+
+    /**
+     * Sign a QZ Tray request with the private key so the Allow/Deny
+     * dialog is skipped on trusted installs.
+     */
+    public function qzSign(Request $request)
+    {
+        $request->validate(['request' => 'required|string|max:10000']);
+
+        $keyPath = storage_path('app/qz-certs/qz-private.pem');
+        abort_if(!is_file($keyPath), 404, 'QZ private key not found.');
+
+        $key = openssl_pkey_get_private(file_get_contents($keyPath));
+        abort_if(!$key, 500, 'Could not load QZ private key.');
+
+        $signature = '';
+        $ok = openssl_sign($request->input('request'), $signature, $key, OPENSSL_ALGO_SHA512);
+        abort_if(!$ok, 500, 'Signing failed.');
+
+        return response(base64_encode($signature))->header('Content-Type', 'text/plain');
+    }
+
+    /**
      * Persist that the current user has installed QZ Tray on this PC.
      * Called from the "Already Downloaded" button on /store/orders.
      */
@@ -344,6 +388,7 @@ class StorePanelController extends Controller
             'store'             => $store,
             'rows'              => $store->trayRows(),
             'sizeOptions'       => Store::traySizeOptions(),
+            'sizeDims'          => Store::traySizeDimensions(),
             'mediaOptions'      => Store::trayMediaOptions(),
             'gsmOptions'        => Store::trayGsmOptions(),
             'needsQzOnboarding' => $needsQzOnboarding,
@@ -376,7 +421,8 @@ class StorePanelController extends Controller
         }
 
         $flow      = $order->flow_data ?? [];
-        $sizeCode  = strtolower(str_replace([' ', '×'], ['', 'x'], (string) ($flow['size_dimensions'] ?? '')));
+        $sizeCode  = $flow['size_slug']
+            ?? strtolower(str_replace([' ', '×'], ['', 'x'], (string) ($flow['size_dimensions'] ?? '')));
         $matched   = $store->matchTrayForSize($sizeCode ?: null);
 
         $copies = 1;
@@ -387,20 +433,27 @@ class StorePanelController extends Controller
         $mediaLabels = \App\Models\Store::trayMediaOptions();
         $sizePretty  = ['4x6' => '4 × 6', '5x7' => '5 × 7', '7x10' => '7 × 10', '8.5x11' => '8.5 × 11'];
 
-        $trays = collect($store->trayRows())->map(function ($t) use ($matched, $mediaLabels, $sizePretty) {
+        $trays = collect($store->trayRows())->where('enabled', true)->map(function ($t) use ($matched, $mediaLabels, $sizePretty) {
             return [
                 'key'         => $t['key'],
                 'label'       => $t['label'],
                 'size'        => $t['size'],
                 'size_pretty' => $sizePretty[$t['size']] ?? $t['size'],
+                'size_width'  => $t['size_width'] ?? null,
+                'size_height' => $t['size_height'] ?? null,
                 'media'       => $t['media'],
                 'media_label' => $mediaLabels[$t['media']] ?? $t['media'],
                 'gsm'         => $t['gsm'],
+                'density'     => $t['density'] ?? null,
                 'user_type'   => $t['user_type'],
                 'enabled'     => (bool) $t['enabled'],
                 'printer'     => $t['printer'] ?? '',
                 'recommended' => $matched && $matched['key'] === $t['key'],
             ];
+        })->sort(function ($a, $b) {
+            $aRank = self::traySortRank($a['label']);
+            $bRank = self::traySortRank($b['label']);
+            return $aRank <=> $bRank ?: strcasecmp($a['label'], $b['label']);
         })->values()->all();
 
         // Embed the PDF bytes as base64 so QZ Tray doesn't have to fetch a
@@ -429,7 +482,9 @@ class StorePanelController extends Controller
                 'id'      => $order->id,
                 'item_id' => $item->id,
                 'number'  => $order->order_number,
-                'size'    => $sizeCode,
+                'size'    => isset($flow['size_width'], $flow['size_height'])
+                    ? $flow['size_width'] . ' × ' . $flow['size_height'] . ' ' . ($flow['size_unit'] ?? 'inch')
+                    : ($sizeCode ?: null),
             ],
             'trays'       => $trays,
             'matched_key' => $matched['key'] ?? null,
@@ -447,12 +502,15 @@ class StorePanelController extends Controller
         abort_if(!$store, 404, 'No store to configure.');
 
         $data = $request->validate([
-            'trays'            => 'required|array',
-            'trays.*.printer'  => 'required|string|max:160',
-            'trays.*.size'     => 'nullable|string|in:' . implode(',', array_keys(Store::traySizeOptions())),
-            'trays.*.media'    => 'nullable|string|in:' . implode(',', array_keys(Store::trayMediaOptions())),
-            'trays.*.gsm'      => 'nullable|string|in:' . implode(',', array_keys(Store::trayGsmOptions())),
-            'trays.*.enabled'  => 'nullable',
+            'trays'               => 'required|array',
+            'trays.*.printer'     => 'required|string|max:160',
+            'trays.*.size'        => 'nullable|string|max:120',
+            'trays.*.size_width'  => 'nullable|numeric|min:0|max:100',
+            'trays.*.size_height' => 'nullable|numeric|min:0|max:100',
+            'trays.*.media'       => 'nullable|string|in:' . implode(',', array_keys(Store::trayMediaOptions())),
+            'trays.*.gsm'         => 'nullable|string|in:' . implode(',', array_keys(Store::trayGsmOptions())),
+            'trays.*.density'     => 'nullable|string|max:20',
+            'trays.*.enabled'     => 'nullable',
         ]);
 
         // Deduplicate by printer name (slugified key) so a double-scan can't
@@ -463,13 +521,16 @@ class StorePanelController extends Controller
             if ($printer === '') continue;
             $key = Store::trayKeyFromPrinter($printer);
             $config[$key] = [
-                'key'     => $key,
-                'label'   => $printer,
-                'printer' => $printer,
-                'size'    => $t['size']  ?? null,
-                'media'   => $t['media'] ?? null,
-                'gsm'     => $t['gsm']   ?? null,
-                'enabled' => (bool) ($t['enabled'] ?? false),
+                'key'         => $key,
+                'label'       => $printer,
+                'printer'     => $printer,
+                'size'        => $t['size']  ?? null,
+                'size_width'  => isset($t['size_width'])  && $t['size_width'] !== ''  ? (float) $t['size_width']  : null,
+                'size_height' => isset($t['size_height']) && $t['size_height'] !== '' ? (float) $t['size_height'] : null,
+                'media'       => $t['media'] ?? null,
+                'gsm'         => $t['gsm']   ?? null,
+                'density'     => $t['density'] ?? null,
+                'enabled'     => (bool) ($t['enabled'] ?? false),
             ];
         }
 

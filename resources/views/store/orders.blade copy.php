@@ -110,11 +110,13 @@
                         <div class="space-y-2">
                             <template x-for="t in payload.trays" :key="'tray-' + t.key">
                                 <label class="flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition"
-                                    :class="choice === 'tray:' + t.key ? 'border-[#287d3c] bg-[#f2f7f2]' : 'border-slate-200 hover:border-slate-300'">
-                                    <input type="radio" name="print_pick" :value="'tray:' + t.key" x-model="choice"
-                                        class="accent-[#287d3c] w-4 h-4">
+                                    :class="!t.enabled ? 'border-slate-100 bg-slate-50/60 cursor-not-allowed'
+                                        : (choice === 'tray:' + t.key ? 'border-[#287d3c] bg-[#f2f7f2]'
+                                            : 'border-slate-200 hover:border-slate-300')">
+                                    <input type="radio" name="print_pick" :value="'tray:' + t.key" x-model="choice" :disabled="!t.enabled"
+                                        class="accent-[#287d3c] w-4 h-4" :class="!t.enabled ? 'opacity-40' : ''">
                                     <div class="flex-1 min-w-0">
-                                        <p class="font-bold text-[13px] text-slate-900">
+                                        <p class="font-bold text-[13px]" :class="t.enabled ? 'text-slate-900' : 'text-slate-400'">
                                             <span x-text="t.label"></span>
                                             <template x-if="t.recommended">
                                                 <span class="ml-2 text-[10px] font-extrabold text-[#287d3c] bg-[#eaf3ea] border border-[#bfdcc4] rounded-full px-2 py-0.5 uppercase tracking-wider">
@@ -122,12 +124,16 @@
                                                 </span>
                                             </template>
                                         </p>
-                                        <p class="mono text-[11px] mt-0.5 truncate text-slate-500" :title="t.printer">
+                                        <p class="mono text-[11px] mt-0.5 truncate" :class="t.enabled ? 'text-slate-500' : 'text-slate-300'"
+                                           :title="t.printer">
                                             <span x-text="t.size_pretty"></span> · <span x-text="t.media_label"></span>
                                             <template x-if="t.user_type"><span class="text-slate-400"> · UT<span x-text="t.user_type"></span></span></template>
                                             <template x-if="t.printer"><span class="text-slate-400"> · <span x-text="t.printer"></span></span></template>
                                         </p>
                                     </div>
+                                    <template x-if="!t.enabled">
+                                        <span class="text-[11px] text-slate-400">Off</span>
+                                    </template>
                                 </label>
                             </template>
                         </div>
@@ -250,19 +256,16 @@
                     if (!this.choice || !this.payload) return null;
                     if (this.choice.startsWith('tray:')) {
                         const key = this.choice.slice(5);
-                        const t = this.payload.trays.find(x => x.key === key);
+                        const t = this.payload.trays.find(x => x.key === key && x.enabled);
                         if (!t) return null;
                         return {
-                            printer:     t.printer || 'Noritsu 931BL',
-                            label:       t.label,
-                            tray_key:    t.key,
-                            size:        t.size,
-                            size_width:  t.size_width,
-                            size_height: t.size_height,
-                            media:       t.media,
-                            gsm:         t.gsm,
-                            density:     t.density,
-                            user_type:   t.user_type,
+                            printer:   t.printer || 'Noritsu 931BL',
+                            label:     t.label,
+                            tray_key:  t.key,
+                            size:      t.size,
+                            media:     t.media,
+                            gsm:       t.gsm,
+                            user_type: t.user_type,
                         };
                     }
                     return null;

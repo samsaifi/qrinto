@@ -165,7 +165,7 @@ class Order extends Model
         // these back onto the canonical pickup stages.
         return match ($this->queue_stage) {
             self::STAGE_NEW      => ['to' => 'printing',         'label' => 'Print on 931BL', 'icon' => 'printer'],
-            self::STAGE_PRINTING => ['to' => 'delivered_store', 'label' => 'Mark ready',     'icon' => 'package-check', 'email' => true],
+            self::STAGE_PRINTING => ['to' => 'delivered_store', 'label' => 'Printed',        'icon' => 'package-check', 'email' => true],
             self::STAGE_READY    => ['to' => 'delivered',       'label' => 'Picked up',      'icon' => 'check-circle-2'],
             default              => null,
         };

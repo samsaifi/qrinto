@@ -100,32 +100,33 @@
                             @php
                                 $customization = $item->customization_data ?? [];
                                 $uploadIds = $customization['upload_ids'] ?? [];
-                                $itemImage = null;
-                                
+                                $itemImages = [];
+
                                 if (!empty($uploadIds)) {
                                     $uArr = is_array($uploadIds) ? array_values($uploadIds) : [$uploadIds];
                                     foreach ($uArr as $upId) {
                                         if ($upId) {
                                             $upObj = $uploads->get($upId) ?? ($uploads[$upId] ?? null);
                                             if ($upObj && !empty($upObj->url)) {
-                                                $itemImage = $upObj->url;
-                                                break;
+                                                $itemImages[] = $upObj->url;
+                                                continue;
                                             }
                                             $upObjDirect = \App\Models\CustomerUpload::find($upId);
                                             if ($upObjDirect && !empty($upObjDirect->url)) {
-                                                $itemImage = $upObjDirect->url;
-                                                break;
+                                                $itemImages[] = $upObjDirect->url;
                                             }
                                         }
                                     }
                                 }
-                                
-                                if (!$itemImage && $item->product) {
-                                    $itemImage = $item->product->frame_image_url 
-                                        ?? ($item->product->sample_image_url 
-                                        ?? ($item->product->background_image_url 
+
+                                if (empty($itemImages) && $item->product) {
+                                    $fallback = $item->product->frame_image_url
+                                        ?? ($item->product->sample_image_url
+                                        ?? ($item->product->background_image_url
                                         ?? ($item->product->overlay_image_url ?? null)));
+                                    if ($fallback) $itemImages[] = $fallback;
                                 }
+                                $itemImage = $itemImages[0] ?? null;
                                 
                                 $unitPrice = (float) ($item->unit_price > 0 ? $item->unit_price : ($item->product->base_price ?? 0));
                                 $itemSubtotal = $unitPrice * (int) $item->quantity;
@@ -133,15 +134,18 @@
 
                             <div class="flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-3.5">
-                                    {{-- Thumbnail --}}
-                                    <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-100 shrink-0">
-                                        @if ($itemImage)
-                                            <img src="{{ $itemImage }}" alt="{{ $item->product->name }}" class="w-full h-full object-cover">
-                                        @else
-                                            <div class="w-full h-full bg-slate-100 rounded-xl border border-slate-200/80 flex items-center justify-center text-slate-400 font-bold text-[10px]">
+                                    {{-- Thumbnails --}}
+                                    <div class="flex gap-1.5 shrink-0 {{ count($itemImages) > 2 ? 'flex-wrap max-w-[120px]' : '' }}">
+                                        @forelse ($itemImages as $imgIdx => $img)
+                                            <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-100 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
+                                                 @click="openGallery({{ json_encode($itemImages) }}, {{ $imgIdx }})">
+                                                <img src="{{ $img }}" alt="{{ $item->product->name }}" class="w-full h-full object-cover">
+                                            </div>
+                                        @empty
+                                            <div class="w-14 h-18 bg-slate-100 rounded-xl border border-slate-200/80 flex items-center justify-center text-slate-400 font-bold text-[10px]">
                                                 Card
                                             </div>
-                                        @endif
+                                        @endforelse
                                     </div>
 
                                     {{-- Title & Specs --}}
@@ -312,6 +316,28 @@
 
         </div>
 
+        {{-- Image Gallery Modal --}}
+        <template x-teleport="body">
+            <div x-cloak x-show="galleryOpen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm" @click.self="galleryOpen = false" @keydown.escape.window="galleryOpen = false" @keydown.arrow-right.window="galleryOpen && nextImg()" @keydown.arrow-left.window="galleryOpen && prevImg()">
+                <div class="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center" @click.stop>
+                    {{-- Close --}}
+                    <button @click="galleryOpen = false" class="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-white shadow-lg text-slate-600 hover:text-slate-900 flex items-center justify-center font-bold text-lg cursor-pointer">✕</button>
+
+                    {{-- Image --}}
+                    <img :src="galleryImages[galleryIdx]" class="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain bg-white" alt="Preview">
+
+                    {{-- Nav arrows --}}
+                    <template x-if="galleryImages.length > 1">
+                        <div class="flex items-center gap-4 mt-4">
+                            <button @click="prevImg()" class="w-10 h-10 rounded-full bg-white/90 shadow text-slate-700 hover:bg-white flex items-center justify-center font-bold text-lg cursor-pointer">‹</button>
+                            <span class="text-white text-xs font-bold tabular-nums" x-text="(galleryIdx + 1) + ' / ' + galleryImages.length"></span>
+                            <button @click="nextImg()" class="w-10 h-10 rounded-full bg-white/90 shadow text-slate-700 hover:bg-white flex items-center justify-center font-bold text-lg cursor-pointer">›</button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
         {{-- PayPal Modal --}}
         <template x-teleport="body">
             <div x-cloak>
@@ -388,6 +414,9 @@
                 isProcessing: false,
                 paymentSuccess: false,
                 paypalRendered: false,
+                galleryOpen: false,
+                galleryImages: [],
+                galleryIdx: 0,
 
                 couponInput: '{{ $cart->coupon->code ?? '' }}',
                 appliedCoupon: {!! $cart->coupon ? "'" . $cart->coupon->code . "'" : 'null' !!},
@@ -415,6 +444,18 @@
                     const symbol = (window.__currency && window.__currency.symbol) ? window.__currency.symbol : '$';
                     const rate = (window.__currency && window.__currency.rate) ? window.__currency.rate : 1;
                     return symbol + (val * rate).toFixed(2);
+                },
+
+                openGallery(images, idx) {
+                    this.galleryImages = images;
+                    this.galleryIdx = idx || 0;
+                    this.galleryOpen = true;
+                },
+                nextImg() {
+                    this.galleryIdx = (this.galleryIdx + 1) % this.galleryImages.length;
+                },
+                prevImg() {
+                    this.galleryIdx = (this.galleryIdx - 1 + this.galleryImages.length) % this.galleryImages.length;
                 },
 
                 calculateTotal() {

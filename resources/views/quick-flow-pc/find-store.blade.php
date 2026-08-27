@@ -170,6 +170,7 @@
                 map: null,
                 userMarker: null,
                 storeMarkers: [],
+                storeMarkerMap: {},
                 searchResults: null,
 
                 get displayStores() {
@@ -245,6 +246,7 @@
 
                     this.storeMarkers.forEach(m => this.map.removeLayer(m));
                     this.storeMarkers = [];
+                    this.storeMarkerMap = {};
 
                     const bounds = L.latLngBounds();
 
@@ -303,10 +305,12 @@
                             icon: storeIcon
                         }).addTo(this.map);
 
+                        const distText = store._calcDistance || '';
                         marker.bindPopup(`
                             <div style="font-family:sans-serif;padding:6px 8px;">
                                 <div style="font-weight:bold;font-size:13px;color:#0f172a;">${store.store_name}</div>
                                 <div style="font-size:11px;color:#64748b;margin-top:2px;">${store.city || ''}, ${store.state || ''}</div>
+                                ${distText ? '<div style="font-size:11px;color:#287d3c;font-weight:600;margin-top:3px;">📍 ' + distText + ' away</div>' : ''}
                             </div>
                         `);
 
@@ -315,6 +319,7 @@
                         });
 
                         this.storeMarkers.push(marker);
+                        this.storeMarkerMap[store.id] = marker;
                         bounds.extend(storeLatLng);
                     });
 
@@ -330,6 +335,8 @@
                     this.selectedStoreObj = store;
                     if (this.map && lat && lon) {
                         this.map.panTo([lat, lon]);
+                        const marker = this.storeMarkerMap[store.id];
+                        if (marker) marker.openPopup();
                     }
                 },
 

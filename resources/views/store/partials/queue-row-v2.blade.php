@@ -21,22 +21,34 @@
     }
     $trayHint = null;
     if ($stage === \App\Models\Order::STAGE_NEW && $store) {
-        $mediaShort = ['plain'=>'plain','cardstock'=>'cardstock','cardstock_scored'=>'cardstock','photo_glossy'=>'glossy','photo_lustre'=>'lustre','photo_matte'=>'matte','film'=>'film','envelopes'=>'envelopes','labels'=>'labels','magnets'=>'magnets'];
+        $mediaShort = [
+            'plain' => 'plain',
+            'cardstock' => 'cardstock',
+            'cardstock_scored' => 'cardstock',
+            'photo_glossy' => 'glossy',
+            'photo_lustre' => 'lustre',
+            'photo_matte' => 'matte',
+            'film' => 'film',
+            'envelopes' => 'envelopes',
+            'labels' => 'labels',
+            'magnets' => 'magnets',
+        ];
         $match = $store->matchTrayForSize($orderSize);
         if ($match) {
             $trayHint = $match['label'] . ' · ' . ($mediaShort[$match['media']] ?? ($match['media'] ?? '—'));
         }
     }
 
-    $journeyStages = ['new' => 'New', 'printing' => 'Printing', 'ready' => 'Ready', 'done' => 'Picked up'];
+    $journeyStages = ['new' => 'New', 'printing' => 'Printing', 'ready' => 'Ready', 'done' => 'Delivered'];
     $stageKeys = array_keys($journeyStages);
     $currentIdx = array_search($stage, $stageKeys);
-    if ($currentIdx === false) $currentIdx = count($stageKeys) - 1;
+    if ($currentIdx === false) {
+        $currentIdx = count($stageKeys) - 1;
+    }
 @endphp
 
 <div class="v2-card {{ $isDone ? 'is-done' : '' }} {{ $stage === 'printing' ? 'is-printing' : '' }}"
-     id="v2-card-{{ $order->id }}"
-     data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}">
+    id="v2-card-{{ $order->id }}" data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}">
     {{-- Order ID --}}
     <div class="v2-col-id">
         @foreach ($codeParts as $part)
@@ -69,7 +81,10 @@
                 <div class="v2-j-step {{ $state }}">
                     <div class="v2-j-dot">
                         @if ($sIdx < $currentIdx)
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 6L9 17l-5-5" />
+                            </svg>
                         @endif
                     </div>
                     <span class="v2-j-label">{{ $sLabel }}</span>
@@ -83,7 +98,9 @@
         @if ($order->payment_status === 'paid')
             <span class="v2-pill-paid">Paid online</span>
         @else
-            <span class="v2-pill">Collect {{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }} at pickup</span>
+            <span class="v2-pill">Collect
+                {{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }} at
+                pickup</span>
         @endif
     </div>
 
@@ -92,14 +109,10 @@
         @if ($action)
             @if ($stage === \App\Models\Order::STAGE_NEW)
                 <button type="button" data-qz-print data-order-id="{{ $order->id }}"
-                    data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}"
-                    class="v2-btn-primary">
+                    data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}" class="v2-btn-primary">
                     <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
                     {{ $action['label'] }}
                 </button>
-                @if ($trayHint)
-                    <p class="mono text-[11px] text-slate-400">{{ $trayHint }}</p>
-                @endif
             @elseif ($stage === \App\Models\Order::STAGE_READY)
                 <form method="POST" action="{{ route($rPrefix . 'orders.advance', $order) }}">
                     @csrf
@@ -116,22 +129,30 @@
                         {{ $action['label'] }}
                     </button>
                 </form>
+                @if ($stage === \App\Models\Order::STAGE_PRINTING)
+                    <button type="button" data-qz-print data-order-id="{{ $order->id }}"
+                        data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}"
+                        class="v2-btn-primary">
+                        <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
+                        Print Again
+                    </button>
+                @endif
             @endif
         @elseif ($isDone)
             <span class="v2-btn-done">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M20 6L9 17l-5-5" />
+                </svg>
                 Done
             </span>
         @endif
 
         <div class="v2-link-row">
-            @if ($stage === \App\Models\Order::STAGE_PRINTING)
-                <a href="{{ route($rPrefix . 'orders.downloadPdf', $order) }}" class="v2-link">
-                    <i data-lucide="download" class="w-3 h-3"></i> Download PDF
-                </a>
-            @endif
+
             @if ($stage !== \App\Models\Order::STAGE_NEW)
-                <form method="POST" action="{{ route($rPrefix . 'orders.undoStatus', $order) }}" style="display:inline;">
+                <form method="POST" action="{{ route($rPrefix . 'orders.undoStatus', $order) }}"
+                    style="display:inline;">
                     @csrf
                     <button type="submit" class="v2-undo">Undo</button>
                 </form>

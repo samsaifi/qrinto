@@ -57,9 +57,9 @@ Route::get('/storage-link', function () {
 | paths win over it.
 */
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/store', [StorePanelController::class, 'orders'])->name('storepanel.home');
-    Route::get('/store/orders', [StorePanelController::class, 'orders'])->name('storepanel.orders');
-    Route::get('/store/orders-v2', [StorePanelController::class, 'ordersV2'])->name('storepanel.orders-v2');
+    Route::get('/store', [StorePanelController::class, 'ordersV2'])->name('storepanel.home');
+    Route::get('/store/orders', [StorePanelController::class, 'ordersV2'])->name('storepanel.orders');
+    Route::get('/store/orders-v2', [StorePanelController::class, 'orders'])->name('storepanel.orders-v2');
     Route::get('/store/qr', [StorePanelController::class, 'qr'])->name('storepanel.qr');
     Route::get('/store/trays', [StorePanelController::class, 'trays'])->name('storepanel.trays');
     Route::post('/store/trays', [StorePanelController::class, 'saveTrays'])->name('storepanel.trays.save');
@@ -91,6 +91,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('/store/templates', AdminTemplateController::class, ['as' => 'storepanel_cat']);
     Route::resource('/store/coupons', AdminCouponController::class, ['as' => 'storepanel_cat']);
     Route::resource('/store/events', AdminEventController::class, ['as' => 'storepanel_cat']);
+
+    // QZ Tray certificate + signing: eliminates the Allow/Deny dialog.
+    Route::get('/store/qz-tray/cert', [StorePanelController::class, 'qzCertificate'])
+        ->name('storepanel.qz.cert');
+    Route::post('/store/qz-tray/sign', [StorePanelController::class, 'qzSign'])
+        ->name('storepanel.qz.sign');
 
     // Persist "I already downloaded QZ Tray" for the current user, so the
     // onboarding modal on /store/orders is only shown once per user.

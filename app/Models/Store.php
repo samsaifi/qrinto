@@ -58,7 +58,79 @@ class Store extends Model
 
     public static function traySizeOptions(): array
     {
-        return ['4x6' => '4 × 6 in', '5x7' => '5 × 7 in', '7x10' => '7 × 10 in', '8.5x11' => '8.5 × 11 in'];
+        return [
+            '3x5'       => 'Index Card 3 × 5 in',
+            '4x6'       => '4 × 6 in',
+            '5x7'       => '5 × 7 in',
+            '5x7.25'    => '5 × 7.25 in E2E',
+            '7x10'      => '7 × 10 in',
+            '8.5x11'    => '8.5 × 11 in (Letter)',
+            '8.5x13'    => '8.5 × 13 in (Folio)',
+            '8.5x13.5'  => '8.5 × 13.5 in (Legal 13.5)',
+            '8.5x14'    => '8.5 × 14 in (Legal)',
+            'A5'        => 'A5 (148 × 210 mm)',
+            'A6'        => 'A6 (105 × 148 mm)',
+            'B4'        => 'B4 (250 × 353 mm)',
+            'B5'        => 'B5 (176 × 250 mm)',
+            'B6'        => 'B6 (125 × 176 mm)',
+            'B6Half'    => 'B6 Half (125 × 88 mm)',
+            'B7'        => 'B7 (88 × 125 mm)',
+            'B8'        => 'B8 (62 × 88 mm)',
+            '8K-260x368'  => '8K 260 × 368 mm',
+            '8K-270x390'  => '8K 270 × 390 mm',
+            '8K-273x394'  => '8K 273 × 394 mm',
+            '16K-184x260' => '16K 184 × 260 mm',
+            '16K-195x270' => '16K 195 × 270 mm',
+        ];
+    }
+
+    /**
+     * Dimensions (width × height in inches) for every known paper size.
+     * Used by the front-end to derive hidden size_width / size_height fields,
+     * and by matchTrayForSize for dimension-based matching.
+     */
+    public static function traySizeDimensions(): array
+    {
+        return [
+            '3x5'       => [3, 5],
+            '4x6'       => [4, 6],
+            '5x7'       => [5, 7],
+            '5x7.25'    => [5, 7.25],
+            '7x10'      => [7, 10],
+            '8.5x11'    => [8.5, 11],
+            '8.5x13'    => [8.5, 13],
+            '8.5x13.5'  => [8.5, 13.5],
+            '8.5x14'    => [8.5, 14],
+            'A5'        => [5.83, 8.27],
+            'A6'        => [4.13, 5.83],
+            'B4'        => [9.84, 13.90],
+            'B5'        => [6.93, 9.84],
+            'B6'        => [4.92, 6.93],
+            'B6Half'    => [4.92, 3.46],
+            'B7'        => [3.46, 4.92],
+            'B8'        => [2.44, 3.46],
+            '8K-260x368'  => [10.24, 14.49],
+            '8K-270x390'  => [10.63, 15.35],
+            '8K-273x394'  => [10.75, 15.51],
+            '16K-184x260' => [7.24, 10.24],
+            '16K-195x270' => [7.68, 10.63],
+        ];
+    }
+
+    /**
+     * Try to map arbitrary paper dimensions (inches) to a standard size code
+     * for deriveUserType compatibility. Returns null if no match.
+     */
+    public static function normalizeToSizeCode(?float $width, ?float $height): ?string
+    {
+        if (!$width || !$height) return null;
+        foreach (self::traySizeDimensions() as $code => [$w, $h]) {
+            if ((abs($width - $w) < 0.15 && abs($height - $h) < 0.15) ||
+                (abs($width - $h) < 0.15 && abs($height - $w) < 0.15)) {
+                return $code;
+            }
+        }
+        return null;
     }
 
     /** Media options grouped by how they drive the User Type. */
@@ -153,16 +225,27 @@ class Store extends Model
             $printer = trim((string) ($entry['printer'] ?? ''));
             if ($printer === '') continue;
 
+            $sizeKey = $entry['size'] ?? null;
+            $sw = isset($entry['size_width'])  ? (float) $entry['size_width']  : null;
+            $sh = isset($entry['size_height']) ? (float) $entry['size_height'] : null;
+            if (!$sw && $sizeKey && isset(self::traySizeDimensions()[$sizeKey])) {
+                [$sw, $sh] = self::traySizeDimensions()[$sizeKey];
+            }
+
             $row = [
-                'key'       => (string) ($entry['key'] ?? self::trayKeyFromPrinter($printer)),
-                'label'     => (string) ($entry['label'] ?? $printer),
-                'printer'   => $printer,
-                'size'      => $entry['size']  ?? null,
-                'media'     => $entry['media'] ?? null,
-                'gsm'       => $entry['gsm']   ?? null,
-                'enabled'   => (bool) ($entry['enabled'] ?? false),
+                'key'         => (string) ($entry['key'] ?? self::trayKeyFromPrinter($printer)),
+                'label'       => (string) ($entry['label'] ?? $printer),
+                'printer'     => $printer,
+                'size'        => $sizeKey,
+                'size_width'  => $sw,
+                'size_height' => $sh,
+                'media'       => $entry['media'] ?? null,
+                'gsm'         => $entry['gsm']   ?? null,
+                'density'     => $entry['density'] ?? null,
+                'enabled'     => (bool) ($entry['enabled'] ?? false),
             ];
-            $row['user_type'] = self::deriveUserType($row['size'], $row['media'], $row['gsm']);
+            $sizeCode = self::normalizeToSizeCode($row['size_width'], $row['size_height']) ?? $row['size'];
+            $row['user_type'] = self::deriveUserType($sizeCode, $row['media'], $row['gsm']);
             $rows[] = $row;
         }
 
@@ -179,8 +262,22 @@ class Store extends Model
         $rows = collect($this->trayRows())->where('enabled', true);
         if ($sizeCode) {
             $needle = str_replace([' ', '×', 'x'], ['', 'x', 'x'], strtolower($sizeCode));
-            $exact  = $rows->first(fn($r) => strtolower($r['size'] ?? '') === $needle);
+
+            // Try exact string match on the size field.
+            $exact = $rows->first(fn($r) => strtolower($r['size'] ?? '') === $needle);
             if ($exact) return $exact;
+
+            // Try matching by stored dimensions against the size code.
+            $knownDims = ['4x6' => [4, 6], '5x7' => [5, 7], '7x10' => [7, 10], '8.5x11' => [8.5, 11]];
+            if (isset($knownDims[$needle])) {
+                [$tw, $th] = $knownDims[$needle];
+                $byDims = $rows->first(fn($r) =>
+                    $r['size_width'] && $r['size_height'] &&
+                    ((abs($r['size_width'] - $tw) < 0.15 && abs($r['size_height'] - $th) < 0.15) ||
+                     (abs($r['size_width'] - $th) < 0.15 && abs($r['size_height'] - $tw) < 0.15))
+                );
+                if ($byDims) return $byDims;
+            }
         }
         // Fallback: any tray labelled "MP" if present, else the first enabled row.
         return $rows->first(fn($r) => stripos($r['label'] ?? '', 'MP') !== false) ?? $rows->first();

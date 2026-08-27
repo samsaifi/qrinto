@@ -15,10 +15,12 @@
     $time = $order->updated_at && $stage !== \App\Models\Order::STAGE_NEW ? $order->updated_at : $order->created_at;
     $isDone = $stage === \App\Models\Order::STAGE_DONE;
 
-    // Best-effort auto-matched tray for the New action (until the helper does it):
-    // pick an enabled tray whose loaded size matches the order's size.
 $flow = $order->flow_data ?? [];
-$orderSize = $flow['size_dimensions'] ?? null;
+$sizeW = $flow['size_width'] ?? null;
+$sizeH = $flow['size_height'] ?? null;
+$sizeUnit = $flow['size_unit'] ?? 'inch';
+$sizeDimDisplay = ($sizeW && $sizeH) ? ($sizeW . ' × ' . $sizeH . ' ' . $sizeUnit) : null;
+$orderSize = $flow['size_slug'] ?? ($flow['size_dimensions'] ?? null);
 if ($orderSize) {
     $orderSize = str_replace([' ', '×'], ['', 'x'], strtolower($orderSize));
 }
@@ -62,6 +64,7 @@ if ($stage === \App\Models\Order::STAGE_NEW && $store) {
         @endforeach
         <p class="text-[13px] text-slate-500 mt-0.5">{{ $name }} · {{ $verb }}
             {{ $time->format('g:i A') }}</p>
+        <p class="mono text-[12px] text-slate-400 mt-0.5">{{ $sizeDimDisplay ?? '—' }}</p>
     </div>
 
     {{-- Payment tag --}}
@@ -113,6 +116,12 @@ if ($stage === \App\Models\Order::STAGE_NEW && $store) {
                     <p class="mono text-[11px] text-slate-400 mt-1.5">{{ $trayHint }}</p>
                 @endif
                 @if ($stage === \App\Models\Order::STAGE_PRINTING)
+                    <button type="button" data-qz-print data-order-id="{{ $order->id }}"
+                        data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition active:scale-[0.98] bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 mt-2">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        Again Print on 931BL
+                    </button>
                     <a href="{{ route($rPrefix . 'orders.downloadPdf', $order) }}"
                         class="inline-flex items-center gap-1 mono text-[11px] text-slate-500 hover:text-[#287d3c] mt-1.5">
                         <i data-lucide="download" class="w-3 h-3"></i> Download PDF

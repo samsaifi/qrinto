@@ -79,17 +79,19 @@ class LocalPrintController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'pdf' => 'required|file|mimetypes:application/pdf|max:204800', // 200 MB
+            'file' => 'required|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp,image/tiff|max:204800',
         ]);
 
-        $file = $request->file('pdf');
+        $file = $request->file('file');
         $path = $file->store('local-print', 'public');
+        $mime = $file->getMimeType();
 
         session([
             'local_print_file' => [
                 'path' => $path,
                 'name' => $file->getClientOriginalName(),
                 'size' => $file->getSize(),
+                'type' => str_starts_with($mime, 'image/') ? 'image' : 'pdf',
             ],
         ]);
 
@@ -104,25 +106,45 @@ class LocalPrintController extends Controller
             return redirect()->route('localprint.pdf');
         }
 
-        // Use asset() so the URL is same-origin with the current request (avoids
-        // CORS blocking PDF.js when APP_URL differs from the browser host).
         $file['url']   = asset('storage/' . ltrim($file['path'], '/'));
         $absPath       = storage_path('app/public/' . $file['path']);
         $file['bytes'] = is_file($absPath) ? filesize($absPath) : ($file['size'] ?? 0);
+        $file['type']  = $file['type'] ?? 'pdf';
 
-        // Feed the client the physical dimensions of each tray media so the
-        // preflight can compare the PDF against the selected tray in real time.
-        $trayDims = [
-            '4x6'    => ['w' => 4.0, 'h' => 6.0],
-            '5x7'    => ['w' => 5.0, 'h' => 7.0],
-            '7x10'   => ['w' => 7.0, 'h' => 10.0],
-            '8.5x11' => ['w' => 8.5, 'h' => 11.0],
-        ];
+        $trayDims = \App\Models\Store::traySizeDimensions();
+        $trayDimsJs = [];
+        foreach ($trayDims as $key => [$w, $h]) {
+            $trayDimsJs[$key] = ['w' => $w, 'h' => $h];
+        }
+
+        $user  = auth()->user();
+        $store = ($user && $user->store_id) ? $user->store : null;
+
+        if ($store) {
+            $storeTrays = collect($store->trayRows())->where('enabled', true)->values();
+            $trays = $storeTrays->map(fn($r) => [
+                'key'      => $r['key'],
+                'label'    => $r['label'],
+                'printer'  => $r['printer'],
+                'size'     => $r['size'],
+                'media'    => $r['media'],
+                'gsm'      => $r['gsm'],
+                'density'  => $r['density'] ?? null,
+                'loaded'   => true,
+                'out'      => false,
+                'desc'     => trim(($r['size'] ? str_replace('x', ' × ', $r['size']) : '') . ' ' . ($r['media'] ?? '')),
+                'user_type' => $r['user_type'] ?? null,
+            ])->all();
+        } else {
+            $trays = [];
+        }
 
         return view($this->view('check'), [
-            'file'     => $file,
-            'trays'    => $this->trays(),
-            'trayDims' => $trayDims,
+            'file'      => $file,
+            'trays'     => $trays,
+            'trayDims'  => $trayDimsJs,
+            'loggedIn'  => (bool) $store,
+            'storeName' => $store->name ?? null,
         ]);
     }
 
@@ -134,11 +156,18 @@ class LocalPrintController extends Controller
         ]);
 
         $file = session('local_print_file');
+        $selectedTray = collect($this->trays())->firstWhere('key', $data['tray']);
 
         session()->flash('print_summary', [
-            'name'   => $file['name'] ?? 'your file',
-            'tray'   => collect($this->trays())->firstWhere('key', $data['tray'])['label'] ?? 'the selected tray',
-            'copies' => $data['copies'],
+            'name'      => $file['name'] ?? 'your file',
+            'tray'      => $selectedTray['label'] ?? 'the selected tray',
+            'tray_key'  => $selectedTray['key'] ?? $data['tray'],
+            'size'      => $selectedTray['size'] ?? null,
+            'media'     => $selectedTray['media'] ?? null,
+            'gsm'       => $selectedTray['gsm'] ?? null,
+            'user_type' => $selectedTray['user_type'] ?? null,
+            'printer'   => $selectedTray['printer'] ?? null,
+            'copies'    => $data['copies'],
         ]);
 
         return redirect()->route('localprint.sent');

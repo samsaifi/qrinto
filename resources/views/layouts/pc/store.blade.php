@@ -6,9 +6,9 @@
 
     {{-- Location Icon Button (ONLY ICON IN HEADER) --}}
     <button type="button" @click="isOpen = !isOpen"
-        class="h-11 w-11 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 text-slate-800 transition-all cursor-pointer active:scale-95 relative shadow-2xs"
+        class="h-11 w-11 flex items-center justify-center rounded-xl text-slate-800 transition-all cursor-pointer active:scale-95 relative"
         title="Store Location">
-        <i data-lucide="map-pin" class="w-5 h-5 text-slate-700"></i>
+        <i data-lucide="map-pin" class="w-5 h-5" :class="storeId ? 'text-[#287d3c]' : 'text-slate-400'"></i>
 
         {{-- Top Right Dot Badge --}}
         <template x-if="storeId">
@@ -19,6 +19,14 @@
                 class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white animate-pulse"></span>
         </template>
     </button>
+
+    {{-- Store name / select label beside icon --}}
+    <template x-if="storeId">
+        <span @click="isOpen = !isOpen" class="ml-1 text-[13px] font-bold text-[#287d3c] truncate max-w-[140px] hidden sm:inline cursor-pointer" x-text="storeName"></span>
+    </template>
+    <template x-if="!storeId">
+        <span @click="isOpen = !isOpen" class="ml-1 text-[13px] font-medium text-slate-400 hidden sm:inline cursor-pointer">Select store</span>
+    </template>
 
     {{-- Absolute Tooltip Dropdown Below Icon --}}
     <div x-show="isOpen || isHovered" @mouseenter="isHovered = true" @mouseleave="isHovered = false"

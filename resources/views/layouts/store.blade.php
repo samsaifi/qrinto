@@ -167,17 +167,40 @@
                 window.dispatchEvent(new CustomEvent('qz-toast', { detail: { msg, kind: kind || 'info' } }));
             }
 
-            // Unsigned-cert mode: QZ Tray 2.x asks the page for a certificate
-            // and a signature on every connect. If we don't answer, the
-            // `connect()` promise hangs even though the websocket is up
-            // (that's what "Failed to get certificate: undefined" means).
-            // These stubs tell QZ Tray we have no signed cert — QZ Tray then
-            // shows its local Allow/Deny dialog on the operator's PC.
+            // QZ Tray certificate-based trust: serve a real certificate and
+            // sign each websocket handshake so QZ Tray skips the Allow/Deny
+            // dialog. The cert must be installed once in QZ Tray's trusted
+            // store (drag qz-cert.pem onto QZ Tray's "Site Manager" window).
             if (window.qz && qz.security) {
-                qz.security.setCertificatePromise(function (resolve) { resolve(); });
-                qz.security.setSignatureAlgorithm && qz.security.setSignatureAlgorithm('SHA512');
-                qz.security.setSignaturePromise(function () {
-                    return function (resolve) { resolve(''); };
+                var __qzCertCache = null;
+                var __qzCsrf = function () {
+                    return document.querySelector('meta[name="csrf-token"]')?.content
+                        || document.querySelector('input[name="_token"]')?.value;
+                };
+                qz.security.setCertificatePromise(function (resolve, reject) {
+                    if (__qzCertCache) { resolve(__qzCertCache); return; }
+                    fetch("{{ route('storepanel.qz.cert') }}", { credentials: 'same-origin' })
+                        .then(function (r) { return r.ok ? r.text() : Promise.reject('cert ' + r.status); })
+                        .then(function (pem) { __qzCertCache = pem; resolve(pem); })
+                        .catch(function (e) { console.warn('[QZ] cert fetch failed, unsigned mode', e); resolve(); });
+                });
+                qz.security.setSignatureAlgorithm('SHA512');
+                qz.security.setSignaturePromise(function (toSign) {
+                    return function (resolve, reject) {
+                        fetch("{{ route('storepanel.qz.sign') }}", {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'text/plain',
+                                'X-CSRF-TOKEN': __qzCsrf(),
+                            },
+                            body: JSON.stringify({ request: toSign }),
+                        })
+                        .then(function (r) { return r.ok ? r.text() : Promise.reject('sign ' + r.status); })
+                        .then(resolve)
+                        .catch(function (e) { console.warn('[QZ] sign failed, unsigned mode', e); resolve(''); });
+                    };
                 });
             }
 
@@ -295,7 +318,15 @@
                 }
 
                 try {
-                    const config = qz.configs.create(printer, { copies: payload.copies || 1 });
+                    const configOpts = { copies: payload.copies || 1 };
+                    if (chosen.size_width && chosen.size_height) {
+                        configOpts.size = { width: chosen.size_width, height: chosen.size_height };
+                        configOpts.units = 'in';
+                    }
+                    if (chosen.density) {
+                        configOpts.density = { cross: parseInt(chosen.density), feed: parseInt(chosen.density) };
+                    }
+                    const config = qz.configs.create(printer, configOpts);
                     // Prefer base64 bytes (the server embedded them) — that way
                     // QZ Tray never has to fetch a URL from its desktop process,
                     // which sidesteps auth cookies, /public prefix quirks, and
