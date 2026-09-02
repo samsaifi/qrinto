@@ -973,7 +973,7 @@
                             </h1>
                             <p class="text-xs lg:text-sm text-slate-500 font-semibold flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full  bg-gray-500 animate-ping"></span>
-                                Upload your photo — it will be fitted to the shape guide on canvas.
+                                Upload your photo - it will be fitted to the shape guide on canvas.
                             </p>
                         </div>
                     </div>

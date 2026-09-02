@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Weekly analytics email. Sent synchronously — the scheduler fires once
+ * Weekly analytics email. Sent synchronously - the scheduler fires once
  * a week, so we don't need a queue worker to deliver it.
  */
 class WeeklyAnalyticsReport extends Mailable
@@ -49,7 +49,7 @@ class WeeklyAnalyticsReport extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Weekly Analytics Report — ' . $this->period['label'],
+            subject: 'Weekly Analytics Report - ' . $this->period['label'],
         );
     }
 

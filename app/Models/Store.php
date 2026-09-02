@@ -159,7 +159,7 @@ class Store extends Model
      * Derive the printer User Type (1–7) from a tray's size / media / gsm,
      * per the spec:
      *   film = UT7; envelopes & labels = UT3; magnets = UT6;
-     *   paper by gsm — 120 = UT1, 120-150 = UT2, 150-270 = UT5, 270-324 = UT6;
+     *   paper by gsm - 120 = UT1, 120-150 = UT2, 150-270 = UT5, 270-324 = UT6;
      *   scored 150-324 = UT6, scored 324 (270-324) at 5×7 = UT5;
      *   a glossy or silk (lustre) surface shifts one step down: 1→2, 2→5, 5→6.
      */
@@ -203,7 +203,7 @@ class Store extends Model
     }
 
     /**
-     * Stable slug for a printer name — used as the tray "key" so lookups
+     * Stable slug for a printer name - used as the tray "key" so lookups
      * survive across visits without depending on fragile array indexes.
      */
     public static function trayKeyFromPrinter(string $printer): string
@@ -213,7 +213,7 @@ class Store extends Model
     }
 
     /**
-     * Normalised tray rows for the panel — one entry per configured printer
+     * Normalised tray rows for the panel - one entry per configured printer
      * (whatever the store saved on /store/trays). Each row carries the
      * derived User Type. Trays are dynamic: their identity is the PC printer
      * name, not a fixed mp/tray1..5 slot.

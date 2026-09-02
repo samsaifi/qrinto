@@ -13,7 +13,7 @@
             <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight mt-4">Set up the print helper</h1>
             <p class="text-sm text-slate-500 mt-2 max-w-lg leading-relaxed">
                 The helper is a small Windows app that lets this page talk to your 931BL. It comes bundled with the driver
-                installer — if the printer is not showing, install it once and reload this page.
+                installer - if the printer is not showing, install it once and reload this page.
             </p>
 
             <div class="mt-8 space-y-3">
@@ -29,7 +29,7 @@
                         ],
                         [
                             'Reload the print page',
-                            'Come back to “Print on your own 931BL” — the printer and trays should appear.',
+                            'Come back to “Print on your own 931BL” - the printer and trays should appear.',
                         ],
                     ];
                 @endphp

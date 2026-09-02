@@ -1,6 +1,6 @@
 ﻿@extends('layouts.quick-flow')
 
-@section('title', 'Order Confirmed — Qrinto Print Studio')
+@section('title', 'Order Confirmed - Qrinto Print Studio')
 @section('header_title', 'Order Confirmed')
 
 @push('styles')
@@ -139,7 +139,9 @@
 
             {{-- Pickup QR (always visible; show at the counter) --}}
             <div class="pt-3 flex flex-col items-center gap-2">
-                <div id="order-qr" class="w-40 h-40 bg-white rounded-2xl border border-slate-100 flex items-center justify-center p-2"></div>
+                <div id="order-qr"
+                    class="w-40 h-40 bg-white rounded-2xl border border-slate-100 flex items-center justify-center p-2">
+                </div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Show this at the counter</p>
             </div>
         </div>
@@ -376,8 +378,10 @@
             if (holder && window.QRCode) {
                 new QRCode(holder, {
                     text: @json($order->order_number),
-                    width: 144, height: 144,
-                    colorDark: '#0f172a', colorLight: '#ffffff',
+                    width: 144,
+                    height: 144,
+                    colorDark: '#0f172a',
+                    colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.H,
                 });
             }

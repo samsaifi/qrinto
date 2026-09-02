@@ -40,11 +40,11 @@
                 <div>
                     <h2 class="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">Start Date</h2>
                     <p class="text-sm text-surface-700">
-                        {{ $event->start_date ? $event->start_date->format('M d, Y') : '—' }}</p>
+                        {{ $event->start_date ? $event->start_date->format('M d, Y') : '-' }}</p>
                 </div>
                 <div>
                     <h2 class="text-xs font-bold text-surface-400 uppercase tracking-wider mb-2">End Date</h2>
-                    <p class="text-sm text-surface-700">{{ $event->end_date ? $event->end_date->format('M d, Y') : '—' }}
+                    <p class="text-sm text-surface-700">{{ $event->end_date ? $event->end_date->format('M d, Y') : '-' }}
                     </p>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-# Qrinto Print Studio — Developer Onboarding Guide
+# Qrinto Print Studio - Developer Onboarding Guide
 
 **Version:** 1.0  
 **Last Updated:** August 3, 2026  
@@ -48,7 +48,7 @@ Qrinto Print Studio is a **custom photo printing and personalized product e-comm
 |-------|-----------|---------|
 | **Backend Framework** | Laravel | 12.x |
 | **Language** | PHP | 8.2+ |
-| **Database** | MySQL / SQLite | — |
+| **Database** | MySQL / SQLite | - |
 | **Frontend (Blade views)** | Alpine.js | 3.x |
 | **Frontend (Noritsu editor)** | React | 19.x |
 | **CSS Framework** | Tailwind CSS | 3.x |
@@ -57,12 +57,12 @@ Qrinto Print Studio is a **custom photo printing and personalized product e-comm
 | **PDF Generation** | DomPDF (barryvdh/laravel-dompdf) | 3.x |
 | **Image Processing** | Intervention Image | 3.x |
 | **Authentication** | Laravel Breeze + Socialite | 2.x |
-| **Payment Gateways** | PayPal REST API v2, Stripe, Razorpay | — |
-| **AI Integration** | OpenRouter API | — |
+| **Payment Gateways** | PayPal REST API v2, Stripe, Razorpay | - |
+| **AI Integration** | OpenRouter API | - |
 | **Print Agent** | .NET 8 (C# Windows Service) | net8.0 |
 | **Icons** | Lucide Icons | 1.x |
-| **Onboarding Tours** | Driver.js | — |
-| **PWA** | Service Worker + manifest.json | — |
+| **Onboarding Tours** | Driver.js | - |
+| **PWA** | Service Worker + manifest.json | - |
 
 ### Architecture Overview
 
@@ -132,7 +132,7 @@ Qrinto Print Studio is a **custom photo printing and personalized product e-comm
 1. **Customer scans QR code** at a store → store is set in session
 2. **Selects product type** (e.g., Greeting Cards) → selects size variant (e.g., 5×7)
 3. **Browses design templates** filtered by category
-4. **Customizes design** — uploads photos, positions within mask zones
+4. **Customizes design** - uploads photos, positions within mask zones
 5. **Adds to cart** or proceeds to single-item checkout
 6. **Pays** via PayPal/Stripe/Razorpay or chooses cash at counter
 7. **Order created** → emails sent to customer, admin, and store
@@ -146,18 +146,18 @@ Qrinto Print Studio is a **custom photo printing and personalized product e-comm
 
 | URL | Description |
 |-----|-------------|
-| **Customer Website (Mobile)** | `{APP_URL}/` — Quick Flow mobile-optimized customer experience |
-| **Customer Website (Desktop)** | `{APP_URL}/pc/` — Desktop-optimized customer experience |
-| **Store Finder** | `{APP_URL}/find-store` — Find nearby stores by location or search |
-| **Custom Print** | `{APP_URL}/custom-print` — Direct file upload printing (skip templates) |
-| **Order Tracking** | `{APP_URL}/track` — Customer order tracking by order number |
-| **Customer Account** | `{APP_URL}/my-account` — Customer dashboard, order history |
-| **Admin Panel** | `{APP_URL}/admin` — Full admin dashboard |
-| **Login** | `{APP_URL}/login` — Authentication page |
-| **Store QR Scan** | `{APP_URL}/store/{storeCode}` — QR code entry point per store |
-| **Store QR Display** | `{APP_URL}/store/{storeCode}/qr` — Printable QR code page |
-| **Noritsu Editor** | `{APP_URL}/noritsu/` — React-based photo editor |
-| **Cart** | `{APP_URL}/cart` — Shopping cart |
+| **Customer Website (Mobile)** | `{APP_URL}/` - Quick Flow mobile-optimized customer experience |
+| **Customer Website (Desktop)** | `{APP_URL}/pc/` - Desktop-optimized customer experience |
+| **Store Finder** | `{APP_URL}/find-store` - Find nearby stores by location or search |
+| **Custom Print** | `{APP_URL}/custom-print` - Direct file upload printing (skip templates) |
+| **Order Tracking** | `{APP_URL}/track` - Customer order tracking by order number |
+| **Customer Account** | `{APP_URL}/my-account` - Customer dashboard, order history |
+| **Admin Panel** | `{APP_URL}/admin` - Full admin dashboard |
+| **Login** | `{APP_URL}/login` - Authentication page |
+| **Store QR Scan** | `{APP_URL}/store/{storeCode}` - QR code entry point per store |
+| **Store QR Display** | `{APP_URL}/store/{storeCode}/qr` - Printable QR code page |
+| **Noritsu Editor** | `{APP_URL}/noritsu/` - React-based photo editor |
+| **Cart** | `{APP_URL}/cart` - Shopping cart |
 
 ### API URLs
 
@@ -165,12 +165,12 @@ Qrinto Print Studio is a **custom photo printing and personalized product e-comm
 |-----|-------------|
 | **Product Price Calculation** | `POST {APP_URL}/api/v1/products/{product}/calculate-price` |
 | **Image Upload** | `POST {APP_URL}/api/v1/upload` |
-| **Cart API** | `{APP_URL}/api/v1/cart/*` — Add, update, remove, coupon operations |
-| **Noritsu API** | `{APP_URL}/api/noritsu/v1/*` — Stores, templates, orders for Noritsu app |
-| **Print Agent Polling** | `GET {APP_URL}/api/print-jobs/pending` — Agent polls for print jobs |
-| **Print Agent Messages** | `POST {APP_URL}/api/agent/messages` — Agent status updates |
+| **Cart API** | `{APP_URL}/api/v1/cart/*` - Add, update, remove, coupon operations |
+| **Noritsu API** | `{APP_URL}/api/noritsu/v1/*` - Stores, templates, orders for Noritsu app |
+| **Print Agent Polling** | `GET {APP_URL}/api/print-jobs/pending` - Agent polls for print jobs |
+| **Print Agent Messages** | `POST {APP_URL}/api/agent/messages` - Agent status updates |
 | **User Design Save** | `POST {APP_URL}/api/user-designs/save` |
-| **AI Chat** | `POST {APP_URL}/chat` — OpenRouter AI integration |
+| **AI Chat** | `POST {APP_URL}/chat` - OpenRouter AI integration |
 
 ### External Service URLs
 
@@ -187,12 +187,12 @@ Qrinto Print Studio is a **custom photo printing and personalized product e-comm
 
 | Resource | Details |
 |----------|---------|
-| **Git Repository** | **Information Required** — Repository URL not found in codebase |
-| **Staging Environment** | **Information Required** — Not configured in codebase |
-| **Production Environment** | **Information Required** — Check `.env` for `APP_URL` |
-| **CDN** | **Information Required** — No CDN configuration found; assets served locally |
-| **Storage URL** | `{APP_URL}/storage/` — Symlinked to `storage/app/public/` |
-| **API Documentation** | **Information Required** — No Swagger/OpenAPI spec found |
+| **Git Repository** | **Information Required** - Repository URL not found in codebase |
+| **Staging Environment** | **Information Required** - Not configured in codebase |
+| **Production Environment** | **Information Required** - Check `.env` for `APP_URL` |
+| **CDN** | **Information Required** - No CDN configuration found; assets served locally |
+| **Storage URL** | `{APP_URL}/storage/` - Symlinked to `storage/app/public/` |
+| **API Documentation** | **Information Required** - No Swagger/OpenAPI spec found |
 
 ---
 
@@ -230,10 +230,10 @@ Qrinto Print Studio is a **custom photo printing and personalized product e-comm
 > **Note:** Registration and password reset routes are currently **commented out** in `routes/auth.php`. These features are disabled in the current deployment.
 
 The controllers exist (`PasswordResetLinkController`, `NewPasswordController`) but the routes must be uncommented to enable:
-- `GET /forgot-password` — Shows reset request form
-- `POST /forgot-password` — Sends reset link email
-- `GET /reset-password/{token}` — Shows reset form
-- `POST /reset-password` — Stores new password
+- `GET /forgot-password` - Shows reset request form
+- `POST /forgot-password` - Sends reset link email
+- `GET /reset-password/{token}` - Shows reset form
+- `POST /reset-password` - Stores new password
 
 ### Registration
 
@@ -263,7 +263,7 @@ The `RegisteredUserController` exists and would create a user with role `custome
 | User passwords | Hashed in database (`users.password` column, bcrypt via Laravel) |
 | API keys (PayPal, Stripe, etc.) | `.env` file (never committed to version control) |
 | OAuth secrets | `.env` file |
-| Store printer FTP passwords | Database (`stores.ftp_password` column) — stored as plaintext |
+| Store printer FTP passwords | Database (`stores.ftp_password` column) - stored as plaintext |
 | Print Agent API key | `appsettings.json` on the store's Windows machine |
 
 ### Username Format
@@ -303,7 +303,7 @@ The system defines **four** user roles via the `users.role` enum column:
 | **Description** | Store-level staff member with read access |
 | **Responsibilities** | Viewing store orders |
 | **Accessible Modules** | Can access admin panel (`canAccessAdmin()` returns true) |
-| **Restricted Modules** | **Information Required** — Staff permissions are not explicitly differentiated from store_admin in the middleware; the `admin` middleware only checks `canAccessAdmin()`. Specific restrictions may be enforced at the controller/view level. |
+| **Restricted Modules** | **Information Required** - Staff permissions are not explicitly differentiated from store_admin in the middleware; the `admin` middleware only checks `canAccessAdmin()`. Specific restrictions may be enforced at the controller/view level. |
 
 ### 4.4 Customer (`customer`)
 
@@ -346,10 +346,10 @@ Displays:
 - Revenue trends
 
 **Additional Dashboard Features:**
-- `GET /admin/stores-summary` — JSON endpoint with store order statistics (paginated, sortable, date-filterable)
-- `GET /admin/stores-summary/export` — CSV download of store order stats
-- `GET /admin/store-statistics` — JSON endpoint with store entity counts (products, categories, etc.)
-- `GET /admin/store-statistics/export` — CSV download of store entity statistics
+- `GET /admin/stores-summary` - JSON endpoint with store order statistics (paginated, sortable, date-filterable)
+- `GET /admin/stores-summary/export` - CSV download of store order stats
+- `GET /admin/store-statistics` - JSON endpoint with store entity counts (products, categories, etc.)
+- `GET /admin/store-statistics/export` - CSV download of store entity statistics
 
 ### 5.2 Orders
 
@@ -373,8 +373,8 @@ Displays:
 - Trigger status update email notifications to customers
 
 **Order Printing:**
-- `POST /admin/orders/{order}/print` → `Admin\OrderPrintController@sendPrint` — Creates a `PrintJob` record for the QrintoPrintAgent
-- `GET /admin/orders/{order}/print-page` → `Admin\OrderPrintController@printPage` — Shows/redirects to printable design page
+- `POST /admin/orders/{order}/print` → `Admin\OrderPrintController@sendPrint` - Creates a `PrintJob` record for the QrintoPrintAgent
+- `GET /admin/orders/{order}/print-page` → `Admin\OrderPrintController@printPage` - Shows/redirects to printable design page
 
 ### 5.3 Products
 
@@ -385,14 +385,14 @@ Displays:
 - **Edit** any product regardless of which store created it
 - **Delete** individual products or **bulk delete** multiple products
 - **Publish/unpublish** products via `is_active` toggle
-- **Manage product images** — upload, delete, set primary
-- **Manage option groups** — add customizable options (size, finish, frame) with price modifiers (fixed, percentage, absolute)
-- **Manage option values** — add/delete values within option groups
-- **AI-powered generation** — `POST /admin/products/ai-generate` uses OpenRouter to auto-generate product descriptions, prices, SEO metadata, and attribute suggestions
+- **Manage product images** - upload, delete, set primary
+- **Manage option groups** - add customizable options (size, finish, frame) with price modifiers (fixed, percentage, absolute)
+- **Manage option values** - add/delete values within option groups
+- **AI-powered generation** - `POST /admin/products/ai-generate` uses OpenRouter to auto-generate product descriptions, prices, SEO metadata, and attribute suggestions
 
 **Mask Editor:**
-- `GET /admin/products/{product}/mask` — Opens the mask editor for products with `no_of_pages` = 2 or 4
-- `POST /admin/products/{product}/mask` — Saves mask data (JSON coordinates defining where customer photos are placed)
+- `GET /admin/products/{product}/mask` - Opens the mask editor for products with `no_of_pages` = 2 or 4
+- `POST /admin/products/{product}/mask` - Saves mask data (JSON coordinates defining where customer photos are placed)
 
 ### 5.4 Categories
 
@@ -410,8 +410,8 @@ Displays:
 **Routes:** Full CRUD resource at `/admin/product-types`
 
 **Admin can:**
-- Create parent types (e.g., "Greeting Cards") — these serve as product categories in the customer flow
-- Create child types (sizes) under parent types — these have specific prices, dimensions (width × height), and unit
+- Create parent types (e.g., "Greeting Cards") - these serve as product categories in the customer flow
+- Create child types (sizes) under parent types - these have specific prices, dimensions (width × height), and unit
 - Configure: name, title, slug, icon (SVG), price, old/compare price, width, height, unit, sort order
 - Each child type defines a size variant with its own pricing that overrides the product's base price
 
@@ -425,7 +425,7 @@ Displays:
 
 **Admin can:**
 - Create coupons with: code, name, description, type (`percentage` or `fixed`), value, minimum order amount, maximum discount cap, usage limit, per-user usage limit, start/end dates
-- **Apply globally** — admin-created coupons work across all stores
+- **Apply globally** - admin-created coupons work across all stores
 - Restrict coupons to specific stores (via `store_id`)
 - Edit any coupon
 - Delete any coupon
@@ -466,11 +466,11 @@ Displays:
 - **Create stores** with: name, code (unique), owner name, email, phone, full address (street, city, state, zip, country), coordinates (lat/lon), opening/closing times, GST number, logo, notes
 - **Configure printer settings**: printer IP, port, name, type, paper size
 - **Configure FTP settings**: host, port, username, password, remote path, passive mode
-- **Test FTP connection** — `POST /admin/stores/{id}/ftp-test`
+- **Test FTP connection** - `POST /admin/stores/{id}/ftp-test`
 - **Edit any store**
 - **Toggle store active/inactive** status
 - **Delete stores** (soft delete)
-- **Manage store users** — create staff/store_admin users linked to the store (sends welcome email with auto-generated password)
+- **Manage store users** - create staff/store_admin users linked to the store (sends welcome email with auto-generated password)
 - **Delete store users**
 - **Search stores** (AJAX endpoint for print modal)
 
@@ -508,7 +508,7 @@ Admin can manage the predefined sizes available for the Qrinto custom print flow
 
 ### 5.13 Custom Print Sizes
 
-**Routes:** **Information Required** — Controller exists (`Admin\CustomPrintSizeController`) but no route registration found in `web.php`. May need to be added.
+**Routes:** **Information Required** - Controller exists (`Admin\CustomPrintSizeController`) but no route registration found in `web.php`. May need to be added.
 
 ---
 
@@ -516,7 +516,7 @@ Admin can manage the predefined sizes available for the Qrinto custom print flow
 
 **URL:** `{APP_URL}/admin` (same panel, scoped by role)  
 **Middleware:** `auth`, `admin`  
-**Layout:** `layouts.admin` — displays store logo and store-specific branding
+**Layout:** `layouts.admin` - displays store logo and store-specific branding
 
 A Store Administrator accesses the **same admin panel** but sees only data belonging to their assigned store. The scoping is enforced at the **controller level** by checking `auth()->user()->isAdmin()` and filtering queries by `store_id`.
 
@@ -750,8 +750,8 @@ Customer (No Admin Access)
 ### 8.1 Customer Flows
 
 The customer experience has **two variants**:
-- **Mobile Flow** (`/`) — Optimized for kiosk/mobile via `QuickFlowController`, uses `layouts.quick-flow`
-- **Desktop Flow** (`/pc/`) — Desktop-optimized via `QuickFlowPcController`, uses `layouts.quick-flow-pc`
+- **Mobile Flow** (`/`) - Optimized for kiosk/mobile via `QuickFlowController`, uses `layouts.quick-flow`
+- **Desktop Flow** (`/pc/`) - Desktop-optimized via `QuickFlowPcController`, uses `layouts.quick-flow-pc`
 
 Both flows share identical business logic (PC controller extends mobile controller).
 
@@ -767,9 +767,9 @@ Both flows share identical business logic (PC controller extends mobile controll
 
 ### 8.3 Product Browsing
 
-1. **Select Product Type** (`GET /`) — Shows parent product types (e.g., Greeting Cards, Magnets)
-2. **Select Size** (`GET /type/{type:slug}`) — Shows child types (sizes) with prices under the selected parent
-3. **Browse Templates** — Shows design templates filtered by category, with event-based filtering
+1. **Select Product Type** (`GET /`) - Shows parent product types (e.g., Greeting Cards, Magnets)
+2. **Select Size** (`GET /type/{type:slug}`) - Shows child types (sizes) with prices under the selected parent
+3. **Browse Templates** - Shows design templates filtered by category, with event-based filtering
 
 ### 8.4 Product Customization
 
@@ -794,24 +794,24 @@ Features:
 
 **Routes:** `/cart/*`
 
-- **Multi-item cart** — supports adding multiple products
-- **Guest cart** — tracked by session ID, merged on login
-- **Quantity adjustment** — update quantities per item
-- **Coupon application** — apply/remove promo codes
-- **Cart count** — AJAX endpoint for header badge (`GET /cart/count`)
+- **Multi-item cart** - supports adding multiple products
+- **Guest cart** - tracked by session ID, merged on login
+- **Quantity adjustment** - update quantities per item
+- **Coupon application** - apply/remove promo codes
+- **Cart count** - AJAX endpoint for header badge (`GET /cart/count`)
 
 ### 8.6 Checkout
 
 **Two checkout modes:**
 
-1. **Single-item checkout** (`POST /checkout`) — Direct checkout for one product
-2. **Cart checkout** (`GET /cart-checkout`) — Checkout for multiple cart items
+1. **Single-item checkout** (`POST /checkout`) - Direct checkout for one product
+2. **Cart checkout** (`GET /cart-checkout`) - Checkout for multiple cart items
 
 **Payment options:**
-- **PayPal** — Create order → capture payment → create internal order
-- **Cash at Counter** — Creates order with `payment_status: 'pending'`
-- **Stripe** — **Information Required** — Stripe integration exists in `PaymentService` but checkout UI integration details need verification
-- **Razorpay** — **Information Required** — Razorpay integration exists in `PaymentService` but checkout UI integration details need verification
+- **PayPal** - Create order → capture payment → create internal order
+- **Cash at Counter** - Creates order with `payment_status: 'pending'`
+- **Stripe** - **Information Required** - Stripe integration exists in `PaymentService` but checkout UI integration details need verification
+- **Razorpay** - **Information Required** - Razorpay integration exists in `PaymentService` but checkout UI integration details need verification
 
 **Checkout fields:**
 - Pickup name, email, phone
@@ -838,9 +838,9 @@ Displays:
 ### 8.8 Order Tracking
 
 **Routes:**
-- `GET /track` — Tracking form
-- `POST /track` — Submit order number
-- `GET /track/{orderNumber}` — Tracking results
+- `GET /track` - Tracking form
+- `POST /track` - Submit order number
+- `GET /track/{orderNumber}` - Tracking results
 
 Displays:
 - Order status with timeline
@@ -852,9 +852,9 @@ Displays:
 ### 8.9 Customer Account
 
 **Routes (authenticated):**
-- `GET /my-account` → `CustomerController@dashboard` — Dashboard with order stats
-- `GET /my-account/orders` → `CustomerController@orders` — Paginated order list
-- `GET /my-account/orders/{order}` → `CustomerController@orderDetail` — Order detail (owner check enforced)
+- `GET /my-account` → `CustomerController@dashboard` - Dashboard with order stats
+- `GET /my-account/orders` → `CustomerController@orders` - Paginated order list
+- `GET /my-account/orders/{order}` → `CustomerController@orderDetail` - Order detail (owner check enforced)
 
 ### 8.10 Profile Management
 
@@ -878,7 +878,7 @@ Allows customers to skip template selection and upload their own design file:
 
 ### Current State
 
-> **Information Required** — No dedicated Customer Resource Center module was found in the codebase. The following related resources exist:
+> **Information Required** - No dedicated Customer Resource Center module was found in the codebase. The following related resources exist:
 
 | Resource | Location | Description |
 |----------|----------|-------------|
@@ -1081,7 +1081,7 @@ The database contains **30+ tables** across 62 migrations:
 |--------|----------|-------------|---------|----------|
 | POST | `/api/v1/products/{product}/calculate-price` | Calculate product price with options | `{ selected_options: [id, ...] }` | `{ price, formatted_price, breakdown }` |
 | POST | `/api/v1/upload` | Upload customer image | Multipart: `image` file | `{ id, url, thumbnail_url, width, height }` |
-| DELETE | `/api/v1/upload/{upload}` | Delete uploaded image | — | `{ success }` |
+| DELETE | `/api/v1/upload/{upload}` | Delete uploaded image | - | `{ success }` |
 
 #### Cart API (`/api/v1/cart`)
 
@@ -1089,9 +1089,9 @@ The database contains **30+ tables** across 62 migrations:
 |--------|----------|-------------|---------|----------|
 | POST | `/api/v1/cart/add` | Add item to cart | `{ product_id, quantity, unit_price, customization_data, selected_options }` | `{ success, cart, item_count }` |
 | PATCH | `/api/v1/cart/update/{itemId}` | Update item quantity | `{ quantity }` | `{ success, cart }` |
-| DELETE | `/api/v1/cart/remove/{itemId}` | Remove item from cart | — | `{ success, cart }` |
+| DELETE | `/api/v1/cart/remove/{itemId}` | Remove item from cart | - | `{ success, cart }` |
 | POST | `/api/v1/cart/coupon` | Apply coupon code | `{ code }` | `{ success, message, discount }` |
-| DELETE | `/api/v1/cart/coupon` | Remove applied coupon | — | `{ success }` |
+| DELETE | `/api/v1/cart/coupon` | Remove applied coupon | - | `{ success }` |
 
 #### Noritsu API (`/api/noritsu/v1`)
 
@@ -1165,11 +1165,11 @@ composer setup
 ```
 
 The `composer setup` script runs:
-1. `composer install` — Install PHP dependencies
-2. `php artisan key:generate` — Generate application encryption key
-3. `php artisan migrate` — Run database migrations
-4. `npm install` — Install Node.js dependencies
-5. `npm run build` — Build frontend assets with Vite
+1. `composer install` - Install PHP dependencies
+2. `php artisan key:generate` - Generate application encryption key
+3. `php artisan migrate` - Run database migrations
+4. `npm install` - Install Node.js dependencies
+5. `npm run build` - Build frontend assets with Vite
 
 ### 12.3 Environment Variables
 
@@ -1257,9 +1257,9 @@ npm run build
 ```
 
 **Vite entry points:**
-- `resources/css/app.css` — Tailwind CSS
-- `resources/js/app.js` — Alpine.js + Lucide icons
-- `resources/js/noritsu.jsx` — React Noritsu editor
+- `resources/css/app.css` - Tailwind CSS
+- `resources/js/app.js` - Alpine.js + Lucide icons
+- `resources/js/noritsu.jsx` - React Noritsu editor
 
 ### 12.8 Local Development
 
@@ -1269,14 +1269,14 @@ composer dev
 ```
 
 This runs concurrently:
-1. `php artisan serve` — Laravel dev server on `http://localhost:8000`
-2. `php artisan queue:listen` — Queue worker
-3. `php artisan pail` — Real-time log viewer
-4. `npm run dev` — Vite dev server with HMR
+1. `php artisan serve` - Laravel dev server on `http://localhost:8000`
+2. `php artisan queue:listen` - Queue worker
+3. `php artisan pail` - Real-time log viewer
+4. `npm run dev` - Vite dev server with HMR
 
 ### 12.9 Deployment
 
-**Information Required** — No deployment configuration (CI/CD pipeline, Docker, deployment scripts) was found in the codebase. Based on the presence of `.htaccess` files and FTP references, the application appears to be deployed to shared hosting (cPanel).
+**Information Required** - No deployment configuration (CI/CD pipeline, Docker, deployment scripts) was found in the codebase. Based on the presence of `.htaccess` files and FTP references, the application appears to be deployed to shared hosting (cPanel).
 
 **Deployment checklist:**
 1. `composer install --no-dev --optimize-autoloader`
@@ -1408,12 +1408,12 @@ This runs concurrently:
 
 | Trigger | Email Class | Recipient | Attachment |
 |---------|------------|-----------|------------|
-| New order placed | `OrderConfirmationMail` | Customer | — |
-| New order placed | `AdminOrderAlertMail` | Admin | — |
-| New order placed | `StoreOrderAlertMail` | Store email | — |
+| New order placed | `OrderConfirmationMail` | Customer | - |
+| New order placed | `AdminOrderAlertMail` | Admin | - |
+| New order placed | `StoreOrderAlertMail` | Store email | - |
 | Quick Flow order | `QuickFlowOrderMail` | Customer + Admin + Store | PDF design |
-| Order status changed | `OrderStatusUpdateMail` | Customer | — |
-| Store user created | `StoreUserWelcomeMail` | New store user | — (includes password) |
+| Order status changed | `OrderStatusUpdateMail` | Customer | - |
+| Store user created | `StoreUserWelcomeMail` | New store user | - (includes password) |
 
 ---
 
@@ -1591,7 +1591,7 @@ qrinto/
 | **PayPal not working** | Missing/wrong credentials | Check `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_MODE` in `.env` |
 | **Vite manifest not found** | Assets not built | Run `npm run build` or `npm run dev` |
 | **Print jobs stuck as pending** | QrintoPrintAgent not running | Start the .NET agent on the store's Windows machine |
-| **Currency showing wrong** | Store country misconfigured | Check `stores.country` in database — must be "Canada"/"CA"/"CAN" for CAD |
+| **Currency showing wrong** | Store country misconfigured | Check `stores.country` in database - must be "Canada"/"CA"/"CAN" for CAD |
 | **Social login redirect error** | OAuth redirect URI mismatch | Ensure `GOOGLE_REDIRECT_URI` matches Google Console config |
 | **Queue jobs not processing** | Queue worker not running | Start with `php artisan queue:listen` or `composer dev` |
 | **Images not uploading** | PHP upload limits | Check `php.ini`: `upload_max_filesize`, `post_max_size` |
@@ -1599,7 +1599,7 @@ qrinto/
 
 ### Debug Tips
 
-- **Real-time logs:** `php artisan pail` — streams log output in real time
+- **Real-time logs:** `php artisan pail` - streams log output in real time
 - **Clear all caches:** Visit `{APP_URL}/clear-cache` or run `php artisan optimize:clear`
 - **Check routes:** `php artisan route:list`
 - **Check model relations:** `php artisan tinker` → `User::find(1)->orders`
@@ -1646,9 +1646,9 @@ qrinto/
 
 ### 16.4 Security Considerations
 
-- **Never commit `.env`** — contains all secrets and API keys
-- **Store printer FTP passwords** are stored as plaintext in the database — consider encrypting
-- **API endpoints are unauthenticated** — consider adding Sanctum tokens for production
+- **Never commit `.env`** - contains all secrets and API keys
+- **Store printer FTP passwords** are stored as plaintext in the database - consider encrypting
+- **API endpoints are unauthenticated** - consider adding Sanctum tokens for production
 - **CSRF protection** is active on all web routes
 - **Input validation** is handled via Laravel's `$request->validate()` in controllers
 - **SQL injection** is prevented by Eloquent ORM and query builder

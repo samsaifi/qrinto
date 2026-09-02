@@ -292,7 +292,7 @@
             <div class="max-w-7xl mx-auto">
                 <div class="relative w-full min-h-[80vh] flex items-center justify-center">
 
-                    {{-- ═══ LEFT: FLOATING DOCK (Templates & Layers only — NO page buttons) ═══ --}}
+                    {{-- ═══ LEFT: FLOATING DOCK (Templates & Layers only - NO page buttons) ═══ --}}
                     <div
                         class="absolute left-1 lg:left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
                         {{-- Templates --}}
@@ -541,7 +541,7 @@
                 const userImagesCount = cv ? cv.fabricCanvas.getObjects().filter(o => o._isUserImage).length : 0;
                 const hasImg = userImagesCount > 0 || (this.canvasImages[key] !== null);
 
-                // Single canvas — just show it
+                // Single canvas - just show it
                 const el = document.getElementById('canvas-wrapper-' + key);
                 if (el) {
                     el.style.position = 'relative';

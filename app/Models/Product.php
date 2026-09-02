@@ -218,7 +218,7 @@ class Product extends Model
         }
 
         // Accept either a full asset URL (e.g. $product->featured_image_url)
-        // or a plain storage-relative path — normalise to the relative path.
+        // or a plain storage-relative path - normalise to the relative path.
         $img_url = str_replace(asset('storage') . '/', '', $img_url);
         $img_url = ltrim(preg_replace('#^/?storage/#', '', $img_url), '/');
 
@@ -232,7 +232,7 @@ class Product extends Model
         // Create the thumbnail if it is missing or older than the source.
         if (!is_file($thumbFull) || (is_file($source) && filemtime($thumbFull) < filemtime($source))) {
             if (!is_file($source)) {
-                // No source to build from — fall back to the original URL.
+                // No source to build from - fall back to the original URL.
                 return asset('storage/' . $img_url);
             }
 

@@ -254,7 +254,7 @@
         <p class="scan-instruction">📱 Scan to Start Ordering</p>
         <p class="scan-description">
             Point your phone camera at the QR code to browse products,<br>
-            customize your order, and pay — all from your device.
+            customize your order, and pay - all from your device.
         </p>
 
         <div class="scan-url">{{ $scanUrl }}</div>
@@ -293,18 +293,27 @@
                 const dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
                 if (!dataUrl || !window.jspdf) return window.print();
 
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+                const {
+                    jsPDF
+                } = window.jspdf;
+                const doc = new jsPDF({
+                    unit: 'pt',
+                    format: 'a4'
+                });
                 const pageW = doc.internal.pageSize.getWidth();
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(24);
-                doc.text(@json($store->store_name), pageW / 2, 90, { align: 'center' });
+                doc.text(@json($store->store_name), pageW / 2, 90, {
+                    align: 'center'
+                });
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(13);
                 doc.setTextColor(120);
-                doc.text('Store #' + @json($store->store_code), pageW / 2, 115, { align: 'center' });
+                doc.text('Store #' + @json($store->store_code), pageW / 2, 115, {
+                    align: 'center'
+                });
 
                 const qrSize = 300;
                 doc.addImage(dataUrl, 'PNG', (pageW - qrSize) / 2, 150, qrSize, qrSize);
@@ -312,12 +321,16 @@
                 doc.setFontSize(15);
                 doc.setTextColor(20);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Scan to Start Ordering', pageW / 2, 500, { align: 'center' });
+                doc.text('Scan to Start Ordering', pageW / 2, 500, {
+                    align: 'center'
+                });
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(11);
                 doc.setTextColor(120);
-                doc.text(@json($scanUrl), pageW / 2, 522, { align: 'center' });
+                doc.text(@json($scanUrl), pageW / 2, 522, {
+                    align: 'center'
+                });
 
                 doc.save('Store-QR-' + @json($store->store_code) + '.pdf');
             } catch (e) {

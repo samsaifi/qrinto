@@ -1300,7 +1300,7 @@
             },
 
             // ── Apply a ready-made template to the canvas(es) ───────────────────────
-            // Async because images and SVGs load asynchronously — we await them so the
+            // Async because images and SVGs load asynchronously - we await them so the
             // final z-ordering happens after every layer is on the canvas.
             async applyTemplate(id) {
                 const tpl = this.templates[id];
@@ -1319,7 +1319,7 @@
                         H = fc.height,
                         sf = cv.scaleFactor;
 
-                    // Clear previous template layers only — keep the customer's own photo and text
+                    // Clear previous template layers only - keep the customer's own photo and text
                     if (tpl.replace !== false) {
                         fc.getObjects().filter(o => o._isTemplateText || o._isTemplateImage || o._isTemplateSvg)
                             .forEach(o => fc.remove(o));
@@ -1388,7 +1388,7 @@
                     this._saveCanvasState(key);
                 }
 
-                // Templates were applied across pages — clear any active selection
+                // Templates were applied across pages - clear any active selection
                 const activeCv = this.canvases[this.activeCanvas];
                 if (activeCv && activeCv.fabricCanvas) {
                     activeCv.fabricCanvas.discardActiveObject().renderAll();
@@ -2429,11 +2429,11 @@
                 if (!obj || !obj.canvas || !obj._isUserImage) return;
                 const fc = obj.canvas;
 
-                // ✅ Sirf movement constrain — koi size check nahi
+                // ✅ Sirf movement constrain - koi size check nahi
                 obj.setCoords();
                 const br = obj.getBoundingRect();
 
-                // Canvas boundary se bahar na jaye (optional — yeh bhi hatana ho toh hata do)
+                // Canvas boundary se bahar na jaye (optional - yeh bhi hatana ho toh hata do)
                 if (br.left > fc.width) obj.left = fc.width - 10;
                 if (br.top > fc.height) obj.top = fc.height - 10;
                 if (br.left + br.width < 0) obj.left = -(br.width - 10);
@@ -2764,11 +2764,11 @@
                 const fc = cv.fabricCanvas;
                 // Call bringToFront bottom-up: each group lands above the previous
                 [
-                    o => o._isUserImage, // customer uploaded photo — lowest
+                    o => o._isUserImage, // customer uploaded photo - lowest
                     o => o._isTemplateImage, // template raster images
                     o => o._isTemplateSvg, // template SVG decorations
                     o => o._isTemplateText, // template text
-                    o => o._isUserText, // user-typed text — topmost content
+                    o => o._isUserText, // user-typed text - topmost content
                 ].forEach(pred => fc.getObjects().filter(pred).forEach(o => o.bringToFront()));
                 if (cv.maskGuides) cv.maskGuides.forEach(g => g.bringToFront());
                 fc.renderAll();

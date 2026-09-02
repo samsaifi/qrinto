@@ -49,7 +49,7 @@
             </section>
         @endforeach
 
-        {{-- Recently picked up — 5 per page. Older completions accessible
+        {{-- Recently picked up - 5 per page. Older completions accessible
              via the pagination footer without cluttering the queue view. --}}
         @if ($recentlyDone->total() > 0)
             <section>
@@ -196,7 +196,7 @@
                 loading: false,
                 sending: false,
                 payload: null,
-                choice: null,          // 'tray:{key}' — key of a configured printer
+                choice: null,          // 'tray:{key}' - key of a configured printer
                 error: '',
 
                 pcState: 'idle',        // idle | loading | ok | error

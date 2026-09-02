@@ -31,7 +31,7 @@ try
     builder.Services.Configure<AgentConfig>(
         builder.Configuration.GetSection("Agent"));
 
-    // Register services (singleton — shared state across the agent lifecycle)
+    // Register services (singleton - shared state across the agent lifecycle)
     builder.Services.AddSingleton<AuditLogger>();
     builder.Services.AddSingleton<ConnectionManager>();
     builder.Services.AddSingleton<JobReceiver>();

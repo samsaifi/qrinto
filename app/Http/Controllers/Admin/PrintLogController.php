@@ -13,15 +13,15 @@ class PrintLogController extends Controller
     /**
      * View-only listing of QZ Tray print events. Admin sidebar entry.
      *
-     * Filters (analytics — top bar):
+     * Filters (analytics - top bar):
      *   preset      today | week | month | year | custom | all
      *   date_start  YYYY-MM-DD (only with preset=custom)
      *   date_end    YYYY-MM-DD (only with preset=custom)
      *   store_id    numeric or 'all'
      *
      * Filters (table):
-     *   search       — order_number / printer / tray_label
-     *   status       — success | failed | retried
+     *   search       - order_number / printer / tray_label
+     *   status       - success | failed | retried
      */
     public function index(Request $request)
     {

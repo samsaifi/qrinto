@@ -82,7 +82,7 @@
                                 </div>
                             </td>
                             <td class="px-3 py-3 hidden md:table-cell">
-                                <span class="text-sm text-surface-600">{{ $paperType->user->name ?? '—' }}</span>
+                                <span class="text-sm text-surface-600">{{ $paperType->user->name ?? '-' }}</span>
                             </td>
                             <td class="px-3 py-3 hidden sm:table-cell">
                                 <span

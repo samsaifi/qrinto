@@ -1369,7 +1369,7 @@
                 if (!cv) return Promise.reject(new Error('Canvas not found'));
 
                 return new Promise((resolve) => {
-                    // Multiple images supported — each new upload adds a new layer
+                    // Multiple images supported - each new upload adds a new layer
                     fabric.Image.fromURL(url, img => {
                         const canvasW = cv.fabricCanvas.width;
                         const canvasH = cv.fabricCanvas.height;
@@ -1672,11 +1672,11 @@
                 if (!obj || !obj.canvas || !obj._isUserImage) return;
                 const fc = obj.canvas;
 
-                // ✅ Sirf movement constrain — koi size check nahi
+                // ✅ Sirf movement constrain - koi size check nahi
                 obj.setCoords();
                 const br = obj.getBoundingRect();
 
-                // Canvas boundary se bahar na jaye (optional — yeh bhi hatana ho toh hata do)
+                // Canvas boundary se bahar na jaye (optional - yeh bhi hatana ho toh hata do)
                 if (br.left > fc.width) obj.left = fc.width - 10;
                 if (br.top > fc.height) obj.top = fc.height - 10;
                 if (br.left + br.width < 0) obj.left = -(br.width - 10);
@@ -2094,7 +2094,7 @@
                 });
             },
 
-            // No masking in this view — no-op
+            // No masking in this view - no-op
             _maybeClip(obj, spec, sf, key) {}
         };
 

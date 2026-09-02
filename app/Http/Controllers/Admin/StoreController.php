@@ -21,7 +21,7 @@ class StoreController extends Controller
      */
     public function index(Request $request)
     {
-        // Server-side DataTables via AJAX — detect by 'draw' parameter DataTables sends
+        // Server-side DataTables via AJAX - detect by 'draw' parameter DataTables sends
         if ($request->has('draw')) {
             $query = Store::query()->withCount('orders');
 

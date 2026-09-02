@@ -348,7 +348,8 @@
                                 <button type="button" @click="updateQty(-1)" :disabled="quantity <= 1 || updatingQty"
                                     class="w-6 h-6 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm font-bold"
                                     aria-label="Decrease quantity">−</button>
-                                <span class="text-xs font-black text-slate-900 w-5 text-center tabular-nums" x-text="quantity">{{ $item->quantity }}</span>
+                                <span class="text-xs font-black text-slate-900 w-5 text-center tabular-nums"
+                                    x-text="quantity">{{ $item->quantity }}</span>
                                 <button type="button" @click="updateQty(1)" :disabled="quantity >= 100 || updatingQty"
                                     class="w-6 h-6 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm font-bold"
                                     aria-label="Increase quantity">+</button>
@@ -440,7 +441,7 @@
                     class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-mobile-500 focus:ring-0 transition-all outline-none shadow-sm resize-none"
                     placeholder="Rush requests, return address info, or other notes…" style="padding-left: 3rem;"></textarea>
             </div>
-            <p class="text-xs text-slate-400 font-medium ml-1">Optional — add any special requests or notes for your order
+            <p class="text-xs text-slate-400 font-medium ml-1">Optional - add any special requests or notes for your order
             </p>
         </div>
 
@@ -614,7 +615,7 @@
                 class="w-full bg-mobile-500 disabled:bg-slate-300 hover:bg-mobile-600 text-white font-extrabold py-3.5 rounded-2xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 text-base">
                 <i data-lucide="credit-card" class="w-5 h-5"></i>
                 <span
-                    x-text="pickupName && contactNumber && pickupEmail && acceptedTerms ? 'Pay Now — ' + __price(calculateTotal()) : (acceptedTerms ? 'Complete All Info' : 'Accept Terms to Continue')"></span>
+                    x-text="pickupName && contactNumber && pickupEmail && acceptedTerms ? 'Pay Now - ' + __price(calculateTotal()) : (acceptedTerms ? 'Complete All Info' : 'Accept Terms to Continue')"></span>
             </button>
             <button type="button" @click="payByCash()"
                 :disabled="!pickupName || !contactNumber || !pickupEmail || !acceptedTerms"
@@ -636,7 +637,7 @@
                 subtotal: {{ $cart->subtotal }},
                 itemId: {{ optional($cart->items->first())->id ?? 'null' }},
                 quantity: {{ (int) (optional($cart->items->first())->quantity ?? 1) }},
-                unitPrice: {{ (float) (optional($cart->items->first())->unit_price ?: (optional(optional($cart->items->first())->product)->base_price ?? 0)) }},
+                unitPrice: {{ (float) (optional($cart->items->first())->unit_price ?: optional(optional($cart->items->first())->product)->base_price ?? 0) }},
                 updatingQty: false,
                 pickupName: '',
                 pickupEmail: '',
@@ -693,7 +694,9 @@
                                 'Accept': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            body: JSON.stringify({ quantity: this.quantity })
+                            body: JSON.stringify({
+                                quantity: this.quantity
+                            })
                         });
                         const data = await res.json();
                         if (data && typeof data.subtotal !== 'undefined') {

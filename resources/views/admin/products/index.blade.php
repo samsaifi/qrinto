@@ -63,11 +63,13 @@
             </div>
             <button type="submit"
                 class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition">Filter</button>
-            <a href="{{ route($rPrefix . 'products.index') }}" class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
+            <a href="{{ route($rPrefix . 'products.index') }}"
+                class="text-sm text-surface-500 hover:text-brand-600">Clear</a>
         </form>
     </div>
 
-    <form id="bulkDeleteForm" action="{{ route($rPrefix . 'products.bulkDelete') }}" method="POST" class="hidden">@csrf</form>
+    <form id="bulkDeleteForm" action="{{ route($rPrefix . 'products.bulkDelete') }}" method="POST" class="hidden">@csrf
+    </form>
 
     <div class="bg-white rounded-2xl border border-surface-100 shadow-card overflow-hidden">
         <div class="overflow-x-auto">
@@ -156,7 +158,7 @@
                                 </span>
                             </td>
                             <td class="px-3 py-3 hidden md:table-cell">
-                                <span class="text-sm text-surface-600">{{ $product->category->name ?? '—' }}</span>
+                                <span class="text-sm text-surface-600">{{ $product->category->name ?? '-' }}</span>
                             </td>
                             <td class="px-3 py-3">
                                 <span
@@ -199,7 +201,8 @@
                         @empty
                             <tr>
                                 <td colspan="10" class="px-6 py-12 text-center text-surface-400">No products yet. <a
-                                        href="{{ route($rPrefix . 'products.create') }}" class="text-brand-600 font-medium">Add
+                                        href="{{ route($rPrefix . 'products.create') }}"
+                                        class="text-brand-600 font-medium">Add
                                         your first product</a>.</td>
                             </tr>
                         @endforelse

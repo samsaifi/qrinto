@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Mask Editor — ' . $product->name)
+@section('title', 'Mask Editor - ' . $product->name)
 
 @section('content')
     <div class="mb-4">
@@ -11,7 +11,7 @@
                     </a>
                     <h1 class="font-display font-bold text-xl text-surface-900">Mask Editor</h1>
                 </div>
-                <p class="text-sm text-surface-500 ml-8">{{ $product->name }} — Define mask regions for all 4 images</p>
+                <p class="text-sm text-surface-500 ml-8">{{ $product->name }} - Define mask regions for all 4 images</p>
             </div>
             <div class="flex items-center gap-3">
                 <button type="button" onclick="clearAllMasks()"
@@ -121,7 +121,7 @@
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span
                         style="font-size:11px; font-weight:600; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.05em;"
-                        id="canvasLabel">Canvas — Frame Image</span>
+                        id="canvasLabel">Canvas - Frame Image</span>
                     <span id="canvasInfo" style="font-size:11px; color:#94a3b8;"></span>
                 </div>
 
@@ -159,7 +159,7 @@
             <div id="canvasDisabledOverlay"
                 style="display:none; position:absolute; inset:0; background:rgba(148,163,184,0.25); backdrop-filter:blur(2px); z-index:40; border-radius:1rem; cursor:not-allowed; flex-direction:column; align-items:center; justify-content:center;">
                 <i data-lucide="lock" style="width:32px; height:32px; color:#94a3b8;"></i>
-                <p style="font-size:13px; font-weight:600; color:#0ea5e9; margin-top:8px;">Canvas disabled — toggle to
+                <p style="font-size:13px; font-weight:600; color:#0ea5e9; margin-top:8px;">Canvas disabled - toggle to
                     enable</p>
             </div>
         </div>
@@ -244,44 +244,44 @@
             </div>
 
             <!-- Add Text
-                            <div style="padding:10px; border-top:1px solid #f1f5f9;">
-                                <h3
-                                    style="font-size:11px; font-weight:600; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
-                                    Add Text</h3>
-                                <input type="text" id="maskTextInput" placeholder="Enter text…"
-                                    style="width:100%; padding:6px 10px; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; outline:none; margin-bottom:6px; box-sizing:border-box;">
-                                <div style="display:flex; gap:6px; margin-bottom:6px;">
-                                    <select id="maskFontSize"
-                                        style="flex:1; padding:5px 6px; font-size:11px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; outline:none;">
-                                        <option value="14">14px</option>
-                                        <option value="18">18px</option>
-                                        <option value="24" selected>24px</option>
-                                        <option value="32">32px</option>
-                                        <option value="40">40px</option>
-                                        <option value="48">48px</option>
-                                        <option value="64">64px</option>
-                                        <option value="80">80px</option>
+                                <div style="padding:10px; border-top:1px solid #f1f5f9;">
+                                    <h3
+                                        style="font-size:11px; font-weight:600; color:#0ea5e9; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
+                                        Add Text</h3>
+                                    <input type="text" id="maskTextInput" placeholder="Enter text…"
+                                        style="width:100%; padding:6px 10px; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; outline:none; margin-bottom:6px; box-sizing:border-box;">
+                                    <div style="display:flex; gap:6px; margin-bottom:6px;">
+                                        <select id="maskFontSize"
+                                            style="flex:1; padding:5px 6px; font-size:11px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; outline:none;">
+                                            <option value="14">14px</option>
+                                            <option value="18">18px</option>
+                                            <option value="24" selected>24px</option>
+                                            <option value="32">32px</option>
+                                            <option value="40">40px</option>
+                                            <option value="48">48px</option>
+                                            <option value="64">64px</option>
+                                            <option value="80">80px</option>
+                                        </select>
+                                        <input type="color" id="maskTextColor" value="#0064ff"
+                                            style="width:34px; height:30px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; padding:2px;">
+                                    </div>
+                                    <select id="maskFontFamily"
+                                        style="width:100%; padding:5px 6px; font-size:11px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; outline:none; margin-bottom:8px;">
+                                        <option>Arial</option>
+                                        <option>Helvetica</option>
+                                        <option>Times New Roman</option>
+                                        <option>Georgia</option>
+                                        <option>Courier New</option>
+                                        <option>Verdana</option>
+                                        <option>Impact</option>
+                                        <option>Comic Sans MS</option>
                                     </select>
-                                    <input type="color" id="maskTextColor" value="#0064ff"
-                                        style="width:34px; height:30px; border:1px solid #e2e8f0; border-radius:6px; cursor:pointer; padding:2px;">
+                                    <button type="button" onclick="addTextMask()"
+                                        style="width:100%; padding:7px 0; font-size:12px; font-weight:600; color:#fff; background:#2563eb; border:none; border-radius:8px; cursor:pointer;">
+                                        + Add Text
+                                    </button>
                                 </div>
-                                <select id="maskFontFamily"
-                                    style="width:100%; padding:5px 6px; font-size:11px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; outline:none; margin-bottom:8px;">
-                                    <option>Arial</option>
-                                    <option>Helvetica</option>
-                                    <option>Times New Roman</option>
-                                    <option>Georgia</option>
-                                    <option>Courier New</option>
-                                    <option>Verdana</option>
-                                    <option>Impact</option>
-                                    <option>Comic Sans MS</option>
-                                </select>
-                                <button type="button" onclick="addTextMask()"
-                                    style="width:100%; padding:7px 0; font-size:12px; font-weight:600; color:#fff; background:#2563eb; border:none; border-radius:8px; cursor:pointer;">
-                                    + Add Text
-                                </button>
-                            </div>
-                            -->
+                                -->
             <!-- Active Mask List -->
             <div class="border-t border-surface-100 px-4 py-3 flex-1">
                 <h3 class="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Active Masks</h3>
@@ -368,16 +368,16 @@
                 <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:4px; font-size:11px;">
                     <div style="background:#f8fafc; border-radius:6px; padding:4px 8px;"><span
                             style="color:#94a3b8;">X:</span> <span id="posX"
-                            style="font-family:monospace; color:#334155;">—</span></div>
+                            style="font-family:monospace; color:#334155;">-</span></div>
                     <div style="background:#f8fafc; border-radius:6px; padding:4px 8px;"><span
                             style="color:#94a3b8;">Y:</span> <span id="posY"
-                            style="font-family:monospace; color:#334155;">—</span></div>
+                            style="font-family:monospace; color:#334155;">-</span></div>
                     <div style="background:#f8fafc; border-radius:6px; padding:4px 8px;"><span
                             style="color:#94a3b8;">W:</span> <span id="posW"
-                            style="font-family:monospace; color:#334155;">—</span></div>
+                            style="font-family:monospace; color:#334155;">-</span></div>
                     <div style="background:#f8fafc; border-radius:6px; padding:4px 8px;"><span
                             style="color:#94a3b8;">H:</span> <span id="posH"
-                            style="font-family:monospace; color:#334155;">—</span></div>
+                            style="font-family:monospace; color:#334155;">-</span></div>
                 </div>
             </div>
         </div><!-- /sidebar -->
@@ -578,7 +578,7 @@
                     background_image: 'Background',
                     overlay_image: 'Overlay',
                 };
-                document.getElementById('canvasLabel').textContent = 'Canvas — ' + (labels[activeTab] || activeTab);
+                document.getElementById('canvasLabel').textContent = 'Canvas - ' + (labels[activeTab] || activeTab);
                 updateDisabledOverlay();
 
                 const imgUrl = imageData[activeTab]?.url;
@@ -682,7 +682,7 @@
 
             function onDeselect() {
                 document.getElementById('deleteBtn').style.display = 'none';
-                ['posX', 'posY', 'posW', 'posH'].forEach(id => document.getElementById(id).textContent = '—');
+                ['posX', 'posY', 'posW', 'posH'].forEach(id => document.getElementById(id).textContent = '-');
                 hidePropsPanel();
             }
 
@@ -1357,7 +1357,7 @@
                             strokeWidth: obj.strokeWidth,
                             opacity: round4(obj.opacity),
                         });
-                        // Dimension fields — only relevant ones per shape type
+                        // Dimension fields - only relevant ones per shape type
                         if (obj.width !== undefined) data.width = Math.round(obj.width);
                         if (obj.height !== undefined) data.height = Math.round(obj.height);
                         if (obj.radius !== undefined) data.radius = Math.round(obj.radius);

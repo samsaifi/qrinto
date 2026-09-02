@@ -1,5 +1,5 @@
 {{-- ═══════════════════════════════════════════════════════════════════════
-     Four-Canvas Customizer (Desktop PC Version) — DRY Refactored
+     Four-Canvas Customizer (Desktop PC Version) - DRY Refactored
      Uses shared partials + customizer-base.js
      - Four independent canvases (frame_image, sample_image, background_image, overlay_image)
      - Left Floating Dock: Page 1–4 circle buttons + Templates & Layers drawers
@@ -32,7 +32,8 @@
 
 @section('content')
     @php
-        $noOfPages = (int) ($product->no_of_pages ?? 1);
+        $lpo = $localPrintOverrides ?? null;
+        $noOfPages = $lpo ? (int) $lpo['noOfPages'] : (int) ($product->no_of_pages ?? 1);
         if ($noOfPages <= 1) {
             $slots = [
                 'frame_image' => 'Page 1',
@@ -51,29 +52,50 @@
             ];
         }
 
-        $galleryImages = $product->images->values();
-        $galleryIndex = 0;
-        $fallbackUrl =
-            $product->featured_image_url ??
-            ($product->sample_image_url ??
-                ($product->frame_image_url ??
-                    ($product->background_image_url ??
-                        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>')));
-        $imageTypes = [];
-        foreach ($slots as $field => $label) {
-            $url = $product->{$field . '_url'};
-            if (!$url && isset($galleryImages[$galleryIndex])) {
-                $url = \App\Models\Product::formatStorageUrl($galleryImages[$galleryIndex]->image_path);
-                $galleryIndex++;
+        $blankCanvas = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>';
+
+        $emptyCanvas = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>';
+
+        if ($lpo) {
+            $imageTypes = [];
+            foreach ($slots as $field => $label) {
+                $imageTypes[$field] = ['label' => $label, 'url' => $emptyCanvas];
             }
-            if (!$url) {
-                $url = $fallbackUrl;
+        } else {
+            $galleryImages = $product->images->values();
+            $galleryIndex = 0;
+            $fallbackUrl =
+                $product->featured_image_url ??
+                ($product->sample_image_url ??
+                    ($product->frame_image_url ??
+                        ($product->background_image_url ?? $blankCanvas)));
+            $imageTypes = [];
+            foreach ($slots as $field => $label) {
+                $url = $product->{$field . '_url'};
+                if (!$url && isset($galleryImages[$galleryIndex])) {
+                    $url = \App\Models\Product::formatStorageUrl($galleryImages[$galleryIndex]->image_path);
+                    $galleryIndex++;
+                }
+                if (!$url) {
+                    $url = $fallbackUrl;
+                }
+                $imageTypes[$field] = ['label' => $label, 'url' => $url];
             }
-            $imageTypes[$field] = ['label' => $label, 'url' => $url];
         }
+
         $maskData = $product->mask_data ?? [];
         if (is_string($maskData)) {
             $maskData = json_decode($maskData, true) ?? [];
+        }
+        if ($lpo) {
+            $maskData = [];
+            foreach ($slots as $field => $label) {
+                $maskData[$field] = [
+                    'enabled' => true,
+                    'canvasWidth' => $lpo['canvasWidth'],
+                    'canvasHeight' => $lpo['canvasHeight'],
+                ];
+            }
         }
         $flowData = session('quick_flow_data', []);
 
@@ -249,7 +271,7 @@
 
                                 <div class="w-px h-5 bg-slate-200 mx-1"></div>
 
-                                {{-- Clear All (multi trash — small faded bin beside a full bin) --}}
+                                {{-- Clear All (multi trash - small faded bin beside a full bin) --}}
                                 <button type="button" onclick="customizer.clearAll()"
                                     class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all"
                                     title="Clear All Designs">
@@ -259,7 +281,7 @@
                                     </span>
                                 </button>
 
-                                {{-- Remove Selected (single trash — only shown when something is selected) --}}
+                                {{-- Remove Selected (single trash - only shown when something is selected) --}}
                                 <button type="button" id="remove-btn" onclick="customizer.handleRemove()"
                                     class="hidden p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all"
                                     title="Remove Selected">
@@ -521,7 +543,7 @@
         const customizer = Object.assign(customizerBase({
             storagePrefix: 'qrinto_design_v1',
             multiCanvas: true,
-            hasMasks: true,
+            hasMasks: {{ $lpo ? 'false' : 'true' }},
             imageTypes: @json($imageTypes),
             allMaskData: @json($maskData),
             productId: {{ $product->id }},
@@ -530,7 +552,7 @@
             csrfToken: '{{ csrf_token() }}',
             uploadRoute: '{{ route('flow.upload') }}',
             uploadCompositeRoute: '{{ route('flow.upload_composite') }}',
-            isPortrait: {{ ($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false' }}
+            isPortrait: {{ $lpo ? ($lpo['isPortrait'] ? 'true' : 'false') : (($product->pdf_orientation ?? 'portrait') === 'portrait' ? 'true' : 'false') }}
         }), {
             init() {
                 if (typeof this.allMaskData === 'string') {
@@ -832,7 +854,7 @@
                     const fc = new fabric.Canvas('canvas-' + key, {
                         width: displayWidth,
                         height: displayHeight,
-                        backgroundColor: null,
+                        backgroundColor: '#ffffff',
                         selection: true,
                         preserveObjectStacking: false,
                         allowTouchScrolling: true

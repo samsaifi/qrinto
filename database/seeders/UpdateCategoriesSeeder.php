@@ -21,19 +21,19 @@ class UpdateCategoriesSeeder extends Seeder
 
         Category::create([
             'parent_id' => $greetingCards->id,
-            'name' => 'Small — 3.5 x 5 (folded 5x7)',
+            'name' => 'Small - 3.5 x 5 (folded 5x7)',
             'sort_order' => 1,
             'is_active' => true,
         ]);
         Category::create([
             'parent_id' => $greetingCards->id,
-            'name' => 'Medium — 5×7"',
+            'name' => 'Medium - 5×7"',
             'sort_order' => 2,
             'is_active' => true,
         ]);
         Category::create([
             'parent_id' => $greetingCards->id,
-            'name' => 'Large — 5x7 (folded 7x10)',
+            'name' => 'Large - 5x7 (folded 7x10)',
             'sort_order' => 3,
             'is_active' => true,
         ]);
@@ -47,19 +47,19 @@ class UpdateCategoriesSeeder extends Seeder
 
         Category::create([
             'parent_id' => $magnets->id,
-            'name' => 'Small — 4x6',
+            'name' => 'Small - 4x6',
             'sort_order' => 1,
             'is_active' => true,
         ]);
         Category::create([
             'parent_id' => $magnets->id,
-            'name' => 'Medium — 5x7',
+            'name' => 'Medium - 5x7',
             'sort_order' => 2,
             'is_active' => true,
         ]);
         Category::create([
             'parent_id' => $magnets->id,
-            'name' => 'Large — N/A',
+            'name' => 'Large - N/A',
             'sort_order' => 3,
             'is_active' => true,
         ]);

@@ -22,7 +22,7 @@
                         <p class="text-[13px] text-slate-600 mt-1 leading-relaxed">
                             QZ Tray is the local printer bridge that lets this PC
                             print to the Noritsu 931-BL. If it's already installed,
-                            confirm below — we'll remember it for your next visit.
+                            confirm below - we'll remember it for your next visit.
                         </p>
 
                         <div class="mt-5 flex items-center gap-2 flex-wrap">
@@ -53,7 +53,7 @@
     <h1 class="font-display font-bold text-4xl text-slate-900 tracking-tight">What is loaded in each printer</h1>
     <p class="text-slate-500 mt-3 max-w-xl leading-relaxed">
         Trays are read from this PC (via QZ Tray). Tell each printer what paper
-        is loaded — the User Type is worked out from that, so you never pick
+        is loaded - the User Type is worked out from that, so you never pick
         one by hand. Enabled printers appear on the "Print on 931-BL" picker.
     </p>
 
@@ -157,7 +157,7 @@
 
                         <div class="ml-auto text-right">
                             <p class="mono text-[13px] font-bold text-slate-900">
-                                User Type <span x-text="userType(row) ?? '—'"></span>
+                                User Type <span x-text="userType(row) ?? '-'"></span>
                             </p>
                             <p class="text-[11px] text-slate-400">set automatically</p>
                         </div>

@@ -3,7 +3,7 @@
 @section('title', 'Local Print Studio | Qrinto')
 @section('header_title', 'Local Print')
 @section('meta_description', 'Upload your photo or artwork for direct local print and fast store pickup.')
-@section('canonical_url', route('flow.qrinto'))
+@section('canonical_url', route('localprint.index'))
 
 @push('styles')
     <style>
@@ -78,7 +78,8 @@
             </template>
             <template x-if="paymentSuccess">
                 <div class="text-center">
-                    <div class="w-14 h-14 bg-[#eaf3ea] text-[#287d3c] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div
+                        class="w-14 h-14 bg-[#eaf3ea] text-[#287d3c] rounded-full flex items-center justify-center mx-auto mb-4">
                         <i data-lucide="check" class="w-8 h-8"></i>
                     </div>
                     <h3 class="text-xl font-extrabold text-slate-900">Order Confirmed</h3>
@@ -105,7 +106,8 @@
                     <span class="text-slate-300">→</span>
                     <span :class="currentStep === 2 ? 'text-[#287d3c] font-extrabold' : 'text-slate-400'">Dimensions</span>
                     <span class="text-slate-300">→</span>
-                    <span :class="currentStep === 3 ? 'text-[#287d3c] font-extrabold' : 'text-slate-400'">Review & Pay</span>
+                    <span :class="currentStep === 3 ? 'text-[#287d3c] font-extrabold' : 'text-slate-400'">Review &
+                        Pay</span>
                 </div>
             </div>
 
@@ -129,27 +131,30 @@
                         </p>
                     </div>
 
-                    <div class="relative" @dragover.prevent="isDragging = true"
-                        @dragleave.prevent="isDragging = false" @drop.prevent="handleDrop($event)">
+                    <div class="relative" @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false"
+                        @drop.prevent="handleDrop($event)">
 
                         <input type="file" x-ref="fileInput" class="hidden" accept="image/*"
                             @change="handleFileSelect($event)">
 
                         <div @click="$refs.fileInput.click()"
                             :class="[
-                                isDragging ? 'border-slate-400 bg-slate-50' : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300',
+                                isDragging ? 'border-slate-400 bg-slate-50' :
+                                'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300',
                                 previewUrl ? 'p-0 border-solid overflow-hidden bg-slate-900' : 'p-8 border-dashed'
                             ]"
                             class="border-2 rounded-xl transition-all cursor-pointer min-h-[220px] flex items-center justify-center">
 
                             <template x-if="!previewUrl">
                                 <div class="space-y-2">
-                                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto text-slate-400 border border-slate-200 shadow-2xs">
+                                    <div
+                                        class="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto text-slate-400 border border-slate-200 shadow-2xs">
                                         <i data-lucide="upload-cloud" class="w-5 h-5"></i>
                                     </div>
                                     <div>
                                         <p class="text-xs font-bold text-slate-800">Click to browse or drag image here</p>
-                                        <p class="text-[11px] text-slate-400 font-normal mt-0.5">JPG, PNG, WebP up to 10MB</p>
+                                        <p class="text-[11px] text-slate-400 font-normal mt-0.5">JPG, PNG, WebP up to 10MB
+                                        </p>
                                     </div>
                                 </div>
                             </template>
@@ -169,7 +174,9 @@
                         {{-- Upload Progress --}}
                         <div x-show="isUploading" x-cloak
                             class="absolute inset-0 bg-white/95 rounded-xl flex flex-col items-center justify-center z-30">
-                            <div class="w-8 h-8 border-2 border-slate-300 border-t-[#287d3c] rounded-full animate-spin mb-3"></div>
+                            <div
+                                class="w-8 h-8 border-2 border-slate-300 border-t-[#287d3c] rounded-full animate-spin mb-3">
+                            </div>
                             <p class="text-xs font-bold text-slate-800" x-text="`Uploading... ${uploadProgress}%`"></p>
                         </div>
                     </div>
@@ -201,7 +208,8 @@
                         <button @click="selectedParent = parent"
                             class="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 flex items-center justify-between transition-all text-left cursor-pointer group shadow-2xs">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/80">
+                                <div
+                                    class="w-10 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/80">
                                     <template x-if="parent.icon_svg">
                                         <div class="w-5 h-5 fill-current" x-html="parent.icon_svg"></div>
                                     </template>
@@ -240,7 +248,8 @@
                                     <p class="text-xs font-mono text-slate-500 mt-1" x-text="size.dimensions"></p>
                                 </div>
                                 <div class="text-right shrink-0">
-                                    <span class="font-mono font-bold text-sm text-slate-900" x-text="__price(size.price)"></span>
+                                    <span class="font-mono font-bold text-sm text-slate-900"
+                                        x-text="__price(size.price)"></span>
                                 </div>
                             </button>
                         </template>
@@ -263,7 +272,8 @@
             </div>
 
             {{-- STEP 3: FINAL REVIEW & CHECKOUT GRID --}}
-            <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-200" class="max-w-4xl mx-auto">
+            <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-200"
+                class="max-w-4xl mx-auto">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
                     {{-- Left Column: Product & Pickup Info --}}
@@ -274,18 +284,22 @@
                             <h2 class="font-extrabold text-slate-900 text-sm">Print Item Details</h2>
 
                             <div class="flex items-center gap-4">
-                                <div class="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
+                                <div
+                                    class="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
                                     <img :src="previewUrl" class="w-full h-full object-cover">
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <h3 class="font-bold text-slate-900 text-sm" x-text="selectedSize?.label"></h3>
-                                    <p class="text-xs font-mono text-slate-500 mt-0.5" x-text="selectedSize?.dimensions"></p>
+                                    <p class="text-xs font-mono text-slate-500 mt-0.5" x-text="selectedSize?.dimensions">
+                                    </p>
                                     <div class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
                                         <span>Quantity:</span>
-                                        <div class="inline-flex items-center bg-slate-50 rounded-lg border border-slate-200">
+                                        <div
+                                            class="inline-flex items-center bg-slate-50 rounded-lg border border-slate-200">
                                             <button type="button" @click="quantity = Math.max(1, quantity - 1)"
                                                 class="w-6 h-6 flex items-center justify-center text-slate-700 font-bold text-xs hover:bg-slate-100 cursor-pointer">−</button>
-                                            <span class="w-7 text-center font-mono font-bold text-slate-900 text-xs" x-text="quantity"></span>
+                                            <span class="w-7 text-center font-mono font-bold text-slate-900 text-xs"
+                                                x-text="quantity"></span>
                                             <button type="button" @click="quantity = Math.min(10, quantity + 1)"
                                                 class="w-6 h-6 flex items-center justify-center text-slate-700 font-bold text-xs hover:bg-slate-100 cursor-pointer">+</button>
                                         </div>
@@ -307,7 +321,8 @@
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Email
+                                            Address</label>
                                         <input type="email" x-model="pickupEmail" placeholder="Email for confirmation"
                                             class="w-full bg-slate-50 border border-slate-200 focus:border-slate-400 focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none transition-all">
                                     </div>
@@ -329,15 +344,18 @@
                         <div class="space-y-2 text-xs font-medium text-slate-600">
                             <div class="flex justify-between items-center">
                                 <span>Unit Price</span>
-                                <span class="font-mono font-bold text-slate-900" x-text="__price(selectedSize?.price)"></span>
+                                <span class="font-mono font-bold text-slate-900"
+                                    x-text="__price(selectedSize?.price)"></span>
                             </div>
                             <div class="flex justify-between items-center">
                                 <span>Quantity</span>
                                 <span class="font-mono font-bold text-slate-900" x-text="quantity"></span>
                             </div>
-                            <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-sm font-extrabold text-slate-900">
+                            <div
+                                class="flex justify-between items-center pt-2 border-t border-slate-100 text-sm font-extrabold text-slate-900">
                                 <span>Total Amount</span>
-                                <span class="font-mono text-base font-extrabold text-slate-900" x-text="__price(selectedSize?.price * quantity)"></span>
+                                <span class="font-mono text-base font-extrabold text-slate-900"
+                                    x-text="__price(selectedSize?.price * quantity)"></span>
                             </div>
                         </div>
 
@@ -366,7 +384,8 @@
             <div class="paypal-sheet text-center space-y-4">
                 <div class="flex justify-between items-center pb-2 border-b border-slate-100">
                     <h3 class="text-sm font-bold text-slate-900">Complete Online Payment</h3>
-                    <button @click="showPaypal = false" class="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
+                    <button @click="showPaypal = false"
+                        class="text-slate-400 hover:text-slate-600 font-bold text-sm">✕</button>
                 </div>
                 <div id="paypal-button-container" class="pt-2"></div>
             </div>
@@ -402,7 +421,8 @@
                 paypalRendered: false,
 
                 get isValid() {
-                    return this.uploadId && this.selectedSize && this.pickupName && this.pickupEmail && this.contactNumber;
+                    return this.uploadId && this.selectedSize && this.pickupName && this
+                        .pickupEmail && this.contactNumber;
                 },
 
                 init() {
@@ -462,9 +482,11 @@
                             this.currentStep = state.currentStep || 1;
 
                             if (state.selectedParentId) {
-                                this.selectedParent = this.productTypes.find(p => p.id === state.selectedParentId);
+                                this.selectedParent = this.productTypes.find(p => p.id === state
+                                    .selectedParentId);
                                 if (this.selectedParent && state.selectedSizeId) {
-                                    this.selectedSize = this.selectedParent.subtypes.find(s => s.id === state.selectedSizeId);
+                                    this.selectedSize = this.selectedParent.subtypes.find(s => s.id ===
+                                        state.selectedSizeId);
                                 }
                             }
                         }
@@ -510,7 +532,8 @@
                     xhr.addEventListener('load', () => {
                         if (xhr.status === 200) {
                             const data = JSON.parse(xhr.responseText);
-                            this.uploadId = data.upload_id || (data.upload ? data.upload.id : data.id);
+                            this.uploadId = data.upload_id || (data.upload ? data.upload.id :
+                                data.id);
                             this.previewUrl = data.url || (data.upload ? data.upload.url : '');
                             this.isUploading = false;
                         } else {
@@ -539,7 +562,7 @@
 
                     try {
                         const response = await fetch(
-                            '{{ route('flow.qrinto.checkout.cash') }}', {
+                            '{{ route('localprint.index.checkout.cash') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -592,7 +615,7 @@
                     paypal.Buttons({
                         createOrder: async (data, actions) => {
                             const response = await fetch(
-                                '{{ route('flow.qrinto.paypal.create') }}', {
+                                '{{ route('localprint.index.paypal.create') }}', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
@@ -614,7 +637,7 @@
                             this.paymentSuccess = false;
 
                             const response = await fetch(
-                                '{{ route('flow.qrinto.paypal.capture') }}', {
+                                '{{ route('localprint.index.paypal.capture') }}', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
@@ -640,7 +663,8 @@
                                     window.location.href = result.redirect_url;
                                 }, 1200);
                             } else {
-                                alert(result.error || result.message || 'Payment capture failed');
+                                alert(result.error || result.message ||
+                                    'Payment capture failed');
                                 this.isProcessing = false;
                             }
                         }

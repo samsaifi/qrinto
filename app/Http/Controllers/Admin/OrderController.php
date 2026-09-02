@@ -421,7 +421,7 @@ class OrderController extends Controller
 
     /**
      * Undo steps the order back exactly ONE canonical pickup stage
-     * (Done → Ready, Ready → Printing, Printing → New) — per the spec.
+     * (Done → Ready, Ready → Printing, Printing → New) - per the spec.
      * Never sends a retraction email.
      */
     public function undoStatus(Request $request, Order $order)

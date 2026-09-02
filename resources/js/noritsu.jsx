@@ -512,7 +512,7 @@ const OwnDesign = () => {
 
 
 // ════════════════════════════════════════════════════
-// 5. EDIT DESIGN — Mask-aware editor
+// 5. EDIT DESIGN - Mask-aware editor
 // ════════════════════════════════════════════════════
 
 // Helper: polygon points

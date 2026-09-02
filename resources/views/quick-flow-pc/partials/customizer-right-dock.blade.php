@@ -60,11 +60,19 @@
         <span class="text-xs font-bold text-slate-600 group-hover:text-slate-900 transition-colors">QR Code</span>
     </button>
 
-    {{-- 6. Continue to order (single design per order — replaces "Add to cart") --}}
-    <form action="{{ route('flow.cart.add') }}" method="POST" id="checkout-form" class="flex justify-center">
+    {{-- 6. Continue to order (single design per order - replaces "Add to cart") --}}
+    <form action="{{ !empty($localPrintMode) ? route('localprint.preview') : route('flow.cart.add') }}" method="POST"
+        id="checkout-form" class="flex justify-center">
         @csrf
         <input type="hidden" name="product_id" value="{{ $product->id }}">
         <input type="hidden" name="upload_ids" id="upload_ids_field">
+        @if (!empty($localPrintMode))
+            @php $fd = session('quick_flow_data', []); @endphp
+            <input type="hidden" name="size_width" value="{{ $fd['size_width'] ?? '' }}">
+            <input type="hidden" name="size_height" value="{{ $fd['size_height'] ?? '' }}">
+            <input type="hidden" name="size_unit" value="{{ $fd['size_unit'] ?? 'in' }}">
+            <input type="hidden" name="orientation" value="{{ $fd['orientation'] ?? 'portrait' }}">
+        @endif
         <button type="button" id="submit-btn" onclick="customizer.submitAllCanvases()"
             class="group flex flex-col items-center gap-1.5 cursor-pointer" title="Continue to order">
             <div

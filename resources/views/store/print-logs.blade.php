@@ -18,14 +18,12 @@
         class="bg-white border border-slate-200/80 rounded-2xl p-4 mb-5 flex flex-wrap items-end gap-3">
         <div>
             <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">Search</label>
-            <input type="text" name="search" value="{{ request('search') }}"
-                placeholder="Order #, printer, tray…"
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Order #, printer, tray…"
                 class="rounded-xl border-slate-200 text-sm focus:border-[#287d3c] focus:ring-[#287d3c]">
         </div>
         <div>
             <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">Status</label>
-            <select name="status"
-                class="rounded-xl border-slate-200 text-sm focus:border-[#287d3c] focus:ring-[#287d3c]">
+            <select name="status" class="rounded-xl border-slate-200 text-sm focus:border-[#287d3c] focus:ring-[#287d3c]">
                 <option value="">All</option>
                 @foreach (['success', 'failed', 'retried'] as $s)
                     <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst($s) }}</option>
@@ -44,12 +42,18 @@
             <table class="w-full">
                 <thead>
                     <tr class="bg-slate-50">
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">When</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Order</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Printer</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Media</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">By</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">When
+                        </th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            Order</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            Printer</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            Media</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">By
+                        </th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -60,7 +64,7 @@
                                 <div class="mono text-[11px] text-slate-400">{{ $log->printed_at?->format('H:i:s') }}</div>
                             </td>
                             <td class="px-5 py-3 text-sm">
-                                <span class="mono font-semibold text-slate-800">{{ $log->order_number ?? '—' }}</span>
+                                <span class="mono font-semibold text-slate-800">{{ $log->order_number ?? '-' }}</span>
                             </td>
                             <td class="px-5 py-3 text-sm text-slate-700">
                                 <div class="font-medium">{{ $log->printer_name }}</div>
@@ -69,21 +73,23 @@
                                 @endif
                             </td>
                             <td class="px-5 py-3 text-[12px] text-slate-500">
-                                {{ collect([$log->size, $log->media, $log->gsm])->filter()->join(' · ') ?: '—' }}
+                                {{ collect([$log->size, $log->media, $log->gsm])->filter()->join(' · ') ?:'-' }}
                                 @if ($log->user_type)
                                     <div class="mono text-[10px] text-slate-400">UT{{ $log->user_type }}</div>
                                 @endif
                             </td>
-                            <td class="px-5 py-3 text-sm text-slate-600">{{ $log->user?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-sm text-slate-600">{{ $log->user?->name ?? '-' }}</td>
                             <td class="px-5 py-3">
                                 @php
-                                    $chip = [
-                                        'success' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                        'failed'  => 'bg-rose-50 text-rose-700 border-rose-200',
-                                        'retried' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                    ][$log->status] ?? 'bg-slate-50 text-slate-600 border-slate-200';
+                                    $chip =
+                                        [
+                                            'success' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                            'failed' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                            'retried' => 'bg-amber-50 text-amber-700 border-amber-200',
+                                        ][$log->status] ?? 'bg-slate-50 text-slate-600 border-slate-200';
                                 @endphp
-                                <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-lg border {{ $chip }}">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-lg border {{ $chip }}">
                                     {{ ucfirst($log->status) }}
                                 </span>
                             </td>

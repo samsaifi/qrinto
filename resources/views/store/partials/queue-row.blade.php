@@ -15,32 +15,32 @@
     $time = $order->updated_at && $stage !== \App\Models\Order::STAGE_NEW ? $order->updated_at : $order->created_at;
     $isDone = $stage === \App\Models\Order::STAGE_DONE;
 
-$flow = $order->flow_data ?? [];
-$sizeW = $flow['size_width'] ?? null;
-$sizeH = $flow['size_height'] ?? null;
-$sizeUnit = $flow['size_unit'] ?? 'inch';
-$sizeDimDisplay = ($sizeW && $sizeH) ? ($sizeW . ' × ' . $sizeH . ' ' . $sizeUnit) : null;
-$orderSize = $flow['size_slug'] ?? ($flow['size_dimensions'] ?? null);
-if ($orderSize) {
-    $orderSize = str_replace([' ', '×'], ['', 'x'], strtolower($orderSize));
-}
-$trayHint = null;
-if ($stage === \App\Models\Order::STAGE_NEW && $store) {
-    $mediaShort = [
-        'plain' => 'plain',
-        'cardstock' => 'cardstock',
-        'cardstock_scored' => 'cardstock',
-        'photo_glossy' => 'glossy',
-        'photo_lustre' => 'lustre',
-        'photo_matte' => 'matte',
-        'film' => 'film',
-        'envelopes' => 'envelopes',
-        'labels' => 'labels',
-        'magnets' => 'magnets',
-    ];
-    $match = $store->matchTrayForSize($orderSize);
-    if ($match) {
-        $trayHint = $match['label'] . ' · ' . ($mediaShort[$match['media']] ?? ($match['media'] ?? '—'));
+    $flow = $order->flow_data ?? [];
+    $sizeW = $flow['size_width'] ?? null;
+    $sizeH = $flow['size_height'] ?? null;
+    $sizeUnit = $flow['size_unit'] ?? 'inch';
+    $sizeDimDisplay = $sizeW && $sizeH ? $sizeW . ' × ' . $sizeH . ' ' . $sizeUnit : null;
+    $orderSize = $flow['size_slug'] ?? ($flow['size_dimensions'] ?? null);
+    if ($orderSize) {
+        $orderSize = str_replace([' ', '×'], ['', 'x'], strtolower($orderSize));
+    }
+    $trayHint = null;
+    if ($stage === \App\Models\Order::STAGE_NEW && $store) {
+        $mediaShort = [
+            'plain' => 'plain',
+            'cardstock' => 'cardstock',
+            'cardstock_scored' => 'cardstock',
+            'photo_glossy' => 'glossy',
+            'photo_lustre' => 'lustre',
+            'photo_matte' => 'matte',
+            'film' => 'film',
+            'envelopes' => 'envelopes',
+            'labels' => 'labels',
+            'magnets' => 'magnets',
+        ];
+        $match = $store->matchTrayForSize($orderSize);
+        if ($match) {
+            $trayHint = $match['label'] . ' · ' . ($mediaShort[$match['media']] ?? ($match['media'] ?? '-'));
         }
     }
 @endphp
@@ -64,7 +64,7 @@ if ($stage === \App\Models\Order::STAGE_NEW && $store) {
         @endforeach
         <p class="text-[13px] text-slate-500 mt-0.5">{{ $name }} · {{ $verb }}
             {{ $time->format('g:i A') }}</p>
-        <p class="mono text-[12px] text-slate-400 mt-0.5">{{ $sizeDimDisplay ?? '—' }}</p>
+        <p class="mono text-[12px] text-slate-400 mt-0.5">{{ $sizeDimDisplay ?? '-' }}</p>
     </div>
 
     {{-- Payment tag --}}

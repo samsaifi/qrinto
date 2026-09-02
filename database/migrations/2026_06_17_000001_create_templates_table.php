@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // The templates table already exists with a different schema — restructure it.
+        // The templates table already exists with a different schema - restructure it.
         Schema::table('templates', function (Blueprint $table) {
             // Drop old columns that are no longer needed
             $table->dropColumn(['category', 'type', 'structure', 'preview_image_url', 'print_specs', 'price']);

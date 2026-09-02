@@ -308,7 +308,8 @@
                                 <span
                                     class="text-[10px] font-black text-mobile-200 uppercase tracking-[0.2em] mb-1">Start
                                     New Flow</span>
-                                <span class="text-xl font-black text-white leading-tight">Print at a store near you</span>
+                                <span class="text-xl font-black text-white leading-tight">Print at a store near
+                                    you</span>
                             </div>
                             <div
                                 class="w-12 h-12 flex-shrink-0 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
@@ -318,7 +319,7 @@
                     </a>
 
                     <!-- Direct Print CTA -->
-                    <a href="{{ route('flow.qrinto') }}" @click="mobileMenu = false"
+                    <a href="{{ route('localprint.index') }}" @click="mobileMenu = false"
                         class="block w-full group relative overflow-hidden bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 transition-all hover:border-mobile-500 active:scale-[0.98]">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-4">
@@ -330,7 +331,8 @@
                                     <span
                                         class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Already
                                         have a design?</span>
-                                    <span class="text-lg font-black text-slate-900 leading-tight">Print on your own 931BL</span>
+                                    <span class="text-lg font-black text-slate-900 leading-tight">Print on your own
+                                        931BL</span>
                                 </div>
                             </div>
                             <div

@@ -66,7 +66,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // QZ Tray print bridge: hand the browser the payload (tray + printer + PDF).
     Route::get('/store/orders/{order}/prepare-print', [StorePanelController::class, 'preparePrint'])
         ->name('storepanel.orders.preparePrint');
-    // Print outcome log — success + failure rows land here after QZ Tray runs.
+    // Print outcome log - success + failure rows land here after QZ Tray runs.
     Route::post('/store/orders/{order}/log-print', [StorePanelController::class, 'logPrint'])
         ->name('storepanel.orders.logPrint');
     // Store-scoped print-log listing (read-only, paginated).
@@ -160,8 +160,12 @@ Route::get('/track/{orderNumber}', fn($orderNumber) => $flowController()->trackO
 
 // Direct Print on 931BL
 // Direct print on the customer's own 931BL (spec §6). Windows/desktop flow.
+Route::get('/local-print', [\App\Http\Controllers\LocalPrintController::class, 'start'])->name('localprint.index');
 Route::get('/print', [\App\Http\Controllers\LocalPrintController::class, 'start'])->name('localprint.start');
 Route::get('/print/design', [\App\Http\Controllers\LocalPrintController::class, 'design'])->name('localprint.design');
+Route::get('/print/own-design/sizes', [\App\Http\Controllers\LocalPrintController::class, 'sizes'])->name('localprint.sizes');
+Route::get('/print/own-design/sizes/customizer', [\App\Http\Controllers\LocalPrintController::class, 'customizer'])->name('localprint.customizer');
+Route::post('/print/own-design/sizes/customizer/preview', [\App\Http\Controllers\LocalPrintController::class, 'preview'])->name('localprint.preview');
 Route::get('/print/pdf', [\App\Http\Controllers\LocalPrintController::class, 'pdf'])->name('localprint.pdf');
 Route::post('/print/pdf', [\App\Http\Controllers\LocalPrintController::class, 'upload'])->name('localprint.upload');
 Route::get('/print/pdf/check', [\App\Http\Controllers\LocalPrintController::class, 'check'])->name('localprint.check');
@@ -172,7 +176,7 @@ Route::get('/print/trays', [\App\Http\Controllers\LocalPrintController::class, '
 Route::post('/print/trays', [\App\Http\Controllers\LocalPrintController::class, 'saveTrays'])->name('localprint.trays.save');
 
 // Store Panel Standalone & Staff Queue
-// Store panel lives at /store/* — registered near the top of this file,
+// Store panel lives at /store/* - registered near the top of this file,
 // ahead of the /store/{storeCode} scan wildcard.
 
 /*
@@ -203,7 +207,7 @@ $registerFlowRoutes = function (string $controller, string $namePrefix, string $
         Route::post('/cart/remove-coupon', [$cartController, 'removeCoupon'])->name('cart.remove-coupon');
         Route::get('/cart/count', [$cartController, 'count'])->name('cart.count');
 
-        Route::get('/local-print', [\App\Http\Controllers\LocalPrintController::class, 'start'])->name('qrinto');
+        
         Route::get('/custom-print', fn() => redirect()->route("$namePrefix.qrinto"));
         Route::post('/local-print/checkout/cash', [$controller, 'qrintoCheckoutCash'])->name('qrinto.checkout.cash');
         Route::post('/local-print/paypal/create', [$controller, 'qrintoPaypalCreate'])->name('qrinto.paypal.create');

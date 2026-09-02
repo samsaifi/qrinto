@@ -40,7 +40,7 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <a href="{{ route('flow.qrinto') }}"
+                <a href="{{ route('localprint.index') }}"
                     class="p-3 rounded-2xl bg-slate-50/80 hover:bg-brand-50/60 border border-slate-100 hover:border-brand-200 transition-all group flex items-start gap-3">
                     <div
                         class="w-9 h-9 rounded-xl bg-brand-100/80 text-brand-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
@@ -104,8 +104,8 @@
     </div>
 
     {{-- Direct Upload / Custom Print CTA --}}
-    <a href="{{ route('flow.qrinto') }}"
-        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('flow.qrinto') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
+    <a href="{{ route('localprint.index') }}"
+        class="px-3.5 py-2 rounded-xl text-sm font-bold transition-colors duration-150 flex items-center gap-1.5 whitespace-nowrap {{ request()->routeIs('localprint.index') ? 'text-brand-600 bg-brand-50/80' : 'text-slate-700 hover:text-brand-600 hover:bg-slate-50' }}">
         <i data-lucide="upload-cloud" class="w-4 h-4 text-slate-400 shrink-0"></i>
         <span>Custom Print</span>
         <span

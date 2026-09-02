@@ -24,7 +24,7 @@
                     </span>
                 </h1>
                 <p class="text-lg text-surface-300 leading-relaxed mb-8 max-w-xl">
-                    Choose from premium acrylic, canvas, and poster prints. Customize every detail — size, material, frame, and more. Made with love, delivered to your door.
+                    Choose from premium acrylic, canvas, and poster prints. Customize every detail - size, material, frame, and more. Made with love, delivered to your door.
                 </p>
                 <div class="flex flex-wrap gap-4">
                     <a href="{{ route('products.index') }}" class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-brand-600 to-brand-700 text-white font-semibold rounded-2xl hover:from-brand-700 hover:to-brand-800 shadow-xl shadow-brand-500/25 hover:shadow-2xl hover:shadow-brand-500/40 transition-all duration-300 transform hover:-translate-y-1 text-center">

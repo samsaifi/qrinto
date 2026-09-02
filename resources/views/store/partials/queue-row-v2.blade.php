@@ -35,7 +35,7 @@
         ];
         $match = $store->matchTrayForSize($orderSize);
         if ($match) {
-            $trayHint = $match['label'] . ' · ' . ($mediaShort[$match['media']] ?? ($match['media'] ?? '—'));
+            $trayHint = $match['label'] . ' · ' . ($mediaShort[$match['media']] ?? ($match['media'] ?? '-'));
         }
     }
 

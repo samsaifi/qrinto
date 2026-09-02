@@ -23,7 +23,9 @@
 
     @foreach (['success' => 'emerald', 'warning' => 'amber', 'error' => 'red'] as $flash => $color)
         @if (session($flash))
-            <div class="mb-4 px-4 py-3 rounded-xl bg-{{ $color }}-50 border border-{{ $color }}-200 text-{{ $color }}-800 text-sm font-medium">{{ session($flash) }}</div>
+            <div
+                class="mb-4 px-4 py-3 rounded-xl bg-{{ $color }}-50 border border-{{ $color }}-200 text-{{ $color }}-800 text-sm font-medium">
+                {{ session($flash) }}</div>
         @endif
     @endforeach
 
@@ -42,14 +44,18 @@
                 @if ($cards->count())
                     <div class="space-y-3">
                         @foreach ($cards as $order)
-                            @include('store.partials.queue-row', ['order' => $order, 'rPrefix' => $rPrefix, 'store' => $store])
+                            @include('store.partials.queue-row', [
+                                'order' => $order,
+                                'rPrefix' => $rPrefix,
+                                'store' => $store,
+                            ])
                         @endforeach
                     </div>
                 @endif
             </section>
         @endforeach
 
-        {{-- Recently picked up — 5 per page. Older completions accessible
+        {{-- Recently picked up - 5 per page. Older completions accessible
              via the pagination footer without cluttering the queue view. --}}
         @if ($recentlyDone->total() > 0)
             <section>
@@ -59,7 +65,11 @@
                 </div>
                 <div class="space-y-3">
                     @foreach ($recentlyDone as $order)
-                        @include('store.partials.queue-row', ['order' => $order, 'rPrefix' => $rPrefix, 'store' => $store])
+                        @include('store.partials.queue-row', [
+                            'order' => $order,
+                            'rPrefix' => $rPrefix,
+                            'store' => $store,
+                        ])
                     @endforeach
                 </div>
                 @if ($recentlyDone->hasPages())
@@ -74,9 +84,7 @@
     {{-- Tray picker modal: opens on every "Print on 931BL" click, staff must choose a tray.
          The modal scans printers via QZ Tray in the background; if QZ Tray
          is not detected the footer surfaces a Download QZ Tray link. --}}
-    <div x-data="printPicker()" x-cloak
-        @open-print-modal.window="await open($event.detail.prepareUrl)"
-        x-show="visible"
+    <div x-data="printPicker()" x-cloak @open-print-modal.window="await open($event.detail.prepareUrl)" x-show="visible"
         class="fixed inset-0 z-[80] flex items-center justify-center px-4">
 
         <div class="absolute inset-0 bg-slate-900/50" @click="close()"></div>
@@ -90,7 +98,8 @@
                         · size <span class="mono text-slate-700" x-text="payload?.order?.size || 'unknown'"></span>
                     </p>
                 </div>
-                <button type="button" @click="close()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500 flex items-center justify-center">
+                <button type="button" @click="close()"
+                    class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500 flex items-center justify-center">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -110,22 +119,26 @@
                         <div class="space-y-2">
                             <template x-for="t in payload.trays" :key="'tray-' + t.key">
                                 <label class="flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition"
-                                    :class="choice === 'tray:' + t.key ? 'border-[#287d3c] bg-[#f2f7f2]' : 'border-slate-200 hover:border-slate-300'">
+                                    :class="choice === 'tray:' + t.key ? 'border-[#287d3c] bg-[#f2f7f2]' :
+                                        'border-slate-200 hover:border-slate-300'">
                                     <input type="radio" name="print_pick" :value="'tray:' + t.key" x-model="choice"
                                         class="accent-[#287d3c] w-4 h-4">
                                     <div class="flex-1 min-w-0">
                                         <p class="font-bold text-[13px] text-slate-900">
                                             <span x-text="t.label"></span>
                                             <template x-if="t.recommended">
-                                                <span class="ml-2 text-[10px] font-extrabold text-[#287d3c] bg-[#eaf3ea] border border-[#bfdcc4] rounded-full px-2 py-0.5 uppercase tracking-wider">
+                                                <span
+                                                    class="ml-2 text-[10px] font-extrabold text-[#287d3c] bg-[#eaf3ea] border border-[#bfdcc4] rounded-full px-2 py-0.5 uppercase tracking-wider">
                                                     Recommended
                                                 </span>
                                             </template>
                                         </p>
                                         <p class="mono text-[11px] mt-0.5 truncate text-slate-500" :title="t.printer">
                                             <span x-text="t.size_pretty"></span> · <span x-text="t.media_label"></span>
-                                            <template x-if="t.user_type"><span class="text-slate-400"> · UT<span x-text="t.user_type"></span></span></template>
-                                            <template x-if="t.printer"><span class="text-slate-400"> · <span x-text="t.printer"></span></span></template>
+                                            <template x-if="t.user_type"><span class="text-slate-400"> · UT<span
+                                                        x-text="t.user_type"></span></span></template>
+                                            <template x-if="t.printer"><span class="text-slate-400"> · <span
+                                                        x-text="t.printer"></span></span></template>
                                         </p>
                                     </div>
                                 </label>
@@ -139,7 +152,7 @@
                         {{-- Footer install-QZ hint: only when the scan came back
                              empty or errored (QZ Tray missing / blocked). --}}
                         <div x-show="pcState === 'error' || (pcState === 'ok' && pcPrinters.length === 0)"
-                             class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
+                            class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
                             <div class="flex items-center gap-2 min-w-0">
                                 <i data-lucide="printer-off" class="w-4 h-4 text-amber-600 shrink-0"></i>
                                 <p class="text-[12px] text-amber-800 leading-snug">
@@ -153,10 +166,12 @@
                             </a>
                         </div>
                         <div class="flex items-center justify-end gap-2">
-                            <button type="button" @click="close()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Cancel</button>
+                            <button type="button" @click="close()"
+                                class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Cancel</button>
                             <button type="button" @click="confirm()" :disabled="!chosenTarget() || sending"
                                 class="px-5 py-2 rounded-xl bg-[#287d3c] hover:bg-emerald-800 text-white text-sm font-bold transition disabled:bg-slate-300 disabled:cursor-not-allowed">
-                                <span x-show="!sending">Print to <span x-text="chosenTarget()?.label || 'printer'"></span></span>
+                                <span x-show="!sending">Print to <span
+                                        x-text="chosenTarget()?.label || 'printer'"></span></span>
                                 <span x-show="sending">Sending…</span>
                             </button>
                         </div>
@@ -172,12 +187,14 @@
         // A. Delegate "Print on 931BL" clicks → open the tray-picker modal.
         //    The modal itself scans QZ Tray for printers and, if QZ Tray is
         //    not detected, surfaces a Download QZ Tray link in the footer.
-        document.addEventListener('click', function (e) {
+        document.addEventListener('click', function(e) {
             const btn = e.target.closest('[data-qz-print]');
             if (!btn) return;
             e.preventDefault();
             window.dispatchEvent(new CustomEvent('open-print-modal', {
-                detail: { prepareUrl: btn.dataset.prepareUrl }
+                detail: {
+                    prepareUrl: btn.dataset.prepareUrl
+                }
             }));
         });
 
@@ -190,10 +207,10 @@
                 loading: false,
                 sending: false,
                 payload: null,
-                choice: null,          // 'tray:{key}' — key of a configured printer
+                choice: null, // 'tray:{key}' - key of a configured printer
                 error: '',
 
-                pcState: 'idle',        // idle | loading | ok | error
+                pcState: 'idle', // idle | loading | ok | error
                 pcPrinters: [],
                 defaultPrinter: null,
 
@@ -206,7 +223,9 @@
                     try {
                         const res = await fetch(prepareUrl, {
                             credentials: 'same-origin',
-                            headers: { 'Accept': 'application/json' },
+                            headers: {
+                                'Accept': 'application/json'
+                            },
                         });
                         const data = await res.json();
                         if (!res.ok || !data.ok) {
@@ -222,7 +241,9 @@
                         this.error = 'Network error while preparing the order.';
                     } finally {
                         this.loading = false;
-                        this.$nextTick(() => { if (window.lucide) lucide.createIcons(); });
+                        this.$nextTick(() => {
+                            if (window.lucide) lucide.createIcons();
+                        });
                     }
                     // Populate the PC printers list in parallel.
                     this.scanPc();
@@ -253,30 +274,32 @@
                         const t = this.payload.trays.find(x => x.key === key);
                         if (!t) return null;
                         return {
-                            printer:     t.printer || 'Noritsu 931BL',
-                            label:       t.label,
-                            tray_key:    t.key,
-                            size:        t.size,
-                            size_width:  t.size_width,
+                            printer: t.printer || 'Noritsu 931BL',
+                            label: t.label,
+                            tray_key: t.key,
+                            size: t.size,
+                            size_width: t.size_width,
                             size_height: t.size_height,
-                            media:       t.media,
-                            gsm:         t.gsm,
-                            density:     t.density,
-                            user_type:   t.user_type,
+                            media: t.media,
+                            gsm: t.gsm,
+                            density: t.density,
+                            user_type: t.user_type,
                         };
                     }
                     return null;
                 },
 
-                close() { this.visible = false; },
+                close() {
+                    this.visible = false;
+                },
 
                 async confirm() {
                     const target = this.chosenTarget();
                     if (!target || this.sending) return;
                     this.sending = true;
                     this.error = '';
-                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
-                        || document.querySelector('input[name="_token"]')?.value;
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ||
+                        document.querySelector('input[name="_token"]')?.value;
 
                     const ok = await window.__qrintoQZ.printOrder(target, this.payload, csrf);
                     this.sending = false;

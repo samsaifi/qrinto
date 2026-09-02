@@ -39,7 +39,7 @@ class SendWeeklyAnalyticsReport extends Command
         $period = $service->period();
         $this->info('Reporting period: ' . $period['label']);
 
-        // Resolve recipients — CLI --to wins, else config.
+        // Resolve recipients - CLI --to wins, else config.
         $to = $this->option('to');
         $recipients = $to
             ? array_filter(array_map('trim', explode(',', $to)))
@@ -61,7 +61,7 @@ class SendWeeklyAnalyticsReport extends Command
                 ['Pending',            $summary['total_pending']],
                 ['Active Kiosks',      $summary['active_kiosks']],
             ]);
-            $this->info('DRY RUN — no email sent.');
+            $this->info('DRY RUN - no email sent.');
             return self::SUCCESS;
         }
 
@@ -73,7 +73,7 @@ class SendWeeklyAnalyticsReport extends Command
         if (!empty($bcc)) $pending->bcc($bcc);
         $pending->send(new WeeklyAnalyticsReport($service));
 
-        $this->info('Weekly analytics report sent — to: ' . count($recipients) . ', cc: ' . count($cc) . ', bcc: ' . count($bcc));
+        $this->info('Weekly analytics report sent - to: ' . count($recipients) . ', cc: ' . count($cc) . ', bcc: ' . count($bcc));
         return self::SUCCESS;
     }
 }

@@ -5,8 +5,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Any stores that saved tray_config with the old printer-name shape
- * ("Noritsu 931BL Tray 1", no parens) get reset so the current defaults —
- * "Noritsu 931BL (Tray N)" matching the driver's installed queue names —
+ * ("Noritsu 931BL Tray 1", no parens) get reset so the current defaults -
+ * "Noritsu 931BL (Tray N)" matching the driver's installed queue names -
  * take effect. Stores that had already customised their printer names are
  * left alone (their names don't begin with the old default).
  */
@@ -36,6 +36,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // No reverse — the old defaults are the wrong values by definition.
+        // No reverse - the old defaults are the wrong values by definition.
     }
 };

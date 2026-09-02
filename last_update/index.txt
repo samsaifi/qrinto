@@ -131,7 +131,7 @@ Ops/admin dashboard
 So this should be designed separately from CMS-style work tied to the PA site.
 
 5) Development approach with AI (e.g. ChatGPT / Claude / GitHub) built in
-We should explicitly use AI as an accelerator—not to reduce quality, but to generate fast drafts that engineers review and harden.
+We should explicitly use AI as an accelerator-not to reduce quality, but to generate fast drafts that engineers review and harden.
 
 What AI can draft
 
@@ -219,7 +219,7 @@ Once PA web reaches a stable completion point, please start this discovery work.
 
 Share the first draft of the deliverables above for initial review.
 
-If anything is unclear or risky, list questions/concerns early—I'll make decisions quickly on our side.
+If anything is unclear or risky, list questions/concerns early-I'll make decisions quickly on our side.
 
 --------------------------------------------------------------------------------
 DAILY REPORT - 2026-02-19

@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>PDF Preview — Order {{ $order->order_number }}</title>
+    <title>PDF Preview - Order {{ $order->order_number }}</title>
     <style>
         * {
             margin: 0;
@@ -469,7 +469,7 @@
                             @else
                                 <div class="thumb"
                                     style="background:#1e293b;display:flex;align-items:center;justify-content:center;font-size:10px;color:#475569;">
-                                    —</div>
+                                    -</div>
                             @endif
                         </td>
                         <td><code>{{ $key }}</code></td>

@@ -70,7 +70,7 @@ class Order extends Model
 
     /**
      * Detailed QZ Tray print events (order_print_logs). Distinct from the
-     * lighter PrintLog audit trail — this one snapshots the tray/media/PDF
+     * lighter PrintLog audit trail - this one snapshots the tray/media/PDF
      * used, timing, and success/failure per QZ Tray dispatch.
      */
     public function orderPrintLogs(): HasMany
@@ -115,7 +115,7 @@ class Order extends Model
     |--------------------------------------------------------------------------
     | The database `status` column holds a variety of legacy strings. These
     | helpers collapse them into the four canonical pickup stages used by the
-    | consumer flow — New, Printing, Ready for pickup, Picked up — so the store
+    | consumer flow - New, Printing, Ready for pickup, Picked up - so the store
     | queue, the tracker, and emails all read from one source of truth.
     */
 

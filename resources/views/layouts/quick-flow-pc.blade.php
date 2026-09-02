@@ -110,8 +110,10 @@
 
                 {{-- Right Side: Pickup store + Menu --}}
                 <div class="flex items-center gap-3 shrink-0">
-                    {{-- Active Store Selector --}}
-                    @include('layouts.pc.store')
+                    {{-- Active Store Selector (hidden on local print pages) --}}
+                    @if (!request()->routeIs('localprint.*'))
+                        @include('layouts.pc.store')
+                    @endif
 
                     {{-- Menu Dropdown Container --}}
                     <div class="relative" x-data="{ menuOpen: false }" @click.outside="menuOpen = false">
@@ -142,7 +144,7 @@
                                 <span>Print at a store near you</span>
                             </a>
 
-                            <a href="{{ route('flow.qrinto') }}" @click="menuOpen = false"
+                            <a href="{{ route('localprint.index') }}" @click="menuOpen = false"
                                 class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
                                 <i data-lucide="printer" class="w-4 h-4 text-slate-400"></i>
                                 <span>Print on your own 931BL</span>
@@ -168,7 +170,9 @@
                             @auth
                                 @php
                                     $u = auth()->user();
-                                    $isAdmin = method_exists($u, 'isAdmin') ? $u->isAdmin() : ($u->role ?? '') === 'admin';
+                                    $isAdmin = method_exists($u, 'isAdmin')
+                                        ? $u->isAdmin()
+                                        : ($u->role ?? '') === 'admin';
                                     $isStoreStaff = in_array($u->role ?? '', ['store_admin', 'storeadmin', 'staff']);
                                     $storeLabel = $u->store->store_name ?? null;
                                 @endphp

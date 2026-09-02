@@ -508,7 +508,7 @@
                     class="w-full bg-white border-2 border-slate-100 rounded-2xl py-4 pl-13 pr-5 font-bold text-slate-700 focus:border-mobile-500 focus:ring-0 transition-all outline-none shadow-sm resize-none"
                     placeholder="Rush requests, return address info, or other notes…" style="padding-left: 3rem;"></textarea>
             </div>
-            <p class="text-xs text-slate-400 font-medium ml-1">Optional — add any special requests or notes for your order
+            <p class="text-xs text-slate-400 font-medium ml-1">Optional - add any special requests or notes for your order
             </p>
         </div>
 
@@ -601,7 +601,7 @@
                 class="w-full bg-mobile-500 disabled:bg-slate-300 hover:bg-mobile-600 text-white font-extrabold py-3.5 rounded-2xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 text-base">
                 <i data-lucide="credit-card" class="w-5 h-5"></i>
                 <span
-                    x-text="pickupName && contactNumber && pickupEmail && acceptedTerms ? 'Pay Now — ' + __price(calculateTotal()) : (acceptedTerms ? 'Complete All Info' : 'Accept Terms to Continue')"></span>
+                    x-text="pickupName && contactNumber && pickupEmail && acceptedTerms ? 'Pay Now - ' + __price(calculateTotal()) : (acceptedTerms ? 'Complete All Info' : 'Accept Terms to Continue')"></span>
             </button>
             <button type="button" @click="payByCash()"
                 :disabled="!pickupName || !contactNumber || !pickupEmail || !acceptedTerms"
@@ -786,7 +786,7 @@
                                 });
                         },
 
-                        // 2) On Approve — capture and create our Order
+                        // 2) On Approve - capture and create our Order
                         onApprove: function(data, actions) {
                             self.showPaypal = false;
                             self.isProcessing = true;
@@ -834,7 +834,7 @@
                         },
 
                         onCancel: function() {
-                            // User cancelled — just close the modal
+                            // User cancelled - just close the modal
                         },
 
                         onError: function(err) {

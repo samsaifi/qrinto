@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   QRinto Print Studio — Premium Onboarding Tour
+   QRinto Print Studio - Premium Onboarding Tour
    Driver.js theme override  ·  scoped via .driver-popover.qrinto-tour
    ════════════════════════════════════════════════════════════════════ */
 
@@ -93,7 +93,7 @@
     margin-top: 6px;
 }
 
-/* ── Close (X) — doubles as Skip ── */
+/* ── Close (X) - doubles as Skip ── */
 .driver-popover.qrinto-tour .driver-popover-close-btn {
     width: 26px;
     height: 26px;

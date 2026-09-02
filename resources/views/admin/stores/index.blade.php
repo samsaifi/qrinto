@@ -188,20 +188,20 @@
                         data: 'owner_name',
                         className: 'hidden lg:table-cell',
                         render: function(data) {
-                            return `<span class="text-sm text-surface-600">${data || '—'}</span>`;
+                            return `<span class="text-sm text-surface-600">${data || '-'}</span>`;
                         }
                     },
                     {
                         data: 'phone',
                         className: 'hidden md:table-cell',
                         render: function(data) {
-                            return `<span class="text-sm text-surface-600">${data || '—'}</span>`;
+                            return `<span class="text-sm text-surface-600">${data || '-'}</span>`;
                         }
                     },
                     {
                         data: 'city',
                         render: function(data) {
-                            return `<span class="text-sm text-surface-600">${data || '—'}</span>`;
+                            return `<span class="text-sm text-surface-600">${data || '-'}</span>`;
                         }
                     },
                     {
@@ -234,7 +234,8 @@
                                     ${active ? 'Active' : 'Inactive'}
                                 </button>`;
                             if (isTest) {
-                                html += `<span class="px-2 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-800 rounded-md border border-amber-200" title="Test Store Environment">TEST</span>`;
+                                html +=
+                                    `<span class="px-2 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-800 rounded-md border border-amber-200" title="Test Store Environment">TEST</span>`;
                             }
                             html += `</div>`;
                             return html;

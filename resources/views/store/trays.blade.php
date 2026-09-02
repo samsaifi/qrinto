@@ -125,7 +125,7 @@
 
                         <div class="ml-auto text-right">
                             <p class="mono text-[13px] font-bold text-slate-900">
-                                User Type <span x-text="userType(row) ?? '—'"></span>
+                                User Type <span x-text="userType(row) ?? '-'"></span>
                             </p>
                             <p class="text-[11px] text-slate-400">set automatically</p>
                         </div>
@@ -171,7 +171,8 @@
 
             <div class="relative bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-md p-6" @click.stop>
                 <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 rounded-full bg-[#eaf3ea] border border-[#bfdcc4] flex items-center justify-center shrink-0">
+                    <div
+                        class="w-10 h-10 rounded-full bg-[#eaf3ea] border border-[#bfdcc4] flex items-center justify-center shrink-0">
                         <i data-lucide="printer" class="w-5 h-5 text-[#287d3c]"></i>
                     </div>
                     <div class="flex-1">
@@ -179,7 +180,7 @@
                         <p class="text-[13px] text-slate-600 mt-1 leading-relaxed">
                             QZ Tray is the local printer bridge that lets this PC
                             print to the Noritsu 931-BL. If it's already installed,
-                            confirm below — we'll remember it for your next visit.
+                            confirm below - we'll remember it for your next visit.
                         </p>
 
                         <div class="mt-5 flex items-center gap-2 flex-wrap">
@@ -370,7 +371,7 @@
                             });
                         }
                     } catch (e) {
-                        // details() not supported or failed — static fallback stays
+                        // details() not supported or failed - static fallback stays
                     }
                     row.detailsLoading = false;
                 },

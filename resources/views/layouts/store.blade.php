@@ -82,7 +82,8 @@
                         <button @click="open = !open"
                             class="navlink flex items-center gap-1.5 {{ request()->is('*products*') || request()->is('*categories*') || request()->is('*product-types*') || request()->is('*templates*') || request()->is('*coupons*') || request()->is('*events*') ? 'active' : '' }}">
                             <span>Catalog</span>
-                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200"
+                                :class="{ 'rotate-180': open }"></i>
                         </button>
 
                         <div x-show="open" x-transition:enter="transition ease-out duration-100"
@@ -143,15 +144,15 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-6 py-8">
-        <div id="qz-toast" x-data="{ open:false, msg:'', kind:'info' }"
-            x-show="open" x-transition x-cloak
+        <div id="qz-toast" x-data="{ open: false, msg: '', kind: 'info' }" x-show="open" x-transition x-cloak
             @qz-toast.window="msg = $event.detail.msg; kind = $event.detail.kind || 'info'; open = true; setTimeout(() => open = false, 4200)"
             class="fixed top-4 right-4 z-[70] max-w-sm px-4 py-3 rounded-xl shadow-lg text-sm font-medium border"
             :class="{
                 'bg-emerald-50 border-emerald-200 text-emerald-800': kind === 'success',
                 'bg-red-50 border-red-200 text-red-800': kind === 'error',
                 'bg-slate-900 border-slate-800 text-white': kind === 'info',
-            }" x-text="msg"></div>
+            }"
+            x-text="msg"></div>
         @yield('content')
     </main>
 
@@ -160,11 +161,16 @@
     <script>
         if (window.lucide) lucide.createIcons();
 
-        window.__qrintoQZ = (function () {
+        window.__qrintoQZ = (function() {
             let connecting = null;
 
             function toast(msg, kind) {
-                window.dispatchEvent(new CustomEvent('qz-toast', { detail: { msg, kind: kind || 'info' } }));
+                window.dispatchEvent(new CustomEvent('qz-toast', {
+                    detail: {
+                        msg,
+                        kind: kind || 'info'
+                    }
+                }));
             }
 
             // QZ Tray certificate-based trust: serve a real certificate and
@@ -173,33 +179,53 @@
             // store (drag qz-cert.pem onto QZ Tray's "Site Manager" window).
             if (window.qz && qz.security) {
                 var __qzCertCache = null;
-                var __qzCsrf = function () {
-                    return document.querySelector('meta[name="csrf-token"]')?.content
-                        || document.querySelector('input[name="_token"]')?.value;
+                var __qzCsrf = function() {
+                    return document.querySelector('meta[name="csrf-token"]')?.content ||
+                        document.querySelector('input[name="_token"]')?.value;
                 };
-                qz.security.setCertificatePromise(function (resolve, reject) {
-                    if (__qzCertCache) { resolve(__qzCertCache); return; }
-                    fetch("{{ route('storepanel.qz.cert') }}", { credentials: 'same-origin' })
-                        .then(function (r) { return r.ok ? r.text() : Promise.reject('cert ' + r.status); })
-                        .then(function (pem) { __qzCertCache = pem; resolve(pem); })
-                        .catch(function (e) { console.warn('[QZ] cert fetch failed, unsigned mode', e); resolve(); });
+                qz.security.setCertificatePromise(function(resolve, reject) {
+                    if (__qzCertCache) {
+                        resolve(__qzCertCache);
+                        return;
+                    }
+                    fetch("{{ route('storepanel.qz.cert') }}", {
+                            credentials: 'same-origin'
+                        })
+                        .then(function(r) {
+                            return r.ok ? r.text() : Promise.reject('cert ' + r.status);
+                        })
+                        .then(function(pem) {
+                            __qzCertCache = pem;
+                            resolve(pem);
+                        })
+                        .catch(function(e) {
+                            console.warn('[QZ] cert fetch failed, unsigned mode', e);
+                            resolve();
+                        });
                 });
                 qz.security.setSignatureAlgorithm('SHA512');
-                qz.security.setSignaturePromise(function (toSign) {
-                    return function (resolve, reject) {
+                qz.security.setSignaturePromise(function(toSign) {
+                    return function(resolve, reject) {
                         fetch("{{ route('storepanel.qz.sign') }}", {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'text/plain',
-                                'X-CSRF-TOKEN': __qzCsrf(),
-                            },
-                            body: JSON.stringify({ request: toSign }),
-                        })
-                        .then(function (r) { return r.ok ? r.text() : Promise.reject('sign ' + r.status); })
-                        .then(resolve)
-                        .catch(function (e) { console.warn('[QZ] sign failed, unsigned mode', e); resolve(''); });
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'text/plain',
+                                    'X-CSRF-TOKEN': __qzCsrf(),
+                                },
+                                body: JSON.stringify({
+                                    request: toSign
+                                }),
+                            })
+                            .then(function(r) {
+                                return r.ok ? r.text() : Promise.reject('sign ' + r.status);
+                            })
+                            .then(resolve)
+                            .catch(function(e) {
+                                console.warn('[QZ] sign failed, unsigned mode', e);
+                                resolve('');
+                            });
                     };
                 });
             }
@@ -208,7 +234,9 @@
                 if (!window.qz) throw new Error('QZ Tray library did not load.');
                 if (qz.websocket.isActive()) return;
                 if (!connecting) {
-                    connecting = qz.websocket.connect().finally(() => { connecting = null; });
+                    connecting = qz.websocket.connect().finally(() => {
+                        connecting = null;
+                    });
                 }
                 return connecting;
             }
@@ -216,7 +244,7 @@
             /**
              * Silent pre-flight: is QZ Tray installed and reachable on this PC?
              * Returns true when the local bridge answers, false otherwise. No
-             * toast — callers decide how to surface the failure (e.g. a blocking
+             * toast - callers decide how to surface the failure (e.g. a blocking
              * install modal on the orders page).
              */
             async function ensureReady() {
@@ -226,40 +254,42 @@
                 // can never keep the "Checking QZ Tray…" spinner up forever.
                 // Poll isActive() after the race: even a rejected/timed-out
                 // promise still counts as ready if the socket did come up.
-                const timeout = new Promise(function (_, reject) {
-                    setTimeout(function () { reject(new Error('qz-timeout')); }, 8000);
+                const timeout = new Promise(function(_, reject) {
+                    setTimeout(function() {
+                        reject(new Error('qz-timeout'));
+                    }, 8000);
                 });
                 try {
                     await Promise.race([connect(), timeout]);
                 } catch (e) {
-                    /* fall through — check isActive() below */
+                    /* fall through - check isActive() below */
                 }
                 return !!(window.qz && qz.websocket.isActive());
             }
 
             /**
              * Fire a print-log row (fire-and-forget). Never blocks the caller
-             * or bubbles up an error — logging must not derail a real print.
+             * or bubbles up an error - logging must not derail a real print.
              */
             function logPrint(payload, chosen, status, extra) {
                 if (!payload || !payload.log_url) return;
-                const csrf = document.querySelector('meta[name="csrf-token"]')?.content
-                    || document.querySelector('input[name="_token"]')?.value;
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content ||
+                    document.querySelector('input[name="_token"]')?.value;
                 const body = {
-                    printer_name:       chosen?.printer || null,
-                    tray_key:           chosen?.tray_key || null,
-                    tray_label:         chosen?.label || null,
-                    size:               chosen?.size || null,
-                    media:              chosen?.media || null,
-                    gsm:                chosen?.gsm || null,
-                    user_type:          chosen?.user_type || null,
+                    printer_name: chosen?.printer || null,
+                    tray_key: chosen?.tray_key || null,
+                    tray_label: chosen?.label || null,
+                    size: chosen?.size || null,
+                    media: chosen?.media || null,
+                    gsm: chosen?.gsm || null,
+                    user_type: chosen?.user_type || null,
                     is_default_printer: !!(extra && extra.is_default_printer),
-                    copies:             (payload.copies || 1),
-                    order_item_id:      payload.order?.item_id || null,
-                    status:             status,
-                    error_message:      (extra && extra.error_message) || null,
-                    duration_ms:        (extra && extra.duration_ms) || null,
-                    qz_tray_version:    (window.qz && window.qz.version) || null,
+                    copies: (payload.copies || 1),
+                    order_item_id: payload.order?.item_id || null,
+                    status: status,
+                    error_message: (extra && extra.error_message) || null,
+                    duration_ms: (extra && extra.duration_ms) || null,
+                    qz_tray_version: (window.qz && window.qz.version) || null,
                 };
                 try {
                     fetch(payload.log_url, {
@@ -272,8 +302,10 @@
                         },
                         body: JSON.stringify(body),
                         keepalive: true,
-                    }).catch(function () { /* swallow — logging is best-effort */ });
-                } catch (e) { /* ignore */ }
+                    }).catch(function() {
+                        /* swallow - logging is best-effort */ });
+                } catch (e) {
+                    /* ignore */ }
             }
 
             /**
@@ -284,7 +316,7 @@
              */
             async function printOrder(chosen, payload, csrf) {
                 const t0 = performance.now();
-                const fail = function (message) {
+                const fail = function(message) {
                     logPrint(payload, chosen, 'failed', {
                         error_message: message,
                         duration_ms: Math.round(performance.now() - t0),
@@ -318,23 +350,41 @@
                 }
 
                 try {
-                    const configOpts = { copies: payload.copies || 1 };
+                    const configOpts = {
+                        copies: payload.copies || 1
+                    };
                     if (chosen.size_width && chosen.size_height) {
-                        configOpts.size = { width: chosen.size_width, height: chosen.size_height };
+                        configOpts.size = {
+                            width: chosen.size_width,
+                            height: chosen.size_height
+                        };
                         configOpts.units = 'in';
                     }
                     if (chosen.density) {
-                        configOpts.density = { cross: parseInt(chosen.density), feed: parseInt(chosen.density) };
+                        configOpts.density = {
+                            cross: parseInt(chosen.density),
+                            feed: parseInt(chosen.density)
+                        };
                     }
                     const config = qz.configs.create(printer, configOpts);
-                    // Prefer base64 bytes (the server embedded them) — that way
+                    // Prefer base64 bytes (the server embedded them) - that way
                     // QZ Tray never has to fetch a URL from its desktop process,
                     // which sidesteps auth cookies, /public prefix quirks, and
                     // missing storage symlinks. Fall back to URL if bytes are
                     // missing (older payloads).
-                    const data = payload.pdf_base64
-                        ? [{ type: 'pixel', format: 'pdf', flavor: 'base64', data: payload.pdf_base64 }]
-                        : [{ type: 'pixel', format: 'pdf', flavor: 'file',   data: payload.pdf_url    }];
+                    const data = payload.pdf_base64 ?
+                        [{
+                            type: 'pixel',
+                            format: 'pdf',
+                            flavor: 'base64',
+                            data: payload.pdf_base64
+                        }] :
+                        [{
+                            type: 'pixel',
+                            format: 'pdf',
+                            flavor: 'file',
+                            data: payload.pdf_url
+                        }];
                     await qz.print(config, data);
                 } catch (e) {
                     console.error(e);
@@ -347,11 +397,14 @@
                     const res = await fetch(payload.advance_url, {
                         method: 'POST',
                         credentials: 'same-origin',
-                        headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'text/html' },
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'text/html'
+                        },
                     });
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                 } catch (e) {
-                    toast('Sent to printer — but could not advance the order in Qrinto.', 'error');
+                    toast('Sent to printer - but could not advance the order in Qrinto.', 'error');
                     // Still log a success row: the physical print DID happen.
                     logPrint(payload, chosen, 'success', {
                         is_default_printer: isDefault,
@@ -370,7 +423,11 @@
                 return true;
             }
 
-            return { printOrder, toast, ensureReady };
+            return {
+                printOrder,
+                toast,
+                ensureReady
+            };
         })();
     </script>
     @stack('scripts')

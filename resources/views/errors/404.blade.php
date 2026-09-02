@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>404 · Page Not Found — Qrinto Print Studio</title>
+    <title>404 · Page Not Found - Qrinto Print Studio</title>
 
     <link rel="apple-touch-icon" href="/logo/Qrinto-logo-med.png">
     <meta name="theme-color" content="#0ea5e9">
@@ -70,7 +70,7 @@
             pointer-events: none;
         }
 
-        /* Header — same blue treatment as the flow layout */
+        /* Header - same blue treatment as the flow layout */
         .topbar {
             position: relative;
             z-index: 2;

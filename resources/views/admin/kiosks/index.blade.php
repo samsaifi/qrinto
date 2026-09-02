@@ -124,10 +124,10 @@
                             </td>
                             <td class="px-4 py-3">
                                 <div class="text-xs font-medium text-surface-800">
-                                    Size: <span class="font-semibold">{{ $kioskItem->print_size ?? '—' }}</span>
+                                    Size: <span class="font-semibold">{{ $kioskItem->print_size ?? '-' }}</span>
                                 </div>
                                 <div class="text-xs text-surface-500">
-                                    Tray: <span class="font-medium">{{ $kioskItem->printer_tray ?? '—' }}</span>
+                                    Tray: <span class="font-medium">{{ $kioskItem->printer_tray ?? '-' }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3 max-w-[200px]">

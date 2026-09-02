@@ -453,7 +453,7 @@
                             <div class="flex items-center gap-3 mb-2">
                                 <img src="{{ asset('storage/' . $template->icon_value) }}" alt=""
                                     class="w-8 h-8 object-contain">
-                                <span class="text-xs text-surface-500">Current icon — upload new to replace</span>
+                                <span class="text-xs text-surface-500">Current icon - upload new to replace</span>
                             </div>
                         @endif
                         <input id="icon_file" name="icon_file" type="file" accept=".svg,image/svg+xml"
@@ -884,9 +884,9 @@
                     <label class="prop-label">Align</label>
                     <div class="flex gap-1">
                         ${['left','center','right'].map(a => `
-                            <button type="button" class="align-btn ${obj.textAlign === a ? 'active' : ''}" data-align="${a}" title="${a}">
-                                <svg viewBox="0 0 14 14" fill="currentColor">${alignIcon(a)}</svg>
-                            </button>`).join('')}
+                                <button type="button" class="align-btn ${obj.textAlign === a ? 'active' : ''}" data-align="${a}" title="${a}">
+                                    <svg viewBox="0 0 14 14" fill="currentColor">${alignIcon(a)}</svg>
+                                </button>`).join('')}
                     </div>
                 </div>
             </div>
@@ -957,16 +957,16 @@
                 <input id="prop-width-frac" type="number" min="0.01" max="1" step="0.01" class="prop-input" value="${widthFrac}">
             </div>
             ${type === 'svg' ? `
-                <div class="prop-row">
-                    <label class="prop-label">Fill Color (SVG — leave blank to keep original)</label>
-                    <input id="prop-svg-fill" type="color" class="w-full h-9 rounded-lg border border-surface-200 cursor-pointer"
-                           value="${obj._svgFill || '#000000'}">
-                    <label class="flex items-center gap-2 mt-1 text-xs text-surface-500 cursor-pointer">
-                        <input type="checkbox" id="prop-svg-fill-enable" class="rounded" ${obj._svgFill ? 'checked' : ''}>
-                        Apply fill color override
-                    </label>
-                </div>
-                ` : ''}
+                    <div class="prop-row">
+                        <label class="prop-label">Fill Color (SVG - leave blank to keep original)</label>
+                        <input id="prop-svg-fill" type="color" class="w-full h-9 rounded-lg border border-surface-200 cursor-pointer"
+                               value="${obj._svgFill || '#000000'}">
+                        <label class="flex items-center gap-2 mt-1 text-xs text-surface-500 cursor-pointer">
+                            <input type="checkbox" id="prop-svg-fill-enable" class="rounded" ${obj._svgFill ? 'checked' : ''}>
+                            Apply fill color override
+                        </label>
+                    </div>
+                    ` : ''}
             <div class="prop-row">
                 <label class="prop-label">Rotation (°)</label>
                 <input id="prop-angle" type="number" min="-180" max="180" class="prop-input" value="${Math.round(obj.angle || 0)}">
@@ -1112,9 +1112,9 @@
 
             function alignIcon(a) {
                 if (a === 'left')
-                return '<rect x="1" y="2" width="12" height="2" rx="1"/><rect x="1" y="6" width="8" height="2" rx="1"/><rect x="1" y="10" width="10" height="2" rx="1"/>';
+                    return '<rect x="1" y="2" width="12" height="2" rx="1"/><rect x="1" y="6" width="8" height="2" rx="1"/><rect x="1" y="10" width="10" height="2" rx="1"/>';
                 if (a === 'right')
-                return '<rect x="1" y="2" width="12" height="2" rx="1"/><rect x="5" y="6" width="8" height="2" rx="1"/><rect x="3" y="10" width="10" height="2" rx="1"/>';
+                    return '<rect x="1" y="2" width="12" height="2" rx="1"/><rect x="5" y="6" width="8" height="2" rx="1"/><rect x="3" y="10" width="10" height="2" rx="1"/>';
                 return '<rect x="1" y="2" width="12" height="2" rx="1"/><rect x="3" y="6" width="8" height="2" rx="1"/><rect x="2" y="10" width="10" height="2" rx="1"/>';
             }
 

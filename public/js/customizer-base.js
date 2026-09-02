@@ -1,22 +1,22 @@
 /**
- * Shared Customizer Base — common logic for single/double/quad canvas editors.
+ * Shared Customizer Base - common logic for single/double/quad canvas editors.
  *
  * Each page creates a `customizer` object that starts with `customizerBase(config)`
  * and then overrides/extends page-specific methods (init, updateUI, _initAllCanvases, etc.).
  *
  * Config shape:
- *   imageTypes      — {key: {label, url}} map
- *   allMaskData     — mask data from product
- *   productId       — product ID
- *   templates       — active templates object
- *   templateCategories — template categories
- *   csrfToken       — CSRF token string
- *   uploadRoute     — upload URL
- *   uploadCompositeRoute — composite upload URL
- *   isPortrait      — boolean
- *   storagePrefix   — localStorage key prefix (e.g. 'qrinto_design_v1' or 'qrinto_single_v1')
- *   multiCanvas     — boolean (has multiple canvases / page switching)
- *   hasMasks        — boolean (has mask/clip path system)
+ *   imageTypes      - {key: {label, url}} map
+ *   allMaskData     - mask data from product
+ *   productId       - product ID
+ *   templates       - active templates object
+ *   templateCategories - template categories
+ *   csrfToken       - CSRF token string
+ *   uploadRoute     - upload URL
+ *   uploadCompositeRoute - composite upload URL
+ *   isPortrait      - boolean
+ *   storagePrefix   - localStorage key prefix (e.g. 'qrinto_design_v1' or 'qrinto_single_v1')
+ *   multiCanvas     - boolean (has multiple canvases / page switching)
+ *   hasMasks        - boolean (has mask/clip path system)
  */
 function customizerBase(config) {
     return {
@@ -1953,7 +1953,7 @@ function customizerBase(config) {
         // ═══════════════════════════════════════════════
         // SHAPE MASK LIBRARY ACTIVE-STATE INDICATOR
         // Highlights which shape mask is applied to the selected image.
-        // Purely a visual indicator inside the drawer — never touches the image itself.
+        // Purely a visual indicator inside the drawer - never touches the image itself.
         // ═══════════════════════════════════════════════
         _syncShapeMaskLibrary() {
             const buttons = document.querySelectorAll('.shape-mask-btn');

@@ -57,7 +57,7 @@
                                         <i data-lucide="star" class="w-3 h-3 inline-block -mt-0.5"></i> Popular
                                     </span>
                                 @else
-                                    <span class="text-xs text-surface-400">—</span>
+                                    <span class="text-xs text-surface-400">-</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4">

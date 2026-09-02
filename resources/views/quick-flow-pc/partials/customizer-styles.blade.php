@@ -35,7 +35,7 @@
     /* ── Shape Mask Library: active (applied) shape indicator ── */
     .shape-mask-btn.shape-mask-active {
         border-color: #10b981;
-        /* emerald-500 — matches drawer accent */
+        /* emerald-500 - matches drawer accent */
         border-width: 2px;
         background-color: #ecfdf5;
         /* emerald-50 */

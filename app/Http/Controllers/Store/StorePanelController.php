@@ -177,7 +177,7 @@ class StorePanelController extends Controller
     }
 
     /**
-     * Store-scoped view of order_print_logs — 20 per page, current store
+     * Store-scoped view of order_print_logs - 20 per page, current store
      * only. Read-only; the store panel never edits or deletes logs.
      */
     public function printLogs(Request $request)
@@ -208,7 +208,7 @@ class StorePanelController extends Controller
     }
 
     /**
-     * Store-scoped view of kiosks — 15 per page, current store only.
+     * Store-scoped view of kiosks - 15 per page, current store only.
      * Read-only for store panel staff.
      */
     public function kioskLogs(Request $request)
@@ -428,7 +428,7 @@ class StorePanelController extends Controller
         $copies = 1;
         foreach ($order->items as $i) { $copies = max($copies, (int) ($i->quantity ?: 1)); }
 
-        // Return every tray so the operator picks — the one that auto-matches
+        // Return every tray so the operator picks - the one that auto-matches
         // is flagged `recommended` so the UI can highlight it.
         $mediaLabels = \App\Models\Store::trayMediaOptions();
         $sizePretty  = ['4x6' => '4 × 6', '5x7' => '5 × 7', '7x10' => '7 × 10', '8.5x11' => '8.5 × 11'];

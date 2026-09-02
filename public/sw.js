@@ -1,4 +1,4 @@
-// Qrinto Service Worker — offline shell caching only
+// Qrinto Service Worker - offline shell caching only
 const CACHE = 'qrinto-v1';
 const SHELL = [
     '/',
@@ -21,7 +21,7 @@ self.addEventListener('activate', e => {
     );
 });
 
-// Network-first strategy — always fresh content, fallback to cache
+// Network-first strategy - always fresh content, fallback to cache
 self.addEventListener('fetch', e => {
     if (e.request.method !== 'GET') return;
     const url = new URL(e.request.url);

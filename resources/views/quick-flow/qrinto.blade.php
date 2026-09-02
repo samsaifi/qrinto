@@ -343,7 +343,7 @@
                     class="w-full text-white font-extrabold py-5 rounded-2xl transition-all flex items-center justify-center gap-3 text-base uppercase tracking-widest">
                     <i data-lucide="credit-card" class="w-5 h-5"></i>
                     <span
-                        x-text="isValid ? 'Pay Now — ' + __price(selectedSize?.price * quantity) : 'Complete All Info'"></span>
+                        x-text="isValid ? 'Pay Now - ' + __price(selectedSize?.price * quantity) : 'Complete All Info'"></span>
                 </button>
                 <button type="button" @click="processCheckout('cash')" :disabled="isProcessing || !isValid"
                     :class="isProcessing || !isValid ? 'bg-slate-50 text-slate-400 border-slate-100 scale-100' :
@@ -556,7 +556,8 @@
                         xhr.addEventListener('load', () => {
                             if (xhr.status === 200) {
                                 const data = JSON.parse(xhr.responseText);
-                                this.uploadId = data.upload_id || (data.upload ? data.upload.id : data.id);
+                                this.uploadId = data.upload_id || (data.upload ? data.upload.id :
+                                    data.id);
                                 this.previewUrl = data.url || (data.upload ? data.upload.url : '');
                                 this.isUploading = false;
                             } else {
@@ -584,21 +585,22 @@
                         this.paymentSuccess = false;
 
                         try {
-                            const response = await fetch('{{ route('flow.qrinto.checkout.cash') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    upload_id: this.uploadId,
-                                    size_id: this.selectedSize.id,
-                                    quantity: this.quantity,
-                                    pickup_name: this.pickupName,
-                                    pickup_email: this.pickupEmail,
-                                    contact_number: this.contactNumber
-                                })
-                            });
+                            const response = await fetch(
+                                '{{ route('localprint.index.checkout.cash') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        upload_id: this.uploadId,
+                                        size_id: this.selectedSize.id,
+                                        quantity: this.quantity,
+                                        pickup_name: this.pickupName,
+                                        pickup_email: this.pickupEmail,
+                                        contact_number: this.contactNumber
+                                    })
+                                });
 
                             const data = await response.json();
                             if (data.success) {
@@ -642,7 +644,7 @@
                         paypal.Buttons({
                             createOrder: async (data, actions) => {
                                 const response = await fetch(
-                                    '{{ route('flow.qrinto.paypal.create') }}', {
+                                    '{{ route('localprint.index.paypal.create') }}', {
                                         method: 'POST',
                                         headers: {
                                             'Content-Type': 'application/json',
@@ -663,7 +665,7 @@
                                 this.paymentSuccess = false;
 
                                 const response = await fetch(
-                                    '{{ route('flow.qrinto.paypal.capture') }}', {
+                                    '{{ route('localprint.index.paypal.capture') }}', {
                                         method: 'POST',
                                         headers: {
                                             'Content-Type': 'application/json',

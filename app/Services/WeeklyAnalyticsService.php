@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Aggregates the previous week's activity across Orders, Print Logs,
- * Kiosks, Stores, Payments, and daily trends — one call per section,
+ * Kiosks, Stores, Payments, and daily trends - one call per section,
  * all in database-level aggregates (COUNT / SUM / GROUP BY).
  *
  * Status buckets and payment logic mirror App\Http\Controllers\Admin\
@@ -61,7 +61,7 @@ class WeeklyAnalyticsService
     }
 
     /**
-     * Executive summary — high-level counters used at the top of the email.
+     * Executive summary - high-level counters used at the top of the email.
      * One aggregate query for orders, one for print logs, one for kiosks.
      */
     public function summary(): array
@@ -108,7 +108,7 @@ class WeeklyAnalyticsService
 
     /**
      * Print-log stage counts within the reporting window.
-     * "Stage" comes from the ORDER's current status — same semantics as
+     * "Stage" comes from the ORDER's current status - same semantics as
      * PrintLogController@buildAnalytics.
      */
     public function printLogs(): array
@@ -156,7 +156,7 @@ class WeeklyAnalyticsService
     }
 
     /**
-     * Kiosk metrics — the /admin/kiosks module models each row as a
+     * Kiosk metrics - the /admin/kiosks module models each row as a
      * store-linked print configuration ("printer_tray"/"print_size" +
      * total_amount), toggled active/inactive via `kiosk` bool.
      */
@@ -205,7 +205,7 @@ class WeeklyAnalyticsService
     }
 
     /**
-     * Store-wise combined table — orders + revenue + print events + stages.
+     * Store-wise combined table - orders + revenue + print events + stages.
      * Every store is listed (including test stores), consistent with the
      * "All Stores" behavior on the dashboard.
      */
@@ -306,7 +306,7 @@ class WeeklyAnalyticsService
     }
 
     /**
-     * Auto-computed observations — highlights the top store, best-order day,
+     * Auto-computed observations - highlights the top store, best-order day,
      * best-revenue day, most-active printer, and pending backlog.
      */
     public function observations(): array

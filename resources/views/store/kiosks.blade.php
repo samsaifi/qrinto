@@ -9,7 +9,8 @@
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Orders
             </a>
             <h1 class="font-display font-bold text-3xl text-slate-900 tracking-tight mt-3">Kiosk Logs</h1>
-            <p class="text-slate-500 mt-1 text-sm">Kiosk print items and logs for {{ $store->store_name ?? 'this store' }}.</p>
+            <p class="text-slate-500 mt-1 text-sm">Kiosk print items and logs for {{ $store->store_name ?? 'this store' }}.
+            </p>
         </div>
     </div>
 
@@ -18,8 +19,7 @@
         class="bg-white border border-slate-200/80 rounded-2xl p-4 mb-5 flex flex-wrap items-end gap-3">
         <div>
             <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">Search</label>
-            <input type="text" name="search" value="{{ request('search') }}"
-                placeholder="File path, tray, size..."
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="File path, tray, size..."
                 class="rounded-xl border-slate-200 text-sm focus:border-[#287d3c] focus:ring-[#287d3c]">
         </div>
 
@@ -38,8 +38,7 @@
 
         <div>
             <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1">Is Kiosk</label>
-            <select name="kiosk"
-                class="rounded-xl border-slate-200 text-sm focus:border-[#287d3c] focus:ring-[#287d3c]">
+            <select name="kiosk" class="rounded-xl border-slate-200 text-sm focus:border-[#287d3c] focus:ring-[#287d3c]">
                 <option value="">All</option>
                 <option value="1" @selected(request('kiosk') === '1')>Yes (Kiosk)</option>
                 <option value="0" @selected(request('kiosk') === '0')>No</option>
@@ -60,14 +59,22 @@
             <table class="w-full">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-100">
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">ID</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Product</th>
-                        <th class="px-3 py-3 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">Kiosk</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Print Spec</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">File Path</th>
-                        <th class="px-5 py-3 text-right text-[10px] font-black text-slate-500 uppercase tracking-widest">Qty x Price</th>
-                        <th class="px-5 py-3 text-right text-[10px] font-black text-slate-500 uppercase tracking-widest">Total</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Date</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">ID
+                        </th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            Product</th>
+                        <th class="px-3 py-3 text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            Kiosk</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            Print Spec</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">File
+                            Path</th>
+                        <th class="px-5 py-3 text-right text-[10px] font-black text-slate-500 uppercase tracking-widest">Qty
+                            x Price</th>
+                        <th class="px-5 py-3 text-right text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            Total</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Date
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -83,21 +90,23 @@
                             </td>
                             <td class="px-3 py-3 text-center">
                                 @if ($kioskItem->kiosk)
-                                    <span class="inline-flex px-2.5 py-0.5 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span
+                                        class="inline-flex px-2.5 py-0.5 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         Yes
                                     </span>
                                 @else
-                                    <span class="inline-flex px-2.5 py-0.5 text-xs font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                                    <span
+                                        class="inline-flex px-2.5 py-0.5 text-xs font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200">
                                         No
                                     </span>
                                 @endif
                             </td>
                             <td class="px-5 py-3">
                                 <div class="text-xs font-medium text-slate-800">
-                                    Size: <span class="font-semibold">{{ $kioskItem->print_size ?? '—' }}</span>
+                                    Size: <span class="font-semibold">{{ $kioskItem->print_size ?? '-' }}</span>
                                 </div>
                                 <div class="text-xs text-slate-500">
-                                    Tray: <span class="font-medium">{{ $kioskItem->printer_tray ?? '—' }}</span>
+                                    Tray: <span class="font-medium">{{ $kioskItem->printer_tray ?? '-' }}</span>
                                 </div>
                             </td>
                             <td class="px-5 py-3 max-w-[220px]">
@@ -115,7 +124,8 @@
                             </td>
                             <td class="px-5 py-3 text-right">
                                 <div class="text-xs text-slate-700">
-                                    {{ $kioskItem->quantity }} x {{ $kioskItem->currency }} {{ number_format($kioskItem->price, 2) }}
+                                    {{ $kioskItem->quantity }} x {{ $kioskItem->currency }}
+                                    {{ number_format($kioskItem->price, 2) }}
                                 </div>
                             </td>
                             <td class="px-5 py-3 text-right font-bold text-sm text-slate-900">
@@ -123,7 +133,8 @@
                             </td>
                             <td class="px-5 py-3 text-sm text-slate-600 whitespace-nowrap">
                                 <div class="font-medium">{{ $kioskItem->created_at?->format('M j, Y') }}</div>
-                                <div class="mono text-[11px] text-slate-400">{{ $kioskItem->created_at?->format('H:i:s') }}</div>
+                                <div class="mono text-[11px] text-slate-400">{{ $kioskItem->created_at?->format('H:i:s') }}
+                                </div>
                             </td>
                         </tr>
                     @empty

@@ -92,7 +92,7 @@ return [
 
     // Store panel is a work queue, not an analytics dashboard. Catalog
     // administration (products, categories, templates, coupons, events, paper
-    // types) belongs to the NAC admin panel above — not the store nav.
+    // types) belongs to the NAC admin panel above - not the store nav.
     'store_admin' => [
         'top' => [
             [

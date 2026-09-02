@@ -51,7 +51,7 @@
                     </tr>
                     <tr>
                         <td align="center" style="padding: 0 32px 4px;">
-                            <p style="margin: 0; font-size: 14px; color: #0ea5e9; font-weight: 500;">Action Required —
+                            <p style="margin: 0; font-size: 14px; color: #0ea5e9; font-weight: 500;">Action Required -
                                 Please process and print</p>
                         </td>
                     </tr>

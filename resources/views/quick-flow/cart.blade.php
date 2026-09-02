@@ -363,7 +363,7 @@
                 <a href="{{ route($routePrefix . 'cart-checkout') }}"
                     class="w-full bg-mobile-500 hover:bg-mobile-600 text-white font-extrabold py-3.5 rounded-2xl shadow-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2 text-base">
                     <i data-lucide="credit-card" class="w-5 h-5"></i>
-                    <span>Proceed to Checkout — <span x-text="__price(total)"></span></span>
+                    <span>Proceed to Checkout - <span x-text="__price(total)"></span></span>
                 </a>
             </div>
         @else

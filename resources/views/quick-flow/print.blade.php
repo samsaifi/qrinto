@@ -1,14 +1,19 @@
 @php
     $item = $order->items->first();
-    $dimW = $item?->customization_data['size_width'] ?? ($item?->product?->width ?? ($item?->product?->productType?->width ?? '4'));
-    $dimH = $item?->customization_data['size_height'] ?? ($item?->product?->height ?? ($item?->product?->productType?->height ?? '6'));
-    $dimensions = sprintf('%.2f x %.2f', (float)$dimW, (float)$dimH);
+    $dimW =
+        $item?->customization_data['size_width'] ??
+        ($item?->product?->width ?? ($item?->product?->productType?->width ?? '4'));
+    $dimH =
+        $item?->customization_data['size_height'] ??
+        ($item?->product?->height ?? ($item?->product?->productType?->height ?? '6'));
+    $dimensions = sprintf('%.2f x %.2f', (float) $dimW, (float) $dimH);
     $unit = $item?->customization_data['size_unit'] ?? 'inch';
     $sizeLabel = $item?->product?->size_label ?? $dimensions;
     $cardType = $item?->product?->productType?->name ?? ($item?->product?->title ?? 'Photo Magnets');
     $category = $item?->product?->category?->name ?? 'Empty canvas';
-    
-    $driverDownloadUrl = 'https://www.dropbox.com/scl/fi/d5f74l6ekg7r3hoxhvhwm/Noritsu_931BL_Driver_Setup-v2.2.exe?rlkey=m94hgu9eww95zj7mr7wtpli30&st=e658g2hc&e=1&dl=1';
+
+    $driverDownloadUrl =
+        'https://www.dropbox.com/scl/fi/d5f74l6ekg7r3hoxhvhwm/Noritsu_931BL_Driver_Setup-v2.2.exe?rlkey=m94hgu9eww95zj7mr7wtpli30&st=e658g2hc&e=1&dl=1';
 
     $rPrefix = match (auth()->user()?->role ?? '') {
         'store_admin', 'storeadmin' => 'store.',
@@ -17,8 +22,8 @@
     };
     $backUrl = route($rPrefix . 'orders.show', $order->id);
 
-    $pdfUrl = !empty($item?->pdf_path) 
-        ? asset('storage/' . $item->pdf_path) 
+    $pdfUrl = !empty($item?->pdf_path)
+        ? asset('storage/' . $item->pdf_path)
         : route($rPrefix . 'orders.show.pdf', $order->id);
 @endphp
 <!DOCTYPE html>
@@ -27,12 +32,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print Station — Order #{{ $order->order_number }}</title>
+    <title>Print Station - Order #{{ $order->order_number }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     {{-- QZ Tray: enumerates the OPERATOR'S PC printers (not the server's), so
@@ -78,29 +84,33 @@
             .no-print {
                 display: none !important;
             }
+
             .print-only-stage {
                 display: flex !important;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                width: {{ (float)$dimW }}in;
-                height: {{ (float)$dimH }}in;
+                width: {{ (float) $dimW }}in;
+                height: {{ (float) $dimH }}in;
                 margin: 0 auto;
                 padding: 0;
             }
+
             .print-only-stage img {
-                width: {{ (float)$dimW }}in;
-                height: {{ (float)$dimH }}in;
+                width: {{ (float) $dimW }}in;
+                height: {{ (float) $dimH }}in;
                 object-fit: contain;
             }
+
             .print-page-break {
                 page-break-after: always;
                 break-after: page;
-                width: {{ (float)$dimW }}in;
-                height: {{ (float)$dimH }}in;
+                width: {{ (float) $dimW }}in;
+                height: {{ (float) $dimH }}in;
             }
+
             @page {
-                size: {{ (float)$dimW }}in {{ (float)$dimH }}in;
+                size: {{ (float) $dimW }}in {{ (float) $dimH }}in;
                 margin: 0mm;
             }
         }
@@ -110,16 +120,19 @@
 <body class="bg-surface-900 text-white min-h-full flex flex-col antialiased">
 
     {{-- Top Bar --}}
-    <header class="no-print bg-surface-800/80 backdrop-blur-md border-b border-surface-700/60 px-6 py-3.5 flex items-center justify-between shrink-0">
+    <header
+        class="no-print bg-surface-800/80 backdrop-blur-md border-b border-surface-700/60 px-6 py-3.5 flex items-center justify-between shrink-0">
         <div class="flex items-center gap-4">
-            <a href="{{ $backUrl }}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-700/70 hover:bg-surface-700 text-surface-200 hover:text-white text-xs font-semibold transition">
+            <a href="{{ $backUrl }}"
+                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-700/70 hover:bg-surface-700 text-surface-200 hover:text-white text-xs font-semibold transition">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Order
             </a>
             <div class="h-4 w-px bg-surface-700"></div>
             <div>
                 <h1 class="text-sm font-bold text-white flex items-center gap-2">
                     <span>Print Design Station</span>
-                    <span class="text-xs font-mono font-normal text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-500/20">
+                    <span
+                        class="text-xs font-mono font-normal text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-500/20">
                         #{{ $order->order_number }}
                     </span>
                 </h1>
@@ -131,18 +144,20 @@
 
     {{-- Main Split View --}}
     <main class="no-print flex-1 flex flex-col md:flex-row overflow-hidden">
-        
+
         {{-- Left Column: Print Design Preview --}}
-        <div class="flex-1 bg-surface-950 p-6 flex flex-col items-center justify-center relative overflow-auto min-h-[400px]">
-            <div class="absolute top-4 left-4 z-10 flex items-center gap-2 bg-surface-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-surface-800 text-xs text-surface-400">
+        <div
+            class="flex-1 bg-surface-950 p-6 flex flex-col items-center justify-center relative overflow-auto min-h-[400px]">
+            <div
+                class="absolute top-4 left-4 z-10 flex items-center gap-2 bg-surface-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-surface-800 text-xs text-surface-400">
                 <i data-lucide="eye" class="w-3.5 h-3.5 text-brand-500"></i> Print Preview Stage
             </div>
 
             @php
                 $imgCount = count($designImages ?? []);
-                $getImgTitle = function($idx, $count) {
+                $getImgTitle = function ($idx, $count) {
                     if ($count === 4) {
-                        return match($idx) {
+                        return match ($idx) {
                             0 => 'Inside',
                             1 => 'Inside',
                             2 => 'Front Cover',
@@ -154,18 +169,22 @@
                 };
             @endphp
 
-            @if($imgCount > 0)
-                <div class="w-full max-w-4xl max-h-[75vh] overflow-y-auto p-4 bg-surface-900/50 rounded-2xl border border-surface-800 shadow-2xl">
-                    <div class="grid gap-4 items-center justify-center 
+            @if ($imgCount > 0)
+                <div
+                    class="w-full max-w-4xl max-h-[75vh] overflow-y-auto p-4 bg-surface-900/50 rounded-2xl border border-surface-800 shadow-2xl">
+                    <div
+                        class="grid gap-4 items-center justify-center 
                         {{ $imgCount === 1 ? 'grid-cols-1 max-w-xl mx-auto' : '' }}
                         {{ $imgCount === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto' : '' }}
                         {{ $imgCount === 3 ? 'grid-cols-1 sm:grid-cols-3' : '' }}
                         {{ $imgCount >= 4 ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-4' : '' }}">
-                        @foreach($designImages as $idx => $imgUrl)
-                            <div class="relative group bg-surface-950/80 p-2 rounded-xl border border-surface-800/80 flex flex-col items-center justify-center">
-                                <img src="{{ $imgUrl }}" alt="{{ $getImgTitle($idx, $imgCount) }}" 
-                                     class="max-w-full {{ $imgCount === 1 ? 'max-h-[65vh]' : 'max-h-[35vh]' }} object-contain rounded-lg shadow-md transition-all duration-300">
-                                <span class="mt-2 text-xs font-bold text-surface-200 bg-surface-800/90 px-3 py-1 rounded-lg border border-surface-700/60 shadow-xs">
+                        @foreach ($designImages as $idx => $imgUrl)
+                            <div
+                                class="relative group bg-surface-950/80 p-2 rounded-xl border border-surface-800/80 flex flex-col items-center justify-center">
+                                <img src="{{ $imgUrl }}" alt="{{ $getImgTitle($idx, $imgCount) }}"
+                                    class="max-w-full {{ $imgCount === 1 ? 'max-h-[65vh]' : 'max-h-[35vh]' }} object-contain rounded-lg shadow-md transition-all duration-300">
+                                <span
+                                    class="mt-2 text-xs font-bold text-surface-200 bg-surface-800/90 px-3 py-1 rounded-lg border border-surface-700/60 shadow-xs">
                                     {{ $getImgTitle($idx, $imgCount) }}
                                 </span>
                             </div>
@@ -182,22 +201,25 @@
             <div class="mt-4 text-xs text-surface-500 flex items-center gap-4">
                 <span><strong class="text-surface-400">Order ID:</strong> {{ $order->id }}</span>
                 <span>•</span>
-                <span><strong class="text-surface-400">Store:</strong> {{ $order->store?->store_name ?? 'Main Studio' }}</span>
+                <span><strong class="text-surface-400">Store:</strong>
+                    {{ $order->store?->store_name ?? 'Main Studio' }}</span>
             </div>
         </div>
 
         {{-- Right Column: Print Details & Destination Window --}}
-        <aside class="w-full md:w-[420px] bg-surface-900 border-l border-surface-800 p-6 flex flex-col justify-between overflow-y-auto shrink-0">
-            
+        <aside
+            class="w-full md:w-[420px] bg-surface-900 border-l border-surface-800 p-6 flex flex-col justify-between overflow-y-auto shrink-0">
+
             <div class="space-y-6">
-                
+
                 {{-- Metadata Window Card --}}
                 <div>
                     <div class="flex items-center justify-between mb-3">
                         <h2 class="text-xs font-bold uppercase tracking-wider text-surface-400 flex items-center gap-2">
                             <i data-lucide="sliders" class="w-3.5 h-3.5 text-brand-500"></i> Design Specifications
                         </h2>
-                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-surface-800 text-brand-400 border border-surface-700">
+                        <span
+                            class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-surface-800 text-brand-400 border border-surface-700">
                             Verified
                         </span>
                     </div>
@@ -205,17 +227,20 @@
                     <div class="bg-surface-800/60 rounded-2xl border border-surface-700/60 p-4 space-y-3 shadow-inner">
                         <div class="flex justify-between items-center text-xs pb-2.5 border-b border-surface-700/40">
                             <span class="text-surface-400">Dimensions:</span>
-                            <span class="font-bold text-white font-mono bg-surface-800 px-2 py-0.5 rounded">{{ $dimensions }}</span>
+                            <span
+                                class="font-bold text-white font-mono bg-surface-800 px-2 py-0.5 rounded">{{ $dimensions }}</span>
                         </div>
 
                         <div class="flex justify-between items-center text-xs pb-2.5 border-b border-surface-700/40">
                             <span class="text-surface-400">Unit:</span>
-                            <span class="font-bold text-white uppercase font-mono bg-surface-800 px-2 py-0.5 rounded">{{ $unit }}</span>
+                            <span
+                                class="font-bold text-white uppercase font-mono bg-surface-800 px-2 py-0.5 rounded">{{ $unit }}</span>
                         </div>
 
                         <div class="flex justify-between items-center text-xs pb-2.5 border-b border-surface-700/40">
                             <span class="text-surface-400">Size label:</span>
-                            <span class="font-bold text-white font-mono bg-surface-800 px-2 py-0.5 rounded">{{ $sizeLabel }}</span>
+                            <span
+                                class="font-bold text-white font-mono bg-surface-800 px-2 py-0.5 rounded">{{ $sizeLabel }}</span>
                         </div>
 
                         <div class="flex justify-between items-center text-xs pb-2.5 border-b border-surface-700/40">
@@ -236,7 +261,8 @@
                         <h2 class="text-xs font-bold uppercase tracking-wider text-surface-400 flex items-center gap-2">
                             <i data-lucide="printer" class="w-3.5 h-3.5 text-brand-500"></i> Destination Printer
                         </h2>
-                        <span id="printerStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <span id="printerStatusBadge"
+                            class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
                             Scanning...
                         </span>
                     </div>
@@ -247,7 +273,8 @@
                     </div>
 
                     {{-- Driver Download Box (If Noritsu printer not found) --}}
-                    <div id="driverDownloadCard" class="hidden mt-4 bg-amber-950/30 border border-amber-500/30 rounded-2xl p-4 text-left">
+                    <div id="driverDownloadCard"
+                        class="hidden mt-4 bg-amber-950/30 border border-amber-500/30 rounded-2xl p-4 text-left">
                         <div class="flex items-start gap-3">
                             <div class="p-2 rounded-xl bg-amber-500/10 text-amber-400 shrink-0 mt-0.5">
                                 <i data-lucide="alert-triangle" class="w-5 h-5"></i>
@@ -255,11 +282,12 @@
                             <div class="space-y-1 flex-1">
                                 <h4 class="text-xs font-bold text-amber-300">Noritsu 931BL Printer Not Found</h4>
                                 <p class="text-[11px] text-amber-200/70 leading-relaxed">
-                                    No local Noritsu 931BL printer was detected on this PC. Please install the driver to continue.
+                                    No local Noritsu 931BL printer was detected on this PC. Please install the driver to
+                                    continue.
                                 </p>
                                 <div class="pt-2">
-                                    <a href="{{ $driverDownloadUrl }}" target="_blank" 
-                                       class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-surface-950 font-bold text-xs transition shadow-md">
+                                    <a href="{{ $driverDownloadUrl }}" target="_blank"
+                                        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-surface-950 font-bold text-xs transition shadow-md">
                                         <i data-lucide="download" class="w-4 h-4"></i> Download Noritsu 931BL Driver
                                     </a>
                                 </div>
@@ -273,9 +301,10 @@
 
             {{-- Action Buttons --}}
             <div class="pt-6 border-t border-surface-800 space-y-2.5">
-                {{-- QZ Tray install hint — shown only when the printer scan
+                {{-- QZ Tray install hint - shown only when the printer scan
                      came back empty (no PC printers visible). --}}
-                <div id="qzInstallHint" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+                <div id="qzInstallHint"
+                    class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2.5 flex items-center gap-2.5">
                     <i data-lucide="printer-off" class="w-4 h-4 text-amber-400 shrink-0"></i>
                     <p class="text-[11px] text-amber-200/90 leading-snug flex-1">
                         Printer not visible? Install QZ Tray to detect this PC's printers.
@@ -288,15 +317,15 @@
                 </div>
 
                 <button onclick="sendToNoritsuPrinter()"
-                        class="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-brand-600/20 active:scale-[0.98]">
+                    class="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-brand-600/20 active:scale-[0.98]">
                     <i data-lucide="printer" class="w-4 h-4"></i> Send to Noritsu Printer
                 </button>
                 <button onclick="openManualBrowserPrint()"
-                        class="w-full py-2 px-3 rounded-xl bg-surface-800/60 hover:bg-surface-800 text-surface-400 hover:text-surface-200 text-[11px] font-medium transition flex items-center justify-center gap-1.5">
+                    class="w-full py-2 px-3 rounded-xl bg-surface-800/60 hover:bg-surface-800 text-surface-400 hover:text-surface-200 text-[11px] font-medium transition flex items-center justify-center gap-1.5">
                     <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open Browser Print Dialog
                 </button>
                 <a href="{{ $backUrl }}"
-                   class="w-full py-2.5 px-4 rounded-xl bg-surface-800 hover:bg-surface-700 text-surface-300 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition">
+                    class="w-full py-2.5 px-4 rounded-xl bg-surface-800 hover:bg-surface-700 text-surface-300 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition">
                     Cancel & Return
                 </a>
             </div>
@@ -306,8 +335,8 @@
 
     {{-- Printable Stage (Full Screen during browser print) --}}
     <div class="print-only-stage hidden">
-        @if(!empty($designImages))
-            @foreach($designImages as $imgUrl)
+        @if (!empty($designImages))
+            @foreach ($designImages as $imgUrl)
                 <div class="print-page-break">
                     <img src="{{ $imgUrl }}" alt="Print Design">
                 </div>
@@ -318,18 +347,41 @@
     <script>
         lucide.createIcons();
 
-        const serverHasNoritsu = @json((bool)$hasNoritsuPrinter);
+        const serverHasNoritsu = @json((bool) $hasNoritsuPrinter);
         const serverNoritsuPrinters = @json($noritsuPrinters ?? []);
         // Full list of every installed printer/driver + connection status (from Windows spooler).
         const serverSystemPrinters = @json($systemPrinters ?? []);
 
-        const defaultTrays = [
-            { id: 'tray-5', name: 'Noritsu 931BL (Tray 5)', default: false },
-            { id: 'tray-4', name: 'Noritsu 931BL (Tray 4)', default: false },
-            { id: 'tray-3', name: 'Noritsu 931BL (Tray 3)', default: false },
-            { id: 'tray-2', name: 'Noritsu 931BL (Tray 2)', default: false },
-            { id: 'tray-1', name: 'Noritsu 931BL (Tray 1)', default: true },
-            { id: 'tray-mp', name: 'Noritsu 931BL (MP Tray)', default: false }
+        const defaultTrays = [{
+                id: 'tray-5',
+                name: 'Noritsu 931BL (Tray 5)',
+                default: false
+            },
+            {
+                id: 'tray-4',
+                name: 'Noritsu 931BL (Tray 4)',
+                default: false
+            },
+            {
+                id: 'tray-3',
+                name: 'Noritsu 931BL (Tray 3)',
+                default: false
+            },
+            {
+                id: 'tray-2',
+                name: 'Noritsu 931BL (Tray 2)',
+                default: false
+            },
+            {
+                id: 'tray-1',
+                name: 'Noritsu 931BL (Tray 1)',
+                default: true
+            },
+            {
+                id: 'tray-mp',
+                name: 'Noritsu 931BL (MP Tray)',
+                default: false
+            }
         ];
 
         let selectedPrinter = 'Noritsu 931BL (Tray 1)';
@@ -352,12 +404,16 @@
 
         function escapeHtml(str) {
             return String(str).replace(/[&<>"']/g, s => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            }[s]));
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            } [s]));
         }
 
         /**
-         * Populate the destination printer list from QZ Tray (browser-side —
+         * Populate the destination printer list from QZ Tray (browser-side -
          * reflects the operator's own PC). Falls back to the server-side
          * PowerShell list only if QZ Tray isn't installed / running, and
          * finally to the hard-coded Noritsu tray labels.
@@ -395,12 +451,12 @@
             const driverCard = document.getElementById('driverDownloadCard');
             const qzHint = document.getElementById('qzInstallHint');
 
-            // 1) QZ Tray — the correct source (operator's own PC).
+            // 1) QZ Tray - the correct source (operator's own PC).
             let printers = await loadPrintersFromQz();
             const qzSawPrinters = Array.isArray(printers) && printers.length > 0;
             if (qzHint) qzHint.classList.toggle('hidden', qzSawPrinters);
 
-            // 2) Server-side PowerShell fallback — only if QZ Tray is offline.
+            // 2) Server-side PowerShell fallback - only if QZ Tray is offline.
             if (!printers) {
                 printers = (serverSystemPrinters || []).map(p => ({
                     name: p.name || '',
@@ -414,7 +470,11 @@
             // 3) Last resort: the hard-coded default Noritsu tray labels.
             if (!printers || printers.length === 0) {
                 printers = defaultTrays.map(t => ({
-                    name: t.name, driver: 'Noritsu 931BL', port: '', connected: false, status: 'Unknown'
+                    name: t.name,
+                    driver: 'Noritsu 931BL',
+                    port: '',
+                    connected: false,
+                    status: 'Unknown'
                 }));
             }
 
@@ -425,13 +485,16 @@
             const connectedCount = printers.filter(p => p.connected).length;
             if (badge) {
                 if (connectedCount > 0) {
-                    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20';
+                    badge.className =
+                        'text-[10px] font-bold px-2 py-0.5 rounded bg-brand-500/10 text-brand-400 border border-brand-500/20';
                     badge.innerText = connectedCount + ' Connected';
                 } else if (printers.length > 0) {
-                    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20';
+                    badge.className =
+                        'text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20';
                     badge.innerText = printers.length + ' Installed';
                 } else {
-                    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20';
+                    badge.className =
+                        'text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20';
                     badge.innerText = 'No Printers';
                 }
             }
@@ -453,13 +516,17 @@
                 const statusText = escapeHtml(p.status || (p.connected ? 'Connected' : 'Not connected'));
                 let dotColor, textColor;
                 if (p.connected) {
-                    dotColor = 'bg-brand-500'; textColor = 'text-brand-400';
+                    dotColor = 'bg-brand-500';
+                    textColor = 'text-brand-400';
                 } else if (p.status === 'Driver only') {
-                    dotColor = 'bg-surface-500'; textColor = 'text-surface-400';
+                    dotColor = 'bg-surface-500';
+                    textColor = 'text-surface-400';
                 } else {
-                    dotColor = 'bg-rose-500'; textColor = 'text-rose-400';
+                    dotColor = 'bg-rose-500';
+                    textColor = 'text-rose-400';
                 }
-                const statusBadge = `<span class="inline-flex items-center gap-1 text-[10px] font-bold ${textColor}"><span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>${statusText}</span>`;
+                const statusBadge =
+                    `<span class="inline-flex items-center gap-1 text-[10px] font-bold ${textColor}"><span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>${statusText}</span>`;
                 html += `
                     <label class="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-surface-700/60 bg-surface-800/40 hover:bg-surface-800/80 cursor-pointer transition">
                         <div class="flex items-center gap-3 min-w-0">
@@ -501,7 +568,7 @@
         }
 
         /**
-         * Silent QZ Tray pre-flight — returns true only when the local QZ
+         * Silent QZ Tray pre-flight - returns true only when the local QZ
          * Tray websocket accepts a connection (i.e. the desktop app is
          * installed and running on the operator's PC).
          */
@@ -509,10 +576,14 @@
         // waiting for signature callbacks even after the socket is up (that's
         // what the "Failed to get certificate: undefined" warning means).
         if (window.qz && qz.security) {
-            qz.security.setCertificatePromise(function (resolve) { resolve(); });
+            qz.security.setCertificatePromise(function(resolve) {
+                resolve();
+            });
             qz.security.setSignatureAlgorithm && qz.security.setSignatureAlgorithm('SHA512');
-            qz.security.setSignaturePromise(function () {
-                return function (resolve) { resolve(''); };
+            qz.security.setSignaturePromise(function() {
+                return function(resolve) {
+                    resolve('');
+                };
             });
         }
 
@@ -520,8 +591,10 @@
             const activePrinter = getSelectedPrinterName();
             const badge = document.getElementById('printerStatusBadge');
             if (badge) {
-                badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/40 animate-pulse';
-                badge.innerText = 'Sending to ' + activePrinter + ' (' + pdfWidth + 'x' + pdfHeight + ' ' + pdfUnit + ')...';
+                badge.className =
+                    'text-[10px] font-bold px-2 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/40 animate-pulse';
+                badge.innerText = 'Sending to ' + activePrinter + ' (' + pdfWidth + 'x' + pdfHeight + ' ' + pdfUnit +
+                    ')...';
             }
 
             try {
@@ -542,10 +615,12 @@
                 console.log('Direct print server response:', data);
 
                 if (badge) {
-                    badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/40';
+                    badge.className =
+                        'text-[10px] font-bold px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/40';
                     badge.innerText = '✓ Direct Sent to ' + activePrinter;
                 }
-                alert('✓ Print job sent directly to Windows printer queue: ' + activePrinter + '!\n(Browser print screen bypassed)');
+                alert('✓ Print job sent directly to Windows printer queue: ' + activePrinter +
+                    '!\n(Browser print screen bypassed)');
             } catch (err) {
                 console.warn('Direct print request error:', err);
                 alert('Could not dispatch print job to ' + activePrinter + '.');
