@@ -1,378 +1,83 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@extends('layouts.quick-flow-pc')
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>404 · Page Not Found - Qrinto Print Studio</title>
+@section('title', '404 · Page Not Found - Qrinto Print Studio')
 
-    <link rel="apple-touch-icon" href="/logo/Qrinto-logo-med.png">
-    <meta name="theme-color" content="#0ea5e9">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
-
+@push('styles')
     <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-        }
-
-        :root {
-            --brand: #0ea5e9;
-            --brand-600: #0284c7;
-            --brand-700: #0369a1;
-            --ink: #0f172a;
-            --muted: #0ea5e9;
-            --faint: #94a3b8;
-            --line: #eef2f7;
-        }
-
-        html,
-        body {
-            height: 100%;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
-            color: var(--ink);
-            background: #f8fafc;
-            -webkit-font-smoothing: antialiased;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Mobile-first centered shell, mirrors the app's max-w-md container */
-        .shell {
-            position: relative;
-            max-width: 28rem;
-            margin: 0 auto;
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            background: #ffffff;
-            box-shadow: 0 25px 50px -12px rgba(2, 132, 199, .12);
-            overflow: hidden;
-        }
-
-        /* Soft brand glow behind the hero */
-        .glow {
-            position: absolute;
-            top: -160px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 460px;
-            height: 460px;
-            border-radius: 50%;
-            background: radial-gradient(circle at center, rgba(14, 165, 233, .18), rgba(14, 165, 233, 0) 70%);
-            pointer-events: none;
-        }
-
-        /* Header - same blue treatment as the flow layout */
-        .topbar {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 18px 22px;
-        }
-
-        .logo-badge {
-            width: 40px;
-            height: 40px;
-            background: var(--brand-600);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px -6px rgba(2, 132, 199, .5);
-        }
-
-        .logo-badge span {
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 900;
-            font-size: 22px;
-            line-height: 1;
-        }
-
-        .logo-text {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.1;
-        }
-
-        .logo-text b {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: -.02em;
-        }
-
-        .logo-text small {
-            font-size: 9.5px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .18em;
-            color: var(--faint);
-            margin-top: 2px;
-        }
-
-        /* Hero content */
-        .main {
-            position: relative;
-            z-index: 2;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 24px 28px 8px;
-        }
-
-        .icon-orb {
-            width: 96px;
-            height: 96px;
-            border-radius: 30px;
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            border: 1.5px solid rgba(14, 165, 233, .14);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--brand-600);
-            margin-bottom: 22px;
-            box-shadow: 0 18px 40px -16px rgba(2, 132, 199, .35);
-            animation: float 4.5s ease-in-out infinite;
-        }
-
-        .icon-orb svg {
-            width: 44px;
-            height: 44px;
-            stroke-width: 1.9;
-        }
-
         @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-9px);
-            }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
         }
-
-        .code {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 900;
-            font-size: clamp(72px, 26vw, 104px);
-            line-height: .92;
-            letter-spacing: -.04em;
-            margin: 0 0 6px;
-            background: linear-gradient(135deg, var(--brand) 0%, #38bdf8 45%, #818cf8 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        h1 {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: -.01em;
-            margin: 0 0 8px;
-        }
-
-        .lead {
-            font-size: 14px;
-            font-weight: 500;
-            line-height: 1.6;
-            color: var(--muted);
-            max-width: 19rem;
-            margin: 0 auto;
-        }
-
-        /* Actions */
-        .actions {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 28px 28px 8px;
-        }
-
-        .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 9px;
-            padding: 15px 20px;
-            border-radius: 18px;
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: -.01em;
-            text-decoration: none;
-            border: 1.5px solid transparent;
-            cursor: pointer;
-            transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
-        }
-
-        .btn svg {
-            width: 18px;
-            height: 18px;
-            stroke-width: 2.2;
-        }
-
-        .btn-primary {
-            color: #fff;
-            background: linear-gradient(135deg, var(--brand), var(--brand-600));
-            box-shadow: 0 12px 26px -10px rgba(2, 132, 199, .6);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 30px -10px rgba(2, 132, 199, .65);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0) scale(.99);
-        }
-
-        .btn-ghost {
-            color: var(--brand-600);
-            background: #fff;
-            border-color: var(--line);
-        }
-
-        .btn-ghost:hover {
-            background: #f8fafc;
-            border-color: #d8e3ef;
-        }
-
-        /* Footer helper links */
-        .foot {
-            position: relative;
-            z-index: 2;
-            padding: 22px 28px calc(26px + env(safe-area-inset-bottom, 0px));
-            text-align: center;
-        }
-
-        .foot .links {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 18px;
-            margin-bottom: 14px;
-        }
-
-        .foot a {
-            font-size: 12.5px;
-            font-weight: 700;
-            color: var(--muted);
-            text-decoration: none;
-            transition: color .18s ease;
-        }
-
-        .foot a:hover {
-            color: var(--brand-600);
-        }
-
-        .foot .sep {
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: #cbd5e1;
-        }
-
-        .foot .mark {
-            font-size: 9.5px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .28em;
-            color: #cbd5e1;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .icon-orb {
-                animation: none;
-            }
-        }
+        .float-anim { animation: float 4.5s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .float-anim { animation: none; } }
     </style>
-</head>
+@endpush
 
-<body>
-    <div class="shell">
-        <div class="glow"></div>
+@section('content')
+    <div class="flex-1 flex items-center justify-center px-4 py-16">
+        <div class="w-full max-w-lg text-center">
 
-        <!-- Branding -->
-        <header class="topbar">
-            <a href="{{ url('/') }}"
-                style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
-                <span class="logo-badge"><span>Q</span></span>
-                <span class="logo-text">
-                    <b>Qrinto</b>
-                    <small>Print Studio</small>
-                </span>
-            </a>
-        </header>
+            {{-- Glow --}}
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden" aria-hidden="true">
+                <div class="w-[500px] h-[500px] rounded-full bg-gradient-radial from-sky-500/10 to-transparent blur-3xl"></div>
+            </div>
 
-        <!-- Hero -->
-        <main class="main">
-            <div class="icon-orb" aria-hidden="true">
-                <!-- map-pin-off (lost / store not found) -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M5.43 5.43A8.06 8.06 0 0 0 4 10c0 6 8 12 8 12a29.94 29.94 0 0 0 5-5" />
-                    <path d="M19.18 13.52A8.66 8.66 0 0 0 20 10a8 8 0 0 0-13.95-5.39" />
-                    <path d="M9.13 9.13A2.74 2.74 0 0 0 9 10a3 3 0 0 0 3 3 2.74 2.74 0 0 0 .87-.13" />
-                    <path d="m2 2 20 20" />
+            {{-- Icon --}}
+            <div class="relative mx-auto mb-6 w-24 h-24 rounded-3xl bg-gradient-to-br from-sky-50 to-sky-100 border border-sky-200/40 flex items-center justify-center text-sky-600 shadow-lg shadow-sky-500/20 float-anim">
+                <svg class="w-11 h-11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5.43 5.43A8.06 8.06 0 0 0 4 10c0 6 8 12 8 12a29.94 29.94 0 0 0 5-5"/>
+                    <path d="M19.18 13.52A8.66 8.66 0 0 0 20 10a8 8 0 0 0-13.95-5.39"/>
+                    <path d="M9.13 9.13A2.74 2.74 0 0 0 9 10a3 3 0 0 0 3 3 2.74 2.74 0 0 0 .87-.13"/>
+                    <path d="m2 2 20 20"/>
                 </svg>
             </div>
 
-            <p class="code">404</p>
-            <h1>This page took a wrong turn</h1>
-            <p class="lead">
-                We couldn't find what you were looking for. It may have moved, expired, or the store link is no longer
-                active.
+            {{-- 404 Code --}}
+            <p class="relative text-[clamp(80px,16vw,120px)] font-black leading-none tracking-tighter bg-gradient-to-br from-sky-500 via-sky-400 to-indigo-400 bg-clip-text text-transparent select-none mb-2">
+                404
             </p>
-        </main>
 
-        <!-- Actions -->
-        <div class="actions">
-            <a class="btn btn-primary" href="{{ url('/') }}">
-                <!-- home -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <path d="M9 22V12h6v10" />
-                </svg>
-                Back to Home
-            </a>
-            <a class="btn btn-ghost" href="{{ url('/find-store') }}">
-                <!-- search -->
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                </svg>
-                Find a Store
-            </a>
-        </div>
+            {{-- Heading --}}
+            <h1 class="relative text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+                This page took a wrong turn
+            </h1>
 
-        <!-- Footer -->
-        <footer class="foot">
-            <div class="links">
-                <a href="{{ url('/track') }}">Track an Order</a>
-                <span class="sep"></span>
-                <a href="{{ url('/custom-print') }}">Custom Print</a>
+            {{-- Description --}}
+            <p class="relative text-sm md:text-base font-medium text-slate-500 leading-relaxed max-w-sm mx-auto mb-10">
+                We couldn't find what you were looking for. It may have moved, expired, or the store link is no longer active.
+            </p>
+
+            {{-- Actions --}}
+            <div class="relative flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="{{ url('/') }}"
+                   class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl text-sm font-extrabold text-white bg-gradient-to-br from-sky-500 to-sky-600 shadow-lg shadow-sky-500/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/35 active:translate-y-0 active:scale-[0.99] transition-all duration-200">
+                    <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <path d="M9 22V12h6v10"/>
+                    </svg>
+                    Back to Home
+                </a>
+
+                <a href="{{ url('/find-store') }}"
+                   class="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-2xl text-sm font-extrabold text-sky-600 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.99] transition-all duration-200">
+                    <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.3-4.3"/>
+                    </svg>
+                    Find a Store
+                </a>
             </div>
-            <p class="mark">Qrinto Custom Studio</p>
-        </footer>
-    </div>
-</body>
 
-</html>
+            {{-- Footer Links --}}
+            <div class="relative mt-14 flex items-center justify-center gap-5 text-xs">
+                <a href="{{ url('/track') }}" class="font-bold text-slate-400 hover:text-sky-600 transition-colors">Track an Order</a>
+                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                <a href="{{ url('/find-store') }}" class="font-bold text-slate-400 hover:text-sky-600 transition-colors">Store Locations</a>
+            </div>
+
+            <p class="relative mt-4 text-[10px] font-extrabold uppercase tracking-[0.25em] text-slate-300">
+                Qrinto Print Studio
+            </p>
+        </div>
+    </div>
+@endsection

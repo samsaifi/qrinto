@@ -70,20 +70,17 @@
 @endpush
 
 @section('content')
-    <div x-data="cartCheckoutFlow()" class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+    <div x-data="cartCheckoutFlow()" class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans">
         <div class="max-w-[1100px] mx-auto">
 
-            {{-- Back Navigation --}}
-            <div class="mb-6">
+            {{-- Back + Title (single row on mobile) --}}
+            <div class="flex items-center gap-2 mb-3 md:flex-col md:items-start md:gap-0 md:mb-6">
                 <a href="{{ route($routePrefix . 'index') }}"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
-                    <span>← All products</span>
+                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
+                    ←
+                    <span class="hidden md:inline">All products</span>
                 </a>
-            </div>
-
-            {{-- Title Header --}}
-            <div class="mb-6">
-                <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
+                <h1 class="text-base md:text-2xl font-extrabold text-[#112419] tracking-tight md:mt-4">
                     Your order
                 </h1>
             </div>
@@ -309,6 +306,20 @@
                         <p class="text-[11px] text-slate-400 text-center font-normal pt-0.5">
                             No shipping. You collect it at the store.
                         </p>
+                    </div>
+
+                    {{-- Secure Payment Badge --}}
+                    <div class="flex items-start gap-3 bg-[#f0fdf4] border border-emerald-200/80 rounded-xl p-3.5">
+                        <div class="w-8 h-8 rounded-full bg-[#287d3c] text-white flex items-center justify-center shrink-0 mt-0.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="M9 12l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-[#112419]">Secure Payment via PayPal</h4>
+                            <p class="text-[11px] text-slate-500 font-normal mt-0.5">Pay safely with PayPal, cards, or your PayPal balance.</p>
+                        </div>
                     </div>
                 </div>
 

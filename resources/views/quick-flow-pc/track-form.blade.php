@@ -9,25 +9,24 @@
 @endphp
 
 @section('content')
-    <div class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans">
         <div class="max-w-[1100px] mx-auto">
 
-            {{-- Back Navigation --}}
-            <div class="mb-6">
+            {{-- Back + Title (single row on mobile) --}}
+            <div class="flex items-center gap-2 mb-3 md:flex-col md:items-start md:gap-0 md:mb-8">
                 <a href="{{ route($routePrefix . 'index') }}"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
-                    <span>← Back to Shop</span>
+                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
+                    ←
+                    <span class="hidden md:inline">Back to Shop</span>
                 </a>
-            </div>
-
-            {{-- Title Header --}}
-            <div class="mb-8 text-center max-w-lg mx-auto">
-                <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
-                    Track Order
-                </h1>
-                <p class="text-xs text-slate-500 font-normal mt-1.5">
-                    Enter your order tracking number and the email or phone on the order to view real-time status.
-                </p>
+                <div class="md:text-center md:max-w-lg md:mx-auto md:mt-4">
+                    <h1 class="text-base md:text-2xl font-extrabold text-[#112419] tracking-tight">
+                        Track Order
+                    </h1>
+                    <p class="hidden md:block text-xs text-slate-500 font-normal mt-1.5">
+                        Enter your order tracking number and the email or phone on the order to view real-time status.
+                    </p>
+                </div>
             </div>
 
             {{-- Lookup Form Card --}}

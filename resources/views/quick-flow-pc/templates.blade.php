@@ -19,33 +19,32 @@
 @section('meta_description', 'Choose a starting template for your custom ' . strtolower($parentName) . '.')
 
 @section('content')
-    <div x-data="{ activeCategory: 'all', searchQuery: '' }" class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+    <div x-data="{ activeCategory: 'all', searchQuery: '' }" class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans">
         <div class="max-w-[1240px] mx-auto">
 
-            {{-- Back Navigation --}}
-            <div class="mb-6">
+            {{-- Back + Title (single row on mobile) --}}
+            <div class="flex items-center gap-2 mb-3 md:flex-col md:items-start md:gap-0 md:mb-8">
                 <a href="{{ route('canonical.cards') }}"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
-                    <span>← {{ $parentName }}</span>
+                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
+                    ←
+                    <span class="hidden md:inline">{{ $parentName }}</span>
                 </a>
-            </div>
-
-            {{-- Title Header --}}
-            <div class="mb-8">
-                <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
-                    Pick a starting point
-                </h1>
-                <p class="text-sm text-slate-500 font-normal mt-1.5">
-                    {{ $titleLabel }}, {{ $sizeLabel }}. Every template can be changed once it is open.
-                </p>
+                <div class="min-w-0">
+                    <h1 class="text-base md:text-2xl font-extrabold text-[#112419] tracking-tight leading-tight truncate md:mt-4">
+                        Pick a starting point
+                    </h1>
+                    <p class="hidden md:block text-sm text-slate-500 font-normal mt-1.5">
+                        {{ $titleLabel }}, {{ $sizeLabel }}. Every template can be changed once it is open.
+                    </p>
+                </div>
             </div>
 
             {{-- Category Filter Pills --}}
-            <div class="flex items-center gap-2 mb-10 flex-wrap">
+            <div class="flex items-center gap-1.5 md:gap-2 mb-4 md:mb-10 flex-wrap overflow-x-auto scrollbar-hide">
                 <button type="button" @click="activeCategory = 'all'"
                     :class="activeCategory === 'all' ? 'bg-[#112419] text-white font-bold' :
                         'bg-white text-slate-700 border border-slate-200/90 hover:border-slate-300 font-medium'"
-                    class="px-4 py-2 rounded-full text-xs transition-all cursor-pointer shadow-2xs">
+                    class="px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[11px] md:text-xs transition-all cursor-pointer shadow-2xs shrink-0">
                     All
                 </button>
 
@@ -55,7 +54,7 @@
                         <button type="button" @click="activeCategory = '{{ $cat->id }}'"
                             :class="activeCategory === '{{ $cat->id }}' ? 'bg-[#112419] text-white font-bold' :
                                 'bg-white text-slate-700 border border-slate-200/90 hover:border-slate-300 font-medium'"
-                            class="px-4 py-2 rounded-full text-xs transition-all cursor-pointer shadow-2xs">
+                            class="px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[11px] md:text-xs transition-all cursor-pointer shadow-2xs shrink-0">
                             {{ $cat->name }}
                         </button>
                     @endif
@@ -63,28 +62,28 @@
             </div>
 
             {{-- 6-Column Templates Grid --}}
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
+            <div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4 md:gap-5">
 
                 {{-- CARD 1: Start Blank (Only shown when activeCategory is 21) --}}
                 <div x-show="activeCategory === '21'"
-                    class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+                    class="bg-white border border-slate-200/90 rounded-xl md:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
                     <a href="{{ url($type->slug . '/' . Str::slug($titleLabel) . '/' . str_replace(' × ', 'x', $sizeLabel) . '/design') }}"
                         class="block h-full flex flex-col justify-between">
                         {{-- Top Image Area --}}
                         <div
-                            class="bg-[#f2f7f2] h-56 sm:h-64 flex flex-col items-center justify-center p-4 border-b border-slate-100 relative group-hover:bg-[#ebf3eb] transition-colors">
+                            class="bg-[#f2f7f2] h-28 md:h-56 flex flex-col items-center justify-center p-3 md:p-4 border-b border-slate-100 relative group-hover:bg-[#ebf3eb] transition-colors">
                             <div
-                                class="w-8 h-8 rounded-full flex items-center justify-center text-emerald-800 text-2xl font-light mb-1">
+                                class="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-emerald-800 text-xl md:text-2xl font-light mb-1">
                                 +
                             </div>
-                            <span class="text-xs font-bold text-emerald-800">
+                            <span class="text-[10px] md:text-xs font-bold text-emerald-800">
                                 Start blank
                             </span>
                         </div>
 
                         {{-- Bottom Info Area --}}
-                        <div class="p-5 bg-white flex-1 flex items-center">
-                            <h3 class="font-extrabold text-slate-900 text-sm">
+                        <div class="px-2 py-1.5 md:p-5 bg-white flex-1 flex items-center">
+                            <h3 class="font-extrabold text-slate-900 text-[11px] md:text-sm line-clamp-1">
                                 Blank {{ $sizeLabel }}
                             </h3>
                         </div>
@@ -98,12 +97,12 @@
                     @endphp
 
                     <div x-show="activeCategory === 'all' || activeCategory === '{{ $tpl->category_id }}'"
-                        class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+                        class="bg-white border border-slate-200/90 rounded-xl md:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
 
                         <a href="{{ url($type->slug . '/' . Str::slug($titleLabel) . '/' . str_replace(' × ', 'x', $sizeLabel) . '/design/' . $tpl->slug) }}"
                             class="block h-full flex flex-col justify-between">
                             {{-- Top Image Area (Real image instead of colorful box) --}}
-                            <div class="h-56 sm:h-64 bg-slate-100 border-b border-slate-100 overflow-hidden relative">
+                            <div class="h-28 md:h-56 bg-slate-100 border-b border-slate-100 overflow-hidden relative">
                                 @if ($imageSrc)
                                     <img src="{{ $imageSrc }}" alt="{{ $tpl->name }}"
                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -138,9 +137,9 @@
                             </div>
 
                             {{-- Bottom Info Area --}}
-                            <div class="p-5 bg-white flex-1 flex items-center">
+                            <div class="px-2 py-1.5 md:p-5 bg-white flex-1 flex items-center">
                                 <h3
-                                    class="font-extrabold text-slate-900 text-sm group-hover:text-emerald-700 transition-colors line-clamp-1">
+                                    class="font-bold md:font-extrabold text-slate-900 text-[11px] md:text-sm group-hover:text-emerald-700 transition-colors line-clamp-1">
                                     {{ $tpl->name }}
                                 </h3>
                             </div>
@@ -191,19 +190,19 @@
 
                     @foreach ($sampleTemplates as $sample)
                         <div
-                            class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+                            class="bg-white border border-slate-200/90 rounded-xl md:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
                             <a href="{{ url($type->slug . '/' . Str::slug($titleLabel) . '/' . str_replace(' × ', 'x', $sizeLabel) . '/design/' . Str::slug($sample['name'])) }}"
                                 class="block h-full flex flex-col justify-between">
                                 {{-- Top Image Area --}}
-                                <div class="h-56 sm:h-64 bg-slate-100 border-b border-slate-100 overflow-hidden relative">
+                                <div class="h-28 md:h-56 bg-slate-100 border-b border-slate-100 overflow-hidden relative">
                                     <img src="{{ $sample['img'] }}" alt="{{ $sample['name'] }}"
                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                 </div>
 
                                 {{-- Bottom Info Area --}}
-                                <div class="p-5 bg-white flex-1 flex items-center">
+                                <div class="px-2 py-1.5 md:p-5 bg-white flex-1 flex items-center">
                                     <h3
-                                        class="font-extrabold text-slate-900 text-sm group-hover:text-emerald-700 transition-colors line-clamp-1">
+                                        class="font-bold md:font-extrabold text-slate-900 text-[11px] md:text-sm group-hover:text-emerald-700 transition-colors line-clamp-1">
                                         {{ $sample['name'] }}
                                     </h3>
                                 </div>

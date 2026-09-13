@@ -8,15 +8,15 @@
     @endphp
 
     {{-- Top action bar: Print logs & Kiosk logs links. --}}
-    <div class="mb-6 flex items-center justify-end gap-3">
+    <div class="mb-4 md:mb-6 flex items-center justify-end gap-1.5 md:gap-3">
         <a href="{{ route('storepanel.printLogs') }}"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 hover:text-[#287d3c] transition">
-            <i data-lucide="printer" class="w-4 h-4"></i>
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl border border-slate-200 bg-white text-slate-700 text-[12px] md:text-sm font-semibold hover:bg-slate-50 hover:text-[#287d3c] transition">
+            <i data-lucide="printer" class="w-3.5 h-3.5 md:w-4 md:h-4"></i>
             Print logs
         </a>
         <a href="{{ route('storepanel.kioskLogs') }}"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 hover:text-[#287d3c] transition">
-            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl border border-slate-200 bg-white text-slate-700 text-[12px] md:text-sm font-semibold hover:bg-slate-50 hover:text-[#287d3c] transition">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 md:w-4 md:h-4"></i>
             Kiosk Logs
         </a>
     </div>
@@ -82,8 +82,8 @@
     </div>
 
     {{-- Tray picker modal: opens on every "Print on 931BL" click, staff must choose a tray.
-         The modal scans printers via QZ Tray in the background; if QZ Tray
-         is not detected the footer surfaces a Download QZ Tray link. --}}
+         The modal scans printers via PrintTrays in the background; if PrintTrays
+         is not detected the footer surfaces a Download PrintTrays link. --}}
     <div x-data="printPicker()" x-cloak @open-print-modal.window="await open($event.detail.prepareUrl)" x-show="visible"
         class="fixed inset-0 z-[80] flex items-center justify-center px-4">
 
@@ -149,20 +149,20 @@
                     <p x-show="error" x-text="error" class="text-[12px] text-red-600 font-medium"></p>
 
                     <div class="pt-3 sticky bottom-0 bg-white pb-1 space-y-2">
-                        {{-- Footer install-QZ hint: only when the scan came back
-                             empty or errored (QZ Tray missing / blocked). --}}
+                        {{-- Footer install hint: only when the scan came back
+                             empty or errored (PrintTrays missing / blocked). --}}
                         <div x-show="pcState === 'error' || (pcState === 'ok' && pcPrinters.length === 0)"
                             class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
                             <div class="flex items-center gap-2 min-w-0">
                                 <i data-lucide="printer-off" class="w-4 h-4 text-amber-600 shrink-0"></i>
                                 <p class="text-[12px] text-amber-800 leading-snug">
-                                    Printer not visible? Install QZ Tray to detect this PC's printers.
+                                    Printer not visible? Install PrintTrays to detect this PC's printers.
                                 </p>
                             </div>
-                            <a href="https://qz.io/download/" target="_blank" rel="noopener"
+                            <a href="https://noritsucanada.com/print-trays/download/" target="_blank" rel="noopener"
                                 class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#287d3c] hover:bg-emerald-800 text-white text-[12px] font-bold transition">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                Download QZ Tray
+                                Download PrintTrays
                             </a>
                         </div>
                         <div class="flex items-center justify-end gap-2">
@@ -185,10 +185,10 @@
 @push('scripts')
     <script>
         // A. Delegate "Print on 931BL" clicks → open the tray-picker modal.
-        //    The modal itself scans QZ Tray for printers and, if QZ Tray is
-        //    not detected, surfaces a Download QZ Tray link in the footer.
+        //    The modal itself scans PrintTrays for printers and, if PrintTrays is
+        //    not detected, surfaces a Download PrintTrays link in the footer.
         document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-qz-print]');
+            const btn = e.target.closest('[data-pt-print]');
             if (!btn) return;
             e.preventDefault();
             window.dispatchEvent(new CustomEvent('open-print-modal', {
@@ -199,7 +199,7 @@
         });
 
         // B. Modal state: loads the tray list for the clicked order, lets the
-        //    operator pick either a configured tray or any raw printer QZ Tray
+        //    operator pick either a configured tray or any raw printer PrintTrays
         //    sees on this PC, then dispatches and advances the order.
         function printPicker() {
             return {
@@ -252,10 +252,11 @@
                 async scanPc() {
                     this.pcState = 'loading';
                     try {
-                        if (!window.qz) throw new Error('QZ Tray library not loaded');
-                        if (!qz.websocket.isActive()) await qz.websocket.connect();
-                        this.defaultPrinter = await qz.printers.getDefault().catch(() => null);
-                        this.pcPrinters = await qz.printers.find();
+                        const pp = await window.__qrintoPT.connect();
+                        const list = await pp.getPrinters();
+                        const all = Array.isArray(list) ? list : [list].filter(Boolean);
+                        this.pcPrinters = all.map(p => p.name);
+                        this.defaultPrinter = (all.find(p => p.isDefault) || {}).name || null;
                         this.pcState = 'ok';
                     } catch (e) {
                         this.pcState = 'error';
@@ -264,7 +265,7 @@
 
                 /**
                  * Resolve the operator's radio choice to a concrete tray
-                 * object the QZ bridge can send to. Includes the tray
+                 * object the print bridge can send to. Includes the tray
                  * metadata so the print-log endpoint can snapshot it.
                  */
                 chosenTarget() {
@@ -284,6 +285,12 @@
                             gsm: t.gsm,
                             density: t.density,
                             user_type: t.user_type,
+                            landscape: t.landscape,
+                            duplex: t.duplex,
+                            color: t.color,
+                            input_bin: t.input_bin,
+                            quality: t.quality,
+                            media_type_live: t.media_type_live,
                         };
                     }
                     return null;
@@ -301,7 +308,7 @@
                     const csrf = document.querySelector('meta[name="csrf-token"]')?.content ||
                         document.querySelector('input[name="_token"]')?.value;
 
-                    const ok = await window.__qrintoQZ.printOrder(target, this.payload, csrf);
+                    const ok = await window.__qrintoPT.printOrder(target, this.payload, csrf);
                     this.sending = false;
                     if (ok) {
                         this.close();

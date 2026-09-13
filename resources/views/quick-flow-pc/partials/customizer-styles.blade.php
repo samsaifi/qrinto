@@ -1,4 +1,81 @@
 <style>
+    /* ── Mobile customizer overrides ── */
+    @media (max-width: 767px) {
+        /* Hide floating docks — replaced by fixed bottom bar */
+        .cust-left-dock, .cust-right-dock { display: none !important; }
+
+        /* Hide heavy toolbar sections on mobile */
+        .cust-toolbar-align, .cust-toolbar-rotate, .cust-toolbar-zoom { display: none !important; }
+
+        /* Breadcrumb: show compact mobile version */
+        .cust-breadcrumb-desktop { display: none !important; }
+        .cust-breadcrumb-mobile { display: flex !important; }
+
+        /* Workspace: minimal padding, room for bottom bar */
+        .cust-workspace { padding: 4px 6px 100px 6px !important; min-height: 100vh !important; min-height: 100dvh !important; }
+        .cust-workspace-inner { min-height: auto !important; }
+
+        /* Toolbar: compact inline row */
+        .cust-toolbar {
+            padding: 4px 6px !important;
+            border-radius: 12px !important;
+            gap: 1px !important;
+            justify-content: center !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+        }
+        .cust-toolbar button, .cust-toolbar a {
+            padding: 5px !important;
+            min-width: 32px !important;
+        }
+        .cust-toolbar button svg, .cust-toolbar a svg,
+        .cust-toolbar button i, .cust-toolbar a i {
+            width: 16px !important;
+            height: 16px !important;
+        }
+
+        /* Canvas: fill width */
+        .canvas-wrapper {
+            border-radius: 10px !important;
+            max-width: calc(100vw - 12px) !important;
+            margin: 0 auto !important;
+        }
+
+        /* Canvas stage: tighter vertical */
+        #canvas-stage { padding-top: 4px !important; padding-bottom: 4px !important; }
+
+        /* Header: compact on mobile */
+        header .flex.h-20 { height: 48px !important; }
+        header img.h-10, header img.sm\:h-12 { height: 28px !important; }
+
+        /* Customizer app: fill screen */
+        #customizer-app { min-height: 100vh !important; min-height: 100dvh !important; }
+
+        /* Mobile page switcher */
+        .cust-mobile-pages { display: flex !important; gap: 6px; padding: 4px 8px; justify-content: center; flex-wrap: wrap; }
+    }
+
+    /* Mobile page switcher buttons */
+    .cust-mobile-page-btn {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 6px 14px; border-radius: 9999px;
+        background: #f8fafc; border: 1.5px solid #e2e8f0;
+        font-size: 11px; font-weight: 700; color: #64748b;
+        cursor: pointer; transition: all .15s; position: relative;
+    }
+    .cust-mobile-page-btn.active {
+        background: #287d3c; border-color: #287d3c; color: #fff;
+        box-shadow: 0 2px 8px rgba(40,125,60,0.25);
+    }
+    .cust-mobile-page-btn.active svg { stroke: #fff; }
+    @media (min-width: 768px) {
+        .cust-mobile-pages { display: none !important; }
+    }
+    @media (min-width: 768px) {
+        .cust-breadcrumb-mobile { display: none !important; }
+        .cust-breadcrumb-desktop { display: flex !important; }
+    }
+
     /* ── Toolbar tooltip (fixed pill, never clipped by overflow) ── */
     #tt-pop {
         position: fixed;

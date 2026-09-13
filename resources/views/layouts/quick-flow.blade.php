@@ -266,6 +266,11 @@
         }
     </style>
     @stack('styles')
+    <script>
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+    </script>
 </head>
 
 <body class="antialiased select-none ">

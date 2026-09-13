@@ -8,18 +8,21 @@
         $totalPages = count($imageUrls);
     @endphp
 
-    <div class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans">
         <div class="max-w-[1080px] mx-auto" x-data="previewFlow()" x-init="init()">
 
-            <a href="{{ route('localprint.sizes') }}"
-                class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors mb-4">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to sizes
-            </a>
+            <div class="flex items-center gap-2 mb-3 md:mb-4">
+                <a href="{{ route('localprint.sizes') }}"
+                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
+                    ← <span class="hidden md:inline">Back to sizes</span>
+                </a>
+                <h1 class="text-base md:hidden font-extrabold text-[#112419] tracking-tight">Preview & Print</h1>
+            </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
 
                 {{-- ═══ Left: swipe slider preview ═══ --}}
-                <div class="bg-white border border-slate-200/80 rounded-2xl p-6">
+                <div class="bg-white border border-slate-200/80 rounded-xl md:rounded-2xl p-4 md:p-6">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <h2 class="font-bold text-slate-900 text-sm">Your Design</h2>
@@ -55,9 +58,9 @@
                             '%); transition: transform 0.4s cubic-bezier(.4,0,.2,1);'">
                             @foreach ($imageUrls as $idx => $url)
                                 <div class="slider-slide flex-shrink-0 w-full flex items-center justify-center p-4"
-                                    style="min-height: 300px;">
+                                    style="min-height: 150px;">
                                     <img src="{{ $url }}" alt="Page {{ $idx + 1 }}"
-                                        class="max-w-full max-h-[340px] rounded-lg bg-white object-contain"
+                                        class="max-w-full max-h-[170px] md:max-h-[340px] rounded-lg bg-white object-contain"
                                         style="box-shadow: 0 4px 20px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.04);"
                                         draggable="false">
                                 </div>
@@ -120,10 +123,11 @@
                 </div>
 
                 {{-- ═══ Right: preflight checks + tray + print (same as check.blade.php) ═══ --}}
-                <div class="bg-white border border-slate-200/80 rounded-2xl p-6">
+                <div class="bg-white border border-slate-200/80 rounded-xl md:rounded-2xl p-4 md:p-6">
                     <h2 class="font-bold text-slate-900 text-sm mb-4">Checks</h2>
 
                     {{-- Dynamic check rows --}}
+                    <div class="grid grid-cols-2 md:grid-cols-1 gap-x-4">
                     <template x-for="c in checks" :key="c.key">
                         <div class="flex items-start gap-2.5 py-3.5 border-b border-slate-100">
                             <template x-if="c.ok">
@@ -141,6 +145,7 @@
                             </div>
                         </div>
                     </template>
+                    </div>
 
                     <div class="mt-5">
                         @if ($storeName)
@@ -150,48 +155,40 @@
                             </p>
                         @endif
 
-                        {{-- QZ Tray status --}}
+                        {{-- PrintTrays bridge status --}}
                         <div class="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg text-[12px]"
-                            :class="(qzReady && printers.length > 0) ? 'bg-emerald-50 text-emerald-700' : (qzChecking ?
-                                'bg-slate-50 text-slate-500' : 'bg-red-50 text-red-600')">
-                            <template x-if="qzChecking">
+                            :class="bridgeReady ? 'bg-emerald-50 text-emerald-700' : (bridgeChecking ? 'bg-slate-50 text-slate-500' :
+                                'bg-red-50 text-red-600')">
+                            <template x-if="bridgeChecking">
                                 <span>
                                     <div
                                         class="w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin inline-block">
                                     </div>
-                                    Connecting to QZ Tray…
+                                    Connecting to PrintTrays…
                                 </span>
                             </template>
-                            <template x-if="!qzChecking && qzReady && printers.length > 0">
-                                <span><i data-lucide="check-circle" class="w-3.5 h-3.5 inline -mt-0.5"></i> QZ Tray
-                                    connected</span>
+                            <template x-if="!bridgeChecking && bridgeReady">
+                                <span><i data-lucide="check-circle" class="w-3.5 h-3.5 inline -mt-0.5"></i> PrintTrays
+                                    connected <span class="text-slate-400" x-show="bridgeVersion" x-text="'v' + bridgeVersion"></span></span>
                             </template>
-                            <template x-if="!qzChecking && qzReady && printers.length === 0">
+                            <template x-if="!bridgeChecking && !bridgeReady">
                                 <span class="flex items-center gap-1.5 w-full">
                                     <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
-                                    <span class="flex-1">No printers found</span>
-                                    <button type="button" @click="showQzModal = true"
-                                        class="font-bold underline hover:no-underline shrink-0">Fix this</button>
-                                </span>
-                            </template>
-                            <template x-if="!qzChecking && !qzReady">
-                                <span class="flex items-center gap-1.5 w-full">
-                                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
-                                    <span class="flex-1">QZ Tray is not installed or not running</span>
-                                    <button type="button" @click="showQzModal = true"
+                                    <span class="flex-1">PrintTrays is not installed or not running</span>
+                                    <button type="button" @click="showBridgeModal = true"
                                         class="font-bold underline hover:no-underline shrink-0">Fix this</button>
                                 </span>
                             </template>
                         </div>
 
-                        {{-- QZ Tray download modal --}}
-                        <div x-show="showQzModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                            @keydown.escape.window="showQzModal = false">
-                            <div class="absolute inset-0 bg-black/40" @click="showQzModal = false"></div>
+                        {{-- PrintTrays download modal --}}
+                        <div x-show="showBridgeModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                            @keydown.escape.window="showBridgeModal = false">
+                            <div class="absolute inset-0 bg-black/40" @click="showBridgeModal = false"></div>
                             <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6" @click.stop>
                                 <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-bold text-slate-900 text-base">QZ Tray Required</h3>
-                                    <button type="button" @click="showQzModal = false"
+                                    <h3 class="font-bold text-slate-900 text-base">PrintTrays Required</h3>
+                                    <button type="button" @click="showBridgeModal = false"
                                         class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
                                         <i data-lucide="x" class="w-4 h-4"></i>
                                     </button>
@@ -202,38 +199,25 @@
                                         class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
                                         <i data-lucide="printer" class="w-7 h-7 text-red-500"></i>
                                     </div>
-                                    <template x-if="qzReady && printers.length === 0">
-                                        <div>
-                                            <p class="text-sm text-slate-700 font-medium">No Noritsu printers found</p>
-                                            <p class="text-[12px] text-slate-500 mt-2 leading-relaxed">
-                                                QZ Tray is connected but no printers were detected. Make sure your Noritsu
-                                                printer is turned on, connected to this PC, and the driver is installed.
-                                            </p>
-                                        </div>
-                                    </template>
-                                    <template x-if="!qzReady">
-                                        <div>
-                                            <p class="text-sm text-slate-700 font-medium">QZ Tray is required to connect to
-                                                your local printer.</p>
-                                            <p class="text-[12px] text-slate-500 mt-2 leading-relaxed">
-                                                Download and install QZ Tray, then reload this page. It runs in the
-                                                background and lets your browser communicate with printers on this PC.
-                                            </p>
-                                        </div>
-                                    </template>
+                                    <p class="text-sm text-slate-700 font-medium">PrintTrays is required to connect to your
+                                        local printer.</p>
+                                    <p class="text-[12px] text-slate-500 mt-2 leading-relaxed">
+                                        Download and install PrintTrays, then reload this page. It runs in the background and
+                                        lets your browser communicate with printers on this PC.
+                                    </p>
                                 </div>
 
                                 <div class="space-y-2 mt-4">
-                                    <a href="https://qz.io/download/" target="_blank"
+                                    <a href="https://noritsucanada.com/print-trays/download/" target="_blank"
                                         class="w-full flex items-center justify-center gap-2 bg-[#287d3c] hover:bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
-                                        <i data-lucide="download" class="w-4 h-4"></i> Download QZ Tray
+                                        <i data-lucide="download" class="w-4 h-4"></i> Download PrintTrays
                                     </a>
                                     <a href="https://www.dropbox.com/scl/fi/d5f74l6ekg7r3hoxhvhwm/Noritsu_931BL_Driver_Setup-v2.2.exe?rlkey=m94hgu9eww95zj7mr7wtpli30&st=e658g2hc&e=1&dl=1"
                                         target="_blank"
                                         class="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
                                         <i data-lucide="download" class="w-4 h-4"></i> Download 931-BL Multi Driver
                                     </a>
-                                    <button type="button" @click="showQzModal = false; qzChecking = true; initQz();"
+                                    <button type="button" @click="showBridgeModal = false; bridgeChecking = true; initBridge();"
                                         class="w-full flex items-center justify-center gap-2 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
                                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> I've installed it - retry
                                         connection
@@ -242,29 +226,29 @@
                             </div>
                         </div>
 
-                        {{-- Printer list from QZ Tray --}}
-                        <div x-show="qzReady">
+                        {{-- Printer list from PrintTrays --}}
+                        <div x-show="bridgeReady">
                             <label class="text-sm font-semibold text-slate-700 mb-2 block">Select Printer</label>
                             <div class="space-y-2" x-show="printers.length > 0">
-                                <template x-for="p in printers" :key="p">
+                                <template x-for="p in printers" :key="p.name">
                                     <label
                                         class="flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition"
-                                        :class="selectedPrinter === p ? 'border-[#287d3c] bg-[#f2f7f2]' :
+                                        :class="selectedPrinter === p.name ? 'border-[#287d3c] bg-[#f2f7f2]' :
                                             'border-slate-200 hover:border-slate-300'"
-                                        @click="selectPrinter(p)">
-                                        <input type="radio" name="printer_radio" :checked="selectedPrinter === p"
-                                            :value="p" class="accent-[#287d3c] w-4 h-4">
+                                        @click="selectPrinter(p.name)">
+                                        <input type="radio" name="printer_radio" :checked="selectedPrinter === p.name"
+                                            :value="p.name" class="accent-[#287d3c] w-4 h-4">
                                         <div class="min-w-0 flex-1">
-                                            <span class="font-bold text-[13px] text-slate-900" x-text="p"></span>
-                                            <template x-if="selectedPrinter === p && printSize">
+                                            <span class="font-bold text-[13px] text-slate-900" x-text="p.name"></span>
+                                            <p class="text-[11px] text-slate-400 mt-0.5" x-show="p.driver" x-text="p.driver"></p>
+                                            <template x-if="selectedPrinter === p.name">
                                                 <p class="text-[11px] text-slate-500 mt-0.5"
-                                                    x-text="(sizeOptionsMap[printSize] || printSize) + ' · ' + (mediaOptionsMap[printMedia] || printMedia) + ' · ' + (gsmOptionsMap[printGsm] || printGsm)">
-                                                </p>
+                                                    x-text="psSummary()"></p>
                                             </template>
                                         </div>
-                                        <template x-if="selectedPrinter === p">
-                                            <button type="button" @click.stop="showPaperModal = true"
-                                                class="text-[11px] text-[#287d3c] font-bold hover:underline shrink-0">Change</button>
+                                        <template x-if="selectedPrinter === p.name">
+                                            <button type="button" @click.stop="openSettings()"
+                                                class="text-[11px] text-[#287d3c] font-bold hover:underline shrink-0">Settings</button>
                                         </template>
                                     </label>
                                 </template>
@@ -275,8 +259,16 @@
 
                         <div class="flex items-center justify-between mt-5">
                             <label class="text-sm font-semibold text-slate-700">Copies</label>
-                            <input type="number" x-model.number="copies" min="1" max="999"
-                                class="w-20 text-right rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" @click="copies = Math.max(1, copies - 1)"
+                                    class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition disabled:opacity-40"
+                                    :disabled="copies <= 1">−</button>
+                                <input type="number" x-model.number="copies" min="1" max="999"
+                                    class="w-16 text-center rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-[#287d3c] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                <button type="button" @click="copies = Math.min(999, copies + 1)"
+                                    class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition disabled:opacity-40"
+                                    :disabled="copies >= 999">+</button>
+                            </div>
                         </div>
 
                         {{-- Print status toast --}}
@@ -301,65 +293,7 @@
 
             </div>
 
-            {{-- Paper settings modal --}}
-            <div x-show="showPaperModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                @keydown.escape.window="showPaperModal = false">
-                <div class="absolute inset-0 bg-black/40" @click="showPaperModal = false"></div>
-                <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6" @click.stop>
-                    <div class="flex items-center justify-between mb-5">
-                        <h3 class="font-bold text-slate-900 text-base">Paper Settings</h3>
-                        <button type="button" @click="showPaperModal = false"
-                            class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-
-                    <p class="text-[12px] text-slate-500 mb-4" x-show="selectedPrinter">
-                        Configuring <span class="font-bold text-slate-700" x-text="selectedPrinter"></span>
-                    </p>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="text-sm font-semibold text-slate-700 mb-1.5 block">Paper Size</label>
-                            <select x-model="printSize"
-                                class="w-full rounded-xl border border-slate-200 text-sm py-2.5 px-3 bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
-                                @foreach ($sizeOptions as $val => $label)
-                                    <option value="{{ $val }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-sm font-semibold text-slate-700 mb-1.5 block">Paper Type</label>
-                            <select x-model="printMedia"
-                                class="w-full rounded-xl border border-slate-200 text-sm py-2.5 px-3 bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
-                                @foreach ($mediaOptions as $val => $label)
-                                    <option value="{{ $val }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-sm font-semibold text-slate-700 mb-1.5 block">GSM</label>
-                            <select x-model="printGsm"
-                                class="w-full rounded-xl border border-slate-200 text-sm py-2.5 px-3 bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
-                                @foreach ($gsmOptions as $val => $label)
-                                    <option value="{{ $val }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-3 mt-6">
-                        <button type="button" @click="applyPaperSettings()"
-                            class="flex-1 bg-[#287d3c] hover:bg-emerald-800 text-white font-bold py-2.5 rounded-xl text-sm transition">
-                            Apply
-                        </button>
-                        <button type="button" @click="showPaperModal = false"
-                            class="flex-1 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
+            @include('partials.print-settings-modal')
 
         </div>
     </div>
@@ -383,59 +317,9 @@
 @endpush
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js"></script>
-
+    <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
     <script>
-        @if ($loggedIn)
-            if (window.qz && qz.security) {
-                var __qzCertCache = null;
-                qz.security.setCertificatePromise(function(resolve, reject) {
-                    if (__qzCertCache) {
-                        resolve(__qzCertCache);
-                        return;
-                    }
-                    fetch("{{ route('storepanel.qz.cert') }}", {
-                            credentials: 'same-origin'
-                        })
-                        .then(function(r) {
-                            return r.ok ? r.text() : Promise.reject('cert ' + r.status);
-                        })
-                        .then(function(pem) {
-                            __qzCertCache = pem;
-                            resolve(pem);
-                        })
-                        .catch(function() {
-                            resolve();
-                        });
-                });
-                qz.security.setSignatureAlgorithm('SHA512');
-                qz.security.setSignaturePromise(function(toSign) {
-                    return function(resolve, reject) {
-                        var csrf = document.querySelector('meta[name="csrf-token"]')?.content ||
-                            document.querySelector('input[name="_token"]')?.value;
-                        fetch("{{ route('storepanel.qz.sign') }}", {
-                                method: 'POST',
-                                credentials: 'same-origin',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'text/plain',
-                                    'X-CSRF-TOKEN': csrf
-                                },
-                                body: JSON.stringify({
-                                    request: toSign
-                                }),
-                            })
-                            .then(function(r) {
-                                return r.ok ? r.text() : Promise.reject('sign ' + r.status);
-                            })
-                            .then(resolve)
-                            .catch(function() {
-                                resolve('');
-                            });
-                    };
-                });
-            }
-        @endif
+        var __ptInstance = null;
 
         function previewFlow() {
             const pdfUrl = @json($pdfUrl ?? null);
@@ -448,29 +332,29 @@
             const designOrientation = '{{ $flowData['orientation'] ?? 'portrait' }}';
 
             return {
+                // Shared Print Settings modal (state + capability loading).
+                ...window.printSettingsMixin({ sizeOptions: @json($sizeOptions), sizeDims: trayDims }),
+
                 slide: 0,
                 touchX: 0,
                 copies: 1,
 
-                qzChecking: true,
-                qzReady: false,
+                bridgeChecking: true,
+                bridgeReady: false,
+                bridgeVersion: null,
                 printers: [],
                 selectedPrinter: null,
                 printing: false,
                 printMsg: null,
                 printMsgKind: 'info',
 
-                showQzModal: false,
-                showPaperModal: false,
-                printSize: '{{ array_key_first($sizeOptions) }}',
-                printMedia: '{{ array_key_first($mediaOptions) }}',
-                printGsm: '{{ array_key_first($gsmOptions) }}',
-                sizeOptionsMap: @json($sizeOptions),
-                mediaOptionsMap: @json($mediaOptions),
-                gsmOptionsMap: @json($gsmOptions),
+                showBridgeModal: false,
 
                 init() {
-                    this.initQz();
+                    if (designSize.w && designSize.h) {
+                        this.printLandscape = designSize.w > designSize.h;
+                    }
+                    this.initBridge();
                 },
 
                 // ── Swipe slider ──
@@ -490,11 +374,10 @@
                     }
                 },
 
-                // ── Checks (like check.blade.php) ──
+                // ── Checks ──
                 get checks() {
                     const list = [];
 
-                    // PDF generated check
                     list.push({
                         key: 'pdf',
                         ok: !!pdfUrl,
@@ -504,9 +387,8 @@
                             ' ready to print.' : 'Something went wrong generating the PDF.',
                     });
 
-                    // Size check
                     if (designSize.w && designSize.h) {
-                        const dim = trayDims[this.printSize];
+                        const dim = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
                         if (dim) {
                             const dw = Math.max(designSize.w, designSize.h);
                             const dh = Math.min(designSize.w, designSize.h);
@@ -532,9 +414,8 @@
                         }
                     }
 
-                    // Orientation check
                     if (designSize.w && designSize.h) {
-                        const dim = trayDims[this.printSize];
+                        const dim = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
                         if (dim) {
                             const designLandscape = designSize.w > designSize.h;
                             const paperLandscape = dim.w > dim.h;
@@ -556,44 +437,62 @@
                     return list;
                 },
 
-                // ── QZ Tray ──
-                async initQz() {
-                    if (!window.qz) {
-                        this.qzChecking = false;
-                        return;
-                    }
+                // ── PrintTrays bridge ──
+                async initBridge() {
                     try {
-                        if (!qz.websocket.isActive()) {
-                            await Promise.race([
-                                qz.websocket.connect(),
-                                new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000))
-                            ]);
-                        }
-                        this.qzReady = !!(qz.websocket.isActive());
-                        if (this.qzReady) {
-                            const list = await qz.printers.find();
-                            const all = Array.isArray(list) ? list : [list].filter(Boolean);
-                            const noritsu = all.filter(p => /noritsu/i.test(p));
-                            const trayOrder = ['MP Tray', 'Tray 1', 'Tray 2', 'Tray 3', 'Tray 4', 'Tray 5'];
-                            noritsu.sort((a, b) => {
-                                const ai = trayOrder.findIndex(t => a.includes(t));
-                                const bi = trayOrder.findIndex(t => b.includes(t));
-                                return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-                            });
-                            this.printers = noritsu;
-                            if (this.printers.length > 0) this.selectedPrinter = this.printers[0];
+                        const { PrintTrays } = await import('{{ asset("js/printtrays.js") }}');
+                        const pp = new PrintTrays({
+                            downloadUrl: 'https://noritsucanada.com/print-trays/download/',
+                            onNotInstalled: () => {},
+                        });
+                        await pp.connect();
+                        __ptInstance = pp;
+                        window.__ptInstance = pp;
+                        this.bridgeReady = true;
+                        this.bridgeVersion = pp.version || null;
+
+                        const list = await pp.getPrinters();
+                        const all = Array.isArray(list) ? list : [list].filter(Boolean);
+                        const trayOrder = ['MP Tray', 'Tray 1', 'Tray 2', 'Tray 3', 'Tray 4', 'Tray 5'];
+                        all.sort((a, b) => {
+                            const aN = /noritsu/i.test(a.name) ? 0 : 1;
+                            const bN = /noritsu/i.test(b.name) ? 0 : 1;
+                            if (aN !== bN) return aN - bN;
+                            const ai = trayOrder.findIndex(t => a.name.includes(t));
+                            const bi = trayOrder.findIndex(t => b.name.includes(t));
+                            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+                        });
+                        this.printers = all;
+                        if (this.printers.length > 0) {
+                            this.selectedPrinter = this.printers[0].name;
+                            this.psLoad(this.selectedPrinter);
                         }
                     } catch (e) {
-                        console.warn('[localprint] QZ Tray connection failed:', e.message || e);
-                        this.qzReady = false;
+                        console.warn('[localprint] PrintTrays connection failed:', e.message || e);
+                        this.bridgeReady = false;
                     }
-                    this.qzChecking = false;
+                    this.bridgeChecking = false;
+                    if (!this.bridgeReady) this.showBridgeModal = true;
+                },
+
+                get selectedPrinterInfo() {
+                    return this.printers.find(p => p.name === this.selectedPrinter) || null;
+                },
+
+
+
+                openSettings() {
+                    this.psOpen(this.selectedPrinter, this.selectedPrinterInfo?.driver,
+                        this.psPrinterStatus(this.selectedPrinterInfo));
                 },
 
                 selectPrinter(p) {
                     if (this.selectedPrinter !== p) {
                         this.selectedPrinter = p;
-                        this.showPaperModal = true;
+                        // A different printer can support a different paper set.
+                        this.psResetCaps();
+                        this.psLoad(p);
+                        this.openSettings();
                     }
                 },
 
@@ -601,18 +500,73 @@
                     this.showPaperModal = false;
                 },
 
+
+
+
                 get canPrint() {
                     if (this.copies < 1) return false;
                     if (!pdfUrl) return false;
-                    return this.qzReady && !!this.selectedPrinter;
+                    return this.bridgeReady && !!this.selectedPrinter;
                 },
 
                 get blocker() {
                     if (!pdfUrl) return 'No PDF generated';
-                    if (this.qzChecking) return 'Connecting to QZ Tray…';
-                    if (!this.qzReady) return 'QZ Tray not connected';
+                    if (this.bridgeChecking) return 'Connecting to PrintTrays…';
+                    if (!this.bridgeReady) return 'PrintTrays not connected';
                     if (!this.selectedPrinter) return 'Select a printer';
                     return null;
+                },
+
+                // Translate the Print Settings modal state into QZ Tray print-config
+                // options. The bridge spreads these into qz.configs.create(printer, …),
+                // so the key names here must match QZ's config schema exactly.
+                buildPrintConfig(type) {
+                    const cfg = {
+                        type: type,
+                        flavor: 'base64',
+                        copies: this.copies || 1,
+                        orientation: this.printLandscape ? 'landscape' : 'portrait',
+                        colorType: this.printColor ? 'color' : 'grayscale',
+                    };
+
+                    // Paper size → explicit media size in inches. Prefer the live
+                    // printer dimensions, then the static tray-dim table.
+                    const dim = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
+                    if (dim) {
+                        cfg.size = {
+                            width: dim.w,
+                            height: dim.h
+                        };
+                        cfg.units = 'in';
+                    }
+
+                    // Paper source → QZ `printerTray`. Empty means printer default.
+                    if (this.printInputBin) {
+                        cfg.printerTray = this.printInputBin;
+                    }
+
+                    // Duplex: QZ expects false for single-sided, or the two-sided
+                    // long/short-edge strings.
+                    if (this.printDuplex === 'longEdge') {
+                        cfg.duplex = 'two-sided-long-edge';
+                    } else if (this.printDuplex === 'shortEdge') {
+                        cfg.duplex = 'two-sided-short-edge';
+                    } else {
+                        cfg.duplex = false;
+                    }
+
+                    // For PDF jobs QZ frequently ignores `orientation` and honours
+                    // `rotation` (degrees) instead. If the requested orientation
+                    // differs from the design's natural orientation, rotate 90°.
+                    const wantLandscape = this.printLandscape;
+                    const designIsLandscape = (designSize.w && designSize.h) ? designSize.w > designSize.h :
+                        wantLandscape;
+                    if (wantLandscape !== designIsLandscape) {
+                        cfg.rotation = 90;
+                    }
+
+                    console.log('[localprint] print config →', JSON.parse(JSON.stringify(cfg)));
+                    return cfg;
                 },
 
                 async doPrint() {
@@ -622,37 +576,23 @@
                     this.printMsgKind = 'info';
 
                     try {
-                        if (!qz.websocket.isActive()) await qz.websocket.connect();
+                        const pp = __ptInstance;
+                        if (!pp) throw new Error('PrintTrays not connected');
 
-                        const configOpts = {
-                            copies: this.copies || 1
-                        };
-                        const dim = trayDims[this.printSize];
-                        if (dim) {
-                            configOpts.size = {
-                                width: dim.w,
-                                height: dim.h
-                            };
-                            configOpts.units = 'in';
-                        }
-                        const config = qz.configs.create(this.selectedPrinter, configOpts);
-
-                        const res = await fetch(pdfUrl, {
-                            credentials: 'same-origin'
-                        });
+                        const res = await fetch(pdfUrl, { credentials: 'same-origin' });
+                        if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
                         const b64 = this.arrayBufToBase64(await res.arrayBuffer());
-                        const data = [{
-                            type: 'pixel',
-                            format: 'pdf',
-                            flavor: 'base64',
-                            data: b64
-                        }];
 
-                        await qz.print(config, data);
+                        // The bridge reads a top-level `type` (pdf|image) — without it,
+                        // it reports "Unsupported print type: undefined". It also needs
+                        // the QZ `flavor:'base64'` key to actually base64-decode the data;
+                        // otherwise it writes the raw text and Chromium fails to load the
+                        // temp file (ERR_FAILED loading printport-*.pdf).
+                        await pp.print(this.selectedPrinter, b64, this.buildPrintConfig('pdf'));
                         this.printMsg = 'Sent to ' + this.selectedPrinter + '!';
                         this.printMsgKind = 'success';
                     } catch (e) {
-                        console.error('[localprint] QZ print failed:', e);
+                        console.error('[localprint] PrintTrays print failed:', e);
                         this.printMsg = (e && e.message) || 'Print failed.';
                         this.printMsgKind = 'error';
                     } finally {

@@ -3,7 +3,7 @@
 @php $multiUpload = $multiUpload ?? true; @endphp
 
 <div
-    class="absolute right-1 lg:right-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
+    class="cust-right-dock absolute right-1 lg:right-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
 
     {{-- 1. Photo Tool --}}
     <label for="photo-upload-input" id="upload-tool-label" class="group flex flex-col items-center gap-1.5 cursor-pointer"

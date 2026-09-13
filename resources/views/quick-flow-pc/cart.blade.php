@@ -9,30 +9,40 @@
 
 @section('content')
     <div x-data="cartPage()" @cart-updated.window="updateFromResponse($event.detail)"
-        class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+        class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans">
         <div class="max-w-[1240px] mx-auto">
 
-            {{-- Back Navigation --}}
-            <div class="mb-6">
+            {{-- Back + Title (single row on mobile) --}}
+            <div class="flex items-center gap-2 mb-3 md:hidden">
                 <a href="{{ route($routePrefix . 'index') }}"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
-                    <span>← Continue Shopping</span>
-                </a>
-            </div>
-
-            {{-- Title Header --}}
-            <div class="mb-8 flex items-baseline justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
-                        Shopping Cart
-                    </h1>
-                    <p class="text-sm text-slate-500 font-normal mt-1.5">
-                        Review your custom items before proceeding to checkout.
-                    </p>
-                </div>
-                <span class="text-xs font-bold text-slate-500 bg-white border border-slate-200/90 px-3 py-1.5 rounded-full shadow-2xs">
+                    class="text-[11px] font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">←</a>
+                <h1 class="text-base font-extrabold text-[#112419] tracking-tight">Shopping Cart</h1>
+                <span class="ml-auto text-[10px] font-bold text-slate-500 bg-white border border-slate-200/90 px-2 py-1 rounded-full shadow-2xs shrink-0">
                     <span x-text="itemCount"></span> <span x-text="itemCount === 1 ? 'item' : 'items'"></span>
                 </span>
+            </div>
+
+            {{-- Desktop header --}}
+            <div class="hidden md:block">
+                <div class="mb-6">
+                    <a href="{{ route($routePrefix . 'index') }}"
+                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
+                        <span>← Continue Shopping</span>
+                    </a>
+                </div>
+                <div class="mb-8 flex items-baseline justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
+                            Shopping Cart
+                        </h1>
+                        <p class="text-sm text-slate-500 font-normal mt-1.5">
+                            Review your custom items before proceeding to checkout.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-slate-500 bg-white border border-slate-200/90 px-3 py-1.5 rounded-full shadow-2xs">
+                        <span x-text="itemCount"></span> <span x-text="itemCount === 1 ? 'item' : 'items'"></span>
+                    </span>
+                </div>
             </div>
 
             @if ($cart->items->count() > 0)

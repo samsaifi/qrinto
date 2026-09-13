@@ -446,6 +446,12 @@ class StorePanelController extends Controller
                 'gsm'         => $t['gsm'],
                 'density'     => $t['density'] ?? null,
                 'user_type'   => $t['user_type'],
+                'landscape'       => (bool) ($t['landscape'] ?? false),
+                'duplex'          => $t['duplex'] ?? 'simplex',
+                'color'           => (bool) ($t['color'] ?? true),
+                'input_bin'       => $t['input_bin'] ?? null,
+                'quality'         => $t['quality'] ?? null,
+                'media_type_live' => $t['media_type_live'] ?? null,
                 'enabled'     => (bool) $t['enabled'],
                 'printer'     => $t['printer'] ?? '',
                 'recommended' => $matched && $matched['key'] === $t['key'],
@@ -510,6 +516,12 @@ class StorePanelController extends Controller
             'trays.*.media'       => 'nullable|string|in:' . implode(',', array_keys(Store::trayMediaOptions())),
             'trays.*.gsm'         => 'nullable|string|in:' . implode(',', array_keys(Store::trayGsmOptions())),
             'trays.*.density'     => 'nullable|string|max:20',
+            'trays.*.landscape'   => 'nullable',
+            'trays.*.duplex'      => 'nullable|string|max:20',
+            'trays.*.color'       => 'nullable',
+            'trays.*.input_bin'   => 'nullable|string|max:160',
+            'trays.*.quality'         => 'nullable|string|max:120',
+            'trays.*.media_type_live' => 'nullable|string|max:160',
             'trays.*.enabled'     => 'nullable',
         ]);
 
@@ -530,6 +542,12 @@ class StorePanelController extends Controller
                 'media'       => $t['media'] ?? null,
                 'gsm'         => $t['gsm']   ?? null,
                 'density'     => $t['density'] ?? null,
+                'landscape'       => filter_var($t['landscape'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'duplex'          => $t['duplex'] ?? 'simplex',
+                'color'           => filter_var($t['color'] ?? true, FILTER_VALIDATE_BOOLEAN),
+                'input_bin'       => $t['input_bin'] ?? null,
+                'quality'         => $t['quality'] ?? null,
+                'media_type_live' => $t['media_type_live'] ?? null,
                 'enabled'     => (bool) ($t['enabled'] ?? false),
             ];
         }

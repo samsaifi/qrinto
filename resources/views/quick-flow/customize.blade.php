@@ -677,12 +677,6 @@
         .template-cat-chip:hover {
             background: #e2e8f0;
         }
-
-        .template-cat-chip.active {
-            background: #38bdf8;
-            border-color: #38bdf8;
-            color: #fff;
-        }
     </style>
 @endpush
 

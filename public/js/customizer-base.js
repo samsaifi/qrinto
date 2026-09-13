@@ -129,7 +129,7 @@ function customizerBase(config) {
                     const fc = cv.fabricCanvas;
                     const W = fc.width, H = fc.height, sf = cv.scaleFactor;
                     if (tpl.replace !== false) {
-                        fc.getObjects().filter(o => o._isTemplateText || o._isTemplateImage || o._isTemplateSvg)
+                        fc.getObjects().filter(o => o._isTemplateText || o._isTemplateImage || o._isTemplateSvg || o._isUserImage || o._isUserText || o._isShape)
                             .forEach(o => fc.remove(o));
                     }
                     for (const spec of (tpl.images || [])) {
@@ -2443,6 +2443,12 @@ function customizerBase(config) {
                     const aScaleX = ((m.width || 100) / 100) * (m.scaleX || 1) * sf;
                     const aScaleY = ((m.height || 120) / 120) * (m.scaleY || 1) * sf;
                     return new fabric.Path(archPathData, Object.assign({}, base, { scaleX: aScaleX, scaleY: aScaleY }));
+                case 'custom_polygon':
+                    const polyPoints = (m.points || []).map(p => ({ x: p.x, y: p.y }));
+                    return new fabric.Polygon(polyPoints, Object.assign({}, base, {
+                        scaleX: (m.scaleX || 1) * sf,
+                        scaleY: (m.scaleY || 1) * sf
+                    }));
                 default:
                     return new fabric.Rect(Object.assign(base, { width: (m.width || 100), height: (m.height || 100) }));
             }

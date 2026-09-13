@@ -3,19 +3,19 @@
 
 @section('content')
     <div class="max-w-xl">
-        <h1 class="font-display font-bold text-4xl text-slate-900 tracking-tight">Store QR code</h1>
-        <p class="text-slate-500 mt-3 leading-relaxed">
+        <h1 class="font-display font-bold text-2xl md:text-4xl text-slate-900 tracking-tight">Store QR code</h1>
+        <p class="text-slate-500 mt-2 md:mt-3 text-sm md:text-base leading-relaxed">
             Customers scan this in the store to order from their phone. Print it and put it by the counter.
         </p>
 
-        <div class="mt-10">
-            <div class="w-64 h-64 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-center shadow-sm">
+        <div class="mt-6 md:mt-10">
+            <div class="w-48 h-48 md:w-64 md:h-64 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-center shadow-sm">
                 <div id="qrcode"></div>
             </div>
-            <p class="mono text-sm text-slate-500 mt-4">{{ $scanUrl }}</p>
+            <p class="mono text-xs md:text-sm text-slate-500 mt-3 md:mt-4 break-all">{{ $scanUrl }}</p>
 
             <button type="button" onclick="downloadQrPdf()"
-                class="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-bold hover:bg-slate-50 transition">
+                class="mt-4 md:mt-5 inline-flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-sm font-bold hover:bg-slate-50 transition">
                 <i data-lucide="download" class="w-4 h-4"></i>
                 Download as PDF
             </button>

@@ -55,6 +55,11 @@
         }
     </style>
     @stack('styles')
+    <script>
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+    </script>
 </head>
 
 <body class="min-h-screen antialiased">
@@ -64,20 +69,27 @@
     @endphp
 
     {{-- Top bar --}}
-    <header class="bg-white border-b border-slate-200/80 sticky top-0 z-40">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="h-16 flex items-center justify-between gap-6">
-                <div class="flex items-center gap-8 min-w-0">
-                    {{-- Logo → store search (customer entry), per spec --}}
+    <header class="bg-white border-b border-slate-200/80 sticky top-0 z-40" x-data="{ mobileMenu: false }">
+        <div class="max-w-6xl mx-auto px-4 md:px-6">
+            <div class="h-14 md:h-16 flex items-center justify-between gap-4 md:gap-6">
+                <div class="flex items-center gap-4 md:gap-8 min-w-0">
                     <a href="{{ url('store') }}" class="flex items-center gap-2.5 shrink-0">
-                        <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto" class="h-8 w-auto">
+                        <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto" class="h-7 md:h-8 w-auto">
                     </a>
                     <span
                         class="font-display font-bold text-sm text-slate-800 truncate hidden sm:block">{{ $storeLabel }}</span>
                 </div>
 
-                <nav class="flex items-center gap-1">
-                    {{-- Catalog Dropdown --}}
+                {{-- Mobile hamburger --}}
+                <button type="button" @click="mobileMenu = !mobileMenu"
+                    class="md:hidden w-10 h-10 flex items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 transition">
+                    <i data-lucide="menu" class="w-5 h-5" x-show="!mobileMenu"></i>
+                    <i data-lucide="x" class="w-5 h-5" x-show="mobileMenu" x-cloak></i>
+                </button>
+
+                {{-- Desktop nav --}}
+                <nav class="hidden md:flex items-center gap-1">
+                    {{-- Catalog Dropdown (hidden for now)
                     <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                         <button @click="open = !open"
                             class="navlink flex items-center gap-1.5 {{ request()->is('*products*') || request()->is('*categories*') || request()->is('*product-types*') || request()->is('*templates*') || request()->is('*coupons*') || request()->is('*events*') ? 'active' : '' }}">
@@ -126,6 +138,7 @@
                             </a>
                         </div>
                     </div>
+                    --}}
 
                     <a href="{{ route('storepanel.orders') }}"
                         class="navlink {{ request()->routeIs('storepanel.orders') || request()->routeIs('storepanel.home') ? 'active' : '' }}">Orders</a>
@@ -141,9 +154,82 @@
                 </nav>
             </div>
         </div>
+
+        {{-- Mobile dropdown menu --}}
+        <div x-show="mobileMenu" x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-2"
+            class="md:hidden border-t border-slate-100 bg-white shadow-lg" x-cloak @click.outside="mobileMenu = false">
+            <div class="max-w-6xl mx-auto px-4 py-3 space-y-1">
+
+                <a href="{{ route('storepanel.orders') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ request()->routeIs('storepanel.orders') || request()->routeIs('storepanel.home') ? 'text-[#16532a] bg-[#e7f2e8]' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <i data-lucide="package" class="w-4 h-4"></i> Orders
+                </a>
+                <a href="{{ route('storepanel.qr') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ request()->routeIs('storepanel.qr') ? 'text-[#16532a] bg-[#e7f2e8]' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i> Store QR
+                </a>
+                <a href="{{ route('storepanel.trays') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ request()->routeIs('storepanel.trays') ? 'text-[#16532a] bg-[#e7f2e8]' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <i data-lucide="inbox" class="w-4 h-4"></i> Trays
+                </a>
+
+                {{-- Catalog section (hidden for now)
+                <div x-data="{ catalogOpen: false }">
+                    <button @click="catalogOpen = !catalogOpen"
+                        class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ request()->is('*products*') || request()->is('*categories*') || request()->is('*product-types*') || request()->is('*templates*') || request()->is('*coupons*') || request()->is('*events*') ? 'text-[#16532a] bg-[#e7f2e8]' : 'text-slate-700 hover:bg-slate-50' }}">
+                        <span class="flex items-center gap-3"><i data-lucide="layout-grid" class="w-4 h-4"></i> Catalog</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': catalogOpen }"></i>
+                    </button>
+                    <div x-show="catalogOpen" x-transition class="ml-7 mt-1 space-y-0.5" x-cloak>
+                        <a href="{{ url('/store/products') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                            <i data-lucide="box" class="w-3.5 h-3.5 text-emerald-600"></i> Products
+                        </a>
+                        <a href="{{ url('/store/categories') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                            <i data-lucide="grid-2x2" class="w-3.5 h-3.5 text-emerald-600"></i> Categories
+                        </a>
+                        <a href="{{ url('/store/product-types') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                            <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-600"></i> Card Types/Sizes
+                        </a>
+                        <a href="{{ url('/store/templates') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                            <i data-lucide="layout-template" class="w-3.5 h-3.5 text-emerald-600"></i> Templates
+                        </a>
+                        <a href="{{ url('/store/coupons') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                            <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-600"></i> Coupons
+                        </a>
+                        <a href="{{ url('/store/events') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-[#287d3c] transition">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-emerald-600"></i> Events
+                        </a>
+                    </div>
+                </div>
+                -->
+
+                {{-- Print & Kiosk logs --}}
+                <a href="{{ route('storepanel.printLogs') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Print Logs
+                </a>
+                <a href="{{ route('storepanel.kioskLogs') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Kiosk Logs
+                </a>
+
+                <div class="border-t border-slate-100 pt-2 mt-2">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition w-full">
+                            <i data-lucide="log-out" class="w-4 h-4"></i> Sign out
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-6 py-8">
+    <main class="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-8">
         <div id="qz-toast" x-data="{ open: false, msg: '', kind: 'info' }" x-show="open" x-transition x-cloak
             @qz-toast.window="msg = $event.detail.msg; kind = $event.detail.kind || 'info'; open = true; setTimeout(() => open = false, 4200)"
             class="fixed top-4 right-4 z-[70] max-w-sm px-4 py-3 rounded-xl shadow-lg text-sm font-medium border"
@@ -156,14 +242,13 @@
         @yield('content')
     </main>
 
-    {{-- QZ Tray: local bridge to the Windows print system. --}}
-    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js"></script>
+    {{-- PrintTrays: local bridge to the Windows print system. --}}
     <script>
         if (window.lucide) lucide.createIcons();
 
-        window.__qrintoQZ = (function() {
-            let connecting = null;
+        window.__ptBridge = null;
 
+        window.__qrintoPT = (function() {
             function toast(msg, kind) {
                 window.dispatchEvent(new CustomEvent('qz-toast', {
                     detail: {
@@ -173,104 +258,29 @@
                 }));
             }
 
-            // QZ Tray certificate-based trust: serve a real certificate and
-            // sign each websocket handshake so QZ Tray skips the Allow/Deny
-            // dialog. The cert must be installed once in QZ Tray's trusted
-            // store (drag qz-cert.pem onto QZ Tray's "Site Manager" window).
-            if (window.qz && qz.security) {
-                var __qzCertCache = null;
-                var __qzCsrf = function() {
-                    return document.querySelector('meta[name="csrf-token"]')?.content ||
-                        document.querySelector('input[name="_token"]')?.value;
-                };
-                qz.security.setCertificatePromise(function(resolve, reject) {
-                    if (__qzCertCache) {
-                        resolve(__qzCertCache);
-                        return;
-                    }
-                    fetch("{{ route('storepanel.qz.cert') }}", {
-                            credentials: 'same-origin'
-                        })
-                        .then(function(r) {
-                            return r.ok ? r.text() : Promise.reject('cert ' + r.status);
-                        })
-                        .then(function(pem) {
-                            __qzCertCache = pem;
-                            resolve(pem);
-                        })
-                        .catch(function(e) {
-                            console.warn('[QZ] cert fetch failed, unsigned mode', e);
-                            resolve();
-                        });
-                });
-                qz.security.setSignatureAlgorithm('SHA512');
-                qz.security.setSignaturePromise(function(toSign) {
-                    return function(resolve, reject) {
-                        fetch("{{ route('storepanel.qz.sign') }}", {
-                                method: 'POST',
-                                credentials: 'same-origin',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'text/plain',
-                                    'X-CSRF-TOKEN': __qzCsrf(),
-                                },
-                                body: JSON.stringify({
-                                    request: toSign
-                                }),
-                            })
-                            .then(function(r) {
-                                return r.ok ? r.text() : Promise.reject('sign ' + r.status);
-                            })
-                            .then(resolve)
-                            .catch(function(e) {
-                                console.warn('[QZ] sign failed, unsigned mode', e);
-                                resolve('');
-                            });
-                    };
-                });
-            }
-
             async function connect() {
-                if (!window.qz) throw new Error('QZ Tray library did not load.');
-                if (qz.websocket.isActive()) return;
-                if (!connecting) {
-                    connecting = qz.websocket.connect().finally(() => {
-                        connecting = null;
-                    });
-                }
-                return connecting;
-            }
-
-            /**
-             * Silent pre-flight: is QZ Tray installed and reachable on this PC?
-             * Returns true when the local bridge answers, false otherwise. No
-             * toast - callers decide how to surface the failure (e.g. a blocking
-             * install modal on the orders page).
-             */
-            async function ensureReady() {
-                if (!window.qz) return false;
-                if (qz.websocket.isActive()) return true;
-                // Race the connect against a hard timeout so a hung QZ handshake
-                // can never keep the "Checking QZ Tray…" spinner up forever.
-                // Poll isActive() after the race: even a rejected/timed-out
-                // promise still counts as ready if the socket did come up.
-                const timeout = new Promise(function(_, reject) {
-                    setTimeout(function() {
-                        reject(new Error('qz-timeout'));
-                    }, 8000);
+                if (window.__ptBridge) return window.__ptBridge;
+                const {
+                    PrintTrays
+                } = await import('{{ asset('js/printtrays.js') }}');
+                const pp = new PrintTrays({
+                    downloadUrl: 'https://noritsucanada.com/print-trays/download/',
+                    onNotInstalled: () => {},
                 });
-                try {
-                    await Promise.race([connect(), timeout]);
-                } catch (e) {
-                    /* fall through - check isActive() below */
-                }
-                return !!(window.qz && qz.websocket.isActive());
+                await pp.connect();
+                window.__ptBridge = pp;
+                return pp;
             }
 
-            /**
-             * Fire a print-log row (fire-and-forget). Never blocks the caller
-             * or bubbles up an error - logging must not derail a real print.
-             */
+            async function ensureReady() {
+                try {
+                    await connect();
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+
             function logPrint(payload, chosen, status, extra) {
                 if (!payload || !payload.log_url) return;
                 const csrf = document.querySelector('meta[name="csrf-token"]')?.content ||
@@ -289,7 +299,7 @@
                     status: status,
                     error_message: (extra && extra.error_message) || null,
                     duration_ms: (extra && extra.duration_ms) || null,
-                    qz_tray_version: (window.qz && window.qz.version) || null,
+                    qz_tray_version: (window.__ptBridge && window.__ptBridge.version) || null,
                 };
                 try {
                     fetch(payload.log_url, {
@@ -302,18 +312,10 @@
                         },
                         body: JSON.stringify(body),
                         keepalive: true,
-                    }).catch(function() {
-                        /* swallow - logging is best-effort */ });
-                } catch (e) {
-                    /* ignore */ }
+                    }).catch(function() {});
+                } catch (e) {}
             }
 
-            /**
-             * Print an order via QZ Tray using the operator's chosen tray.
-             * chosen: full tray row incl. metadata (see chosenTarget()).
-             * payload: { pdf_url, pdf_base64, copies, advance_url, log_url,
-             *            order:{number, item_id} }
-             */
             async function printOrder(chosen, payload, csrf) {
                 const t0 = performance.now();
                 const fail = function(message) {
@@ -324,73 +326,70 @@
                     return false;
                 };
 
-                toast('Connecting to QZ Tray…', 'info');
+                toast('Connecting to PrintTrays…', 'info');
+                let pp;
                 try {
-                    await connect();
+                    pp = await connect();
                 } catch (e) {
-                    toast('QZ Tray not running. Install it from qz.io then reload.', 'error');
-                    return fail('QZ Tray not running / could not connect.');
+                    toast('PrintTrays not running. Install it then reload.', 'error');
+                    return fail('PrintTrays not running / could not connect.');
                 }
 
                 let printer = chosen.printer;
                 let isDefault = false;
                 try {
-                    const found = await qz.printers.find(printer);
-                    printer = Array.isArray(found) ? (found[0] || printer) : (found || printer);
-                    if (!printer) {
-                        const any = await qz.printers.find('Noritsu');
-                        printer = Array.isArray(any) ? any[0] : any;
+                    const list = await pp.getPrinters();
+                    const all = Array.isArray(list) ? list : [list].filter(Boolean);
+                    const match = all.find(p => p.name === printer);
+                    if (!match) {
+                        const noritsu = all.find(p => /noritsu/i.test(p.name));
+                        if (noritsu) {
+                            printer = noritsu.name;
+                        } else {
+                            throw new Error('No matching printer queue found.');
+                        }
                     }
-                    if (!printer) throw new Error('No matching printer queue found.');
-                    const defaultPrinter = await qz.printers.getDefault().catch(() => null);
-                    isDefault = !!defaultPrinter && defaultPrinter === printer;
+                    isDefault = !!(match && match.isDefault);
                 } catch (e) {
                     toast('Printer "' + chosen.printer + '" not found on this PC.', 'error');
                     return fail('Printer "' + chosen.printer + '" not found on this PC.');
                 }
 
                 try {
-                    const configOpts = {
-                        copies: payload.copies || 1
+                    let b64 = payload.pdf_base64;
+                    if (!b64 && payload.pdf_url) {
+                        const res = await fetch(payload.pdf_url, {
+                            credentials: 'same-origin'
+                        });
+                        if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
+                        const bytes = new Uint8Array(await res.arrayBuffer());
+                        let binary = '';
+                        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+                        b64 = btoa(binary);
+                    }
+                    if (!b64) throw new Error('No PDF data available.');
+
+                    const printOpts = {
+                        type: 'pdf',
+                        encoding: 'base64',
+                        copies: payload.copies || 1,
                     };
-                    if (chosen.size_width && chosen.size_height) {
-                        configOpts.size = {
-                            width: chosen.size_width,
-                            height: chosen.size_height
-                        };
-                        configOpts.units = 'in';
-                    }
-                    if (chosen.density) {
-                        configOpts.density = {
-                            cross: parseInt(chosen.density),
-                            feed: parseInt(chosen.density)
-                        };
-                    }
-                    const config = qz.configs.create(printer, configOpts);
-                    // Prefer base64 bytes (the server embedded them) - that way
-                    // QZ Tray never has to fetch a URL from its desktop process,
-                    // which sidesteps auth cookies, /public prefix quirks, and
-                    // missing storage symlinks. Fall back to URL if bytes are
-                    // missing (older payloads).
-                    const data = payload.pdf_base64 ?
-                        [{
-                            type: 'pixel',
-                            format: 'pdf',
-                            flavor: 'base64',
-                            data: payload.pdf_base64
-                        }] :
-                        [{
-                            type: 'pixel',
-                            format: 'pdf',
-                            flavor: 'file',
-                            data: payload.pdf_url
-                        }];
-                    await qz.print(config, data);
+                    if (chosen.size) printOpts.paperSize = chosen.size;
+                    if (chosen.landscape) printOpts.landscape = true;
+                    if (chosen.duplex && chosen.duplex !== 'simplex') printOpts.duplex = chosen.duplex;
+                    if (chosen.color !== undefined) printOpts.color = chosen.color;
+                    if (chosen.input_bin) printOpts.printerTray = chosen.input_bin;
+                    if (chosen.scale && chosen.scale !== 100) printOpts.scaleFactor = chosen.scale;
+                    if (chosen.margins && chosen.margins !== 'default') printOpts.margins = {
+                        marginType: chosen.margins
+                    };
+
+                    await pp.print(printer, b64, printOpts);
                 } catch (e) {
                     console.error(e);
                     const msg = (e && e.message) ? e.message : 'unknown error';
                     toast('Print failed: ' + msg, 'error');
-                    return fail('QZ print threw: ' + msg);
+                    return fail('PrintTrays print threw: ' + msg);
                 }
 
                 try {
@@ -405,7 +404,6 @@
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                 } catch (e) {
                     toast('Sent to printer - but could not advance the order in Qrinto.', 'error');
-                    // Still log a success row: the physical print DID happen.
                     logPrint(payload, chosen, 'success', {
                         is_default_printer: isDefault,
                         duration_ms: Math.round(performance.now() - t0),
@@ -426,7 +424,8 @@
             return {
                 printOrder,
                 toast,
-                ensureReady
+                ensureReady,
+                connect
             };
         })();
     </script>

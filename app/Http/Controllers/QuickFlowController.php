@@ -47,9 +47,10 @@ class QuickFlowController extends Controller
      */
     protected function getViewPath($viewName)
     {
-        $folder = $this->isMobileRequest() ? 'quick-flow' : 'quick-flow-pc';
+        // $folder = $this->isMobileRequest() ? 'quick-flow' : 'quick-flow-pc';
 
-        return "{$folder}.{$viewName}";
+        return "quick-flow-pc.{$viewName}";
+        // return "{$folder}.{$viewName}";
     }
 
     /**
@@ -381,6 +382,15 @@ class QuickFlowController extends Controller
             }
         }
         
+        $sizeTitle = strtolower($flowData['size_title'] ?? ($title ? str_replace('-', ' ', $title) : ''));
+        if (str_contains($sizeTitle, 'flat')) {
+            $product->no_of_pages = 1;
+        } elseif (str_contains($sizeTitle, 'double')) {
+            $product->no_of_pages = 2;
+        } elseif (str_contains($sizeTitle, 'folded')) {
+            $product->no_of_pages = 4;
+        }
+
         if (!empty($product->store_id)) {
             $unitPrice = (float) $product->base_price;
         } else {
@@ -937,7 +947,7 @@ class QuickFlowController extends Controller
         $cart = $cartService->getCart();
 
         if ($cart->items->isEmpty()) {
-            return redirect()->route($this->getRoutePrefix() . 'cart.index');
+            return redirect()->route($this->getRoutePrefix() . 'index');
         }
 
         $allUploadIds = [];

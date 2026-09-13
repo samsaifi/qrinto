@@ -2,19 +2,22 @@
 @section('title', 'What is loaded in each tray | Qrinto')
 
 @section('content')
-    <div class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans">
         <div class="max-w-[860px] mx-auto">
 
-            <a href="{{ route('localprint.check') }}"
-                class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back
-            </a>
-
-            <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight mt-4">What is loaded in each tray</h1>
-            <p class="text-sm text-slate-500 mt-2 max-w-xl leading-relaxed">
-                Say what paper is in the printer. The right printer setting is worked out from this, so you never pick a
-                User Type yourself.
-            </p>
+            <div class="flex items-center gap-2 mb-3 md:flex-col md:items-start md:gap-0 md:mb-0">
+                <a href="{{ route('localprint.check') }}"
+                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
+                    ← <span class="hidden md:inline">Back</span>
+                </a>
+                <div>
+                    <h1 class="text-base md:text-2xl font-extrabold text-[#112419] tracking-tight md:mt-4">What is loaded in each tray</h1>
+                    <p class="hidden md:block text-sm text-slate-500 mt-2 max-w-xl leading-relaxed">
+                        Say what paper is in the printer. The right printer setting is worked out from this, so you never pick a
+                        User Type yourself.
+                    </p>
+                </div>
+            </div>
 
             @if (session('success'))
                 <div
@@ -26,7 +29,7 @@
                 @csrf
                 <div class="space-y-3">
                     <template x-for="row in rows" :key="row.key">
-                        <div class="bg-white border border-slate-200/80 rounded-2xl px-5 py-4 flex items-center gap-4 flex-wrap"
+                        <div class="bg-white border border-slate-200/80 rounded-xl md:rounded-2xl px-3 py-3 md:px-5 md:py-4 flex items-center gap-2 md:gap-4 flex-wrap"
                             :class="(row.key === 'mp' || row.enabled) ? '' : 'opacity-55'">
                             <div class="w-24 shrink-0 font-bold text-slate-900" x-text="row.label"></div>
 
@@ -78,12 +81,12 @@
                     </template>
                 </div>
 
-                <div class="flex items-center gap-3 mt-8">
+                <div class="flex items-center gap-2 md:gap-3 mt-6 md:mt-8">
                     <button type="submit"
-                        class="px-5 py-2.5 rounded-xl bg-[#287d3c] hover:bg-emerald-800 text-white text-sm font-bold transition">Save
+                        class="px-4 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl bg-[#287d3c] hover:bg-emerald-800 text-white text-xs md:text-sm font-bold transition">Save
                         tray setup</button>
                     <a href="{{ route('localprint.check') }}"
-                        class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Cancel</a>
+                        class="px-4 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl border border-slate-200 text-slate-600 text-xs md:text-sm font-semibold hover:bg-slate-50 transition">Cancel</a>
                 </div>
             </form>
         </div>

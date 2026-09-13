@@ -13,32 +13,36 @@
 @endphp
 
 @section('content')
-    <div class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans">
+    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans">
         <div class="max-w-[1100px] mx-auto">
 
-            {{-- Back Navigation --}}
-            <div class="mb-6">
+            {{-- Back + Title (single row on mobile) --}}
+            <div class="flex items-center gap-2 mb-3 md:flex-col md:items-start md:gap-0 md:mb-6">
                 <a href="{{ route($routePrefix . 'track') }}"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
-                    <span>← Search Another Order</span>
+                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
+                    ←
+                    <span class="hidden md:inline">Search Another Order</span>
                 </a>
-            </div>
-
-            {{-- Title Header --}}
-            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
+                <div class="min-w-0 md:mt-4">
+                    <h1 class="text-base md:text-2xl font-extrabold text-[#112419] tracking-tight truncate">
                         Order {{ $prefix }}<strong class="font-extrabold text-[#287d3c]">{{ $last5 }}</strong>
                     </h1>
-                    <p class="text-xs text-slate-500 font-normal mt-1">
-                        Placed on {{ $order->created_at->format('M d, Y · h:i A') }}
-                    </p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#287d3c] bg-[#f2f7f2] border border-emerald-200/80 px-3 py-1.5 rounded-full">
-                        <span>Show this at the counter:</span>
-                        <strong class="font-mono">{{ $prefix }}<span class="font-black underline">{{ $last5 }}</span></strong>
-                    </span>
+            </div>
+
+            {{-- Order meta (desktop: inline with title; mobile: below) --}}
+            <div class="hidden md:flex md:items-center md:justify-between md:mb-6">
+                <p class="text-xs text-slate-500 font-normal">
+                    Placed on {{ $order->created_at->format('M d, Y · h:i A') }}
+                </p>
+                <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#287d3c] bg-[#f2f7f2] border border-emerald-200/80 px-3 py-1.5 rounded-full">
+                    <span>Show this at the counter:</span>
+                    <strong class="font-mono">{{ $prefix }}<span class="font-black underline">{{ $last5 }}</span></strong>
+                </span>
+            </div>
+            <div class="md:hidden mb-3">
+                <div class="bg-[#f2f7f2] border border-emerald-100 rounded-xl px-3 py-2 text-center">
+                    <span class="font-mono text-[10px] text-[#287d3c] font-bold">Show at counter: {{ $prefix }}<span class="font-black underline">{{ $last5 }}</span></span>
                 </div>
             </div>
 

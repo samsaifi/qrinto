@@ -8,8 +8,8 @@
                 class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Orders
             </a>
-            <h1 class="font-display font-bold text-3xl text-slate-900 tracking-tight mt-3">Print logs</h1>
-            <p class="text-slate-500 mt-1 text-sm">Every print event from this store.</p>
+            <h1 class="font-display font-bold text-2xl md:text-3xl text-slate-900 tracking-tight mt-2 md:mt-3">Print logs</h1>
+            <p class="text-slate-500 mt-1 text-xs md:text-sm">Every print event from this store.</p>
         </div>
     </div>
 
@@ -36,24 +36,47 @@
             class="text-sm text-slate-500 hover:text-[#287d3c] transition font-medium">Clear</a>
     </form>
 
-    {{-- Log table --}}
-    <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden">
+    {{-- Mobile card layout --}}
+    <div class="md:hidden space-y-3">
+        @forelse ($logs as $log)
+            @php
+                $chip = ['success' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'failed' => 'bg-rose-50 text-rose-700 border-rose-200', 'retried' => 'bg-amber-50 text-amber-700 border-amber-200'][$log->status] ?? 'bg-slate-50 text-slate-600 border-slate-200';
+            @endphp
+            <div class="bg-white border border-slate-200/80 rounded-xl px-4 py-3">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <span class="mono font-semibold text-[13px] text-slate-800">{{ $log->order_number ?? '-' }}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-lg border {{ $chip }}">{{ ucfirst($log->status) }}</span>
+                </div>
+                <p class="text-[12px] text-slate-700 font-medium">{{ $log->printer_name }}</p>
+                @if ($log->tray_label && $log->tray_label !== $log->printer_name)
+                    <p class="text-[11px] text-slate-400">{{ $log->tray_label }}</p>
+                @endif
+                <p class="text-[11px] text-slate-500 mt-1">{{ collect([$log->size, $log->media, $log->gsm])->filter()->join(' · ') ?: '-' }}</p>
+                <div class="flex items-center justify-between mt-2 text-[11px] text-slate-400">
+                    <span>{{ $log->user?->name ?? '-' }}</span>
+                    <span>{{ $log->printed_at?->format('M j, g:i A') }}</span>
+                </div>
+            </div>
+        @empty
+            <div class="px-4 py-12 text-center text-sm text-slate-400">No print events yet.</div>
+        @endforelse
+        @if ($logs->hasPages())
+            <div class="mt-4">{{ $logs->onEachSide(1)->links() }}</div>
+        @endif
+    </div>
+
+    {{-- Desktop table --}}
+    <div class="hidden md:block bg-white border border-slate-200/80 rounded-2xl overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr class="bg-slate-50">
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">When
-                        </th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                            Order</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                            Printer</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                            Media</th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">By
-                        </th>
-                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                            Status</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">When</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Order</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Printer</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Media</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">By</th>
+                        <th class="px-5 py-3 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -73,7 +96,7 @@
                                 @endif
                             </td>
                             <td class="px-5 py-3 text-[12px] text-slate-500">
-                                {{ collect([$log->size, $log->media, $log->gsm])->filter()->join(' · ') ?:'-' }}
+                                {{ collect([$log->size, $log->media, $log->gsm])->filter()->join(' · ') ?: '-' }}
                                 @if ($log->user_type)
                                     <div class="mono text-[10px] text-slate-400">UT{{ $log->user_type }}</div>
                                 @endif
@@ -81,24 +104,16 @@
                             <td class="px-5 py-3 text-sm text-slate-600">{{ $log->user?->name ?? '-' }}</td>
                             <td class="px-5 py-3">
                                 @php
-                                    $chip =
-                                        [
-                                            'success' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                            'failed' => 'bg-rose-50 text-rose-700 border-rose-200',
-                                            'retried' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                        ][$log->status] ?? 'bg-slate-50 text-slate-600 border-slate-200';
+                                    $chip = ['success' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'failed' => 'bg-rose-50 text-rose-700 border-rose-200', 'retried' => 'bg-amber-50 text-amber-700 border-amber-200'][$log->status] ?? 'bg-slate-50 text-slate-600 border-slate-200';
                                 @endphp
-                                <span
-                                    class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-lg border {{ $chip }}">
+                                <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-lg border {{ $chip }}">
                                     {{ ucfirst($log->status) }}
                                 </span>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-16 text-center text-sm text-slate-400">
-                                No print events yet.
-                            </td>
+                            <td colspan="6" class="px-5 py-16 text-center text-sm text-slate-400">No print events yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

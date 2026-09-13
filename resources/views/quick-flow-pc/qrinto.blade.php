@@ -63,7 +63,7 @@
 @endpush
 
 @section('content')
-    <div class="bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans text-slate-900" x-data="qrintoFlow()">
+    <div class="bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans text-slate-900" x-data="qrintoFlow()">
 
         {{-- Fullscreen Processing Overlay --}}
         <div x-show="isProcessing" class="processing-overlay" style="display: none;"
@@ -91,7 +91,7 @@
         <div class="max-w-[1240px] mx-auto">
 
             {{-- Quiet Step Navigation Bar --}}
-            <div class="flex items-center justify-between gap-4 mb-8">
+            <div class="flex items-center justify-between gap-2 md:gap-4 mb-4 md:mb-8">
                 <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
                     <a href="{{ route('flow.index') }}" class="hover:text-slate-700 transition-colors">
                         Shop
@@ -101,7 +101,7 @@
                 </div>
 
                 {{-- Quiet Step Indicator --}}
-                <div class="flex items-center gap-3 text-xs font-semibold">
+                <div class="flex items-center gap-1.5 md:gap-3 text-[10px] md:text-xs font-semibold">
                     <span :class="currentStep === 1 ? 'text-[#287d3c] font-extrabold' : 'text-slate-400'">Upload</span>
                     <span class="text-slate-300">→</span>
                     <span :class="currentStep === 2 ? 'text-[#287d3c] font-extrabold' : 'text-slate-400'">Dimensions</span>
@@ -112,11 +112,11 @@
             </div>
 
             {{-- Title Header --}}
-            <div class="mb-8">
-                <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">
+            <div class="mb-4 md:mb-8">
+                <h1 class="text-lg md:text-2xl font-extrabold text-[#112419] tracking-tight">
                     Local Print Studio
                 </h1>
-                <p class="text-sm text-slate-500 font-normal mt-1">
+                <p class="text-xs md:text-sm text-slate-500 font-normal mt-1">
                     Upload photo artwork and select print dimensions for same-day store pickup.
                 </p>
             </div>

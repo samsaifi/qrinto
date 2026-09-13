@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'site_lock_enabled' => env('SITE_LOCK_ENABLED', false),
+    'site_lock_password' => env('SITE_LOCK_PASSWORD', ''),
+
 ];

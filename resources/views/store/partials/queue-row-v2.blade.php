@@ -49,8 +49,30 @@
 
 <div class="v2-card {{ $isDone ? 'is-done' : '' }} {{ $stage === 'printing' ? 'is-printing' : '' }}"
     id="v2-card-{{ $order->id }}" data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}">
-    {{-- Order ID --}}
-    <div class="v2-col-id">
+    {{-- Mobile: order code + payment on same row --}}
+    <div class="v2-mobile-top">
+        <div class="v2-col-id">
+            @foreach ($codeParts as $part)
+                @if ($loop->last)
+                    <strong class="text-slate-900 font-extrabold text-[13px]">{{ $part }}</strong>
+                @else
+                    {{ $part }}<br>
+                @endif
+            @endforeach
+        </div>
+        <div class="v2-col-price v2-mobile-price">
+            @if ($order->payment_status === 'paid')
+                <span class="v2-pill-paid">Paid online</span>
+            @else
+                <span class="v2-pill">Collect
+                    {{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }} at
+                    pickup</span>
+            @endif
+        </div>
+    </div>
+
+    {{-- Desktop: order ID column (hidden on mobile since it's in the top row) --}}
+    <div class="v2-col-id v2-desktop-id">
         @foreach ($codeParts as $part)
             @if ($loop->last)
                 <strong class="text-slate-900 font-extrabold text-[13px]">{{ $part }}</strong>
@@ -93,8 +115,8 @@
         </div>
     </div>
 
-    {{-- Payment pill --}}
-    <div class="v2-col-price">
+    {{-- Desktop: Payment pill (hidden on mobile since it's in the top row) --}}
+    <div class="v2-col-price v2-desktop-price">
         @if ($order->payment_status === 'paid')
             <span class="v2-pill-paid">Paid online</span>
         @else
@@ -108,7 +130,7 @@
     <div class="v2-col-action">
         @if ($action)
             @if ($stage === \App\Models\Order::STAGE_NEW)
-                <button type="button" data-qz-print data-order-id="{{ $order->id }}"
+                <button type="button" data-pt-print data-order-id="{{ $order->id }}"
                     data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}" class="v2-btn-primary">
                     <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
                     {{ $action['label'] }}
@@ -130,7 +152,7 @@
                     </button>
                 </form>
                 @if ($stage === \App\Models\Order::STAGE_PRINTING)
-                    <button type="button" data-qz-print data-order-id="{{ $order->id }}"
+                    <button type="button" data-pt-print data-order-id="{{ $order->id }}"
                         data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}"
                         class="v2-btn-primary">
                         <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
@@ -144,7 +166,7 @@
                     stroke-width="2">
                     <path d="M20 6L9 17l-5-5" />
                 </svg>
-                Done
+                Delivered
             </span>
         @endif
 

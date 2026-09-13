@@ -156,12 +156,12 @@
                             class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
                             <div class="flex items-center gap-2 min-w-0">
                                 <i data-lucide="printer-off" class="w-4 h-4 text-amber-600 shrink-0"></i>
-                                <p class="text-[12px] text-amber-800 leading-snug">Printer not visible? Install QZ Tray to
+                                <p class="text-[12px] text-amber-800 leading-snug">Printer not visible? Install PrintTrays to
                                     detect this PC's printers.</p>
                             </div>
-                            <a href="https://qz.io/download/" target="_blank" rel="noopener"
+                            <a href="https://noritsucanada.com/print-trays/download/" target="_blank" rel="noopener"
                                 class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#287d3c] hover:bg-emerald-800 text-white text-[12px] font-bold transition">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download QZ Tray
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download PrintTrays
                             </a>
                         </div>
                         <div class="flex items-center justify-end gap-2">
@@ -253,6 +253,10 @@
                 transform: scale(1);
                 opacity: 1;
             }
+        }
+
+        .v2-mobile-top {
+            display: none;
         }
 
         .v2-col-id {
@@ -612,11 +616,83 @@
 
         @media (max-width: 720px) {
             .v2-card {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 14px 14px;
+            }
+
+            .v2-mobile-top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .v2-mobile-top .v2-col-id {
+                width: auto;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .v2-mobile-top .v2-col-id br {
+                display: none;
+            }
+
+            .v2-desktop-id,
+            .v2-desktop-price {
+                display: none !important;
+            }
+
+            .v2-col-id br {
+                display: none;
+            }
+
+            .v2-col-main {
+                min-width: 0;
+            }
+
+            .v2-col-main .v2-title {
+                font-size: 14px;
+            }
+
+            .v2-journey {
                 flex-wrap: wrap;
+                gap: 2px;
+            }
+
+            .v2-j-line {
+                width: 12px;
+            }
+
+            .v2-j-label {
+                font-size: 9.5px;
+            }
+
+            .v2-col-price {
+                align-self: flex-start;
+            }
+
+            .v2-pill,
+            .v2-pill-paid {
+                font-size: 11px;
+                padding: 5px 10px;
             }
 
             .v2-col-action {
                 align-items: flex-start;
+                min-width: 0;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .v2-btn-primary,
+            .v2-btn-neutral,
+            .v2-btn-done {
+                font-size: 12.5px;
+                padding: 8px 14px;
             }
         }
     </style>
@@ -644,7 +720,7 @@
         }
 
         document.addEventListener('click', function(e) {
-            const btn = e.target.closest('[data-qz-print]');
+            const btn = e.target.closest('[data-pt-print]');
             if (!btn) return;
             e.preventDefault();
             window.dispatchEvent(new CustomEvent('open-print-modal', {
@@ -702,10 +778,11 @@
                 async scanPc() {
                     this.pcState = 'loading';
                     try {
-                        if (!window.qz) throw new Error('QZ Tray library not loaded');
-                        if (!qz.websocket.isActive()) await qz.websocket.connect();
-                        this.defaultPrinter = await qz.printers.getDefault().catch(() => null);
-                        this.pcPrinters = await qz.printers.find();
+                        const pp = await window.__qrintoPT.connect();
+                        const list = await pp.getPrinters();
+                        const all = Array.isArray(list) ? list : [list].filter(Boolean);
+                        this.pcPrinters = all.map(p => p.name);
+                        this.defaultPrinter = (all.find(p => p.isDefault) || {}).name || null;
                         this.pcState = 'ok';
                     } catch (e) {
                         this.pcState = 'error';
@@ -725,7 +802,13 @@
                             size: t.size,
                             media: t.media,
                             gsm: t.gsm,
-                            user_type: t.user_type
+                            user_type: t.user_type,
+                            landscape: t.landscape,
+                            duplex: t.duplex,
+                            color: t.color,
+                            input_bin: t.input_bin,
+                            quality: t.quality,
+                            media_type_live: t.media_type_live
                         };
                     }
                     return null;
@@ -750,7 +833,7 @@
                     this.close();
                     this.sending = false;
 
-                    const ok = await window.__qrintoQZ.printOrder(target, this.payload, csrf);
+                    const ok = await window.__qrintoPT.printOrder(target, this.payload, csrf);
 
                     if (ok) {
                         if (card) showPrintSuccess(card, orderId);
@@ -761,7 +844,7 @@
                             showCardError(card, orderId);
                         }
                         showBannerError('Print failed for ' + (orderNumber || 'order') +
-                            '. Check that QZ Tray is running and the printer is online.');
+                            '. Check that PrintTrays is running and the printer is online.');
                     }
                 },
             };
@@ -835,7 +918,7 @@
                 actionCol.innerHTML =
                     '<div class="v2-card-error">' +
                     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>' +
-                    'Print failed - check QZ Tray and try again.' +
+                    'Print failed - check PrintTrays and try again.' +
                     '</div>' +
                     '<button class="v2-btn-primary" style="margin-top:6px;" onclick="window.location.reload()">' +
                     svgPrinter(15) + ' Retry' +

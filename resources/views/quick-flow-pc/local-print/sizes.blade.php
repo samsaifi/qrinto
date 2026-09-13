@@ -4,34 +4,33 @@
 @section('header_title', 'Choose a Size')
 
 @section('content')
-    <div class="w-full bg-[#fafcf9] min-h-screen py-10 px-6 lg:px-16 font-sans" x-data="{ orientMode: 'portrait' }">
+    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans" x-data="{ orientMode: 'portrait' }">
         <div class="max-w-[1240px] mx-auto">
 
-            {{-- Back Navigation --}}
-            <div class="mb-6">
+            {{-- Back + Title + Toggle (compact on mobile) --}}
+            <div class="flex items-center gap-2 mb-2 md:flex-col md:items-start md:gap-0 md:mb-0">
                 <a href="{{ route('localprint.start') }}"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors">
-                    <span>← Back to Local Print</span>
+                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
+                    ← <span class="hidden md:inline">Back to Local Print</span>
                 </a>
+                <h1 class="text-base md:text-2xl font-extrabold text-[#112419] tracking-tight md:mt-4">Choose a size</h1>
             </div>
 
-            {{-- Title + Orientation Toggle --}}
-            <div class="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-[#112419] tracking-tight">Choose a size</h1>
-                    <p class="text-sm text-slate-500 font-normal mt-1.5">
-                        Pick a card type and size, then design it in the editor.
-                    </p>
-                </div>
+            {{-- Orientation Toggle --}}
+            <div class="mb-3 md:mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 md:gap-4">
+                <p class="hidden md:block text-sm text-slate-500 font-normal mt-1.5">
+                    Pick a card type and size, then design it in the editor.
+                </p>
 
                 {{-- Portrait / Landscape switch --}}
-                <div class="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-2xs shrink-0">
+                <div
+                    class="flex items-center bg-gray-50 w-auto md:bg-white md:border border-slate-200 rounded-lg md:rounded-xl p-0.5 md:p-1 shadow-2xs shrink-0">
                     <button type="button" @click="orientMode = 'portrait'"
                         :class="orientMode === 'portrait' ? 'bg-[#287d3c] text-white shadow-sm' :
                             'text-slate-500 hover:text-slate-700'"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
-                        <svg class="w-3.5 h-5" viewBox="0 0 14 20" fill="none" stroke="currentColor" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round">
+                        class="flex items-center gap-1 md:gap-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-md md:rounded-lg text-[11px] md:text-xs font-bold transition-all">
+                        <svg class="w-3 h-4 md:w-3.5 md:h-5" viewBox="0 0 14 20" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="1" y="1" width="12" height="18" rx="1.5" />
                         </svg>
                         Portrait
@@ -39,9 +38,9 @@
                     <button type="button" @click="orientMode = 'landscape'"
                         :class="orientMode === 'landscape' ? 'bg-[#287d3c] text-white shadow-sm' :
                             'text-slate-500 hover:text-slate-700'"
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
-                        <svg class="w-5 h-3.5" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round">
+                        class="flex items-center gap-1 md:gap-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-md md:rounded-lg text-[11px] md:text-xs font-bold transition-all">
+                        <svg class="w-4 h-3 md:w-5 md:h-3.5" viewBox="0 0 20 14" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="1" y="1" width="18" height="12" rx="1.5" />
                         </svg>
                         Landscape
@@ -54,7 +53,7 @@
             @endphp
 
             {{-- 3-Column Card Grid --}}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid   grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
 
                 @forelse ($groupedSubTypes as $groupTitle => $items)
                     @php
@@ -105,18 +104,18 @@
                         dispH(s) { return orientMode === 'landscape' ? Math.min(s.w, s.h) : Math.max(s.w, s.h); },
                         get sizeCode() { return this.dispW(this.cur) + 'x' + this.dispH(this.cur); },
                     }"
-                        class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+                        class="bg-white border border-slate-200/90 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
 
                         {{-- Top Image Area --}}
                         <div
-                            class="bg-[#f2f7f2] h-48 sm:h-52 flex items-center justify-center p-6 border-b border-slate-100 relative">
+                            class="bg-[#f2f7f2] h-24 sm:h-32 md:h-48 flex items-center justify-center p-3 md:p-6 border-b border-slate-100 relative">
                             @if ($firstItem->icon_svg)
                                 <div
-                                    class="w-24 h-24 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                    class="w-14 h-14 md:w-24 md:h-24 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
                                     {!! $firstItem->icon_svg !!}
                                 </div>
                             @elseif ($isFolded)
-                                <svg class="w-28 h-28 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
+                                <svg class="w-16 h-16 md:w-28 md:h-28 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
                                     viewBox="0 0 90 90">
                                     <path d="M 21 22 L 45 16 L 45 74 L 21 80 A 3 3 0 0 1 18 77 L 18 25 A 3 3 0 0 1 21 22 Z"
                                         stroke="currentColor" fill="none" />
@@ -137,7 +136,7 @@
                                         stroke="currentColor" />
                                 </svg>
                             @elseif ($isDouble)
-                                <svg class="w-24 h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
+                                <svg class="w-14 h-14 md:w-24 md:h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
                                     viewBox="0 0 90 90">
                                     <rect x="15" y="15" width="35" height="50" rx="3" stroke="currentColor"
                                         fill="none" />
@@ -151,7 +150,7 @@
                                     <path d="M22 68 L25 65 L28 71" stroke="currentColor" />
                                 </svg>
                             @else
-                                <svg class="w-24 h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
+                                <svg class="w-14 h-14 md:w-24 md:h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
                                     viewBox="0 0 80 90">
                                     <rect x="20" y="12" width="40" height="60" rx="4"
                                         stroke="currentColor" fill="none" />
@@ -164,19 +163,19 @@
                         </div>
 
                         {{-- Bottom Info & Action --}}
-                        <div class="p-6 flex-1 flex flex-col justify-between">
+                        <div class="px-3 py-2.5 md:p-6 flex-1 flex flex-col justify-between">
                             <div>
                                 <h3
-                                    class="font-extrabold text-slate-900 text-lg sm:text-xl group-hover:text-emerald-700 transition-colors">
+                                    class="font-extrabold text-slate-900 text-sm md:text-lg sm:text-xl group-hover:text-emerald-700 transition-colors">
                                     {{ $displayTitle }}
                                 </h3>
                                 @if ($desc)
-                                    <p class="text-xs text-slate-500 font-normal mt-1.5 leading-relaxed">
+                                    <p class="hidden md:block text-xs text-slate-500 font-normal mt-1.5 leading-relaxed">
                                         {{ $desc }}</p>
                                 @endif
 
                                 {{-- Dimension Pills --}}
-                                <div class="mt-4">
+                                <div class="mt-2 md:mt-4">
                                     @if ($hasMultipleSizes)
                                         <div class="flex items-center gap-1.5 flex-wrap">
                                             <template x-for="(s, idx) in sizes" :key="s.id">
@@ -184,7 +183,7 @@
                                                     :class="selectedIdx === idx ?
                                                         'border-emerald-600 bg-emerald-50/80 text-emerald-900 font-bold' :
                                                         'border-slate-200 bg-white text-slate-600 hover:border-slate-300 font-normal'"
-                                                    class="px-2.5 py-1 rounded-xl border text-[11px] transition-all cursor-pointer"
+                                                    class="px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg md:rounded-xl border text-[10px] md:text-[11px] transition-all cursor-pointer"
                                                     x-text="dispW(s) + ' × ' + dispH(s)">
                                                 </button>
                                             </template>
@@ -197,10 +196,11 @@
                             </div>
 
                             {{-- Design Button --}}
-                            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end">
+                            <?php $slug = '&title='; ?>
+                            <div class="mt-3 md:mt-6 pt-3 md:pt-4 border-t border-slate-100 flex items-center justify-end">
                                 <a :href="'{{ route('localprint.customizer') }}?size=' + sizeCode +
-                                    '&orientation=' + orientMode + ' & title = ' + titleSlug"
-                                    class="bg-[#287d3c] hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-2xs inline-flex items-center gap-1 active:scale-95">
+                                    '&orientation=' + orientMode + '{{ $slug }} ' + titleSlug"
+                                    class="bg-[#287d3c] hover:bg-emerald-800 text-white font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-[11px] md:text-xs transition-all shadow-2xs inline-flex items-center gap-1 active:scale-95">
                                     <span>Design →</span>
                                 </a>
                             </div>

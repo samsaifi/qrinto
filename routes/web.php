@@ -26,6 +26,18 @@ use App\Http\Controllers\AIController;
 use App\Http\Middleware\DetectDevice;
 use App\Http\Controllers\Store\StorePanelController;
 use Illuminate\Http\Request;
+
+// ── Site Lock Routes (excluded from SiteLock middleware) ──
+Route::get('/site-lock', fn () => view('site-lock'))->name('site-lock');
+Route::post('/site-lock/verify', function (Request $request) {
+    $request->validate(['password' => 'required|string']);
+    if (hash_equals(config('app.site_lock_password', ''), $request->input('password'))) {
+        $request->session()->put('site_unlocked', true);
+        return redirect('/');
+    }
+    return back()->withErrors(['password' => 'Incorrect password. Please try again.']);
+})->name('site-lock.verify');
+
 Route::get('/storage-link', function () {
     $link = public_path('storage');
     $target = storage_path('app/public');
@@ -92,17 +104,18 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('/store/coupons', AdminCouponController::class, ['as' => 'storepanel_cat']);
     Route::resource('/store/events', AdminEventController::class, ['as' => 'storepanel_cat']);
 
-    // QZ Tray certificate + signing: eliminates the Allow/Deny dialog.
-    Route::get('/store/qz-tray/cert', [StorePanelController::class, 'qzCertificate'])
-        ->name('storepanel.qz.cert');
-    Route::post('/store/qz-tray/sign', [StorePanelController::class, 'qzSign'])
-        ->name('storepanel.qz.sign');
-
     // Persist "I already downloaded QZ Tray" for the current user, so the
     // onboarding modal on /store/orders is only shown once per user.
     Route::post('/store/qz-tray/confirm', [StorePanelController::class, 'confirmQzTray'])
         ->name('storepanel.qz.confirm');
 });
+
+// QZ Tray certificate + signing: eliminates the Allow/Deny dialog.
+// Outside the auth group so the public local-print flow can use them too.
+Route::get('/store/qz-tray/cert', [StorePanelController::class, 'qzCertificate'])
+    ->name('storepanel.qz.cert');
+Route::post('/store/qz-tray/sign', [StorePanelController::class, 'qzSign'])
+    ->name('storepanel.qz.sign');
 
 Route::get('/store/{storeCode}', function ($storeCode) {
     return app(\App\Http\Controllers\StoreQrController::class)->scan($storeCode);
