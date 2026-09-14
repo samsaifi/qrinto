@@ -55,11 +55,7 @@
         }
     </style>
     @stack('styles')
-    <script>
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-    </script>
+    <script></script>
 </head>
 
 <body class="min-h-screen antialiased">
@@ -369,20 +365,40 @@
                     }
                     if (!b64) throw new Error('No PDF data available.');
 
+                    // Translate the saved tray config into QZ Tray's print-config
+                    // schema. These key names MUST match QZ exactly (the bridge
+                    // spreads them into qz.configs.create) — otherwise the tray's
+                    // configured orientation/size/colour/duplex are silently
+                    // ignored and the job prints with the printer's own defaults.
+                    // Kept in sync with quick-flow-pc buildPrintConfig().
                     const printOpts = {
                         type: 'pdf',
-                        encoding: 'base64',
+                        flavor: 'base64',
                         copies: payload.copies || 1,
+                        orientation: chosen.landscape ? 'landscape' : 'portrait',
+                        colorType: (chosen.color === false) ? 'grayscale' : 'color',
                     };
-                    if (chosen.size) printOpts.paperSize = chosen.size;
-                    if (chosen.landscape) printOpts.landscape = true;
-                    if (chosen.duplex && chosen.duplex !== 'simplex') printOpts.duplex = chosen.duplex;
-                    if (chosen.color !== undefined) printOpts.color = chosen.color;
+
+                    // Paper size → explicit media size in inches (QZ wants
+                    // { size:{width,height}, units:'in' }, not a paperSize name).
+                    const sw = parseFloat(chosen.size_width);
+                    const sh = parseFloat(chosen.size_height);
+                    if (sw > 0 && sh > 0) {
+                        printOpts.size = { width: sw, height: sh };
+                        printOpts.units = 'in';
+                    }
+
+                    // Paper source → QZ `printerTray`. Empty means printer default.
                     if (chosen.input_bin) printOpts.printerTray = chosen.input_bin;
-                    if (chosen.scale && chosen.scale !== 100) printOpts.scaleFactor = chosen.scale;
-                    if (chosen.margins && chosen.margins !== 'default') printOpts.margins = {
-                        marginType: chosen.margins
-                    };
+
+                    // Duplex: QZ expects false, or the two-sided edge strings.
+                    if (chosen.duplex === 'longEdge') {
+                        printOpts.duplex = 'two-sided-long-edge';
+                    } else if (chosen.duplex === 'shortEdge') {
+                        printOpts.duplex = 'two-sided-short-edge';
+                    } else {
+                        printOpts.duplex = false;
+                    }
 
                     await pp.print(printer, b64, printOpts);
                 } catch (e) {

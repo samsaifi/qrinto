@@ -20,140 +20,155 @@
             {{ session('warning') }}</div>
     @endif
 
-    <div x-data="trayForm({{ Illuminate\Support\Js::from($rows) }}, {{ Illuminate\Support\Js::from($sizeOptions) }}, {{ Illuminate\Support\Js::from($sizeDims) }})"
-        x-init="scan()">
-    <form method="POST" action="{{ route('storepanel.trays.save') }}" class="mt-8 max-w-3xl">
-        @csrf
+    <div x-data="trayForm({{ Illuminate\Support\Js::from($rows) }}, {{ Illuminate\Support\Js::from($sizeOptions) }}, {{ Illuminate\Support\Js::from($sizeDims) }})" x-init="scan()">
+        <form method="POST" action="{{ route('storepanel.trays.save') }}" class="mt-8 max-w-3xl">
+            @csrf
 
-        {{-- Scan status --}}
-        <div class="mb-4 flex items-center gap-3">
-            <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">Noritsu Printers</span>
-            <span x-show="scanState === 'loading'" class="text-[12px] text-slate-400 flex items-center gap-2">
-                <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                    </circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                </svg>
-                Scanning printers…
-            </span>
-            <span x-show="scanState === 'ok'" class="mono text-[11px] text-slate-500"
-                x-text="rows.length + ' printer' + (rows.length === 1 ? '' : 's')"></span>
-            <button type="button" @click="scan()" x-show="scanState !== 'loading'"
-                class="ml-auto inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-800 transition">
-                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Rescan
-            </button>
-        </div>
+            {{-- Scan status --}}
+            <div class="mb-4 flex items-center gap-3">
+                <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">Noritsu Printers</span>
+                <span x-show="scanState === 'loading'" class="text-[12px] text-slate-400 flex items-center gap-2">
+                    <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                            stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    Scanning printers…
+                </span>
+                <span x-show="scanState === 'ok'" class="mono text-[11px] text-slate-500"
+                    x-text="rows.length + ' printer' + (rows.length === 1 ? '' : 's')"></span>
+                <button type="button" @click="scan()" x-show="scanState !== 'loading'"
+                    class="ml-auto inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-800 transition">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Rescan
+                </button>
+            </div>
 
-        {{-- PrintTrays missing hint --}}
-        <div x-show="scanState === 'error'"
-            class="mb-4 flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200">
-            <i data-lucide="printer-off" class="w-4 h-4 text-amber-600 shrink-0"></i>
-            <p class="text-[13px] text-amber-800 leading-snug flex-1">
-                PrintTrays isn't running on this PC. Install it and reload to detect printers.
-            </p>
-            <a href="https://noritsucanada.com/print-trays/download/" target="_blank" rel="noopener"
-                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#287d3c] hover:bg-emerald-800 text-white text-[12px] font-bold transition">
-                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                Download PrintTrays
-            </a>
-        </div>
+            {{-- PrintTrays missing hint --}}
+            <div x-show="scanState === 'error'"
+                class="mb-4 flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200">
+                <i data-lucide="printer-off" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                <p class="text-[13px] text-amber-800 leading-snug flex-1">
+                    PrintTrays isn't running on this PC. Install it and reload to detect printers.
+                </p>
+                <a href="https://noritsucanada.com/print-trays/download/" target="_blank" rel="noopener"
+                    class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#287d3c] hover:bg-emerald-800 text-white text-[12px] font-bold transition">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    Download PrintTrays
+                </a>
+            </div>
 
-        {{-- Empty state --}}
-        <div x-show="scanState === 'ok' && rows.length === 0"
-            class="mb-4 px-4 py-6 rounded-2xl bg-slate-50 border border-slate-200 text-center text-[13px] text-slate-500">
-            No Noritsu printers found on this PC.
-        </div>
+            {{-- Empty state --}}
+            <div x-show="scanState === 'ok' && rows.length === 0"
+                class="mb-4 px-4 py-6 rounded-2xl bg-slate-50 border border-slate-200 text-center text-[13px] text-slate-500">
+                No Noritsu printers found on this PC.
+            </div>
 
-        {{-- Printer rows --}}
-        <div class="space-y-2">
-            <template x-for="(row, i) in rows" :key="row.key">
-                <div class="bg-white border border-slate-200/80 rounded-2xl p-4 cursor-pointer transition hover:border-slate-300"
-                    :class="row.enabled ? '' : 'opacity-60'"
-                    @click="openConfig(i)">
+            {{-- Printer rows --}}
+            <div class="space-y-2">
+                <template x-for="(row, i) in rows" :key="row.key">
+                    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 cursor-pointer transition hover:border-slate-300"
+                        :class="row.enabled ? '' : 'opacity-60'" @click="openConfig(i)">
 
-                    <div class="flex items-center gap-3">
-                        {{-- Enable toggle --}}
-                        <button type="button" @click.stop="row.enabled = !row.enabled" role="switch"
-                            :aria-checked="row.enabled" class="relative w-11 h-6 rounded-full transition-colors shrink-0"
-                            :class="row.enabled ? 'bg-[#287d3c]' : 'bg-slate-300'">
-                            <span
-                                class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-                                :class="row.enabled ? 'translate-x-5' : ''"></span>
-                        </button>
+                        <div class="flex items-center gap-3">
+                            {{-- Enable toggle --}}
+                            <button type="button" @click.stop="row.enabled = !row.enabled" role="switch"
+                                :aria-checked="row.enabled"
+                                class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+                                :class="row.enabled ? 'bg-[#287d3c]' : 'bg-slate-300'">
+                                <span
+                                    class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                                    :class="row.enabled ? 'translate-x-5' : ''"></span>
+                            </button>
 
-                        <div class="flex-1 min-w-0">
-                            <p class="font-bold text-[14px] text-slate-900 truncate" x-text="row.label" :title="row.label"></p>
-                            <p class="mono text-[11px] text-slate-400 mt-0.5">
-                                <span x-text="row.printer"></span>
-                                <span x-show="row.defaultPrinter" class="ml-1 text-blue-600 font-bold">· default</span>
-                            </p>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-[14px] text-slate-900 truncate" x-text="row.label"
+                                    :title="row.label"></p>
+                                <p class="mono text-[11px] text-slate-400 mt-0.5">
+                                    <span x-text="row.printer"></span>
+                                    <span x-show="row.defaultPrinter" class="ml-1 text-blue-600 font-bold">· default</span>
+                                </p>
+                            </div>
+
+                            <button type="button" @click.stop="openConfig(i)"
+                                class="text-[11px] text-[#287d3c] font-bold hover:underline shrink-0">Change</button>
                         </div>
 
-                        <button type="button" @click.stop="openConfig(i)"
-                            class="text-[11px] text-[#287d3c] font-bold hover:underline shrink-0">Change</button>
-                    </div>
+                        {{-- Saved params summary --}}
+                        <template x-if="row.size || row.inputBin || row.mediaTypeLive">
+                            <div class="mt-2 ml-14 flex flex-wrap items-center gap-1.5">
+                                <template x-if="row.size">
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200"
+                                        x-text="sizeLabel(row)"></span>
+                                </template>
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200"
+                                    x-text="row.landscape ? 'Landscape' : 'Portrait'"></span>
+                                <template x-if="row.duplex !== 'simplex'">
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200"
+                                        x-text="row.duplex === 'longEdge' ? 'Duplex' : 'Duplex (short)'"></span>
+                                </template>
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200"
+                                    x-text="row.color ? 'Color' : 'B&W'"></span>
+                                <template x-if="row.inputBin">
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200"
+                                        x-text="inputBinLabel(row)"></span>
+                                </template>
+                                <template x-if="row.mediaTypeLive">
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200"
+                                        x-text="mediaTypeLiveLabel(row)"></span>
+                                </template>
+                            </div>
+                        </template>
 
-                    {{-- Saved params summary --}}
-                    <template x-if="row.size || row.inputBin || row.mediaTypeLive">
-                        <div class="mt-2 ml-14 flex flex-wrap items-center gap-1.5">
-                            <template x-if="row.size">
-                                <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200" x-text="sizeLabel(row)"></span>
-                            </template>
-                            <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200" x-text="row.landscape ? 'Landscape' : 'Portrait'"></span>
-                            <template x-if="row.duplex !== 'simplex'">
-                                <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200" x-text="row.duplex === 'longEdge' ? 'Duplex' : 'Duplex (short)'"></span>
-                            </template>
-                            <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200" x-text="row.color ? 'Color' : 'B&W'"></span>
-                            <template x-if="row.inputBin">
-                                <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200" x-text="inputBinLabel(row)"></span>
-                            </template>
-                            <template x-if="row.mediaTypeLive">
-                                <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-100 text-slate-600 border border-slate-200" x-text="mediaTypeLiveLabel(row)"></span>
-                            </template>
+                        {{-- Loading indicator --}}
+                        <div x-show="row.detailsLoading" class="mt-2 ml-14">
+                            <span class="text-[11px] text-slate-400 flex items-center gap-1.5">
+                                <svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                                    </path>
+                                </svg>
+                                Reading printer capabilities…
+                            </span>
                         </div>
-                    </template>
 
-                    {{-- Loading indicator --}}
-                    <div x-show="row.detailsLoading" class="mt-2 ml-14">
-                        <span class="text-[11px] text-slate-400 flex items-center gap-1.5">
-                            <svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                            </svg>
-                            Reading printer capabilities…
-                        </span>
+                        {{-- Hidden fields --}}
+                        <input type="hidden" :name="`trays[${i}][printer]`" :value="row.printer">
+                        <input type="hidden" :name="`trays[${i}][enabled]`" :value="row.enabled ? 1 : 0">
+                        <input type="hidden" :name="`trays[${i}][size]`" :value="row.size">
+                        <input type="hidden" :name="`trays[${i}][media]`" :value="row.media">
+                        <input type="hidden" :name="`trays[${i}][gsm]`" :value="row.gsm">
+                        <input type="hidden" :name="`trays[${i}][density]`" :value="row.density">
+                        <input type="hidden" :name="`trays[${i}][landscape]`" :value="row.landscape ? 1 : 0">
+                        <input type="hidden" :name="`trays[${i}][duplex]`" :value="row.duplex">
+                        <input type="hidden" :name="`trays[${i}][input_bin]`" :value="row.inputBin">
+                        <input type="hidden" :name="`trays[${i}][quality]`" :value="row.quality">
+                        <input type="hidden" :name="`trays[${i}][media_type_live]`" :value="row.mediaTypeLive">
+                        <input type="hidden" :name="`trays[${i}][margins]`" :value="row.margins">
+                        <input type="hidden" :name="`trays[${i}][color]`" :value="row.color ? 1 : 0">
+                        <input type="hidden" :name="`trays[${i}][scale]`" :value="row.scale">
+                        <input type="hidden" :name="`trays[${i}][size_width]`" :value="selectedPaperWidth(row)">
+                        <input type="hidden" :name="`trays[${i}][size_height]`" :value="selectedPaperHeight(row)">
                     </div>
+                </template>
+            </div>
 
-                    {{-- Hidden fields --}}
-                    <input type="hidden" :name="`trays[${i}][printer]`" :value="row.printer">
-                    <input type="hidden" :name="`trays[${i}][enabled]`" :value="row.enabled ? 1 : 0">
-                    <input type="hidden" :name="`trays[${i}][size]`" :value="row.size">
-                    <input type="hidden" :name="`trays[${i}][media]`" :value="row.media">
-                    <input type="hidden" :name="`trays[${i}][gsm]`" :value="row.gsm">
-                    <input type="hidden" :name="`trays[${i}][density]`" :value="row.density">
-                    <input type="hidden" :name="`trays[${i}][landscape]`" :value="row.landscape ? 1 : 0">
-                    <input type="hidden" :name="`trays[${i}][duplex]`" :value="row.duplex">
-                    <input type="hidden" :name="`trays[${i}][input_bin]`" :value="row.inputBin">
-                    <input type="hidden" :name="`trays[${i}][quality]`" :value="row.quality">
-                    <input type="hidden" :name="`trays[${i}][media_type_live]`" :value="row.mediaTypeLive">
-                    <input type="hidden" :name="`trays[${i}][margins]`" :value="row.margins">
-                    <input type="hidden" :name="`trays[${i}][color]`" :value="row.color ? 1 : 0">
-                    <input type="hidden" :name="`trays[${i}][scale]`" :value="row.scale">
-                    <input type="hidden" :name="`trays[${i}][size_width]`" :value="selectedPaperWidth(row)">
-                    <input type="hidden" :name="`trays[${i}][size_height]`" :value="selectedPaperHeight(row)">
-                </div>
-            </template>
-        </div>
-
-        <div class="flex items-center gap-3 mt-8">
-            <button type="submit" :disabled="rows.length === 0"
-                class="px-5 py-2.5 rounded-xl bg-[#287d3c] hover:bg-emerald-800 text-white text-sm font-bold transition disabled:bg-slate-300 disabled:cursor-not-allowed">
-                Save tray setup
-            </button>
-            <a href="{{ route('storepanel.orders') }}"
-                class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Cancel</a>
-        </div>
-    </form>
+            <div class="flex items-center gap-3 mt-8">
+                <button type="submit" :disabled="rows.length === 0"
+                    class="px-5 py-2.5 rounded-xl bg-[#287d3c] hover:bg-emerald-800 text-white text-sm font-bold transition disabled:bg-slate-300 disabled:cursor-not-allowed">
+                    Save tray setup
+                </button>
+                <a href="{{ route('storepanel.orders') }}"
+                    class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Cancel</a>
+            </div>
+        </form>
 
         @include('partials.print-settings-modal')
     </div>
@@ -279,12 +294,18 @@
             // Static paper dims as { code: { w, h } } for the shared mixin.
             const STATIC_DIMS = {};
             Object.entries(serverSizeDims || {}).forEach(([code, d]) => {
-                if (d) STATIC_DIMS[code] = { w: d[0], h: d[1] };
+                if (d) STATIC_DIMS[code] = {
+                    w: d[0],
+                    h: d[1]
+                };
             });
 
             return {
                 // Shared Print Settings modal (state + capability loading).
-                ...window.printSettingsMixin({ sizeOptions: serverSizeOptions, sizeDims: STATIC_DIMS }),
+                ...window.printSettingsMixin({
+                    sizeOptions: serverSizeOptions,
+                    sizeDims: STATIC_DIMS
+                }),
 
                 rows: [],
                 scanState: 'idle',
@@ -361,7 +382,9 @@
                 async scan() {
                     this.scanState = 'loading';
                     try {
-                        const { PrintTrays } = await import('{{ asset("js/printtrays.js") }}');
+                        const {
+                            PrintTrays
+                        } = await import('{{ asset('js/printtrays.js') }}');
                         const pp = new PrintTrays({
                             downloadUrl: 'https://noritsucanada.com/print-trays/download/',
                             onNotInstalled: () => {},

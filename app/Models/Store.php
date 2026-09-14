@@ -43,7 +43,11 @@ class Store extends Model
      */
 
     public const TRAY_KEYS = ['mp', 'tray1', 'tray2', 'tray3', 'tray4', 'tray5'];
-
+    protected $appends = ['name']; 
+    public function getNameAttribute()
+    {
+        return $this->store_name;
+    }
     public static function trayLabels(): array
     {
         return [

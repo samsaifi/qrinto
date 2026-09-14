@@ -426,6 +426,13 @@ Route::get('/store-admin/dashboard', [AdminDashboardController::class, 'index'])
 Route::get('/store-admin/trays', fn() => response('Trays feature coming soon', 200))->middleware(['auth', 'admin'])->name('store.trays');
 Route::get('/staff/dashboard', [AdminDashboardController::class, 'index'])->middleware(['auth', 'admin'])->name('staff.dashboard');
 
+// -----------------------------------------------------------------------------
+// New standalone card editor (v2). Fully isolated from the existing customizer.
+// Registered BEFORE the flow routes so the '/{type}' wildcard cannot shadow it.
+// -----------------------------------------------------------------------------
+Route::get('/card-editor/{product?}', [\App\Http\Controllers\CardEditorController::class, 'index'])
+    ->name('card-editor');
+
 // Single device-aware consumer flow. QuickFlowController now picks the view
 // folder (quick-flow vs quick-flow-pc) from the request device, so one route
 // set named 'flow.*' serves both mobile and desktop.

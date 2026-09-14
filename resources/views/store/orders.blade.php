@@ -140,6 +140,22 @@
                                             <template x-if="t.printer"><span class="text-slate-400"> · <span
                                                         x-text="t.printer"></span></span></template>
                                         </p>
+
+                                        {{-- Configured print settings — same wired settings that reach the
+                                             printer (Media Type / Quality are NOT WIRED, so not shown). --}}
+                                        <div class="mt-1.5 flex flex-wrap items-center gap-1">
+                                            <template x-if="t.size_pretty">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.size_pretty"></span>
+                                            </template>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.landscape ? 'Landscape' : 'Portrait'"></span>
+                                            <template x-if="t.duplex && t.duplex !== 'simplex'">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.duplex === 'longEdge' ? 'Duplex' : 'Duplex (short)'"></span>
+                                            </template>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.color === false ? 'B&amp;W' : 'Color'"></span>
+                                            <template x-if="t.input_bin">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.input_bin"></span>
+                                            </template>
+                                        </div>
                                     </div>
                                 </label>
                             </template>

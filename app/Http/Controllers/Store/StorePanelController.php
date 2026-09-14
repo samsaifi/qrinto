@@ -32,13 +32,13 @@ class StorePanelController extends Controller
     protected function currentStore(): ?Store
     {
         $user = auth()->user();
-
+         
         if ($user && $user->store_id) {
+           
             return $user->store;
-        }
-
-        // NAC admins without a store see the first real store as a preview.
-        return Store::realStores()->active()->first() ?? Store::first();
+        }else{
+            return redirect()->route('login')->with('error', 'You are not authorized to access this page.');
+        } 
     }
 
     public function orders(Request $request)

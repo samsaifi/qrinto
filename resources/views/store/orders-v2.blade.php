@@ -140,6 +140,25 @@
                                             <template x-if="t.printer"><span class="text-slate-400"> · <span
                                                         x-text="t.printer"></span></span></template>
                                         </p>
+
+                                        {{-- Configured print settings — mirrors the tray setup page so the
+                                             operator sees exactly what will be sent to the printer. --}}
+                                        <div class="mt-1.5 flex flex-wrap items-center gap-1">
+                                            <template x-if="t.size_pretty">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.size_pretty"></span>
+                                            </template>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.landscape ? 'Landscape' : 'Portrait'"></span>
+                                            <template x-if="t.duplex && t.duplex !== 'simplex'">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.duplex === 'longEdge' ? 'Duplex' : 'Duplex (short)'"></span>
+                                            </template>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.color === false ? 'B&amp;W' : 'Color'"></span>
+                                            <template x-if="t.input_bin">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.input_bin"></span>
+                                            </template>
+                                            {{-- Media Type / Quality are intentionally NOT shown here: the
+                                                 print pipeline can't set a driver's media-type or DPI, so they
+                                                 never reach the printer. Only wired settings are displayed. --}}
+                                        </div>
                                     </div>
                                     <template x-if="!t.enabled">
                                         <span class="text-[11px] text-slate-400">Off</span>
@@ -800,6 +819,8 @@
                             label: t.label,
                             tray_key: t.key,
                             size: t.size,
+                            size_width: t.size_width,
+                            size_height: t.size_height,
                             media: t.media,
                             gsm: t.gsm,
                             user_type: t.user_type,

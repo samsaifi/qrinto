@@ -158,7 +158,11 @@
                                 <i data-lucide="package" class="w-4 h-4 text-slate-400"></i>
                                 <span>Track an order</span>
                             </a>
-
+                            <a href="https://www.noritsu.com/931bl-resource-center.html " @click="menuOpen = false"
+                                class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
+                                <i data-lucide="package" class="w-4 h-4 text-slate-400"></i>
+                                <span>Resource Center</span>
+                            </a>
                             <div class="my-1 border-t border-slate-100"></div>
 
                             <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
