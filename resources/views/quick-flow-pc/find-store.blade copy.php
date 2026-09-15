@@ -340,20 +340,9 @@
                     }
                 },
 
-                async detectLocation() {
+                detectLocation() {
                     this.query = '';
                     this.searchResults = null;
-
-                    // Primary: IP-based location (respects VPN). This resolves the
-                    // visitor's location from their IP via the server (ipwho.is).
-                    this.nearbyLoading = true;
-                    await this.detectLocationByIp();
-                    this.nearbyLoading = false;
-                    this.geolocationChecked = true;
-                    this.initMap();
-                    return;
-
-                    // eslint-disable-next-line no-unreachable
                     if (!navigator.geolocation) {
                         this.nearbyError = true;
                         this.geolocationChecked = true;
@@ -394,58 +383,13 @@
                                     });
                                 }
                             },
-                            async (error) => {
+                            (error) => {
                                 console.error('Geolocation error:', error);
-                                // Fallback: estimate location from the visitor's IP.
-                                await this.detectLocationByIp();
                                 this.nearbyLoading = false;
                                 this.geolocationChecked = true;
                                 this.initMap();
                             }
                     );
-                },
-
-                async detectLocationByIp() {
-                    try {
-                        // Resolve location from the browser's own connection so a
-                        // browser-level VPN is respected. ipwho.is needs no API key.
-                        let lat = null, lon = null;
-                        try {
-                            const ipRes = await fetch('https://ipwho.is/');
-                            if (ipRes.ok) {
-                                const ipData = await ipRes.json();
-                                if (ipData.success && ipData.latitude && ipData.longitude) {
-                                    lat = ipData.latitude;
-                                    lon = ipData.longitude;
-                                }
-                            }
-                        } catch (e) {
-                            console.error('ipwho.is lookup failed:', e);
-                        }
-
-                        // Build the nearby-stores request. If the client-side IP
-                        // lookup worked, pass the coords; otherwise let the server
-                        // fall back to its own IP-based lookup.
-                        const url = (lat && lon)
-                            ? `<?php echo url()->current(); ?>?lat=${lat}&lon=${lon}`
-                            : `<?php echo url()->current(); ?>?ip_locate=1`;
-
-                        const response = await fetch(url, {
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        if (response.ok) {
-                            const data = await response.json();
-                            this.nearbyStores = data.stores || [];
-                            this.userLat = lat || data.lat || null;
-                            this.userLon = lon || data.lon || null;
-                        }
-                    } catch (err) {
-                        console.error('Error fetching IP-based stores:', err);
-                        this.nearbyError = true;
-                    }
                 },
 
                 async fetchStores() {

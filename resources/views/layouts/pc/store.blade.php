@@ -194,16 +194,24 @@
                     }
                 };
 
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => fetchStore(pos.coords.latitude, pos.coords.longitude),
-                        () => fetchStore(), {
-                            timeout: 5000
+                // Primary: IP-based location via the browser so a browser-level
+                // VPN is respected. ipwho.is needs no API key.
+                (async () => {
+                    try {
+                        const ipRes = await fetch('https://ipwho.is/');
+                        if (ipRes.ok) {
+                            const ipData = await ipRes.json();
+                            if (ipData.success && ipData.latitude && ipData.longitude) {
+                                await fetchStore(ipData.latitude, ipData.longitude);
+                                return;
+                            }
                         }
-                    );
-                } else {
-                    fetchStore();
-                }
+                    } catch (e) {
+                        console.error('ipwho.is lookup failed:', e);
+                    }
+                    // Fallback: let the server resolve from the request IP.
+                    await fetchStore();
+                })();
             },
 
             async confirmSuggestedStore() {

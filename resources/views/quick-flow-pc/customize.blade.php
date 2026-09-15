@@ -34,6 +34,7 @@
     @php
         $lpo = $localPrintOverrides ?? null;
         $noOfPages = $lpo ? (int) $lpo['noOfPages'] : (int) ($product->no_of_pages ?? 1);
+
         if ($noOfPages <= 1) {
             $slots = [
                 'frame_image' => 'Page 1',
@@ -102,7 +103,7 @@
         $bcStoreName =
             session('active_store_name') ??
             ((session('active_store_id') ? \App\Models\Store::find(session('active_store_id'))?->name : null) ??
-                ($product->store->name ?? (null ?? ($flowData['store_name'] ?? 'Store'))));
+                ($product->store->store_name ?? (null ?? ($flowData['store_name'] ?? 'Store'))));
 
         $bcProductType =
             $flowData['type_name'] ?? ($product->productType->name ?? ($flowData['category_name'] ?? 'Product Type'));
@@ -146,15 +147,19 @@
                 <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
                 <span class="text-slate-500 font-medium">{{ $bcPageSizeSide }}</span>
                 <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                <span class="text-slate-900 font-extrabold max-w-xs truncate" title="{{ $bcTemplateName }}">{{ $bcTemplateName }}</span>
+                <span class="text-slate-900 font-extrabold max-w-xs truncate"
+                    title="{{ $bcTemplateName }}">{{ $bcTemplateName }}</span>
             </nav>
             {{-- Mobile breadcrumb (abbreviated) --}}
-            <nav class="cust-breadcrumb cust-breadcrumb-mobile items-center gap-1.5 text-[10px] font-semibold" style="display:none;">
-                <a href="{{ route('flow.index') }}" class="text-slate-500 hover:text-brand-600 transition-colors shrink-0">Home</a>
+            <nav class="cust-breadcrumb cust-breadcrumb-mobile items-center gap-1.5 text-[10px] font-semibold"
+                style="display:none;">
+                <a href="{{ route('flow.index') }}"
+                    class="text-slate-500 hover:text-brand-600 transition-colors shrink-0">Home</a>
                 <i data-lucide="chevron-right" class="w-3 h-3 text-slate-400 shrink-0"></i>
                 <span class="text-slate-500 font-medium shrink-0">{{ $bcPageSizeSide }}</span>
                 <i data-lucide="chevron-right" class="w-3 h-3 text-slate-400 shrink-0"></i>
-                <span class="text-slate-900 font-extrabold max-w-[160px] truncate" title="{{ $bcTemplateName }}">{{ $bcTemplateName }}</span>
+                <span class="text-slate-900 font-extrabold max-w-[160px] truncate"
+                    title="{{ $bcTemplateName }}">{{ $bcTemplateName }}</span>
             </nav>
         </div>
 
@@ -172,6 +177,8 @@
                         class="cust-left-dock absolute left-1 lg:left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
 
                         {{-- Page Circle Buttons (Only if product has > 1 page) --}}
+
+
                         @if (count($imageTypes) > 1)
                             @foreach ($imageTypes as $key => $img)
                                 @php
@@ -282,7 +289,8 @@
                             </div>
 
                             {{-- Alignments --}}
-                            <div class="cust-toolbar-align flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/60">
+                            <div
+                                class="cust-toolbar-align flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200/60">
                                 <button type="button" onclick="customizer.alignSelected('left')"
                                     class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-white rounded-lg transition-all"
                                     title="Align Left">
@@ -389,24 +397,37 @@
 
                         {{-- Mobile Page Switcher (horizontal strip, hidden on desktop via CSS) --}}
                         @if (count($imageTypes) > 1)
-                        <div class="cust-mobile-pages" style="display:none;">
-                            @foreach ($imageTypes as $key => $img)
-                                @php
-                                    $config = $maskData[$key] ?? [];
-                                    $enabled = ($config['enabled'] ?? true) !== false;
-                                    $isFirst = $loop->first;
-                                @endphp
-                                <button type="button" onclick="customizer.switchCanvas('{{ $key }}')"
-                                    class="cust-mobile-page-btn thumb-nav-btn {{ $isFirst ? 'active' : '' }} {{ !$enabled ? 'disabled-tab' : '' }}"
-                                    data-key="{{ $key }}" data-short="P{{ $loop->iteration }}" data-full="Page {{ $loop->iteration }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
-                                    <span>{{ $isFirst ? 'Page '.$loop->iteration : 'P'.$loop->iteration }}</span>
-                                    @if (!$enabled)
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;top:-2px;right:-2px;color:#ef4444;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                    @endif
-                                </button>
-                            @endforeach
-                        </div>
+                            <div class="cust-mobile-pages" style="display:none;">
+                                @foreach ($imageTypes as $key => $img)
+                                    @php
+                                        $config = $maskData[$key] ?? [];
+                                        $enabled = ($config['enabled'] ?? true) !== false;
+                                        $isFirst = $loop->first;
+                                    @endphp
+                                    <button type="button" onclick="customizer.switchCanvas('{{ $key }}')"
+                                        class="cust-mobile-page-btn thumb-nav-btn {{ $isFirst ? 'active' : '' }} {{ !$enabled ? 'disabled-tab' : '' }}"
+                                        data-key="{{ $key }}" data-short="P{{ $loop->iteration }}"
+                                        data-full="Page {{ $loop->iteration }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                                            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                                        </svg>
+                                        <span>{{ $isFirst ? 'Page ' . $loop->iteration : 'P' . $loop->iteration }}</span>
+                                        @if (!$enabled)
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                                style="position:absolute;top:-2px;right:-2px;color:#ef4444;">
+                                                <rect width="18" height="11" x="3" y="11" rx="2"
+                                                    ry="2" />
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                            </svg>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
                         @endif
 
                         <div class="w-full flex items-center justify-center py-2 relative" id="canvas-stage">
@@ -550,54 +571,107 @@
 @endsection
 
 @push('body_end')
-<div id="mobile-customize-toolbar" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#ffffff; border-top:1px solid #e2e8f0; padding:12px 10px calc(22px + env(safe-area-inset-bottom, 22px)) 10px; box-shadow:0 -4px 16px rgba(0,0,0,0.12);">
-    <div style="display:flex; align-items:center; justify-content:space-evenly; max-width:400px; margin:0 auto;">
-        <label for="photo-upload-input" style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer;">
-            <div style="width:40px; height:40px; border-radius:14px; background:#fff0f6; border:1.5px solid #fbcfe8; display:flex; align-items:center; justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-            </div>
-            <span style="font-size:9px; font-weight:700; color:#ec4899;">Photo</span>
-        </label>
-        <button type="button" onclick="toggleTextDrawer()" style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
-            <div style="width:40px; height:40px; border-radius:14px; background:#faf5ff; border:1.5px solid #e9d5ff; display:flex; align-items:center; justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
-            </div>
-            <span style="font-size:9px; font-weight:700; color:#9333ea;">Text</span>
-        </button>
-        <button type="button" onclick="toggleShapesDrawer()" style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
-            <div style="width:40px; height:40px; border-radius:14px; background:#f0fdf4; border:1.5px solid #bbf7d0; display:flex; align-items:center; justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>
-            </div>
-            <span style="font-size:9px; font-weight:700; color:#16a34a;">Shapes</span>
-        </button>
-        <button type="button" onclick="toggleTemplatesDrawer()" style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
-            <div style="width:40px; height:40px; border-radius:14px; background:#f8fafc; border:1.5px solid #e2e8f0; display:flex; align-items:center; justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/></svg>
-            </div>
-            <span style="font-size:9px; font-weight:700; color:#475569;">Design</span>
-        </button>
-        <button type="button" onclick="toggleLayersDrawer()" style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
-            <div style="width:40px; height:40px; border-radius:14px; background:#f8fafc; border:1.5px solid #e2e8f0; display:flex; align-items:center; justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
-            </div>
-            <span style="font-size:9px; font-weight:700; color:#475569;">Layers</span>
-        </button>
-        <button type="button" onclick="customizer.submitAllCanvases()" style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
-            <div style="width:42px; height:42px; border-radius:14px; background:#287d3c; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(40,125,60,0.3);">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </div>
-            <span style="font-size:9px; font-weight:900; color:#287d3c;">Done</span>
-        </button>
+    <div id="mobile-customize-toolbar"
+        style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#ffffff; border-top:1px solid #e2e8f0; padding:12px 10px calc(22px + env(safe-area-inset-bottom, 22px)) 10px; box-shadow:0 -4px 16px rgba(0,0,0,0.12);">
+        <div style="display:flex; align-items:center; justify-content:space-evenly; max-width:400px; margin:0 auto;">
+            <label for="photo-upload-input"
+                style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer;">
+                <div
+                    style="width:40px; height:40px; border-radius:14px; background:#fff0f6; border:1.5px solid #fbcfe8; display:flex; align-items:center; justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                        <circle cx="9" cy="9" r="2" />
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                    </svg>
+                </div>
+                <span style="font-size:9px; font-weight:700; color:#ec4899;">Photo</span>
+            </label>
+            <button type="button" onclick="toggleTextDrawer()"
+                style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
+                <div
+                    style="width:40px; height:40px; border-radius:14px; background:#faf5ff; border:1.5px solid #e9d5ff; display:flex; align-items:center; justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <polyline points="4 7 4 4 20 4 20 7" />
+                        <line x1="9" x2="15" y1="20" y2="20" />
+                        <line x1="12" x2="12" y1="4" y2="20" />
+                    </svg>
+                </div>
+                <span style="font-size:9px; font-weight:700; color:#9333ea;">Text</span>
+            </button>
+            <button type="button" onclick="toggleShapesDrawer()"
+                style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
+                <div
+                    style="width:40px; height:40px; border-radius:14px; background:#f0fdf4; border:1.5px solid #bbf7d0; display:flex; align-items:center; justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path
+                            d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <circle cx="17.5" cy="17.5" r="3.5" />
+                    </svg>
+                </div>
+                <span style="font-size:9px; font-weight:700; color:#16a34a;">Shapes</span>
+            </button>
+            <button type="button" onclick="toggleTemplatesDrawer()"
+                style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
+                <div
+                    style="width:40px; height:40px; border-radius:14px; background:#f8fafc; border:1.5px solid #e2e8f0; display:flex; align-items:center; justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect width="18" height="7" x="3" y="3" rx="1" />
+                        <rect width="9" height="7" x="3" y="14" rx="1" />
+                        <rect width="5" height="7" x="16" y="14" rx="1" />
+                    </svg>
+                </div>
+                <span style="font-size:9px; font-weight:700; color:#475569;">Design</span>
+            </button>
+            <button type="button" onclick="toggleLayersDrawer()"
+                style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
+                <div
+                    style="width:40px; height:40px; border-radius:14px; background:#f8fafc; border:1.5px solid #e2e8f0; display:flex; align-items:center; justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path
+                            d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+                        <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+                        <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+                    </svg>
+                </div>
+                <span style="font-size:9px; font-weight:700; color:#475569;">Layers</span>
+            </button>
+            <button type="button" onclick="customizer.submitAllCanvases()"
+                style="display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; background:none; border:none; padding:0;">
+                <div
+                    style="width:42px; height:42px; border-radius:14px; background:#287d3c; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(40,125,60,0.3);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                        fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                    </svg>
+                </div>
+                <span style="font-size:9px; font-weight:900; color:#287d3c;">Done</span>
+            </button>
+        </div>
     </div>
-</div>
-<script>
-(function(){
-    var tb = document.getElementById('mobile-customize-toolbar');
-    function toggle(){ if(tb) tb.style.display = window.innerWidth < 768 ? 'block' : 'none'; }
-    toggle();
-    window.addEventListener('resize', toggle);
-})();
-</script>
+    <script>
+        (function() {
+            var tb = document.getElementById('mobile-customize-toolbar');
+
+            function toggle() {
+                if (tb) tb.style.display = window.innerWidth < 768 ? 'block' : 'none';
+            }
+            toggle();
+            window.addEventListener('resize', toggle);
+        })();
+    </script>
 @endpush
 
 @push('scripts')

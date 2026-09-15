@@ -6,11 +6,11 @@
 
 @php
     $routePrefix = $routePrefix ?? 'flow.';
-    
+
     $activeStoreId = session('active_store_id');
     $firstItem = $cart->items->first();
-    $activeStore = $activeStoreId ? \App\Models\Store::find($activeStoreId) : ($firstItem->product->store ?? null);
-    $storeName = $activeStore->name ?? 'Billmeijer Camera';
+    $activeStore = $activeStoreId ? \App\Models\Store::find($activeStoreId) : $firstItem->product->store ?? null;
+    $storeName = $activeStore->store_name ?? 'Billmeijer Camera';
     $storeCity = $activeStore->city ?? 'Fenton';
     $storeState = $activeStore->state ?? 'Michigan';
 @endphp
@@ -117,29 +117,38 @@
                                 }
 
                                 if (empty($itemImages) && $item->product) {
-                                    $fallback = $item->product->frame_image_url
-                                        ?? ($item->product->sample_image_url
-                                        ?? ($item->product->background_image_url
-                                        ?? ($item->product->overlay_image_url ?? null)));
-                                    if ($fallback) $itemImages[] = $fallback;
+                                    $fallback =
+                                        $item->product->frame_image_url ??
+                                        ($item->product->sample_image_url ??
+                                            ($item->product->background_image_url ??
+                                                ($item->product->overlay_image_url ?? null)));
+                                    if ($fallback) {
+                                        $itemImages[] = $fallback;
+                                    }
                                 }
                                 $itemImage = $itemImages[0] ?? null;
-                                
-                                $unitPrice = (float) ($item->unit_price > 0 ? $item->unit_price : ($item->product->base_price ?? 0));
+
+                                $unitPrice =
+                                    (float) ($item->unit_price > 0
+                                        ? $item->unit_price
+                                        : $item->product->base_price ?? 0);
                                 $itemSubtotal = $unitPrice * (int) $item->quantity;
                             @endphp
 
                             <div class="flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-3.5">
                                     {{-- Thumbnails --}}
-                                    <div class="flex gap-1.5 shrink-0 {{ count($itemImages) > 2 ? 'flex-wrap max-w-[120px]' : '' }}">
+                                    <div
+                                        class="flex gap-1.5 shrink-0 {{ count($itemImages) > 2 ? 'flex-wrap max-w-[120px]' : '' }}">
                                         @forelse ($itemImages as $imgIdx => $img)
                                             <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-100 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
-                                                 @click="openGallery({{ json_encode($itemImages) }}, {{ $imgIdx }})">
-                                                <img src="{{ $img }}" alt="{{ $item->product->name }}" class="w-full h-full object-cover">
+                                                @click="openGallery({{ json_encode($itemImages) }}, {{ $imgIdx }})">
+                                                <img src="{{ $img }}" alt="{{ $item->product->name }}"
+                                                    class="w-full h-full object-cover">
                                             </div>
                                         @empty
-                                            <div class="w-14 h-18 bg-slate-100 rounded-xl border border-slate-200/80 flex items-center justify-center text-slate-400 font-bold text-[10px]">
+                                            <div
+                                                class="w-14 h-18 bg-slate-100 rounded-xl border border-slate-200/80 flex items-center justify-center text-slate-400 font-bold text-[10px]">
                                                 Card
                                             </div>
                                         @endforelse
@@ -152,7 +161,9 @@
                                         </h3>
                                         <p class="text-[11px] text-slate-500 font-normal mt-0.5">
                                             @if (isset($customization['size_title']) || isset($customization['size_width']))
-                                                {{ $customization['size_title'] ?? 'Card' }} · {{ ($customization['size_width'] ?? 5) + 0 }} × {{ ($customization['size_height'] ?? 7) + 0 }} in
+                                                {{ $customization['size_title'] ?? 'Card' }} ·
+                                                {{ ($customization['size_width'] ?? 5) + 0 }} ×
+                                                {{ ($customization['size_height'] ?? 7) + 0 }} in
                                             @else
                                                 Standard Specification
                                             @endif
@@ -160,11 +171,14 @@
 
                                         {{-- Quantity stepper --}}
                                         <div class="flex items-center gap-2.5 mt-2">
-                                            <button type="button" @click="updateQty(-1)" :disabled="quantity <= 1 || updatingQty"
+                                            <button type="button" @click="updateQty(-1)"
+                                                :disabled="quantity <= 1 || updatingQty"
                                                 class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
                                                 aria-label="Decrease quantity">−</button>
-                                            <span class="text-sm font-extrabold text-slate-900 w-6 text-center tabular-nums" x-text="quantity">{{ $item->quantity }}</span>
-                                            <button type="button" @click="updateQty(1)" :disabled="quantity >= 100 || updatingQty"
+                                            <span class="text-sm font-extrabold text-slate-900 w-6 text-center tabular-nums"
+                                                x-text="quantity">{{ $item->quantity }}</span>
+                                            <button type="button" @click="updateQty(1)"
+                                                :disabled="quantity >= 100 || updatingQty"
                                                 class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
                                                 aria-label="Increase quantity">+</button>
                                         </div>
@@ -182,8 +196,10 @@
                     <div class="bg-[#f2f7f2] rounded-2xl p-3.5 border border-emerald-100/80 flex items-start gap-2.5">
                         <div class="w-4 h-4 text-emerald-800 mt-0.5 shrink-0">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                         </div>
                         <div>
@@ -202,7 +218,9 @@
                             Who is picking it up
                         </h3>
 
-                        <div x-show="errors.form" class="bg-rose-50 text-rose-600 border border-rose-200 rounded-xl p-3 text-xs font-semibold" style="display:none">
+                        <div x-show="errors.form"
+                            class="bg-rose-50 text-rose-600 border border-rose-200 rounded-xl p-3 text-xs font-semibold"
+                            style="display:none">
                             <span x-text="errors.form"></span>
                         </div>
 
@@ -211,32 +229,40 @@
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-500 mb-1">Name</label>
                                 <input type="text" x-model="pickupName" @blur="validatePickupName()"
-                                    :class="errors.pickupName && touched.pickupName ? 'border-rose-400 bg-rose-50/50' : 'border-slate-200'"
+                                    :class="errors.pickupName && touched.pickupName ? 'border-rose-400 bg-rose-50/50' :
+                                        'border-slate-200'"
                                     class="w-full border rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all">
-                                <p x-show="errors.pickupName && touched.pickupName" x-text="errors.pickupName" class="text-[10px] text-rose-600 font-medium mt-1"></p>
+                                <p x-show="errors.pickupName && touched.pickupName" x-text="errors.pickupName"
+                                    class="text-[10px] text-rose-600 font-medium mt-1"></p>
                             </div>
 
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-500 mb-1">Phone</label>
                                 <input type="tel" x-model="contactNumber" @blur="validateContactNumber()"
-                                    :class="errors.contactNumber && touched.contactNumber ? 'border-rose-400 bg-rose-50/50' : 'border-slate-200'"
+                                    :class="errors.contactNumber && touched.contactNumber ? 'border-rose-400 bg-rose-50/50' :
+                                        'border-slate-200'"
                                     class="w-full border rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all">
-                                <p x-show="errors.contactNumber && touched.contactNumber" x-text="errors.contactNumber" class="text-[10px] text-rose-600 font-medium mt-1"></p>
+                                <p x-show="errors.contactNumber && touched.contactNumber" x-text="errors.contactNumber"
+                                    class="text-[10px] text-rose-600 font-medium mt-1"></p>
                             </div>
                         </div>
 
                         {{-- Email --}}
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Email, for the ready-for-pickup message</label>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Email, for the
+                                ready-for-pickup message</label>
                             <input type="email" x-model="pickupEmail" @blur="validatePickupEmail()"
-                                :class="errors.pickupEmail && touched.pickupEmail ? 'border-rose-400 bg-rose-50/50' : 'border-slate-200'"
+                                :class="errors.pickupEmail && touched.pickupEmail ? 'border-rose-400 bg-rose-50/50' :
+                                    'border-slate-200'"
                                 class="w-full border rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all">
-                            <p x-show="errors.pickupEmail && touched.pickupEmail" x-text="errors.pickupEmail" class="text-[10px] text-rose-600 font-medium mt-1"></p>
+                            <p x-show="errors.pickupEmail && touched.pickupEmail" x-text="errors.pickupEmail"
+                                class="text-[10px] text-rose-600 font-medium mt-1"></p>
                         </div>
 
                         {{-- Note to store --}}
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Note to the store, optional</label>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Note to the store,
+                                optional</label>
                             <textarea x-model="specialInstructions" rows="2.5"
                                 class="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all resize-none"></textarea>
                         </div>
@@ -247,10 +273,12 @@
                                 <input type="checkbox" x-model="acceptedTerms" @change="validateTerms()"
                                     class="w-4 h-4 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 mt-0.5 cursor-pointer">
                                 <span class="text-[11px] text-slate-600 font-medium">
-                                    I agree to the <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank" class="text-emerald-800 font-bold underline">Terms & Conditions</a>.
+                                    I agree to the <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}"
+                                        target="_blank" class="text-emerald-800 font-bold underline">Terms & Conditions</a>.
                                 </span>
                             </label>
-                            <p x-show="errors.terms" x-text="errors.terms" class="text-[10px] text-rose-600 font-medium mt-1"></p>
+                            <p x-show="errors.terms" x-text="errors.terms"
+                                class="text-[10px] text-rose-600 font-medium mt-1"></p>
                         </div>
                     </div>
 
@@ -290,15 +318,13 @@
                     {{-- Action Buttons --}}
                     <div class="space-y-2.5 pt-1">
                         {{-- Place order, pay at counter --}}
-                        <button type="button" @click="payByCash()"
-                            :disabled="!isFormValid()"
+                        <button type="button" @click="payByCash()" :disabled="!isFormValid()"
                             class="w-full bg-[#287d3c] hover:bg-emerald-800 disabled:bg-slate-200 text-white font-bold py-3 rounded-xl text-xs transition-all shadow-2xs active:scale-95 cursor-pointer disabled:cursor-not-allowed">
                             Place order, pay at the counter
                         </button>
 
                         {{-- Pay online now --}}
-                        <button type="button" @click="openPaypal()"
-                            :disabled="!isFormValid()"
+                        <button type="button" @click="openPaypal()" :disabled="!isFormValid()"
                             class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 disabled:bg-slate-50 disabled:text-slate-300 font-bold py-3 rounded-xl text-xs transition-all shadow-2xs active:scale-95 cursor-pointer disabled:cursor-not-allowed">
                             Pay online now
                         </button>
@@ -310,15 +336,18 @@
 
                     {{-- Secure Payment Badge --}}
                     <div class="flex items-start gap-3 bg-[#f0fdf4] border border-emerald-200/80 rounded-xl p-3.5">
-                        <div class="w-8 h-8 rounded-full bg-[#287d3c] text-white flex items-center justify-center shrink-0 mt-0.5">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                <path d="M9 12l2 2 4-4"/>
+                        <div
+                            class="w-8 h-8 rounded-full bg-[#287d3c] text-white flex items-center justify-center shrink-0 mt-0.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <path d="M9 12l2 2 4-4" />
                             </svg>
                         </div>
                         <div>
                             <h4 class="text-xs font-bold text-[#112419]">Secure Payment via PayPal</h4>
-                            <p class="text-[11px] text-slate-500 font-normal mt-0.5">Pay safely with PayPal, cards, or your PayPal balance.</p>
+                            <p class="text-[11px] text-slate-500 font-normal mt-0.5">Pay safely with PayPal, cards, or your
+                                PayPal balance.</p>
                         </div>
                     </div>
                 </div>
@@ -329,20 +358,29 @@
 
         {{-- Image Gallery Modal --}}
         <template x-teleport="body">
-            <div x-cloak x-show="galleryOpen" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm" @click.self="galleryOpen = false" @keydown.escape.window="galleryOpen = false" @keydown.arrow-right.window="galleryOpen && nextImg()" @keydown.arrow-left.window="galleryOpen && prevImg()">
+            <div x-cloak x-show="galleryOpen"
+                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                @click.self="galleryOpen = false" @keydown.escape.window="galleryOpen = false"
+                @keydown.arrow-right.window="galleryOpen && nextImg()"
+                @keydown.arrow-left.window="galleryOpen && prevImg()">
                 <div class="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center" @click.stop>
                     {{-- Close --}}
-                    <button @click="galleryOpen = false" class="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-white shadow-lg text-slate-600 hover:text-slate-900 flex items-center justify-center font-bold text-lg cursor-pointer">✕</button>
+                    <button @click="galleryOpen = false"
+                        class="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-white shadow-lg text-slate-600 hover:text-slate-900 flex items-center justify-center font-bold text-lg cursor-pointer">✕</button>
 
                     {{-- Image --}}
-                    <img :src="galleryImages[galleryIdx]" class="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain bg-white" alt="Preview">
+                    <img :src="galleryImages[galleryIdx]"
+                        class="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain bg-white" alt="Preview">
 
                     {{-- Nav arrows --}}
                     <template x-if="galleryImages.length > 1">
                         <div class="flex items-center gap-4 mt-4">
-                            <button @click="prevImg()" class="w-10 h-10 rounded-full bg-white/90 shadow text-slate-700 hover:bg-white flex items-center justify-center font-bold text-lg cursor-pointer">‹</button>
-                            <span class="text-white text-xs font-bold tabular-nums" x-text="(galleryIdx + 1) + ' / ' + galleryImages.length"></span>
-                            <button @click="nextImg()" class="w-10 h-10 rounded-full bg-white/90 shadow text-slate-700 hover:bg-white flex items-center justify-center font-bold text-lg cursor-pointer">›</button>
+                            <button @click="prevImg()"
+                                class="w-10 h-10 rounded-full bg-white/90 shadow text-slate-700 hover:bg-white flex items-center justify-center font-bold text-lg cursor-pointer">‹</button>
+                            <span class="text-white text-xs font-bold tabular-nums"
+                                x-text="(galleryIdx + 1) + ' / ' + galleryImages.length"></span>
+                            <button @click="nextImg()"
+                                class="w-10 h-10 rounded-full bg-white/90 shadow text-slate-700 hover:bg-white flex items-center justify-center font-bold text-lg cursor-pointer">›</button>
                         </div>
                     </template>
                 </div>
@@ -359,12 +397,14 @@
                                 <h3 class="text-lg font-extrabold text-slate-900">Pay with PayPal</h3>
                                 <p class="text-xs text-slate-500">Fast & secure online payment</p>
                             </div>
-                            <button @click="showPaypal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">
+                            <button @click="showPaypal = false"
+                                class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">
                                 ✕
                             </button>
                         </div>
 
-                        <div class="bg-[#f2f7f2] rounded-2xl p-4 mb-5 flex items-center justify-between border border-emerald-100">
+                        <div
+                            class="bg-[#f2f7f2] rounded-2xl p-4 mb-5 flex items-center justify-between border border-emerald-100">
                             <div>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</p>
                                 <p class="text-2xl font-extrabold text-slate-900" x-text="__price(calculateTotal())"></p>
@@ -385,18 +425,22 @@
                         <div class="text-center">
                             <div class="spinner mx-auto mb-4"></div>
                             <h3 class="text-xl font-extrabold text-slate-900">Processing Order</h3>
-                            <p class="text-slate-500 font-medium text-sm mt-1">Please wait while we confirm your print order...</p>
+                            <p class="text-slate-500 font-medium text-sm mt-1">Please wait while we confirm your print
+                                order...</p>
                         </div>
                     </template>
                     <template x-if="paymentSuccess">
                         <div class="text-center">
-                            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-700">
+                            <div
+                                class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-700">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
                             <h3 class="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h3>
-                            <p class="text-slate-500 font-medium text-sm mt-1">Redirecting to your confirmation details...</p>
+                            <p class="text-slate-500 font-medium text-sm mt-1">Redirecting to your confirmation details...
+                            </p>
                         </div>
                     </template>
                 </div>
@@ -407,14 +451,15 @@
 
 @push('scripts')
     <!-- PayPal SDK -->
-    <script src="https://www.paypal.com/sdk/js?client-id=<?php echo $paypalClientId; ?>&currency=<?php echo \App\Services\CurrencyService::getCode(); ?>&intent=capture"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=<?php echo $paypalClientId; ?>&currency=<?php echo \App\Services\CurrencyService::getCode(); ?>&intent=capture">
+    </script>
     <script>
         function cartCheckoutFlow() {
             return {
                 subtotal: {{ (float) $cart->subtotal }},
                 itemId: {{ optional($cart->items->first())->id ?? 'null' }},
                 quantity: {{ (int) (optional($cart->items->first())->quantity ?? 1) }},
-                unitPrice: {{ (float) (optional($cart->items->first())->unit_price ?: (optional(optional($cart->items->first())->product)->base_price ?? 0)) }},
+                unitPrice: {{ (float) (optional($cart->items->first())->unit_price ?: optional(optional($cart->items->first())->product)->base_price ?? 0) }},
                 updatingQty: false,
                 pickupName: '',
                 pickupEmail: '',
@@ -487,7 +532,9 @@
                                 'Accept': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            body: JSON.stringify({ quantity: this.quantity })
+                            body: JSON.stringify({
+                                quantity: this.quantity
+                            })
                         });
                         const data = await res.json();
                         if (data && typeof data.subtotal !== 'undefined') {
@@ -595,37 +642,37 @@
                     this.errors.form = '';
 
                     fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow.cart-checkout.cash' : 'flow.cart-checkout.cash'); ?>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            pickup_name: this.pickupName,
-                            pickup_email: this.pickupEmail,
-                            contact_number: this.contactNumber,
-                            coupon_code: this.appliedCoupon,
-                            special_instructions: this.specialInstructions,
-                        }),
-                    })
-                    .then(res => res.json())
-                    .then(result => {
-                        if (result.success) {
-                            this.paymentSuccess = true;
-                            setTimeout(() => {
-                                window.location.href = result.redirect_url;
-                            }, 1800);
-                        } else {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                pickup_name: this.pickupName,
+                                pickup_email: this.pickupEmail,
+                                contact_number: this.contactNumber,
+                                coupon_code: this.appliedCoupon,
+                                special_instructions: this.specialInstructions,
+                            }),
+                        })
+                        .then(res => res.json())
+                        .then(result => {
+                            if (result.success) {
+                                this.paymentSuccess = true;
+                                setTimeout(() => {
+                                    window.location.href = result.redirect_url;
+                                }, 1800);
+                            } else {
+                                this.isProcessing = false;
+                                this.errors.form = result.error || result.message || 'Failed to process order.';
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
                             this.isProcessing = false;
-                            this.errors.form = result.error || result.message || 'Failed to process order.';
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        this.isProcessing = false;
-                        this.errors.form = 'An error occurred while connecting to the server.';
-                    });
+                            this.errors.form = 'An error occurred while connecting to the server.';
+                        });
                 },
 
                 renderPaypalButtons() {
@@ -644,28 +691,28 @@
 
                         createOrder(data, actions) {
                             return fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow.cart-checkout.paypal.create' : 'flow.cart-checkout.paypal.create'); ?>', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    pickup_name: self.pickupName,
-                                    pickup_email: self.pickupEmail,
-                                    contact_number: self.contactNumber,
-                                    coupon_code: self.appliedCoupon,
-                                    special_instructions: self.specialInstructions,
-                                }),
-                            })
-                            .then(res => res.json())
-                            .then(order => {
-                                if (order.error) {
-                                    alert(order.error);
-                                    throw new Error(order.error);
-                                }
-                                return order.id;
-                            });
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        pickup_name: self.pickupName,
+                                        pickup_email: self.pickupEmail,
+                                        contact_number: self.contactNumber,
+                                        coupon_code: self.appliedCoupon,
+                                        special_instructions: self.specialInstructions,
+                                    }),
+                                })
+                                .then(res => res.json())
+                                .then(order => {
+                                    if (order.error) {
+                                        alert(order.error);
+                                        throw new Error(order.error);
+                                    }
+                                    return order.id;
+                                });
                         },
 
                         onApprove(data, actions) {
@@ -673,38 +720,38 @@
                             self.isProcessing = true;
 
                             return fetch('<?php echo route(str_contains(Route::currentRouteName(), 'flow-pc') ? 'flow.cart-checkout.paypal.capture' : 'flow.cart-checkout.paypal.capture'); ?>', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                },
-                                body: JSON.stringify({
-                                    paypal_order_id: data.orderID,
-                                    pickup_name: self.pickupName,
-                                    pickup_email: self.pickupEmail,
-                                    contact_number: self.contactNumber,
-                                    coupon_code: self.appliedCoupon,
-                                    special_instructions: self.specialInstructions,
-                                }),
-                            })
-                            .then(res => res.json())
-                            .then(result => {
-                                if (result.success) {
-                                    self.paymentSuccess = true;
-                                    setTimeout(() => {
-                                        window.location.href = result.redirect_url;
-                                    }, 1800);
-                                } else {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        paypal_order_id: data.orderID,
+                                        pickup_name: self.pickupName,
+                                        pickup_email: self.pickupEmail,
+                                        contact_number: self.contactNumber,
+                                        coupon_code: self.appliedCoupon,
+                                        special_instructions: self.specialInstructions,
+                                    }),
+                                })
+                                .then(res => res.json())
+                                .then(result => {
+                                    if (result.success) {
+                                        self.paymentSuccess = true;
+                                        setTimeout(() => {
+                                            window.location.href = result.redirect_url;
+                                        }, 1800);
+                                    } else {
+                                        self.isProcessing = false;
+                                        self.errors.form = result.error || 'Payment failed.';
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(err);
                                     self.isProcessing = false;
-                                    self.errors.form = result.error || 'Payment failed.';
-                                }
-                            })
-                            .catch(err => {
-                                console.error(err);
-                                self.isProcessing = false;
-                                self.errors.form = 'An error occurred during PayPal processing.';
-                            });
+                                    self.errors.form = 'An error occurred during PayPal processing.';
+                                });
                         },
 
                         onCancel() {},

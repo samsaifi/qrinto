@@ -85,9 +85,13 @@
     {{-- Items + customer + journey --}}
     <div class="v2-col-main">
         @foreach ($order->items as $item)
-            <p class="v2-title">{{ $item->quantity }} × {{ $item->product_name ?? ($item->product->name ?? 'Item') }}</p>
+            <p class="v2-title">{{ $item->quantity }} × {{ $item->product_name ?? ($item->product->name ?? 'Item') }}
+            </p>
         @endforeach
         <p class="v2-sub">{{ $name }} · {{ $verb }} {{ $time->format('g:i A') }}</p>
+
+        {{-- Display All flow data cpolumn from here ..  --}}
+
 
         {{-- Journey stepper --}}
         <div class="v2-journey">

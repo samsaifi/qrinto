@@ -452,17 +452,8 @@
                         this.bridgeVersion = pp.version || null;
 
                         const list = await pp.getPrinters();
-                        const all = Array.isArray(list) ? list : [list].filter(Boolean);
-                        const trayOrder = ['MP Tray', 'Tray 1', 'Tray 2', 'Tray 3', 'Tray 4', 'Tray 5'];
-                        all.sort((a, b) => {
-                            const aN = /noritsu/i.test(a.name) ? 0 : 1;
-                            const bN = /noritsu/i.test(b.name) ? 0 : 1;
-                            if (aN !== bN) return aN - bN;
-                            const ai = trayOrder.findIndex(t => a.name.includes(t));
-                            const bi = trayOrder.findIndex(t => b.name.includes(t));
-                            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-                        });
-                        this.printers = all;
+                        const raw = Array.isArray(list) ? list : [list].filter(Boolean);
+                        this.printers = this.orderPrinters(raw);
                         if (this.printers.length > 0) {
                             this.selectedPrinter = this.printers[0].name;
                             this.psLoad(this.selectedPrinter);
@@ -473,6 +464,28 @@
                     }
                     this.bridgeChecking = false;
                     if (!this.bridgeReady) this.showBridgeModal = true;
+                },
+
+                // Keep only Noritsu printers and order them by tray number,
+                // regardless of the exact printer-name string. The MP / multi tray
+                // (no tray number) comes first, then Tray 1, 2, 3, 4, 5…
+                orderPrinters(list) {
+                    const trayNum = (name) => {
+                        const m = String(name).match(/tray\s*(\d+)/i);
+                        return m ? parseInt(m[1], 10) : null;
+                    };
+                    const rank = (name) => {
+                        const n = trayNum(name);
+                        return n === null ? -1 : n;
+                    };
+                    return (list || [])
+                        .filter(p => p && typeof p.name === 'string' &&
+                            p.name.toLowerCase().includes('noritsu'))
+                        .sort((a, b) => {
+                            const ra = rank(a.name), rb = rank(b.name);
+                            if (ra !== rb) return ra - rb;
+                            return a.name.localeCompare(b.name);
+                        });
                 },
 
                 get selectedPrinterInfo() {

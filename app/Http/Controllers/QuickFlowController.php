@@ -134,7 +134,8 @@ class QuickFlowController extends Controller
         ];
     }
     public function category($type, $title = null, $size = null)
-    {
+    {  
+         
         if (is_string($type)) {
             $type = ProductType::where('slug', $type)
                 ->orWhere('name', 'like', "%{$type}%")
@@ -165,7 +166,7 @@ class QuickFlowController extends Controller
         }
 
         session(['quick_flow_data' => $flowData]);
-
+        
         // If product type is Magnets and size/title is requested, skip template gallery and open editor directly
         $isMagnetType = \Illuminate\Support\Str::contains(strtolower($type->slug ?? ''), 'magnet') || \Illuminate\Support\Str::contains(strtolower($type->name ?? ''), 'magnet');
         if ($isMagnetType && ($title || $size)) {
@@ -173,23 +174,33 @@ class QuickFlowController extends Controller
             $sizeCode = str_replace([' ', '×', '-'], ['', 'x', 'x'], strtolower($rawSize));
             return redirect()->to(url("/magnets/{$sizeCode}/design"));
         }
-
+        
         // If title and size are passed directly (e.g. /products/cards/folded/5x7/templates)
         if ($title && $size) {
             [$w, $h] = array_pad(explode('x', strtolower($size)), 2, null);
-            $cleanTitle = str_replace('-', ' ', strtolower($title));
-            
+            $cleanTitle = strtolower($title);
+            // $cleanTitle = str_replace('-', ' ', strtolower($title));
+             
+             
             $targetChild = ProductType::where('parent_id', $type->id)
-                ->where(function ($q) use ($cleanTitle) {
-                    $q->where('title', 'like', "%{$cleanTitle}%")
-                      ->orWhere('name', 'like', "%{$cleanTitle}%")
-                      ->orWhere('slug', 'like', "%{$cleanTitle}%");
-                })
-                ->when($w && $h, function ($q) use ($w, $h) {
-                    $q->where('width', (float)$w)->where('height', (float)$h);
-                })
-                ->first();
+            ->where(function ($q) use ($cleanTitle) {
+                $searchSlug = \Illuminate\Support\Str::slug($cleanTitle);
 
+                $q->where('slug', 'LIKE', "%{$searchSlug}%")
+                    ->orWhereRaw(
+                        "LOWER(REGEXP_REPLACE(title, '[^a-zA-Z0-9]+', '-')) LIKE ?",
+                        ["%{$searchSlug}%"]
+                    )
+                    ->orWhereRaw(
+                        "LOWER(REGEXP_REPLACE(name, '[^a-zA-Z0-9]+', '-')) LIKE ?",
+                        ["%{$searchSlug}%"]
+                    );
+            })
+            ->when($w !== null && $h !== null, function ($q) use ($w, $h) {
+                $q->where('width', (float) $w)
+                ->where('height', (float) $h);
+            })
+            ->first(); 
             if ($targetChild) {
                 $flowData['size_id']     = $targetChild->id;
                 $flowData['size_name']   = $targetChild->name;
@@ -207,11 +218,11 @@ class QuickFlowController extends Controller
             ->where('is_active', 1)
             ->orderBy('sort_order')
             ->get();
-
+        
         if (empty($title) && empty($size) && $subTypes->isNotEmpty()) {
             return view($this->getViewPath('category'), compact('type', 'subTypes'));
         }
-
+        
         $q = Product::where('is_active', 1)
             ->where(function ($query) use ($type) {
                 $query->where('product_type_id', $type->parent_id)
@@ -222,7 +233,7 @@ class QuickFlowController extends Controller
                     ->orWhereNull('store_id');
             });
         $targetTitle = strtolower(($flowData['size_title'] ?? '') . ' ' . ($title ?? ''));
-
+       
         if (str_contains($targetTitle, 'double')) {
             $q->where('no_of_pages', 2);
         } elseif (str_contains($targetTitle, 'folded')) {
@@ -272,6 +283,8 @@ class QuickFlowController extends Controller
             ->orderBy('sort_order')
             ->get();
         $flowData = session()->get('quick_flow_data');
+          
+        
         return view(
             $this->getViewPath('templates'),
             compact('type', 'templates', 'categories','flowData')
@@ -290,7 +303,8 @@ class QuickFlowController extends Controller
      * Step 4: Customization
      */
     public function customize($product, $title = null, $size = null, $template = null)
-    {
+    {  
+        
         if (is_string($product)) {
             $foundProduct = Product::where('slug', $product)->orWhere('id', $product)->first();
             
@@ -383,10 +397,10 @@ class QuickFlowController extends Controller
         }
         
         $sizeTitle = strtolower($flowData['size_title'] ?? ($title ? str_replace('-', ' ', $title) : ''));
-        if (str_contains($sizeTitle, 'flat')) {
-            $product->no_of_pages = 1;
-        } elseif (str_contains($sizeTitle, 'double')) {
+        if (str_contains($sizeTitle, 'double')) {
             $product->no_of_pages = 2;
+        } elseif (str_contains($sizeTitle, 'flat')) {
+            $product->no_of_pages = 1;
         } elseif (str_contains($sizeTitle, 'folded')) {
             $product->no_of_pages = 4;
         }
@@ -402,7 +416,7 @@ class QuickFlowController extends Controller
         
         $activeTemplates     = $this->buildTemplatesForJs();
         $templateCategories  = $this->buildTemplateCategoriesForJs();
-    
+       
         return view($this->getViewPath('customize'), compact('product', 'unitPrice', 'oldPrice', 'flowData', 'activeTemplates', 'templateCategories', 'template'));
     }
 
@@ -942,7 +956,7 @@ class QuickFlowController extends Controller
      * Cart Checkout: Show checkout page from cart
      */
     public function cartCheckout()
-    {
+    {    
         $cartService = app(\App\Services\CartService::class);
         $cart = $cartService->getCart();
 
@@ -1551,7 +1565,7 @@ class QuickFlowController extends Controller
         if (file_exists($pdfPath)) {
             $pdfUrl = asset('storage/orders/pdfs/' . $pdfName);
         }
-
+        
         return view($this->getViewPath('print'), compact('order', 'designUrl', 'pdfUrl'));
     }
 
@@ -1740,10 +1754,20 @@ class QuickFlowController extends Controller
         $query = $request->input('q');
         $lat = $request->input('lat');
         $lon = $request->input('lon');
-        
+
         $stores = collect();
         $nearbyStores = collect();
         $geolocationAttempted = false;
+
+        // Fallback: if the browser did not provide coordinates (e.g. user denied
+        // geolocation), estimate location from the visitor's IP address.
+        if ((!$lat || !$lon) && !$query && $request->boolean('ip_locate')) {
+            $coords = $this->getLocationFromIp($request->ip());
+            if ($coords) {
+                $lat = $coords['lat'];
+                $lon = $coords['lon'];
+            }
+        }
 
         if ($lat && $lon) {
             $nearbyStores = $this->getNearbyStoresFromCoords($lat, $lon);
@@ -1752,7 +1776,9 @@ class QuickFlowController extends Controller
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'stores' => $nearbyStores
+                    'stores' => $nearbyStores,
+                    'lat' => (float) $lat,
+                    'lon' => (float) $lon,
                 ]);
             }
         }
@@ -1864,6 +1890,49 @@ class QuickFlowController extends Controller
     }
 
     /**
+     * Estimate latitude/longitude from an IP address using ipwho.is (free, no key).
+     *
+     * On local/private IPs (localhost, LAN) ipwho.is is called without an IP so it
+     * resolves the server's own public IP — useful for local development/testing.
+     * In production the visitor's real IP is used.
+     *
+     * @return array{lat: float, lon: float}|null
+     */
+    private function getLocationFromIp($ip)
+    {
+        try {
+            $isPrivate = !filter_var(
+                $ip,
+                FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+            );
+
+            $url = $isPrivate
+                ? 'https://ipwho.is/'
+                : 'https://ipwho.is/' . $ip;
+
+            $response = \Illuminate\Support\Facades\Http::timeout(5)->get($url);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (
+                    !empty($data['success'])
+                    && isset($data['latitude'], $data['longitude'])
+                ) {
+                    return [
+                        'lat' => (float) $data['latitude'],
+                        'lon' => (float) $data['longitude'],
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('IP geolocation error: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * AJAX Endpoint: Get single nearest store for header suggestion
      */
     public function getNearestStore(Request $request)
@@ -1872,6 +1941,16 @@ class QuickFlowController extends Controller
         $lon = $request->input('lon');
 
         $store = null;
+
+        // Fallback: estimate coordinates from the visitor's IP when the browser
+        // did not supply them.
+        if ((!$lat || !$lon)) {
+            $coords = $this->getLocationFromIp($request->ip());
+            if ($coords) {
+                $lat = $coords['lat'];
+                $lon = $coords['lon'];
+            }
+        }
 
         if ($lat && $lon) {
             $nearby = $this->getNearbyStoresFromCoords($lat, $lon);

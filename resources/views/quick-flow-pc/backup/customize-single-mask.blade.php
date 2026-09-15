@@ -541,7 +541,7 @@
         $bcStoreName =
             session('active_store_name') ??
             ((session('active_store_id') ? \App\Models\Store::find(session('active_store_id'))?->name : null) ??
-                ($product->store->name ?? (null ?? ($flowData['store_name'] ?? 'Store'))));
+                ($product->store->store_name ?? (null ?? ($flowData['store_name'] ?? 'Store'))));
 
         $bcProductType =
             $flowData['type_name'] ?? ($product->productType->name ?? ($flowData['category_name'] ?? 'Product Type'));

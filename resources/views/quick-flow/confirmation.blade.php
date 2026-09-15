@@ -132,7 +132,8 @@
                     <span
                         class="bg-slate-100 text-slate-700 text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-200/80 flex items-center gap-1.5">
                         <i data-lucide="store" class="w-3.5 h-3.5 text-mobile-600"></i>
-                        <span class="truncate max-w-[140px]">{{ $order->store->name ?? $order->store->store_name }}</span>
+                        <span
+                            class="truncate max-w-[140px]">{{ $order->store->store_name ?? $order->store->store_name }}</span>
                     </span>
                 @endif
             </div>

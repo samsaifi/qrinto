@@ -33,6 +33,12 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
         session()->forget('url.intended');
 
+        // Staff/store users: auto-select their own store for the session,
+        // unless one is already selected in this session.
+        if (!session()->has('active_store_id') && $user->store_id) {
+            session()->put('active_store_id', $user->store_id);
+        }
+
         if ($user->role === 'admin') {
             return redirect('/admin/dashboard');
         } elseif (in_array($user->role, ['store_admin', 'storeadmin', 'staff'])) {

@@ -7,17 +7,17 @@
 @php
     $routePrefix = $routePrefix ?? 'flow.';
     $flowData = session('quick_flow_data', []);
-    
+
     $titleLabel = $flowData['size_title'] ?? 'Folded';
     $sizeWidth = isset($flowData['size_width']) ? $flowData['size_width'] + 0 : 5;
     $sizeHeight = isset($flowData['size_height']) ? $flowData['size_height'] + 0 : 7;
     $sizeLabel = "{$sizeWidth} × {$sizeHeight}";
-    
+
     $templateName = $flowData['template_name'] ?? ($product->name ?? 'Happy Anniversary');
 
     $activeStoreId = session('active_store_id');
-    $activeStore = $activeStoreId ? \App\Models\Store::find($activeStoreId) : ($product->store ?? null);
-    $storeName = $activeStore->name ?? 'Billmeijer Camera';
+    $activeStore = $activeStoreId ? \App\Models\Store::find($activeStoreId) : $product->store ?? null;
+    $storeName = $active->store->store_name ?? 'Billmeijer Camera';
     $storeCity = $activeStore->city ?? 'Fenton';
     $storeState = $activeStore->state ?? 'Michigan';
 
@@ -33,7 +33,7 @@
     if (empty($editedImages) && isset($upload) && !empty($upload->url)) {
         $editedImages[] = $upload->url;
     }
-    
+
     $firstImg = $editedImages[0] ?? null;
     if (!$firstImg && isset($product)) {
         $firstImg = $product->frame_image_url ?? ($product->sample_image_url ?? ($product->image_url ?? null));
@@ -123,16 +123,22 @@
                             <div class="flex items-center gap-1.5">
                                 @if (!empty($editedImages))
                                     @foreach (array_slice($editedImages, 0, 2) as $imgUrl)
-                                        <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
-                                            <img src="{{ $imgUrl }}" alt="{{ $templateName }}" class="w-full h-full object-cover">
+                                        <div
+                                            class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+                                            <img src="{{ $imgUrl }}" alt="{{ $templateName }}"
+                                                class="w-full h-full object-cover">
                                         </div>
                                     @endforeach
                                 @elseif ($firstImg)
-                                    <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
-                                        <img src="{{ $firstImg }}" alt="{{ $templateName }}" class="w-full h-full object-cover">
+                                    <div
+                                        class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-200 shrink-0">
+                                        <img src="{{ $firstImg }}" alt="{{ $templateName }}"
+                                            class="w-full h-full object-cover">
                                     </div>
                                 @else
-                                    <div class="w-14 h-18 bg-pink-300 rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0">Card</div>
+                                    <div
+                                        class="w-14 h-18 bg-pink-300 rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                        Card</div>
                                 @endif
                             </div>
 
@@ -171,8 +177,10 @@
                     <div class="bg-[#f2f7f2] rounded-2xl p-3.5 border border-emerald-100/80 flex items-start gap-2.5">
                         <div class="w-4 h-4 text-emerald-800 mt-0.5 shrink-0">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                         </div>
                         <div>
@@ -208,14 +216,16 @@
 
                         {{-- Email --}}
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Email, for the ready-for-pickup message</label>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Email, for the
+                                ready-for-pickup message</label>
                             <input type="email" x-model="pickupEmail"
                                 class="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all">
                         </div>
 
                         {{-- Note to store --}}
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Note to the store, optional</label>
+                            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Note to the store,
+                                optional</label>
                             <textarea x-model="storeNote" rows="2.5"
                                 class="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 font-medium outline-none focus:border-emerald-600 transition-all resize-none"></textarea>
                         </div>
@@ -268,79 +278,85 @@
                         </p>
                     </div>
                 </div>
-                            class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 disabled:bg-slate-50 disabled:text-slate-300 font-bold py-3.5 rounded-xl text-sm transition-all shadow-2xs active:scale-95 cursor-pointer disabled:cursor-not-allowed">
-                            Pay online now
-                        </button>
+                class="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 disabled:bg-slate-50 disabled:text-slate-300 font-bold py-3.5 rounded-xl text-sm transition-all shadow-2xs active:scale-95 cursor-pointer disabled:cursor-not-allowed">
+                Pay online now
+                </button>
 
-                        <p class="text-xs text-slate-400 text-center font-normal pt-1">
-                            No shipping. You collect it at the store.
-                        </p>
-                    </div>
-                </div>
-
+                <p class="text-xs text-slate-400 text-center font-normal pt-1">
+                    No shipping. You collect it at the store.
+                </p>
             </div>
-
         </div>
 
-        {{-- PayPal Modal --}}
-        <template x-teleport="body">
-            <div x-cloak>
-                <div x-show="showPaypal" class="paypal-overlay" @click.self="showPaypal = false">
-                    <div class="paypal-sheet" @click.stop>
-                        <div class="flex items-center justify-between mb-5">
-                            <div>
-                                <h3 class="text-lg font-extrabold text-slate-900">Pay with PayPal</h3>
-                                <p class="text-xs text-slate-500">Fast & secure online payment</p>
-                            </div>
-                            <button @click="showPaypal = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">
-                                ✕
-                            </button>
-                        </div>
+    </div>
 
-                        <div class="bg-[#f2f7f2] rounded-2xl p-4 mb-5 flex items-center justify-between border border-emerald-100">
-                            <div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</p>
-                                <p class="text-2xl font-extrabold text-slate-900" x-text="__price(calculateTotal())"></p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pickup</p>
-                                <p class="text-sm font-bold text-slate-700" x-text="pickupName"></p>
-                            </div>
-                        </div>
+    </div>
 
-                        <div id="paypal-button-container" class="mb-3"></div>
+    {{-- PayPal Modal --}}
+    <template x-teleport="body">
+        <div x-cloak>
+            <div x-show="showPaypal" class="paypal-overlay" @click.self="showPaypal = false">
+                <div class="paypal-sheet" @click.stop>
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <h3 class="text-lg font-extrabold text-slate-900">Pay with PayPal</h3>
+                            <p class="text-xs text-slate-500">Fast & secure online payment</p>
+                        </div>
+                        <button @click="showPaypal = false"
+                            class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold">
+                            ✕
+                        </button>
                     </div>
-                </div>
 
-                {{-- Processing Overlay --}}
-                <div x-show="isProcessing" class="processing-overlay" x-cloak>
-                    <template x-if="!paymentSuccess">
-                        <div class="text-center">
-                            <div class="spinner mx-auto mb-4"></div>
-                            <h3 class="text-xl font-extrabold text-slate-900">Processing Order</h3>
-                            <p class="text-slate-500 font-medium text-sm mt-1">Please wait while we confirm your print order...</p>
+                    <div
+                        class="bg-[#f2f7f2] rounded-2xl p-4 mb-5 flex items-center justify-between border border-emerald-100">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount</p>
+                            <p class="text-2xl font-extrabold text-slate-900" x-text="__price(calculateTotal())"></p>
                         </div>
-                    </template>
-                    <template x-if="paymentSuccess">
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-700">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h3>
-                            <p class="text-slate-500 font-medium text-sm mt-1">Redirecting to your confirmation details...</p>
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pickup</p>
+                            <p class="text-sm font-bold text-slate-700" x-text="pickupName"></p>
                         </div>
-                    </template>
+                    </div>
+
+                    <div id="paypal-button-container" class="mb-3"></div>
                 </div>
             </div>
-        </template>
+
+            {{-- Processing Overlay --}}
+            <div x-show="isProcessing" class="processing-overlay" x-cloak>
+                <template x-if="!paymentSuccess">
+                    <div class="text-center">
+                        <div class="spinner mx-auto mb-4"></div>
+                        <h3 class="text-xl font-extrabold text-slate-900">Processing Order</h3>
+                        <p class="text-slate-500 font-medium text-sm mt-1">Please wait while we confirm your print order...
+                        </p>
+                    </div>
+                </template>
+                <template x-if="paymentSuccess">
+                    <div class="text-center">
+                        <div
+                            class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-700">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-extrabold text-slate-900">Order Placed Successfully!</h3>
+                        <p class="text-slate-500 font-medium text-sm mt-1">Redirecting to your confirmation details...</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
     </div>
 @endsection
 
 @push('scripts')
     <!-- PayPal SDK -->
-    <script src="https://www.paypal.com/sdk/js?client-id=<?php echo $paypalClientId; ?>&currency=<?php echo \App\Services\CurrencyService::getCode(); ?>&intent=capture"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=<?php echo $paypalClientId; ?>&currency=<?php echo \App\Services\CurrencyService::getCode(); ?>&intent=capture">
+    </script>
     <script>
         function __price(val) {
             return '$' + parseFloat(val || 0).toFixed(2);
@@ -380,41 +396,41 @@
                     this.isProcessing = true;
 
                     fetch('<?php echo route('flow.checkout.cash'); ?>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
-                        },
-                        body: JSON.stringify({
-                            product_id: <?php echo $product->id; ?>,
-                            quantity: this.quantity,
-                            message: <?php echo json_encode($message); ?>,
-                            style_data: <?php echo json_encode(json_encode($styleData)); ?>,
-                            upload_ids: <?php echo json_encode($uploadIds); ?>,
-                            pickup_name: this.pickupName,
-                            pickup_email: this.pickupEmail,
-                            contact_number: this.contactNumber,
-                            note: this.storeNote,
-                        }),
-                    })
-                    .then(res => res.json())
-                    .then(result => {
-                        if (result.success) {
-                            this.paymentSuccess = true;
-                            setTimeout(() => {
-                                window.location.href = result.redirect_url;
-                            }, 1800);
-                        } else {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
+                            },
+                            body: JSON.stringify({
+                                product_id: <?php echo $product->id; ?>,
+                                quantity: this.quantity,
+                                message: <?php echo json_encode($message); ?>,
+                                style_data: <?php echo json_encode(json_encode($styleData)); ?>,
+                                upload_ids: <?php echo json_encode($uploadIds); ?>,
+                                pickup_name: this.pickupName,
+                                pickup_email: this.pickupEmail,
+                                contact_number: this.contactNumber,
+                                note: this.storeNote,
+                            }),
+                        })
+                        .then(res => res.json())
+                        .then(result => {
+                            if (result.success) {
+                                this.paymentSuccess = true;
+                                setTimeout(() => {
+                                    window.location.href = result.redirect_url;
+                                }, 1800);
+                            } else {
+                                this.isProcessing = false;
+                                alert(result.error || result.message || 'Failed to process order. Please try again.');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Checkout error:', err);
                             this.isProcessing = false;
-                            alert(result.error || result.message || 'Failed to process order. Please try again.');
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Checkout error:', err);
-                        this.isProcessing = false;
-                        alert('An error occurred. Please try again.');
-                    });
+                            alert('An error occurred. Please try again.');
+                        });
                 },
 
                 renderPaypalButtons() {
@@ -433,29 +449,29 @@
 
                         createOrder: function(data, actions) {
                             return fetch('<?php echo route('flow.paypal.create'); ?>', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
-                                },
-                                body: JSON.stringify({
-                                    product_id: <?php echo $product->id; ?>,
-                                    quantity: self.quantity,
-                                    pickup_name: self.pickupName,
-                                    pickup_email: self.pickupEmail,
-                                    contact_number: self.contactNumber,
-                                    note: self.storeNote,
-                                }),
-                            })
-                            .then(res => res.json())
-                            .then(order => {
-                                if (order.error) {
-                                    alert(order.error);
-                                    throw new Error(order.error);
-                                }
-                                return order.id;
-                            });
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
+                                    },
+                                    body: JSON.stringify({
+                                        product_id: <?php echo $product->id; ?>,
+                                        quantity: self.quantity,
+                                        pickup_name: self.pickupName,
+                                        pickup_email: self.pickupEmail,
+                                        contact_number: self.contactNumber,
+                                        note: self.storeNote,
+                                    }),
+                                })
+                                .then(res => res.json())
+                                .then(order => {
+                                    if (order.error) {
+                                        alert(order.error);
+                                        throw new Error(order.error);
+                                    }
+                                    return order.id;
+                                });
                         },
 
                         onApprove: function(data, actions) {
@@ -463,42 +479,43 @@
                             self.isProcessing = true;
 
                             return fetch('<?php echo route('flow.paypal.capture'); ?>', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
-                                },
-                                body: JSON.stringify({
-                                    paypal_order_id: data.orderID,
-                                    product_id: <?php echo $product->id; ?>,
-                                    quantity: self.quantity,
-                                    message: <?php echo json_encode($message); ?>,
-                                    style_data: <?php echo json_encode(json_encode($styleData)); ?>,
-                                    upload_ids: <?php echo json_encode($uploadIds); ?>,
-                                    pickup_name: self.pickupName,
-                                    pickup_email: self.pickupEmail,
-                                    contact_number: self.contactNumber,
-                                    note: self.storeNote,
-                                }),
-                            })
-                            .then(res => res.json())
-                            .then(result => {
-                                if (result.success) {
-                                    self.paymentSuccess = true;
-                                    setTimeout(() => {
-                                        window.location.href = result.redirect_url;
-                                    }, 1800);
-                                } else {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': '<?php echo csrf_token(); ?>',
+                                    },
+                                    body: JSON.stringify({
+                                        paypal_order_id: data.orderID,
+                                        product_id: <?php echo $product->id; ?>,
+                                        quantity: self.quantity,
+                                        message: <?php echo json_encode($message); ?>,
+                                        style_data: <?php echo json_encode(json_encode($styleData)); ?>,
+                                        upload_ids: <?php echo json_encode($uploadIds); ?>,
+                                        pickup_name: self.pickupName,
+                                        pickup_email: self.pickupEmail,
+                                        contact_number: self.contactNumber,
+                                        note: self.storeNote,
+                                    }),
+                                })
+                                .then(res => res.json())
+                                .then(result => {
+                                    if (result.success) {
+                                        self.paymentSuccess = true;
+                                        setTimeout(() => {
+                                            window.location.href = result.redirect_url;
+                                        }, 1800);
+                                    } else {
+                                        self.isProcessing = false;
+                                        alert(result.error || result.message ||
+                                            'Payment failed. Please try again.');
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error('Capture error:', err);
                                     self.isProcessing = false;
-                                    alert(result.error || result.message || 'Payment failed. Please try again.');
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Capture error:', err);
-                                self.isProcessing = false;
-                                alert('An error occurred. Please try again.');
-                            });
+                                    alert('An error occurred. Please try again.');
+                                });
                         },
 
                         onCancel: function() {},

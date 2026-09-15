@@ -374,7 +374,8 @@
                         this.bridgeVersion = pp.version || null;
 
                         const list = await pp.getPrinters();
-                        this.printers = Array.isArray(list) ? list : [list].filter(Boolean);
+                        const raw = Array.isArray(list) ? list : [list].filter(Boolean);
+                        this.printers = this.orderPrinters(raw);
                         if (this.printers.length > 0) {
                             this.selectedPrinter = this.printers[0].name;
                             this.psLoad(this.selectedPrinter);
@@ -385,6 +386,30 @@
                     }
                     this.bridgeChecking = false;
                     if (!this.bridgeReady) this.showBridgeModal = true;
+                },
+
+                // Keep only Noritsu printers and order them by tray number,
+                // regardless of the exact printer-name string. The MP / multi tray
+                // (no tray number) comes first, then Tray 1, 2, 3, 4, 5…
+                orderPrinters(list) {
+                    const trayNum = (name) => {
+                        const m = String(name).match(/tray\s*(\d+)/i);
+                        return m ? parseInt(m[1], 10) : null;
+                    };
+                    const rank = (name) => {
+                        const n = trayNum(name);
+                        // No tray number (MP / multi tray) sorts first, then
+                        // numbered trays in ascending order.
+                        return n === null ? -1 : n;
+                    };
+                    return (list || [])
+                        .filter(p => p && typeof p.name === 'string' &&
+                            p.name.toLowerCase().includes('noritsu'))
+                        .sort((a, b) => {
+                            const ra = rank(a.name), rb = rank(b.name);
+                            if (ra !== rb) return ra - rb;
+                            return a.name.localeCompare(b.name);
+                        });
                 },
 
                 get selectedPrinterInfo() {
