@@ -70,7 +70,10 @@
          </section>
 
          {{-- guide --}}
-         <section class="guide  " id="guide" aria-live="polite">
+         {{-- FIX: "hidden" by default because Single-sided is the default choice.
+              JS render() shows it again for Flat / Folded. This stops the folded
+              guide flashing on first page load before the script runs. --}}
+         <section class="guide  " id="guide" aria-live="polite" hidden>
              <div class="guide-head">
                  <div>
                      <h2 id="g-title">How to set up a folded portrait card</h2>
@@ -121,7 +124,6 @@
      <div class="toast" id="toast" role="status"></div>
 
      <style>
-         /* Scoped card-guide styles — vars live on .printo-ref so nothing leaks. */
          .printo-ref {
              --bg: #F7F8F5;
              --surface: #FFFFFF;
@@ -209,7 +211,6 @@
              color: var(--ink);
          }
 
-         /* choice rows */
          .printo-ref .choose {
              display: grid;
              grid-template-columns: 1fr auto;
@@ -321,7 +322,6 @@
              height: 18px;
          }
 
-         /* guide */
          .printo-ref .guide {
              background: var(--surface);
              border: 1px solid var(--line);
@@ -478,7 +478,6 @@
              stroke-width: 10;
          }
 
-         /* 3D stage */
          .printo-ref .stage {
              height: 330px;
              display: flex;
@@ -595,7 +594,6 @@
              accent-color: var(--green);
          }
 
-         /* rules */
          .printo-ref .rules {
              display: grid;
              grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -621,7 +619,6 @@
              margin-bottom: 2px;
          }
 
-         /* dropzone */
          .printo-ref .drop {
              display: none;
              background: var(--surface);
@@ -678,7 +675,6 @@
              padding: 5px 12px;
          }
 
-         /* toast */
          .printo-ref .toast {
              position: fixed;
              left: 50%;
@@ -764,6 +760,7 @@
      <script>
          (function() {
              const PT_MM = 25.4 / 72;
+             const TEMPLATE_BASE = "{{ rtrim(asset('tamplates'), '/') }}";
              const PANELS = {
                  front: {
                      name: 'Front',
@@ -782,7 +779,6 @@
                      cls: 'ir'
                  }
              };
-             // Layouts mirror the sample PDFs: [panelKey, cardPageNumber, rotation in degrees clockwise]
              const CFG = {
                  'folded-portrait': {
                      kind: 'folded',
@@ -873,7 +869,6 @@
                      fold: 'Turns over top to bottom'
                  }
              };
-             // rename inside panels for landscape (top/bottom instead of left/right)
              const NAME_OVERRIDE = {
                  'folded-landscape': {
                      il: 'Inside top',
@@ -883,17 +878,23 @@
 
              const root = document.querySelector('.printo-ref');
              const $ = s => root.querySelector(s);
+
              const state = {
-                 kind: 'folded',
-                 orient: 'portrait',
+                 kind: root.querySelector('input[name="kind"]:checked')?.value || 'single',
+                 orient: root.querySelector('input[name="orient"]:checked')?.value || 'portrait',
                  open: 0,
                  turned: false
              };
+
+             function syncFromInputs() {
+                 state.kind = root.querySelector('input[name="kind"]:checked')?.value || 'single';
+                 state.orient = root.querySelector('input[name="orient"]:checked')?.value || 'portrait';
+             }
+
              const key = () => state.kind + '-' + state.orient;
              const pname = (k, cfgKey) => (NAME_OVERRIDE[cfgKey] || {})[k] || PANELS[k].name;
              const mm = pt => Math.round(pt * PT_MM);
 
-             /* ---------- panel drawing (SVG, point units) ---------- */
              function panelContent(cw, ch, k, num, cfgKey) {
                  const s = Math.min(cw, ch) / 10.5;
                  const ix = s * 1.35,
@@ -940,7 +941,6 @@
                  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="${w}" height="${h}" fill="var(--paper)"/>${panelSVG(0,0,w,h,k,num,0,cfgKey).replace('role="button" tabindex="0"','')}</svg>`;
              }
 
-             /* ---------- guide render ---------- */
              function render() {
                  const single = state.kind === 'single';
                  $('#seg').classList.toggle('off', single);
@@ -1062,7 +1062,6 @@
                      state.open = 180;
                  }
                  $('#open').value = state.open;
-                 // close before turning, so the card doesn't spin while open
                  if (cfg.kind === 'folded' && wasTurned !== state.turned && view === 'inside') {
                      state.open = 0;
                      applyCard();
@@ -1082,11 +1081,9 @@
                  root.querySelectorAll(`[data-panel="${p}"]`).forEach(el => el.classList.toggle('hl', on));
              }
 
-             /* ---------- events ---------- */
              root.querySelectorAll('input[name=kind],input[name=orient]').forEach(i => i.addEventListener('change',
                  () => {
-                     state.kind = root.querySelector('input[name=kind]:checked').value;
-                     state.orient = root.querySelector('input[name=orient]:checked').value;
+                     syncFromInputs();
                      render();
                  }));
              $('#open').addEventListener('input', e => {
@@ -1145,6 +1142,13 @@
                  rt = setTimeout(sizeCard, 80);
              });
 
+             window.addEventListener('pageshow', e => {
+                 if (e.persisted) {
+                     syncFromInputs();
+                     render();
+                 }
+             });
+
              function toast(msg) {
                  const t = $('#toast');
                  t.textContent = msg;
@@ -1153,16 +1157,35 @@
                  toast.t = setTimeout(() => t.classList.remove('show'), 2600);
              }
 
-             /* ---------- template download ---------- */
-             $('#dl').addEventListener('click', () => {
-                 let kind = state.kind;
-                 let orient = state.orient;
-                 let href = "{{ asset('tamplates') }}" + "/printo-" + kind + "-" + orient + "-template.pdf";
-                 let a = document.createElement('a');
-                 a.href = href;
-                 a.download = kind + "-" + orient + "-template.pdf";
-                 a.click();
-                 toast('Template downloaded successfully.');
+             $('#dl').addEventListener('click', async () => {
+                 const fileName = 'printo-' + state.kind + '-' + state.orient + '-template.pdf';
+                 const href = TEMPLATE_BASE + '/' + fileName;
+                 const btn = $('#dl');
+                 btn.disabled = true;
+                 try {
+                     const res = await fetch(href, {
+                         method: 'HEAD',
+                         cache: 'no-store'
+                     });
+                     const type = res.headers.get('content-type') || '';
+                     if (!res.ok || type.indexOf('pdf') === -1) {
+                         toast('Template not found. Please contact support.');
+                         console.error('Template missing:', href, res.status, type);
+                         return;
+                     }
+                     const a = document.createElement('a');
+                     a.href = href;
+                     a.download = state.kind + '-' + state.orient + '-template.pdf';
+                     document.body.appendChild(a);
+                     a.click();
+                     a.remove();
+                     toast('Template downloaded successfully.');
+                 } catch (err) {
+                     toast('Download failed. Please try again.');
+                     console.error(err);
+                 } finally {
+                     btn.disabled = false;
+                 }
              });
 
              render();

@@ -148,19 +148,55 @@
                     {{-- Dynamic check rows --}}
                     <div class="grid grid-cols-2 md:grid-cols-1 gap-x-4">
                         <template x-for="c in checks" :key="c.key">
-                            <div class="flex items-start gap-2.5 py-3.5 border-b border-slate-100">
+                            <div class="flex items-start gap-2.5 py-3.5 transition-colors"
+                                :class="c.ok ? 'border-b border-slate-100' : (c.severity === 'error' ?
+                                    'bg-red-50 border border-red-100 rounded-lg px-3 my-1' :
+                                    (c.severity === 'warn' ?
+                                        'bg-amber-50 border border-amber-100 rounded-lg px-3 my-1' :
+                                        'border-b border-slate-100'))">
+                                {{-- Inline SVGs (not lucide <i>) so the icon + colour
+                                     re-render reactively when a check's state changes. --}}
                                 <template x-if="c.ok">
-                                    <i data-lucide="check" class="w-4 h-4 text-[#287d3c] mt-0.5 shrink-0"></i>
+                                    <svg class="w-4 h-4 text-[#287d3c] mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
                                 </template>
                                 <template x-if="!c.ok && c.severity === 'warn'">
-                                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i>
+                                    <svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path
+                                            d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                        <path d="M12 9v4" />
+                                        <path d="M12 17h.01" />
+                                    </svg>
                                 </template>
                                 <template x-if="!c.ok && c.severity === 'error'">
-                                    <i data-lucide="x" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                                    <svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M18 6 6 18" />
+                                        <path d="m6 6 12 12" />
+                                    </svg>
                                 </template>
-                                <div>
+                                <div class="min-w-0">
                                     <p class="text-[13px] font-bold text-slate-900" x-text="c.title"></p>
                                     <p class="text-[12px] text-slate-500 mt-0.5" x-text="c.detail"></p>
+                                    {{-- Acknowledgement checkbox for a failing check.
+                                         For errors it must be ticked before printing;
+                                         for warnings (E2E) it's optional. --}}
+                                    <template x-if="!c.ok && c.ackLabel">
+                                        <label class="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                                            <input type="checkbox" x-model="acks[c.key]"
+                                                class="w-4 h-4 rounded border-slate-300 shrink-0"
+                                                :class="c.severity === 'error' ? 'accent-red-600' : 'accent-amber-500'">
+                                            <span class="text-[12px] font-semibold"
+                                                :class="c.severity === 'error' ? 'text-red-700' : 'text-amber-700'"
+                                                x-text="c.ackLabel"></span>
+                                        </label>
+                                    </template>
                                 </div>
                             </div>
                         </template>
@@ -303,11 +339,23 @@
                             )"
                             x-text="printMsg"></div>
 
+                        {{-- Button colour:
+                             • disabled (grey) → not printable yet (unacknowledged error, etc.)
+                             • green          → everything clean (no error, no warning)
+                             • red            → printable but with acknowledged issues
+                                                (errors ticked, or a non-E2E warning). --}}
                         <button type="button" @click="doPrint()" :disabled="!canPrint || printing"
-                            class="w-full mt-4 bg-[#287d3c] hover:bg-emerald-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
+                            class="w-full mt-4 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99] disabled:bg-slate-300 disabled:cursor-not-allowed"
+                            :class="(!canPrint || printing) ? '' : (checksAllClear ?
+                                'bg-[#287d3c] hover:bg-emerald-800' :
+                                'bg-red-600 hover:bg-red-700')">
                             <template x-if="printing"><span>Sending to printer…</span></template>
-                            <template x-if="!printing && canPrint"><span>Print <span x-text="copies"></span> <span
+                            <template x-if="!printing && canPrint && checksAllClear"><span>Print <span
+                                        x-text="copies"></span> <span
                                         x-text="copies == 1 ? 'copy' : 'copies'"></span></span></template>
+                            <template x-if="!printing && canPrint && !checksAllClear"><span>Print <span
+                                        x-text="copies"></span> <span x-text="copies == 1 ? 'copy' : 'copies'"></span>
+                                    anyway</span></template>
                             <template x-if="!printing && !canPrint"><span
                                     x-text="blocker || 'Not ready to print'"></span></template>
                         </button>
@@ -370,6 +418,11 @@
                 touchX: 0,
                 copies: 1,
 
+                // Per-check acknowledgements ({ [check.key]: true }). An error must be
+                // acknowledged before the operator can print; a warning (E2E) shows a
+                // checkbox too but never blocks printing.
+                acks: {},
+
                 bridgeChecking: true,
                 bridgeReady: false,
                 bridgeVersion: null,
@@ -382,35 +435,28 @@
                 showBridgeModal: false,
 
                 init() {
-                    if (designSize.w && designSize.h) {
+                    let pages = parseInt({{ $totalPages }});
+                    // Some products only work in one orientation:
+                    //   2-page (double) → landscape-only
+                    //   4-page          → portrait-only
+                    // Lock the orientation so the modal can grey/redden the other
+                    // option (instead of the old alert()), and force the correct one.
+                    if (pages == 2) {
+                        this.orientationLock = 'landscape';
+                        this.printLandscape = true;
+                    } else if (pages == 4) {
+                        this.orientationLock = 'portrait';
+                        this.printLandscape = false;
+                    } else if (designSize.w && designSize.h) {
+                        this.orientationLock = null;
                         this.printLandscape = designSize.w > designSize.h;
-                        let pages = parseInt({{ $totalPages }});
-                        if (pages == 2 && this.printLandscape == 0) {
-                            this.printLandscape = 1;
-                        }
-                        if (pages == 4 && this.printLandscape == 1) {
-
-                            this.printLandscape = 0;
-                        }
                     }
-                    // Alert whenever the user switches print orientation
-                    // (portrait ↔ landscape) in the Print Settings modal.
-                    this.$watch('printLandscape', (val) => {
-
-                        let pages = parseInt({{ $totalPages }});
-                        if (pages == 2 && val != 1) {
-                            alert(
-                                'this design is not sutaible for Portrait mode, please switch to Landscape mode'
-                            );
-                            this.printLandscape = 1;
-                        }
-                        if (pages == 4 && val == 1) {
-                            alert(
-                                'this design is not sutaible for Landscape mode, please switch to Portrait mode'
-                            );
-                            this.printLandscape = 0;
-                        }
-                    });
+                    // Auto-select the Paper Size that matches the DESIGN's actual size
+                    // (e.g. a 5 × 7 design → the 5 × 7 paper option) from the static
+                    // list now; re-applied after live sizes load (see initBridge).
+                    if (designSize.w && designSize.h) {
+                        this.psSelectSizeForDims(designSize.w, designSize.h);
+                    }
                     this.initBridge();
                 },
 
@@ -445,50 +491,122 @@
                     });
 
                     if (designSize.w && designSize.h) {
-                        const dim = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
-                        if (dim) {
+                        // Compare the design against the paper's TRIM size — not the
+                        // larger BLEED dims — so a 7×10 design on a "7x10-E2E"
+                        // (7.57×10.49 bleed) paper still reads as a match. Live driver
+                        // media values are opaque names, so parse the TRIM from the
+                        // size code first, then from the option's LABEL (e.g.
+                        // "7 x 10in E2E (7.57 × 10.49 in)" → 7×10), then fall back to
+                        // the bleed dims only if neither yields a WxH.
+                        let selLabel = this.printPaperSize;
+                        const _live = (this.dynamicSizes || []).find(s => s.value === this.printPaperSize);
+                        if (_live && _live.label) selLabel = _live.label;
+                        else if (this.psSizeOptionsMap && this.psSizeOptionsMap[this.printPaperSize])
+                            selLabel = this.psSizeOptionsMap[this.printPaperSize];
+                        // Lenient: grab the FIRST "W x H" / "W × H" from the label
+                        // (e.g. "7 x 10in E2E (7.57 × 10.49 in)" → [7, 10]).
+                        const _leadWH = (str) => {
+                            const m = String(str || '').match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i);
+                            return m ? [parseFloat(m[1]), parseFloat(m[2])] : null;
+                        };
+                        const trim = this.trimSizeFromCode(this.printPaperSize) || _leadWH(selLabel);
+                        const pdim = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
+                        const paper = trim ? {
+                            w: trim[0],
+                            h: trim[1]
+                        } : pdim;
+
+                        if (paper) {
                             const dw = Math.max(designSize.w, designSize.h);
                             const dh = Math.min(designSize.w, designSize.h);
-                            const tw = Math.max(dim.w, dim.h);
-                            const th = Math.min(dim.w, dim.h);
-                            const match = Math.abs(dw - tw) < 0.1 && Math.abs(dh - th) < 0.1;
+                            const tw = Math.max(paper.w, paper.h);
+                            const th = Math.min(paper.w, paper.h);
+                            const match = Math.abs(dw - tw) < 0.15 && Math.abs(dh - th) < 0.15;
+
+                            // Order the displayed dims by the intended orientation:
+                            //   portrait  → width small, height large ("5 × 7")
+                            //   landscape → width large, height small ("7 × 5")
+                            const _pages = parseInt({{ $totalPages }});
+                            let _land;
+                            if (_pages === 2) _land = true;
+                            else if (_pages === 4) _land = false;
+                            else _land = String(designOrientation).toLowerCase() === 'landscape';
+                            const dW = _land ? Math.max(designSize.w, designSize.h) : Math.min(designSize.w, designSize.h);
+                            const dH = _land ? Math.min(designSize.w, designSize.h) : Math.max(designSize.w, designSize.h);
+                            const pW = _land ? tw : th;
+                            const pH = _land ? th : tw;
+
                             list.push({
                                 key: 'size',
                                 ok: match,
-                                severity: match ? 'ok' : 'warn',
-                                title: match ? 'Size matches paper' : 'Size does not match paper',
-                                detail: 'Design: ' + designSize.w + ' × ' + designSize.h + ' in. Paper: ' + dim
-                                    .w + ' × ' + dim.h + ' in.',
+                                severity: match ? 'ok' : 'error',
+                                title: match ? 'Size matches paper' : 'Paper size doesn\'t match your design',
+                                detail: 'Design: ' + dW + ' × ' + dH + ' in · Paper: ' +
+                                    pW + ' × ' + pH + ' in.' + (match ? '' :
+                                        ' Your design will be scaled to fit, leaving white areas or cutting off edges.'
+                                    ),
+                                ackLabel: match ? null : 'I understand. Print anyway.',
                             });
-                        } else {
+
+                            // Orientation — compare the INTENDED print orientation (the
+                            // one the job will actually print in) against the selected
+                            // paper's orientation. The print orientation follows the
+                            // product page count (2-page → landscape, 4-page → portrait)
+                            // and otherwise the chosen printLandscape toggle — NOT the
+                            // design's raw stored dimensions (a 2-page card is stored
+                            // 7×10 portrait but prints landscape).
+                            // Match the "Print Mode" shown on the page exactly:
+                            //   2-page → Landscape, 4-page → Portrait,
+                            //   otherwise → the design's own orientation.
+                            const pages = parseInt({{ $totalPages }});
+                            let wantLandscape;
+                            if (pages === 2) wantLandscape = true;
+                            else if (pages === 4) wantLandscape = false;
+                            else wantLandscape = String(designOrientation).toLowerCase() === 'landscape';
+
+                            // Compare the design's REQUIRED orientation against the
+                            // orientation the operator selected in Print Settings
+                            // (printLandscape) — NOT the paper's trim aspect. The paper
+                            // is printed in the chosen orientation (a 3×5 card printed
+                            // Landscape becomes 5×3), so the chosen toggle is the real
+                            // "paper" orientation. This updates live as the toggle changes.
+                            const chosenLandscape = !!this.printLandscape;
+                            const orientOk = wantLandscape === chosenLandscape;
+                            const needOrient = wantLandscape ? 'landscape' : 'portrait';
+                            const chosenOrient = chosenLandscape ? 'landscape' : 'portrait';
                             list.push({
-                                key: 'size',
-                                ok: true,
-                                severity: 'ok',
-                                title: 'Design size',
-                                detail: designSize.w + ' × ' + designSize.h + ' in (' + designOrientation + ')',
+                                key: 'orient',
+                                ok: orientOk,
+                                severity: orientOk ? 'ok' : 'error',
+                                title: orientOk ? 'Orientation matches' : 'Orientation mismatch',
+                                detail: orientOk ?
+                                    'Design and print are both ' + needOrient + '.' : 'Design needs ' +
+                                    needOrient + ', but ' + chosenOrient + ' is selected.',
+                                ackLabel: orientOk ? null : 'I understand. Print anyway.',
                             });
                         }
                     }
 
-                    if (designSize.w && designSize.h) {
-                        const dim = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
-                        if (dim) {
-                            const designLandscape = designSize.w > designSize.h;
-                            const paperLandscape = dim.w > dim.h;
-                            const orientMatch = designLandscape === paperLandscape || (designSize.w === designSize.h) ||
-                                (dim.w === dim.h);
-                            if (!orientMatch) {
-                                list.push({
-                                    key: 'orient',
-                                    ok: false,
-                                    severity: 'warn',
-                                    title: 'Orientation mismatch',
-                                    detail: 'Design is ' + designOrientation + ', paper is ' + (paperLandscape ?
-                                        'landscape' : 'portrait') + '.',
-                                });
-                            }
-                        }
+                    // Borderless / edge-to-edge — warn when the selected paper is not
+                    // an E2E form (the print will have a white border).
+                    if (this.printPaperSize) {
+                        const sel = this.printPaperSize;
+                        let label = sel;
+                        const live = (this.dynamicSizes || []).find(s => s.value === sel);
+                        if (live && live.label) label = live.label;
+                        else if (this.psSizeOptionsMap && this.psSizeOptionsMap[sel]) label = this.psSizeOptionsMap[
+                            sel];
+                        const isE2E = /e2e/i.test(sel) || /e2e/i.test(label);
+                        list.push({
+                            key: 'e2e',
+                            ok: isE2E,
+                            severity: isE2E ? 'ok' : 'warn',
+                            title: isE2E ? 'Borderless (edge to edge)' : 'Not edge to edge (E2E)',
+                            detail: isE2E ? 'This paper prints to the edge of the paper.' :
+                                'Your print won\'t be borderless — there will be a white border on every side. ' +
+                                'Choose an E2E paper for a full-bleed print.',
+                            ackLabel: isE2E ? null : 'Print with a white border',
+                        });
                     }
 
                     return list;
@@ -515,7 +633,12 @@
                         this.printers = this.orderPrinters(raw);
                         if (this.printers.length > 0) {
                             this.selectedPrinter = this.printers[0].name;
-                            this.psLoad(this.selectedPrinter);
+                            // psLoad resets the size to the printer's first form, so
+                            // re-apply the design-size match once live sizes arrive.
+                            await this.psLoad(this.selectedPrinter);
+                            if (designSize.w && designSize.h) {
+                                this.psSelectSizeForDims(designSize.w, designSize.h);
+                            }
                         }
                     } catch (e) {
                         console.warn('[localprint] PrintTrays connection failed:', e.message || e);
@@ -555,17 +678,27 @@
 
 
                 openSettings() {
+                    // Auto-select the paper size on open, preferring an E2E variant
+                    // that matches the design size (psSelectSizeForDims ranks E2E first).
+                    if (designSize.w && designSize.h) {
+                        this.psSelectSizeForDims(designSize.w, designSize.h);
+                    }
                     this.psOpen(this.selectedPrinter, this.selectedPrinterInfo?.driver,
                         this.psPrinterStatus(this.selectedPrinterInfo));
                 },
 
-                selectPrinter(p) {
+                async selectPrinter(p) {
                     if (this.selectedPrinter !== p) {
                         this.selectedPrinter = p;
                         // A different printer can support a different paper set.
                         this.psResetCaps();
-                        this.psLoad(p);
-                        this.openSettings();
+                        await this.psLoad(p);
+                        // Keep the design's size selected on the new printer too.
+                        if (designSize.w && designSize.h) {
+                            this.psSelectSizeForDims(designSize.w, designSize.h);
+                        }
+                        // NOTE: don't auto-open the modal here — it opens only when the
+                        // user clicks the "Settings" button (openSettings()).
                     }
                 },
 
@@ -576,9 +709,43 @@
 
 
 
+                // True when any check is a blocking error (red).
+                get hasCheckErrors() {
+                    return this.checks.some(c => !c.ok && c.severity === 'error');
+                },
+
+                // Every error check has its acknowledgement checkbox ticked.
+                get errorsAcknowledged() {
+                    return this.checks
+                        .filter(c => !c.ok && c.severity === 'error')
+                        .every(c => !!this.acks[c.key]);
+                },
+
+                // True when there's a warning (e.g. non-E2E border).
+                get hasCheckWarnings() {
+                    return this.checks.some(c => !c.ok && c.severity === 'warn');
+                },
+
+                // Every failing check that offers an acknowledgement checkbox
+                // (errors AND warnings, e.g. the non-E2E "Print with a white
+                // border" box) must be ticked before printing.
+                get allAcksTicked() {
+                    return this.checks
+                        .filter(c => !c.ok && c.ackLabel)
+                        .every(c => !!this.acks[c.key]);
+                },
+
+                // Fully clean: no errors and no warnings → the print button goes green.
+                get checksAllClear() {
+                    return !this.hasCheckErrors && !this.hasCheckWarnings;
+                },
+
                 get canPrint() {
                     if (this.copies < 1) return false;
                     if (!pdfUrl) return false;
+                    // Every failing check with a checkbox — errors AND warnings
+                    // (e.g. the non-E2E border) — must be acknowledged first.
+                    if (!this.allAcksTicked) return false;
                     return this.bridgeReady && !!this.selectedPrinter;
                 },
 
@@ -587,6 +754,8 @@
                     if (this.bridgeChecking) return 'Connecting to PrintTrays…';
                     if (!this.bridgeReady) return 'PrintTrays not connected';
                     if (!this.selectedPrinter) return 'Select a printer';
+                    if (!this.allAcksTicked)
+                        return 'Confirm the warnings above to print';
                     return null;
                 },
 
@@ -642,6 +811,14 @@
                     return cfg;
                 },
 
+                // Explicit opt-in: when true, the server PDF is rebuilt/cover-filled
+                // onto the selected media size before printing (the legacy behaviour,
+                // isolated in transformPdfForPrint below). Default is FALSE so the
+                // already-generated server PDF is treated as the source of truth and
+                // sent to PrintTrays unchanged. Only flip this if a specific printer
+                // capability is found to genuinely require in-browser PDF transformation.
+                forcePdfTransform: false,
+
                 async doPrint() {
                     if (!this.canPrint || this.printing) return;
                     this.printing = true;
@@ -652,47 +829,33 @@
                         const pp = __ptInstance;
                         if (!pp) throw new Error('PrintTrays not connected');
 
+                        // DEFAULT PRINT PATH — no PDF reconstruction.
+                        // Fetch the already-generated server PDF and send those exact
+                        // bytes straight to PrintTrays. The server PDF is the source of
+                        // truth: a 7×10 design PDF stays a 7×10 PDF. Scaling / fit /
+                        // edge-to-edge is left to PrintTrays → the driver → the printer.
                         const res = await fetch(pdfUrl, {
                             credentials: 'same-origin'
                         });
                         if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
                         let bytes = new Uint8Array(await res.arrayBuffer());
 
-                        // The design PDF is the DESIGN size (e.g. 5×7). If the chosen
-                        // media is bigger (e.g. Letter E2E 9.07×11.49), SumatraPDF
-                        // centres it small → margins. So cover-fill the PDF onto the
-                        // selected media size here, exactly like the check page builds
-                        // its image PDF to the media size — guaranteeing edge-to-edge.
-                        // Only cover-fill for 'fit'. For 'actual' the operator wants
-                        // the design at its true size, so leave the PDF untouched.
-                        const media = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
-                        if ((this.printScaleMode || 'fit') === 'fit' && media && media.w > 0 && media.h > 0) {
-                            // Use TRIM dims (parsed from the size code) instead of
-                            // the BLEED sheet dims, so the saved PDF is e.g. 7×10
-                            // rather than 7.57×10.49. The physical print still
-                            // reaches the sheet edges via the driver's E2E form.
-                            let trim = this.trimSizeFromCode(this.printPaperSize) || [media.w, media.h];
-                            // Size codes are portrait (e.g. 7x10). The server already
-                            // builds the design PDF landscape when landscape was
-                            // chosen, so orient the media page the SAME way — swap
-                            // trim W/H when landscape — or the landscape design gets
-                            // cover-filled onto a portrait page and crops.
-                            let tw = trim[0],
-                                th = trim[1];
-                            let pages = parseInt({{ $totalPages }});
-                            // 2-page (double) products are ALWAYS landscape (server
-                            // builds them landscape, and the spec label says so), so
-                            // force landscape even if portrait was chosen — otherwise
-                            // the landscape design cover-fills a portrait page and
-                            // crops. Other page counts follow the chosen orientation.
-                            const wantLandscape = (pages === 2) ? true : this.printLandscape;
-                            if (pages != 4 && wantLandscape && tw < th) {
-                                const t = tw;
-                                tw = th;
-                                th = t;
-                            }
-                            bytes = await this.fitPdfToMedia(bytes, tw * 72, th * 72);
+                        // ROTATION-ONLY (no rebuild, no resize). The driver does NOT
+                        // reliably honour the `landscape` flag, so if a page's own
+                        // orientation doesn't match the chosen print orientation we
+                        // rotate it 90° in place — dimensions stay the same (7×10 stays
+                        // 7×10), only a rotation flag is set. This fixes landscape /
+                        // portrait without regenerating the PDF or adding margins.
+                        bytes = await this.rotatePdfToOrientation(bytes);
+
+                        // FALLBACK ONLY — never runs during normal printing. Kept as an
+                        // explicit escape hatch (transformPdfForPrint) for a future
+                        // printer capability that genuinely needs the PDF rebuilt.
+                        if (this.forcePdfTransform &&
+                            (this.printScaleMode || 'fit') === 'fit') {
+                            bytes = await this.transformPdfForPrint(bytes);
                         }
+
                         const b64 = this.arrayBufToBase64(bytes.buffer);
 
                         // The bridge decodes PDF jobs with Buffer.from(req.data,
@@ -710,11 +873,80 @@
                     }
                 },
 
-                // Rebuild the PDF so every page is the SELECTED media size, with the
-                // original page cover-filled (scaled to cover, centred) — the same
-                // "fill the media" behaviour the check page uses for images. This is
-                // what makes it print edge-to-edge instead of a small centred design.
-                // Best-effort: returns the original bytes on any failure.
+                // ── ROTATION-ONLY (lightweight, on the default path) ──
+                // Rotates each page 90° ONLY when its orientation doesn't match the
+                // chosen print orientation. No re-embed, no scaling, no size change —
+                // pdf-lib's setRotation just flips the page's rotation flag, so a 7×10
+                // design PDF stays a 7×10 PDF (its printed footprint becomes 10×7).
+                // Best-effort: returns the original bytes on any failure or when no
+                // rotation is needed.
+                async rotatePdfToOrientation(bytes) {
+                    try {
+                        if (!window.PDFLib) return bytes;
+                        const {
+                            PDFDocument,
+                            degrees
+                        } = window.PDFLib;
+
+                        let pages = parseInt({{ $totalPages }});
+                        // 2-page (double) products are ALWAYS landscape; 4-page ALWAYS
+                        // portrait; otherwise follow the modal's chosen orientation.
+                        let wantLandscape;
+                        if (pages === 2) wantLandscape = true;
+                        else if (pages === 4) wantLandscape = false;
+                        else wantLandscape = !!this.printLandscape;
+
+                        const src = await PDFDocument.load(bytes);
+                        const list = src.getPages();
+                        let changed = false;
+                        for (const page of list) {
+                            const {
+                                width,
+                                height
+                            } = page.getSize();
+                            const isLandscape = width > height;
+                            if (isLandscape === wantLandscape) continue; // already correct
+                            // Add 90° to whatever rotation the page already has.
+                            const cur = page.getRotation().angle || 0;
+                            page.setRotation(degrees((cur + 90) % 360));
+                            changed = true;
+                        }
+                        if (!changed) return bytes; // nothing to do → original bytes
+                        return await src.save();
+                    } catch (e) {
+                        console.warn('[localprint] PDF rotate skipped:', e && e.message || e);
+                        return bytes;
+                    }
+                },
+
+                // ── FALLBACK PDF TRANSFORM (isolated, not on the default path) ──
+                // Rebuilds the server PDF so every page is the SELECTED media size,
+                // cover-filling the original design onto it. This is the LEGACY
+                // edge-to-edge behaviour, extracted verbatim from doPrint(). It is
+                // ONLY invoked when forcePdfTransform is explicitly enabled — normal
+                // printing sends the untouched server PDF. Best-effort: returns the
+                // original bytes on any failure.
+                async transformPdfForPrint(bytes) {
+                    const media = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
+                    if (!(media && media.w > 0 && media.h > 0)) return bytes;
+
+                    // Use TRIM dims (parsed from the size code) instead of the BLEED
+                    // sheet dims, so the saved PDF is e.g. 7×10 rather than 7.57×10.49.
+                    let trim = this.trimSizeFromCode(this.printPaperSize) || [media.w, media.h];
+                    let tw = trim[0],
+                        th = trim[1];
+                    let pages = parseInt({{ $totalPages }});
+                    // 2-page (double) products are ALWAYS landscape; other page counts
+                    // follow the chosen orientation.
+                    const wantLandscape = (pages === 2) ? true : this.printLandscape;
+                    if (pages != 4 && wantLandscape && tw < th) {
+                        const t = tw;
+                        tw = th;
+                        th = t;
+                    }
+                    return await this.fitPdfToMedia(bytes, tw * 72, th * 72);
+                },
+
                 // Derive the TRIM size (in inches) from a tray size code —
                 // strips a "-E2E" suffix and parses "WxH" (e.g. '7x10-E2E' →
                 // [7, 10]). Named sizes (Letter, Legal) handled explicitly.

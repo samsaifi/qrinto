@@ -328,6 +328,43 @@
             //      Cover-filling onto the media size makes it print edge-to-edge.
             // mediaWin/mediaHin are the tray's paper size in inches. Best-effort:
             // returns the original bytes on any failure so a print is never blocked.
+            // ── ROTATION-ONLY (lightweight, default print path) ──
+            // Rotates each page 90° ONLY when its orientation doesn't match the
+            // desired print orientation. No re-embed, no scaling, no size change —
+            // pdf-lib's setRotation just flips the page's rotation flag, so a 7×10
+            // design PDF stays a 7×10 PDF (its printed footprint becomes 10×7). This
+            // fixes the fact that the bridge/SumatraPDF won't rotate PDF content for
+            // a `landscape` flag, WITHOUT rebuilding the server PDF or adding margins.
+            // Best-effort: returns the original bytes on failure or when no change.
+            async function rotatePdfToOrientation(bytes, wantLandscape) {
+                try {
+                    if (!window.PDFLib) return bytes;
+                    const {
+                        PDFDocument,
+                        degrees
+                    } = window.PDFLib;
+                    const src = await PDFDocument.load(bytes);
+                    const pages = src.getPages();
+                    let changed = false;
+                    for (const page of pages) {
+                        const {
+                            width,
+                            height
+                        } = page.getSize();
+                        const isLandscape = width > height;
+                        if (isLandscape === wantLandscape) continue; // already correct
+                        const cur = page.getRotation().angle || 0;
+                        page.setRotation(degrees((cur + 90) % 360));
+                        changed = true;
+                    }
+                    if (!changed) return bytes; // nothing to do → original bytes
+                    return await src.save();
+                } catch (e) {
+                    console.warn('[store-print] PDF rotate skipped:', e && e.message || e);
+                    return bytes;
+                }
+            }
+
             async function fitPdfToMedia(bytes, mediaWin, mediaHin, wantLandscape) {
                 try {
                     if (!window.PDFLib || !(mediaWin > 0) || !(mediaHin > 0)) return bytes;
@@ -511,21 +548,16 @@
                     }
                     if (!bytes) throw new Error('No PDF data available.');
 
-                    // Scale mode from the tray config (default 'fit'). For 'fit' we
-                    // rebuild the PDF to the tray's media size + chosen orientation,
-                    // cover-filled — so it prints edge-to-edge AND in the right
-                    // orientation (see fitPdfToMedia). For 'actual' the operator
-                    // wants the design at its true size, so leave the PDF untouched.
-                    // Best-effort: on any failure, the original bytes print as-is.
+                    // DEFAULT PRINT PATH — do NOT rebuild the server PDF. The server
+                    // PDF is the source of truth (a 7×10 design stays a 7×10 PDF).
+                    // Since the bridge/SumatraPDF won't rotate PDF content for the
+                    // `landscape` flag, we ONLY rotate pages 90° when their orientation
+                    // doesn't match the desired one — no resize, no cover-fill, no
+                    // margins. Scaling / edge-to-edge is left to the driver via
+                    // paperSize + scaleMode. For 'actual' the operator wants the true
+                    // size AND orientation, so the PDF is left completely untouched.
                     const scaleMode = chosen.scale_mode || 'fit';
                     if (scaleMode === 'fit') {
-                        // Use TRIM dims (not the tray's saved BLEED dims) so the
-                        // rebuilt PDF's page size matches the /print/pdf/check
-                        // output (e.g. 7×10, not 7.57×10.49). The physical print
-                        // is still edge-to-edge because paperSize pins the driver
-                        // to its E2E form (see resolveLiveMediaName below).
-                        const trim = trimSizeFromCode(chosen) ||
-                            [parseFloat(chosen.size_width), parseFloat(chosen.size_height)];
                         // Orientation from the PRODUCT page count (from size_title):
                         //   4-page (Folded)          → portrait
                         //   2-page (Flat - double)   → landscape
@@ -533,12 +565,7 @@
                         let wantLandscape = !!chosen.landscape;
                         if (payload.pages_count === 4) wantLandscape = false;
                         else if (payload.pages_count === 2) wantLandscape = true;
-                        bytes = await fitPdfToMedia(
-                            bytes,
-                            trim[0],
-                            trim[1],
-                            wantLandscape
-                        );
+                        bytes = await rotatePdfToOrientation(bytes, wantLandscape);
                     }
 
                     let binary = '';

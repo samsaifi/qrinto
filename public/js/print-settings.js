@@ -53,6 +53,11 @@
             // ── user selections ──
             printPaperSize: cfg.defaultSize || Object.keys(sizeOptions)[0] || '',
             printLandscape: false,
+            // Orientation constraint for products that only work one way (e.g.
+            // 2-page = landscape-only, 4-page = portrait-only). null = both allowed.
+            // The host sets this; the modal greys/reddens the disallowed option.
+            //   null | 'portrait' (portrait-only) | 'landscape' (landscape-only)
+            orientationLock: null,
             printDuplex: 'simplex',
             printColor: true,
             printInputBin: '',
@@ -96,6 +101,179 @@
             // Dimensions (inches) of the selected paper size, or null.
             psDim: function () {
                 return this.dynamicDims[this.printPaperSize] || this.psStaticDims[this.printPaperSize] || null;
+            },
+
+            // ── Shared preflight checks (size / orientation / borderless) ──
+            // Per-check acknowledgements, keyed by check.key. An error must be ticked
+            // before printing; a warning (E2E) shows a checkbox but never blocks.
+            acks: {},
+            // Whether the shared modal should render the checks block + gate Apply.
+            psShowChecks: false,
+            // The design/order the modal is validating against ({ w, h, pages }).
+            // Hosts set this before opening the modal when psShowChecks is on.
+            psDesign: { w: 0, h: 0, pages: 0 },
+
+            // Checks for the modal's CURRENT paper selection + orientation toggle.
+            psModalChecks: function () {
+                var selLabel = this.printPaperSize;
+                var live = (this.dynamicSizes || []).find(function (s) { return s.value === this.printPaperSize; }, this);
+                if (live && live.label) selLabel = live.label;
+                else if (this.psSizeOptionsMap && this.psSizeOptionsMap[this.printPaperSize]) selLabel = this.psSizeOptionsMap[this.printPaperSize];
+                return this.psComputeChecks({
+                    designW: this.psDesign.w, designH: this.psDesign.h, pages: this.psDesign.pages,
+                    paperCode: this.printPaperSize, paperLabel: selLabel,
+                    paperDim: this.psDim(), chosenLandscape: this.printLandscape,
+                });
+            },
+
+            // Parse the leading "W x H" / "W × H" from a code/label (ignores an
+            // "-E2E" suffix and the trailing "(bleed × bleed in)" part).
+            psParseWH: function (str) {
+                var m = String(str || '').match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i);
+                return m ? [parseFloat(m[1]), parseFloat(m[2])] : null;
+            },
+
+            // Build the preflight checks for a given design + paper selection.
+            // cfg: { designW, designH, pages, paperCode, paperLabel, paperDim,
+            //        chosenLandscape }.
+            // Returns [{ key, ok, severity, title, detail, ackLabel }].
+            psComputeChecks: function (cfg) {
+                cfg = cfg || {};
+                var list = [];
+                var dW = parseFloat(cfg.designW), dH = parseFloat(cfg.designH);
+                var pages = parseInt(cfg.pages);
+                var code = cfg.paperCode, label = cfg.paperLabel || cfg.paperCode || '';
+
+                // Paper TRIM: parse from code, then label, then fall back to dims.
+                var trim = this.psParseWH(code) || this.psParseWH(label);
+                var paper = trim ? { w: trim[0], h: trim[1] } :
+                    (cfg.paperDim && cfg.paperDim.w > 0 ? cfg.paperDim : null);
+
+                if (dW > 0 && dH > 0 && paper) {
+                    var dw = Math.max(dW, dH), dh = Math.min(dW, dH);
+                    var tw = Math.max(paper.w, paper.h), th = Math.min(paper.w, paper.h);
+
+                    var match = Math.abs(dw - tw) < 0.15 && Math.abs(dh - th) < 0.15;
+
+                    // Order the displayed dims by the intended orientation:
+                    //   portrait  → width small, height large ("5 × 7")
+                    //   landscape → width large, height small ("7 × 5")
+                    var wantLand;
+                    if (pages === 2) wantLand = true;
+                    else if (pages === 4) wantLand = false;
+                    else wantLand = dW > dH;
+                    var showDW = wantLand ? dw : dh, showDH = wantLand ? dh : dw;
+                    var showPW = wantLand ? tw : th, showPH = wantLand ? th : tw;
+
+                    list.push({
+                        key: 'size', ok: match, severity: match ? 'ok' : 'error',
+                        title: match ? 'Size matches paper' : 'Paper size doesn\'t match your design',
+                        detail: 'Design: ' + showDW + ' × ' + showDH + ' in · Paper: ' + showPW + ' × ' + showPH + ' in.' +
+                            (match ? '' : ' Your design will be scaled to fit, leaving white areas or cutting off edges.'),
+                        ackLabel: match ? null : 'I understand. Print anyway.',
+                    });
+
+                    // Orientation: design's REQUIRED orientation vs the chosen one.
+                    var wantLandscape;
+                    if (pages === 2) wantLandscape = true;
+                    else if (pages === 4) wantLandscape = false;
+                    else wantLandscape = dW > dH;
+                    var chosenLandscape = !!cfg.chosenLandscape;
+                    var orientOk = wantLandscape === chosenLandscape;
+                    list.push({
+                        key: 'orient', ok: orientOk, severity: orientOk ? 'ok' : 'error',
+                        title: orientOk ? 'Orientation matches' : 'Orientation mismatch',
+                        detail: orientOk
+                            ? 'Design and print are both ' + (wantLandscape ? 'landscape' : 'portrait') + '.'
+                            : 'Design needs ' + (wantLandscape ? 'landscape' : 'portrait') + ', but ' +
+                            (chosenLandscape ? 'landscape' : 'portrait') + ' is selected.',
+                        ackLabel: orientOk ? null : 'I understand. Print anyway.',
+                    });
+                }
+
+                // Borderless / E2E.
+                if (code) {
+                    var isE2E = /e2e/i.test(String(code)) || /e2e/i.test(String(label));
+                    list.push({
+                        key: 'e2e', ok: isE2E, severity: isE2E ? 'ok' : 'warn',
+                        title: isE2E ? 'Borderless (edge to edge)' : 'Not edge to edge (E2E)',
+                        detail: isE2E ? 'This paper prints to the edge of the paper.' :
+                            'Your print won\'t be borderless — there will be a white border on every side. ' +
+                            'Choose an E2E paper for a full-bleed print.',
+                        ackLabel: isE2E ? null : 'Print with a white border',
+                    });
+                }
+                return list;
+            },
+
+            // Helpers over a checks array + the shared `acks` map.
+            psChecksHaveError: function (checks) { return (checks || []).some(function (c) { return !c.ok && c.severity === 'error'; }); },
+            psChecksErrorsAck: function (checks) { return (checks || []).filter(function (c) { return !c.ok && c.severity === 'error'; }).every(function (c) { return !!this.acks[c.key]; }, this); },
+            psChecksHaveWarn: function (checks) { return (checks || []).some(function (c) { return !c.ok && c.severity === 'warn'; }); },
+            psChecksAllClear: function (checks) { return !this.psChecksHaveError(checks) && !this.psChecksHaveWarn(checks); },
+            // Every failing check that offers an acknowledgement checkbox — errors
+            // AND warnings (e.g. the non-E2E "Print with a white border" box) — must
+            // be ticked before printing.
+            psChecksAcksAll: function (checks) { return (checks || []).filter(function (c) { return !c.ok && c.ackLabel; }).every(function (c) { return !!this.acks[c.key]; }, this); },
+            // Printable = every acknowledgement checkbox (error or warning) ticked.
+            psChecksPrintable: function (checks) { return this.psChecksAcksAll(checks); },
+
+            // Auto-select the Paper Size option that matches the given TRIM size
+            // (inches), ignoring orientation, within a small tolerance. When several
+            // options match, the E2E (edge-to-edge / borderless) variant is preferred
+            // — e.g. a 7 × 10 design picks "7 x 10in E2E (7.57 × 10.49 in)" over a
+            // plain 7 × 10. Matching uses the option's TRIM size parsed from its
+            // name/label (e.g. "7 x 10in E2E" → 7×10) so an E2E option isn't rejected
+            // by its larger BLEED dims; it falls back to the option's dims otherwise.
+            // Sets printPaperSize on the best match and returns its value, or null
+            // when nothing is close enough (leaving the current selection).
+            psSelectSizeForDims: function (w, h) {
+                w = parseFloat(w); h = parseFloat(h);
+                if (!(w > 0) || !(h > 0)) return null;
+                var targetMin = Math.min(w, h), targetMax = Math.max(w, h);
+                var TOL = 0.15; // inches, per side
+                // Parse the leading "W x H" (or "W × H") from a code/label, ignoring
+                // any "-E2E" suffix and the trailing "(bleed × bleed in)" part.
+                var parseTrim = function (str) {
+                    var m = String(str || '').match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i);
+                    return m ? [parseFloat(m[1]), parseFloat(m[2])] : null;
+                };
+                var isE2E = function (str) { return /e2e/i.test(String(str || '')); };
+
+                // Build the candidate list from the live sizes, else the static map.
+                var opts = [];
+                if (this.dynamicSizes && this.dynamicSizes.length) {
+                    this.dynamicSizes.forEach(function (s) {
+                        opts.push({ value: s.value, label: s.label, dim: this.dynamicDims[s.value] || { w: s.w, h: s.h } });
+                    }, this);
+                } else {
+                    Object.keys(this.psStaticDims || {}).forEach(function (k) {
+                        var label = (this.psSizeOptionsMap && this.psSizeOptionsMap[k]) || k;
+                        opts.push({ value: k, label: label, dim: this.psStaticDims[k] });
+                    }, this);
+                }
+
+                var matches = [];
+                opts.forEach(function (o) {
+                    // Prefer the TRIM parsed from the code/label; fall back to dims.
+                    var trim = parseTrim(o.value) || parseTrim(o.label);
+                    var mn, mx;
+                    if (trim) { mn = Math.min(trim[0], trim[1]); mx = Math.max(trim[0], trim[1]); }
+                    else if (o.dim && o.dim.w > 0 && o.dim.h > 0) { mn = Math.min(o.dim.w, o.dim.h); mx = Math.max(o.dim.w, o.dim.h); }
+                    else return;
+                    var delta = Math.abs(mn - targetMin) + Math.abs(mx - targetMax);
+                    if (delta <= TOL * 2) {
+                        matches.push({ value: o.value, delta: delta, e2e: isE2E(o.value) || isE2E(o.label) });
+                    }
+                });
+                if (!matches.length) return null;
+                // E2E variants first, then the closest dimension match.
+                matches.sort(function (a, b) {
+                    if (a.e2e !== b.e2e) return a.e2e ? -1 : 1;
+                    return a.delta - b.delta;
+                });
+                this.printPaperSize = matches[0].value;
+                return matches[0].value;
             },
 
             // One-line human summary of the current settings.

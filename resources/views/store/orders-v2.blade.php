@@ -97,7 +97,7 @@
                     <h3 class="font-display font-bold text-lg text-slate-900">Pick a tray</h3>
                     <p class="text-[13px] text-slate-500 mt-0.5">
                         Order <span class="mono text-slate-700" x-text="payload?.order?.number"></span>
-                        · size <span class="mono text-slate-700" x-text="payload?.order?.size || 'unknown'"></span>
+                        · size <span class="mono text-slate-700" x-text="orderSizePretty()"></span>
                     </p>
                 </div>
                 <button type="button" @click="close()"
@@ -174,6 +174,54 @@
 
                     <p x-show="error" x-text="error" class="text-[12px] text-red-600 font-medium"></p>
 
+                    {{-- Preflight checks for the chosen tray --}}
+                    <template x-if="chosenTarget()">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Checks</p>
+                            <template x-for="c in targetChecks()" :key="'pt-' + c.key">
+                                <div class="flex items-start gap-2.5 py-2.5 transition-colors"
+                                    :class="c.ok ? 'border-b border-slate-100' : (c.severity === 'error'
+                                        ? 'bg-red-50 border border-red-100 rounded-lg px-3 my-1'
+                                        : 'bg-amber-50 border border-amber-100 rounded-lg px-3 my-1')">
+                                    <template x-if="c.ok">
+                                        <svg class="w-4 h-4 text-[#287d3c] mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 6 9 17l-5-5" />
+                                        </svg>
+                                    </template>
+                                    <template x-if="!c.ok && c.severity === 'warn'">
+                                        <svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                            <path d="M12 9v4" />
+                                            <path d="M12 17h.01" />
+                                        </svg>
+                                    </template>
+                                    <template x-if="!c.ok && c.severity === 'error'">
+                                        <svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 6 6 18" />
+                                            <path d="m6 6 12 12" />
+                                        </svg>
+                                    </template>
+                                    <div class="min-w-0">
+                                        <p class="text-[13px] font-bold text-slate-900" x-text="c.title"></p>
+                                        <p class="text-[12px] text-slate-500 mt-0.5" x-text="c.detail"></p>
+                                        <template x-if="!c.ok && c.ackLabel">
+                                            <label class="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                                                <input type="checkbox" x-model="acks[c.key]" class="w-4 h-4 rounded border-slate-300 shrink-0"
+                                                    :class="c.severity === 'error' ? 'accent-red-600' : 'accent-amber-500'">
+                                                <span class="text-[12px] font-semibold"
+                                                    :class="c.severity === 'error' ? 'text-red-700' : 'text-amber-700'"
+                                                    x-text="c.ackLabel"></span>
+                                            </label>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
                     <div class="pt-3 sticky bottom-0 bg-white pb-1 space-y-2">
                         <div x-show="pcState === 'error' || (pcState === 'ok' && pcPrinters.length === 0)"
                             class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
@@ -190,10 +238,14 @@
                         <div class="flex items-center justify-end gap-2">
                             <button type="button" @click="close()"
                                 class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Cancel</button>
-                            <button type="button" @click="confirm()" :disabled="!chosenTarget() || sending"
-                                class="px-5 py-2 rounded-xl bg-[#287d3c] hover:bg-emerald-800 text-white text-sm font-bold transition disabled:bg-slate-300 disabled:cursor-not-allowed">
+                            <button type="button" @click="confirm()"
+                                :disabled="!chosenTarget() || sending || !targetPrintable"
+                                class="px-5 py-2 rounded-xl text-white text-sm font-bold transition disabled:bg-slate-300 disabled:cursor-not-allowed"
+                                :class="(!chosenTarget() || sending || !targetPrintable) ? ''
+                                    : (targetAllClear ? 'bg-[#287d3c] hover:bg-emerald-800' : 'bg-red-600 hover:bg-red-700')">
                                 <span x-show="!sending">Print to <span
-                                        x-text="chosenTarget()?.label || 'printer'"></span></span>
+                                        x-text="chosenTarget()?.label || 'printer'"></span><span
+                                        x-show="chosenTarget() && !targetAllClear"> anyway</span></span>
                                 <span x-show="sending">Sending…</span>
                             </button>
                         </div>
@@ -790,6 +842,7 @@
                     this.payload = null;
                     this.choice = null;
                     this.error = '';
+                    this.acks = {}; // fresh acknowledgements per order
                     try {
                         const res = await fetch(prepareUrl, {
                             credentials: 'same-origin',
@@ -842,6 +895,21 @@
                     this.psResetCaps();
                     if (t.size) this.printPaperSize = t.size;
                     this.printLandscape = t.landscape || false;
+
+                    // Lock orientation by the order's product page count (same rule as
+                    // the customer preview flow): 2-page → Landscape-only, 4-page →
+                    // Portrait-only. The shared modal greys/reddens the disallowed
+                    // option and forces the correct one. null = both allowed.
+                    const pages = parseInt(this.payload?.pages_count);
+                    if (pages === 2) {
+                        this.orientationLock = 'landscape';
+                        this.printLandscape = true;
+                    } else if (pages === 4) {
+                        this.orientationLock = 'portrait';
+                        this.printLandscape = false;
+                    } else {
+                        this.orientationLock = null;
+                    }
                     this.printDuplex = t.duplex || 'simplex';
                     this.printColor = t.color !== undefined ? t.color : true;
                     this.printInputBin = t.input_bin || '';
@@ -849,11 +917,33 @@
                     this.printMediaType = t.media_type_live || '';
                     this.printScaleMode = t.scale_mode || 'fit';
                     this.printScaleFactor = t.scale_factor || 100;
+
+                    // Enable the shared modal's preflight checks against THIS order.
+                    this.psDesign = {
+                        w: parseFloat(this.payload?.order?.size_width) || 0,
+                        h: parseFloat(this.payload?.order?.size_height) || 0,
+                        pages: parseInt(this.payload?.pages_count) || 0,
+                    };
+                    this.psShowChecks = true;
+                    this.acks = {}; // reset acknowledgements for this open
+
                     this.psOpen(t.label, t.printer || '', null);
-                    if (t.printer) this.psLoad(t.printer);
-                    this.$nextTick(() => {
-                        if (window.lucide) lucide.createIcons();
-                    });
+
+                    // Auto-select the Paper Size that matches THIS ORDER's size
+                    // (e.g. a 5 × 7 order → the 5 × 7 paper option), ignoring
+                    // orientation. Try the static list immediately, then again after
+                    // the printer's LIVE sizes load (psLoad resets to the first size,
+                    // so re-apply the match afterwards).
+                    const ow = this.payload?.order?.size_width;
+                    const oh = this.payload?.order?.size_height;
+                    if (ow && oh) this.psSelectSizeForDims(ow, oh);
+                    (async () => {
+                        if (t.printer) await this.psLoad(t.printer);
+                        if (ow && oh) this.psSelectSizeForDims(ow, oh);
+                        this.$nextTick(() => {
+                            if (window.lucide) lucide.createIcons();
+                        });
+                    })();
                 },
 
                 // Called by the modal's Apply button — persist this one tray's
@@ -919,6 +1009,7 @@
                             label: t.label,
                             tray_key: t.key,
                             size: t.size,
+                            size_pretty: t.size_pretty,
                             size_width: t.size_width,
                             size_height: t.size_height,
                             media: t.media,
@@ -937,27 +1028,56 @@
                     return null;
                 },
 
+                // Order size string, ordered by the intended orientation:
+                //   portrait  → width small, height large ("5 × 7")
+                //   landscape → width large, height small ("7 × 5")
+                // Falls back to the raw server string when numeric dims are absent.
+                orderSizePretty() {
+                    const o = this.payload?.order;
+                    if (!o) return 'unknown';
+                    const w = parseFloat(o.size_width), h = parseFloat(o.size_height);
+                    if (!(w > 0) || !(h > 0)) return o.size || 'unknown';
+                    const pages = parseInt(this.payload?.pages_count);
+                    let land;
+                    if (pages === 2) land = true;
+                    else if (pages === 4) land = false;
+                    else land = w > h;
+                    const sw = land ? Math.max(w, h) : Math.min(w, h);
+                    const sh = land ? Math.min(w, h) : Math.max(w, h);
+                    return sw + ' × ' + sh + ' inch';
+                },
+
+                // Preflight checks for the currently CHOSEN tray (Pick-a-tray modal).
+                targetChecks() {
+                    const t = this.chosenTarget();
+                    if (!t) return [];
+                    return this.psComputeChecks({
+                        designW: this.payload?.order?.size_width,
+                        designH: this.payload?.order?.size_height,
+                        pages: this.payload?.pages_count,
+                        paperCode: t.size,
+                        paperLabel: t.size_pretty || t.size,
+                        paperDim: { w: parseFloat(t.size_width), h: parseFloat(t.size_height) },
+                        chosenLandscape: t.landscape,
+                    });
+                },
+                get targetPrintable() { return this.psChecksPrintable(this.targetChecks()); },
+                get targetAllClear() { return this.psChecksAllClear(this.targetChecks()); },
+
                 close() {
                     this.visible = false;
+                    this.psShowChecks = false;
                 },
 
                 async confirm() {
                     const target = this.chosenTarget();
                     if (!target || this.sending) return;
 
-                    // Enforce orientation by product page count (same rule as the
-                    // customer preview flow): 2-page (Flat - double) → Landscape,
-                    // 4-page (Folded) → Portrait. Block a mismatched tray.
-                    const pages = parseInt(this.payload?.pages_count);
-                    const land = !!target.landscape;
-                    if (pages === 2 && !land) {
-                        alert('This design (2-page) is only suitable for Landscape mode. Please pick a Landscape tray.');
-                        return;
-                    }
-                    if (pages === 4 && land) {
-                        alert('This design (4-page) is only suitable for Portrait mode. Please pick a Portrait tray.');
-                        return;
-                    }
+                    // Block printing until every failing check with a checkbox is
+                    // acknowledged — errors (size / orientation) AND warnings (the
+                    // non-E2E "Print with a white border" box). Orientation itself
+                    // is auto-corrected at print time by printOrder().
+                    if (!this.targetPrintable) return;
 
                     this.sending = true;
                     this.error = '';

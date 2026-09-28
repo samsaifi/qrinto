@@ -332,21 +332,10 @@
                     const target = this.chosenTarget();
                     if (!target || this.sending) return;
 
-                    // Enforce orientation by product page count (same rule as the
-                    // customer preview flow): 2-page (Flat - double) → Landscape,
-                    // 4-page (Folded) → Portrait. Block a mismatched tray.
-                    const pages = parseInt(this.payload?.pages_count);
-                    const land = !!target.landscape;
-                    if (pages === 2 && !land) {
-                        alert(
-                            'This design (2-page) is only suitable for Landscape mode. Please pick a Landscape tray.'
-                        );
-                        return;
-                    }
-                    if (pages === 4 && land) {
-                        alert('This design (4-page) is only suitable for Portrait mode. Please pick a Portrait tray.');
-                        return;
-                    }
+                    // Orientation is enforced automatically at print time by product
+                    // page count (2-page → Landscape, 4-page → Portrait): printOrder()
+                    // rotates the PDF to the correct orientation regardless of the
+                    // tray's landscape flag, so no blocking alert is needed here.
 
                     this.sending = true;
                     this.error = '';
