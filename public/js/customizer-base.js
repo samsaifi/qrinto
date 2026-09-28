@@ -2479,6 +2479,13 @@ function customizerBase(config) {
             if (!obj) return;
             if (spec && spec.ignoreMask === true) return;
             if (!this._config.hasMasks) return;
+            // Templates are meant to cover the whole design (they define the
+            // artwork itself, not the user-fillable region), so they must NOT
+            // be clipped to the mask. Otherwise a mask smaller than the canvas
+            // would reveal any baked-in margin of the background JPG on the
+            // sides where the template got clipped away. Mask only constrains
+            // USER-uploaded photos.
+            if (obj._isTemplateImage || obj._isTemplateText || obj._isTemplateSvg) return;
             key = key || this.activeCanvas;
             const cv = this.canvases[key];
             sf = sf || (cv ? cv.scaleFactor : 1) || 1;

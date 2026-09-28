@@ -123,6 +123,39 @@
                 </div>
             </div>
 
+            {{-- Scale (wired) — guarded with typeof so an older cached
+                 print-settings.js (without printScaleMode) can't crash Alpine;
+                 the block simply doesn't render until the updated JS is loaded. --}}
+            <template x-if="typeof printScaleMode !== 'undefined'">
+                <div class="col-span-2">
+                    <label class="text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        Scale
+                    </label>
+                    <div class="flex gap-2 items-center">
+                        <select x-model="printScaleMode"
+                            class="flex-1 rounded-xl border border-slate-200 text-sm py-2.5 px-3 bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
+                            <option value="fit">Fit to paper (edge-to-edge)</option>
+                            <option value="fit_area">Fit to printable area</option>
+                            <option value="actual">Actual size</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        {{-- Custom percentage — only meaningful when "Custom" is picked. --}}
+                        <div class="flex items-center gap-1 rounded-xl border px-2 shrink-0 transition"
+                            x-show="printScaleMode === 'custom'"
+                            :class="'border-[#287d3c] bg-[#f2f7f2]'">
+                            <input type="number" min="1" max="400" x-model.number="printScaleFactor"
+                                class="w-12 text-center bg-transparent text-[12px] font-bold text-[#287d3c] py-2 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <span class="text-[11px] font-semibold text-[#287d3c]">%</span>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1"
+                        x-text="printScaleMode === 'fit' ? 'Fills the whole sheet edge-to-edge (may crop slightly).' :
+                            (printScaleMode === 'fit_area' ? 'Scales to fit inside the printer\'s margins.' :
+                            (printScaleMode === 'actual' ? 'Prints at the file\'s true size.' :
+                            'Scales by the percentage you set.'))"></p>
+                </div>
+            </template>
+
             {{-- Paper Source (wired) --}}
             <div x-show="inputBins.length > 0">
                 <label class="text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">

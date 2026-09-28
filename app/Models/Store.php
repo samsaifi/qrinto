@@ -281,6 +281,8 @@ class Store extends Model
                 'input_bin'       => $entry['input_bin'] ?? null,
                 'quality'         => $entry['quality'] ?? null,
                 'media_type_live' => $entry['media_type_live'] ?? null,
+                'scale_mode'      => $entry['scale_mode'] ?? 'fit',
+                'scale_factor'    => isset($entry['scale_factor']) ? (float) $entry['scale_factor'] : 100,
                 'enabled'     => (bool) ($entry['enabled'] ?? false),
             ];
             $sizeCode = self::normalizeToSizeCode($row['size_width'], $row['size_height']) ?? $row['size'];

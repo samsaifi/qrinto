@@ -160,6 +160,10 @@
                                                  never reach the printer. Only wired settings are displayed. --}}
                                         </div>
                                     </div>
+                                    <template x-if="t.enabled">
+                                        <button type="button" @click.stop.prevent="openConfig(t)"
+                                            class="shrink-0 text-[11px] text-[#287d3c] font-bold hover:underline">Change</button>
+                                    </template>
                                     <template x-if="!t.enabled">
                                         <span class="text-[11px] text-slate-400">Off</span>
                                     </template>
@@ -197,6 +201,9 @@
                 </div>
             </template>
         </div>
+
+        {{-- Shared per-printer "Print Settings" modal (opened by the Change button). --}}
+        @include('partials.print-settings-modal')
     </div>
 @endsection
 
@@ -718,6 +725,7 @@
 @endpush
 
 @push('scripts')
+    <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
     <script>
         const V2_STAGES = ['new', 'printing', 'ready', 'done'];
         const V2_LABELS = {
@@ -749,8 +757,21 @@
             }));
         });
 
+        const V2_SIZE_OPTIONS = {{ Illuminate\Support\Js::from($sizeOptions) }};
+        const V2_SIZE_DIMS_RAW = {{ Illuminate\Support\Js::from($sizeDims) }};
+        const V2_SIZE_DIMS = {};
+        Object.entries(V2_SIZE_DIMS_RAW || {}).forEach(([code, d]) => {
+            if (d) V2_SIZE_DIMS[code] = { w: d[0], h: d[1] };
+        });
+
         function printPickerV2() {
             return {
+                // Shared Print Settings modal (state + live-capability loading).
+                ...window.printSettingsMixin({
+                    sizeOptions: V2_SIZE_OPTIONS,
+                    sizeDims: V2_SIZE_DIMS
+                }),
+
                 visible: false,
                 loading: false,
                 sending: false,
@@ -760,6 +781,8 @@
                 pcState: 'idle',
                 pcPrinters: [],
                 defaultPrinter: null,
+                editingKey: null,
+                savingTray: false,
 
                 async open(prepareUrl) {
                     this.visible = true;
@@ -798,6 +821,9 @@
                     this.pcState = 'loading';
                     try {
                         const pp = await window.__qrintoPT.connect();
+                        // The shared Print Settings mixin reads the live bridge from
+                        // window.__ptInstance when loading a printer's capabilities.
+                        window.__ptInstance = pp;
                         const list = await pp.getPrinters();
                         const all = Array.isArray(list) ? list : [list].filter(Boolean);
                         this.pcPrinters = all.map(p => p.name);
@@ -805,6 +831,80 @@
                         this.pcState = 'ok';
                     } catch (e) {
                         this.pcState = 'error';
+                    }
+                },
+
+                // Open the shared Print Settings modal for one tray row: seed the
+                // buffer from its saved values, then load the printer's live caps.
+                openConfig(t) {
+                    if (!t || !t.enabled) return;
+                    this.editingKey = t.key;
+                    this.psResetCaps();
+                    if (t.size) this.printPaperSize = t.size;
+                    this.printLandscape = t.landscape || false;
+                    this.printDuplex = t.duplex || 'simplex';
+                    this.printColor = t.color !== undefined ? t.color : true;
+                    this.printInputBin = t.input_bin || '';
+                    this.printQuality = t.quality || '';
+                    this.printMediaType = t.media_type_live || '';
+                    this.printScaleMode = t.scale_mode || 'fit';
+                    this.printScaleFactor = t.scale_factor || 100;
+                    this.psOpen(t.label, t.printer || '', null);
+                    if (t.printer) this.psLoad(t.printer);
+                    this.$nextTick(() => {
+                        if (window.lucide) lucide.createIcons();
+                    });
+                },
+
+                // Called by the modal's Apply button — persist this one tray's
+                // settings, then refresh its chips from the server response.
+                async applyPaperSettings() {
+                    if (this.savingTray || !this.editingKey) return;
+                    this.savingTray = true;
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ||
+                        document.querySelector('input[name="_token"]')?.value;
+                    const dim = this.psDim();
+                    const body = {
+                        key: this.editingKey,
+                        size: this.printPaperSize,
+                        size_width: dim ? dim.w : '',
+                        size_height: dim ? dim.h : '',
+                        landscape: this.printLandscape ? 1 : 0,
+                        duplex: this.printDuplex,
+                        color: this.printColor ? 1 : 0,
+                        input_bin: this.printInputBin,
+                        quality: this.printQuality,
+                        media_type_live: this.printMediaType,
+                        scale_mode: this.printScaleMode || 'fit',
+                        scale_factor: this.printScaleFactor || 100,
+                    };
+                    try {
+                        const res = await fetch("{{ route('storepanel.trays.saveOne') }}", {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrf,
+                            },
+                            body: JSON.stringify(body),
+                        });
+                        const data = await res.json();
+                        if (!res.ok || !data.ok) {
+                            this.error = data.error || 'Could not save printer settings.';
+                        } else if (data.tray && this.payload) {
+                            const idx = this.payload.trays.findIndex(x => x.key === data.tray.key);
+                            if (idx !== -1) this.payload.trays[idx] = data.tray;
+                        }
+                    } catch (e) {
+                        this.error = 'Network error while saving printer settings.';
+                    } finally {
+                        this.savingTray = false;
+                        this.showPaperModal = false;
+                        this.editingKey = null;
+                        this.$nextTick(() => {
+                            if (window.lucide) lucide.createIcons();
+                        });
                     }
                 },
 
@@ -829,7 +929,9 @@
                             color: t.color,
                             input_bin: t.input_bin,
                             quality: t.quality,
-                            media_type_live: t.media_type_live
+                            media_type_live: t.media_type_live,
+                            scale_mode: t.scale_mode,
+                            scale_factor: t.scale_factor
                         };
                     }
                     return null;
@@ -842,6 +944,21 @@
                 async confirm() {
                     const target = this.chosenTarget();
                     if (!target || this.sending) return;
+
+                    // Enforce orientation by product page count (same rule as the
+                    // customer preview flow): 2-page (Flat - double) → Landscape,
+                    // 4-page (Folded) → Portrait. Block a mismatched tray.
+                    const pages = parseInt(this.payload?.pages_count);
+                    const land = !!target.landscape;
+                    if (pages === 2 && !land) {
+                        alert('This design (2-page) is only suitable for Landscape mode. Please pick a Landscape tray.');
+                        return;
+                    }
+                    if (pages === 4 && land) {
+                        alert('This design (4-page) is only suitable for Portrait mode. Please pick a Portrait tray.');
+                        return;
+                    }
+
                     this.sending = true;
                     this.error = '';
                     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector(

@@ -230,7 +230,8 @@
                                             <p class="text-[11px] text-slate-400 mt-0.5" x-show="p.driver"
                                                 x-text="p.driver"></p>
                                             <template x-if="selectedPrinter === p.name">
-                                                <p class="text-[11px] text-slate-500 mt-0.5" x-text="psSummary()"></p>
+                                                <p class="text-[11px] text-slate-500 mt-0.5"
+                                                    x-text="psSummary()"></p>
                                             </template>
                                         </div>
                                         <template x-if="selectedPrinter === p.name">
@@ -297,7 +298,6 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
     <script>
         if (window['pdfjsLib']) {
@@ -313,10 +313,7 @@
 
             return {
                 // Shared Print Settings modal (state + capability loading).
-                ...window.printSettingsMixin({
-                    sizeOptions: @json($sizeOptions),
-                    sizeDims: trayDims
-                }),
+                ...window.printSettingsMixin({ sizeOptions: @json($sizeOptions), sizeDims: trayDims }),
 
                 file,
                 trays,
@@ -409,8 +406,7 @@
                         .filter(p => p && typeof p.name === 'string' &&
                             p.name.toLowerCase().includes('noritsu'))
                         .sort((a, b) => {
-                            const ra = rank(a.name),
-                                rb = rank(b.name);
+                            const ra = rank(a.name), rb = rank(b.name);
                             if (ra !== rb) return ra - rb;
                             return a.name.localeCompare(b.name);
                         });
@@ -735,7 +731,7 @@
                     if (this.bridgeChecking) return 'Connecting to PrintTrays…';
                     if (this.bridgeReady && !this.selectedPrinter) return 'Select a printer';
                     if (!this.bridgeReady && (!this.selectedTray || this.selectedTray.out))
-                        return 'Choose a loaded tray';
+                    return 'Choose a loaded tray';
                     if (!this.bridgeReady) return 'PrintTrays not connected';
                     return null;
                 },
@@ -744,59 +740,50 @@
                 // options. The bridge spreads these into qz.configs.create(printer, …),
                 // so the key names here must match QZ's config schema exactly.
                 buildPrintConfig(type) {
-                    // PrintTrays bridge has its OWN high-level option schema — it is
-                    // NOT raw QZ config. The official demo
-                    // (noritsucanada.com/print-trays/demo) sends exactly these keys:
-                    //   { type, paperSize:<driver media NAME>, landscape:<bool>,
-                    //     color:<bool>, copies, duplex?, inputBin? }
-                    // Sending QZ-style keys instead (size:{w,h}, orientation,
-                    // colorType, printerTray, flavor, margins…) makes the bridge
-                    // ignore them and fall back to the printer's DEFAULT media —
-                    // which prints inside the hardware printable area and leaves
-                    // white space on the sides. Passing the driver's real media
-                    // name in `paperSize` is what makes it print edge-to-edge.
                     const cfg = {
-                        type: 'pdf',
-                        // For images we bake the orientation into the generated PDF
-                        // page itself (see imageToPdfBase64), so the page is already
-                        // correct for the portrait media — tell the bridge portrait
-                        // to avoid a double rotation. Real PDFs are passed through and
-                        // rely on the bridge/SumatraPDF orientation.
-                        landscape: this.file.type === 'image' ? false : !!this.printLandscape,
-                        color: !!this.printColor,
+                        type: type,
+                        flavor: 'base64',
                         copies: this.copies || 1,
+                        orientation: this.printLandscape ? 'landscape' : 'portrait',
+                        colorType: this.printColor ? 'color' : 'grayscale',
                     };
 
-                    // Map the modal's scale choice to the bridge's scaleMode:
-                    //   'fit' (fit-to-paper) & 'fit_area' (fit printable) → 'fit'
-                    //   'actual' → 'actual', 'custom' → 'custom' (+ scaleFactor).
-                    const _m = this.printScaleMode || 'fit';
-                    cfg.scaleMode = (_m === 'actual') ? 'actual' : (_m === 'custom' ? 'custom' : 'fit');
-                    if (_m === 'custom') cfg.scaleFactor = this.printScaleFactor || 100;
-
-                    // paperSize goes STRAIGHT into SumatraPDF's `paper=<name>` on
-                    // the bridge (pdf-to-printer). SumatraPDF matches it against the
-                    // driver's own media forms, so it MUST be a real driver media
-                    // name — only the live capabilities (getPrinterDetails) give us
-                    // those. Our static fallback names (e.g. "Letter") don't exist
-                    // on a Noritsu photo printer: sending one makes the whole print
-                    // command FAIL ("Command failed … paper=Letter"). So send
-                    // paperSize ONLY when it came from the live printer; otherwise
-                    // omit it and let SumatraPDF use the printer's DEFAULT loaded
-                    // media (the borderless photo paper) — which also prints
-                    // edge-to-edge.
-                    if (this.sizesSource === 'printer' &&
-                        this.dynamicDims && this.dynamicDims[this.printPaperSize]) {
-                        cfg.paperSize = this.printPaperSize;
+                    // Paper size → explicit media size in inches. Prefer the
+                    // live printer dimensions, then the static tray-dim table.
+                    const dim = this.dynamicDims[this.printPaperSize] || this.trayDims[this.printPaperSize];
+                    if (dim) {
+                        cfg.size = {
+                            width: dim.w,
+                            height: dim.h
+                        };
+                        cfg.units = 'in';
                     }
 
-                    // Duplex values match the bridge's own select: '' (simplex),
-                    // 'longEdge', 'shortEdge'. Only send when the user picked one.
-                    if (this.printDuplex) cfg.duplex = this.printDuplex;
+                    // Paper source → QZ `printerTray`. Only set when the user
+                    // picked a specific bin; empty means the printer default.
+                    if (this.printInputBin) {
+                        cfg.printerTray = this.printInputBin;
+                    }
 
-                    // Paper source → bridge `inputBin` (goes into SumatraPDF
-                    // `bin=`). Only from live capabilities; empty = printer default.
-                    if (this.printInputBin) cfg.inputBin = this.printInputBin;
+                    // Duplex: QZ expects false for single-sided, or the two-sided
+                    // long/short-edge strings.
+                    if (this.printDuplex === 'longEdge') {
+                        cfg.duplex = 'two-sided-long-edge';
+                    } else if (this.printDuplex === 'shortEdge') {
+                        cfg.duplex = 'two-sided-short-edge';
+                    } else {
+                        cfg.duplex = false;
+                    }
+
+                    // For PDF/pixel jobs QZ frequently ignores `orientation` and honours
+                    // `rotation` (degrees) instead. If the requested orientation differs
+                    // from the file's natural orientation, rotate the content 90° so the
+                    // choice actually takes effect.
+                    const wantLandscape = this.printLandscape;
+                    const fileIsLandscape = this.dims ? this.dims.w > this.dims.h : wantLandscape;
+                    if (wantLandscape !== fileIsLandscape) {
+                        cfg.rotation = 90;
+                    }
 
                     console.log('[localprint] print config →', JSON.parse(JSON.stringify(cfg)));
                     return cfg;
@@ -823,42 +810,20 @@
                                 credentials: 'same-origin'
                             });
                             if (!res.ok) throw new Error('Failed to fetch file: HTTP ' + res.status);
-                            let bytes = new Uint8Array(await res.arrayBuffer());
-
-                            // SumatraPDF ignores the bridge's `landscape` flag for
-                            // PDF content rotation — it only fits the page into the
-                            // printable area. So bake the requested orientation into
-                            // the PDF itself: if the user toggled landscape but the
-                            // file's pages are portrait (or vice-versa), rotate each
-                            // page by 90° using pdf-lib before sending.
-                            if (window.PDFLib) {
-                                try {
-                                    const { PDFDocument, degrees } = window.PDFLib;
-                                    const src = await PDFDocument.load(bytes);
-                                    const pages = src.getPages();
-                                    const firstPage = pages[0];
-                                    const { width: pw, height: ph } = firstPage.getSize();
-                                    const fileIsLandscape = pw > ph;
-                                    const needRotate = !!this.printLandscape !== fileIsLandscape;
-                                    if (needRotate) {
-                                        pages.forEach(p => {
-                                            const cur = p.getRotation().angle || 0;
-                                            p.setRotation(degrees((cur + 90) % 360));
-                                        });
-                                        bytes = await src.save();
-                                    }
-                                } catch (e) {
-                                    console.warn('[localprint] PDF rotation skipped:', e && e.message || e);
-                                }
-                            }
-
-                            b64 = this.arrayBufToBase64(bytes.buffer || bytes);
+                            b64 = this.arrayBufToBase64(await res.arrayBuffer());
                         }
 
-                        // The bridge decodes PDF jobs with Buffer.from(req.data,
-                        // 'base64') and does NOT strip a data: URL prefix, so send the
-                        // RAW base64 (no "data:…," prefix, no `flavor` key). type:'pdf'
-                        // routes it to printPdfBase64 on the bridge.
+                        // The bridge reads a top-level `type` (pdf|image) — without it,
+                        // it reports "Unsupported print type: undefined". It also needs
+                        // the QZ `flavor:'base64'` key to actually base64-decode the data;
+                        // otherwise it writes the raw text and Chromium fails to load the
+                        // temp file (ERR_FAILED loading printport-*.pdf).
+                        //
+                        // Everything after `flavor` is forwarded verbatim into the QZ
+                        // print config on the bridge side (qz.configs.create), so these
+                        // must use QZ's option names — otherwise the Print Settings the
+                        // user picked (orientation, size, colour, duplex…) are ignored and
+                        // the job prints with the printer's own defaults.
                         await pp.print(this.selectedPrinter, b64, this.buildPrintConfig(type));
                         this.printMsg = 'Sent to ' + this.selectedPrinter + '!';
                         this.printMsgKind = 'success';
@@ -896,62 +861,19 @@
                         img.crossOrigin = 'anonymous';
                         img.onload = () => {
                             try {
-                                // Size the canvas to the ACTUAL selected paper size (in
-                                // inches, from trayDims), not the image's raw pixel size —
-                                // then crop-to-cover so the image fills it with zero gaps,
-                                // regardless of the source image's own aspect ratio.
-                                // Prefer TRIM dims parsed from the size code (e.g.
-                                // '7x10-E2E' → 7×10) so the produced PDF page size
-                                // matches what the other flows write. Fall back to
-                                // the LIVE driver dims (dynamicDims), then the
-                                // static bleed table (trayDims). Letter is only a
-                                // last-resort default when nothing is known.
-                                const trim = this.trimSizeFromCode(this.printPaperSize);
-                                const live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
-                                const stat = this.trayDims && this.trayDims[this.printPaperSize];
-                                const dim = trim ? { w: trim[0], h: trim[1] } :
-                                    (live && live.w > 0 ? live :
-                                        (stat && stat.w > 0 ? stat : { w: 8.5, h: 11 }));
-                                const dpi = 300;
-                                // The PDF page follows the REQUESTED orientation:
-                                // landscape → wide page, portrait → tall page.
-                                const rawMax = Math.max(dim.w, dim.h);
-                                const rawMin = Math.min(dim.w, dim.h);
-                                const pageW = this.printLandscape ? rawMax : rawMin;
-                                const pageH = this.printLandscape ? rawMin : rawMax;
-                                const outW = Math.max(1, Math.round(pageW * dpi));
-                                const outH = Math.max(1, Math.round(pageH * dpi));
+                                const w = img.naturalWidth,
+                                    h = img.naturalHeight;
                                 const c = document.createElement('canvas');
-                                c.width = outW;
-                                c.height = outH;
+                                c.width = w;
+                                c.height = h;
                                 const ctx = c.getContext('2d');
+                                // Flatten transparency onto white for JPEG.
                                 ctx.fillStyle = '#ffffff';
-                                ctx.fillRect(0, 0, outW, outH);
-                                // Rotate the image 90° whenever the REQUESTED
-                                // orientation differs from the image's OWN orientation
-                                // — so a portrait image printed landscape has its
-                                // design turned with the page (not just the paper).
-                                // Then fit-contain the (possibly rotated) image:
-                                // scale until the first dimension hits the paper edge,
-                                // centre, and leave white space on the other axis
-                                // (no cropping).
-                                const iw = img.naturalWidth, ih = img.naturalHeight;
-                                const imgLandscape = iw > ih;
-                                const needSwap = !!this.printLandscape !== imgLandscape;
-                                // Effective image box after any 90° rotation.
-                                const effW = needSwap ? ih : iw;
-                                const effH = needSwap ? iw : ih;
-                                const scale = Math.min(outW / effW, outH / effH);
-                                ctx.save();
-                                ctx.translate(outW / 2, outH / 2);
-                                if (needSwap) ctx.rotate(Math.PI / 2);
-                                const drawW = iw * scale;
-                                const drawH = ih * scale;
-                                ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-                                ctx.restore();
+                                ctx.fillRect(0, 0, w, h);
+                                ctx.drawImage(img, 0, 0);
                                 const jpegB64 = c.toDataURL('image/jpeg', 0.92).split(',')[1];
                                 const jpeg = this.base64ToBytes(jpegB64);
-                                resolve(this.buildImagePdf(jpeg, outW, outH, pageW * 72, pageH * 72));
+                                resolve(this.buildImagePdf(jpeg, w, h));
                             } catch (e) {
                                 reject(e);
                             }
@@ -960,18 +882,17 @@
                         img.src = url;
                     });
                 },
+
                 base64ToBytes(b64) {
                     const bin = atob(b64);
                     const bytes = new Uint8Array(bin.length);
                     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
                     return bytes;
                 },
-                // Assemble a minimal PDF embedding a JPEG image, sized to the target
-                // PAPER size (pageWPt/pageHPt, in points) rather than the image's own
-                // pixel dimensions — pixelW/pixelH describe the embedded JPEG itself,
-                // pageWPt/pageHPt describe the page it's placed on. Then return it
-                // base64-encoded.
-                buildImagePdf(jpeg, pixelW, pixelH, pageWPt, pageHPt) {
+
+                // Assemble a minimal PDF embedding a JPEG image at full page size,
+                // then return it base64-encoded.
+                buildImagePdf(jpeg, w, h) {
                     const enc = new TextEncoder();
                     const parts = [];
                     const offsets = [];
@@ -988,26 +909,33 @@
                     const startObj = () => {
                         offsets.push(len);
                     };
+
                     pushStr('%PDF-1.4\n');
+
                     startObj(); // 1
                     pushStr('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+
                     startObj(); // 2
                     pushStr('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+
                     startObj(); // 3
-                    pushStr('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pageWPt + ' ' + pageHPt +
+                    pushStr('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + w + ' ' + h +
                         '] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n');
+
                     startObj(); // 4 - image
-                    pushStr('4 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + pixelW + ' /Height ' + pixelH +
+                    pushStr('4 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + w + ' /Height ' + h +
                         ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' +
                         jpeg.length + ' >>\nstream\n');
                     pushBytes(jpeg);
                     pushStr('\nendstream\nendobj\n');
+
                     startObj(); // 5 - content
-                    const content = 'q\n' + pageWPt + ' 0 0 ' + pageHPt + ' 0 0 cm\n/Im0 Do\nQ\n';
+                    const content = 'q\n' + w + ' 0 0 ' + h + ' 0 0 cm\n/Im0 Do\nQ\n';
                     const contentBytes = enc.encode(content);
                     pushStr('5 0 obj\n<< /Length ' + contentBytes.length + ' >>\nstream\n');
                     pushBytes(contentBytes);
                     pushStr('\nendstream\nendobj\n');
+
                     const xrefStart = len;
                     let xref = 'xref\n0 6\n0000000000 65535 f \n';
                     for (let i = 0; i < offsets.length; i++) {
@@ -1015,6 +943,7 @@
                     }
                     pushStr(xref);
                     pushStr('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + xrefStart + '\n%%EOF');
+
                     const out = new Uint8Array(len);
                     let pos = 0;
                     for (const p of parts) {
@@ -1024,22 +953,6 @@
                     let binary = '';
                     for (let i = 0; i < out.length; i++) binary += String.fromCharCode(out[i]);
                     return btoa(binary);
-                },
-
-                // Derive the TRIM size (in inches) from a tray/driver size code
-                // — strips a "-E2E" / " E2E" suffix and parses "WxH" (e.g.
-                // '7x10-E2E' → [7, 10], '4x6' → [4, 6]). Named sizes (Letter,
-                // Legal) handled explicitly. Returns null on an unknown code
-                // so the caller can fall back to live/static dims.
-                trimSizeFromCode(code) {
-                    const raw = String(code || '').trim();
-                    const base = raw.replace(/[-\s]*e2e$/i, '').trim();
-                    const m = base.match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)$/i);
-                    if (m) return [parseFloat(m[1]), parseFloat(m[2])];
-                    const named = { 'letter': [8.5, 11], 'legal': [8.5, 14] };
-                    const key = base.toLowerCase();
-                    if (named[key]) return named[key];
-                    return null;
                 },
 
                 arrayBufToBase64(buf) {

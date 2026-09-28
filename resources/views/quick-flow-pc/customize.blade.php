@@ -1037,11 +1037,15 @@
                         }, bgCors);
                     }
 
-                    // Add mask guides if applicable
+                    // Mask guides are only drawn on the FIRST canvas (Page 1),
+                    // and only when (a) Page 1 is editable (not locked) and
+                    // (b) its `masks` array is non-empty. If Page 1 is locked
+                    // or has empty masks, no guides are drawn on any canvas.
                     const firstKey = Object.keys(this.imageTypes)[0];
+                    const firstEditable = this.canvasEnabled[firstKey] !== false;
                     const mData = this.allMaskData[key] || {};
                     const masks = mData.masks || this.allMaskData.masks;
-                    if (key === firstKey && Array.isArray(masks) && masks.length > 0) {
+                    if (key === firstKey && firstEditable && Array.isArray(masks) && masks.length > 0) {
                         this.canvases[key].maskGuides = [];
                         masks.forEach((m, idx) => {
                             const guide = this._createMaskObject(m, scaleFactor, {
@@ -1066,6 +1070,14 @@
                         fc.defaultCursor = 'not-allowed';
                         fc.hoverCursor = 'not-allowed';
                     }
+
+                    // Refresh the cached canvas offset before every pointer
+                    // interaction. Fabric caches upperCanvasEl's screen position
+                    // at init; later layout shifts (icon/font reflow, dock render)
+                    // leave that offset stale, so dragging a freshly-uploaded
+                    // image maps the pointer wrong and the object "sticks" to the
+                    // cursor. Recalculating here keeps drag/resize accurate.
+                    fc.on('mouse:down:before', () => fc.calcOffset());
 
                     fc.on('selection:created', (e) => {
                         if (this.canvasEnabled[key] === false) {
@@ -1156,8 +1168,13 @@
                     setTimeout(() => this.pushHistoryState(key), 300);
                 });
 
+                // Honour the enabled-first decision made in init() — if
+                // Page 1 is locked, land on the first unlocked page instead
+                // of blindly switching to the first key.
                 const firstKey = Object.keys(this.imageTypes)[0];
-                if (firstKey) this.switchCanvas(firstKey);
+                const firstEnabled = Object.keys(this.canvasEnabled).find(k => this.canvasEnabled[k] === true);
+                const openKey = this.activeCanvas || firstEnabled || firstKey;
+                if (openKey) this.switchCanvas(openKey);
             },
 
             _resizeAllCanvases() {
@@ -1212,28 +1229,34 @@
                         o.setCoords();
                     });
 
+                    // Re-render mask guides only on the FIRST canvas, only
+                    // when Page 1 is editable AND its `masks` array is
+                    // non-empty. Kept in sync with the gate in
+                    // _initAllCanvases.
+                    const firstKey = Object.keys(this.imageTypes)[0];
+                    const firstEditable = this.canvasEnabled[firstKey] !== false;
+                    const mData = this.allMaskData[key] || {};
+                    const masks = mData.masks || this.allMaskData.masks;
                     if (cv.maskGuides && cv.maskGuides.length > 0) {
                         cv.maskGuides.forEach(g => cv.fabricCanvas.remove(g));
-                        cv.maskGuides = [];
-                        const mData = this.allMaskData[key] || {};
-                        const masks = mData.masks || this.allMaskData.masks;
-                        if (Array.isArray(masks)) {
-                            masks.forEach((m, idx) => {
-                                const guide = this._createMaskObject(m, newSf, {
-                                    fill: 'transparent',
-                                    stroke: 'rgba(0, 80, 220, 0.5)',
-                                    strokeWidth: 1,
-                                    selectable: false,
-                                    evented: false,
-                                    name: 'mask_guide_' + idx
-                                });
-                                if (guide) {
-                                    cv.fabricCanvas.add(guide);
-                                    cv.maskGuides.push(guide);
-                                    guide.bringToFront();
-                                }
+                    }
+                    cv.maskGuides = [];
+                    if (key === firstKey && firstEditable && Array.isArray(masks) && masks.length > 0) {
+                        masks.forEach((m, idx) => {
+                            const guide = this._createMaskObject(m, newSf, {
+                                fill: 'transparent',
+                                stroke: 'rgba(0, 80, 220, 0.5)',
+                                strokeWidth: 1,
+                                selectable: false,
+                                evented: false,
+                                name: 'mask_guide_' + idx
                             });
-                        }
+                            if (guide) {
+                                cv.fabricCanvas.add(guide);
+                                cv.maskGuides.push(guide);
+                                guide.bringToFront();
+                            }
+                        });
                     }
                     cv.scaleFactor = newSf;
                     cv.fabricCanvas.renderAll();

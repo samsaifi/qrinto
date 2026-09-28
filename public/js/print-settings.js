@@ -58,6 +58,13 @@
             printInputBin: '',
             printQuality: '',
             printMediaType: '',
+            // Scale mode sent to the bridge (SumatraPDF scaling):
+            //   'fit'    → scale the page to fill the printable area (edge-to-edge)
+            //   'actual' → print at true size (no scaling)
+            //   'custom' → scale by printScaleFactor percent (sent as scaleFactor)
+            // Default 'fit' so prints are edge-to-edge unless the operator changes it.
+            printScaleMode: 'fit',
+            printScaleFactor: 100,
 
             // ── capability state (static defaults until the bridge answers) ──
             sizesLoading: false,

@@ -26,13 +26,36 @@ use App\Http\Controllers\AIController;
 use App\Http\Middleware\DetectDevice;
 use App\Http\Controllers\Store\StorePanelController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 
 // ── Site Lock Routes (excluded from SiteLock middleware) ──
 Route::get('/site-lock', fn () => view('site-lock'))->name('site-lock');
 Route::post('/site-lock/verify', function (Request $request) {
     $request->validate(['password' => 'required|string']);
-    if (hash_equals(config('app.site_lock_password', ''), $request->input('password'))) {
+    if (hash_equals(
+        (string) config('app.site_lock_password', ''),
+        (string) $request->input('password')
+    )) {
+        // Session unlock (fast path for the current browser session).
         $request->session()->put('site_unlocked', true);
+
+        // Cookie unlock — persists 7 days so the site stays unlocked across
+        // sessions / private-window closes. Read back by the SiteLock
+        // middleware. HttpOnly so it can't be tampered with from JS.
+        Cookie::queue(
+            Cookie::make(
+                'site_unlocked',
+                '1',
+                60 * 24 * 365, // 7 days, in minutes
+                '/',
+                null,
+                config('session.secure', false),
+                true,  // HttpOnly
+                false,
+                'lax'
+            )
+        );
+
         return redirect('/');
     }
     return back()->withErrors(['password' => 'Incorrect password. Please try again.']);
@@ -75,6 +98,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/store/qr', [StorePanelController::class, 'qr'])->name('storepanel.qr');
     Route::get('/store/trays', [StorePanelController::class, 'trays'])->name('storepanel.trays');
     Route::post('/store/trays', [StorePanelController::class, 'saveTrays'])->name('storepanel.trays.save');
+    // Save print settings for a single tray/printer (from the order print modal).
+    Route::post('/store/trays/one', [StorePanelController::class, 'saveTray'])->name('storepanel.trays.saveOne');
     // QZ Tray print bridge: hand the browser the payload (tray + printer + PDF).
     Route::get('/store/orders/{order}/prepare-print', [StorePanelController::class, 'preparePrint'])
         ->name('storepanel.orders.preparePrint');

@@ -90,7 +90,58 @@
         @endforeach
         <p class="v2-sub">{{ $name }} · {{ $verb }} {{ $time->format('g:i A') }}</p>
 
-        {{-- Display All flow data cpolumn from here ..  --}}
+        {{-- Display selected flow data columns from here .. --}}
+        @if (!empty($flow) && is_array($flow))
+            @php
+
+                $sizelabel = $flow['size_title'];
+                switch ($sizelabel) {
+                    case 'Folded':
+                        $pagescount = 'portrait';
+                        break;
+                    case 'Flat - double':
+                        $pagescount = 'landscape';
+                        break;
+                    case 'Flat':
+                        $pagescount = 'portrait/landscape';
+                        break;
+                    default:
+                        $pagescount = 'portrait/landscape';
+                        break;
+                }
+
+                $sizeW = $flow['size_width'] ?? null;
+                $sizeH = $flow['size_height'] ?? null;
+                $sizeDim = trim(($sizeW ?? '') . ' × ' . ($sizeH ?? '') . ' ' . ($flow['size_unit'] ?? ''));
+
+                // Orientation: prefer the value chosen in the flow, otherwise
+                // derive it from the physical dimensions (taller = portrait).
+                $orientation = $flow['orientation'] ?? null;
+                if (!$orientation && $sizeW && $sizeH) {
+                    $orientation = (float) $sizeH >= (float) $sizeW ? 'portrait' : 'landscape';
+                }
+                //'Orientation' => $orientation ? ucfirst($orientation) : null,
+                $flowChips = [
+                    'Card Type' => $flow['type_name'] ?? null,
+                    'Size' => $sizeW && $sizeH ? $sizeDim : null,
+                    'Card Style' => $flow['size_title'] ?? null,
+
+                    'Print Mode' => $pagescount,
+                ];
+            @endphp
+            <div class="v2-flow" style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">
+                @foreach ($flowChips as $flowLabel => $flowVal)
+                    @if (!is_null($flowVal) && $flowVal !== '')
+                        <span class="v2-flow-chip"
+                            style="display:inline-flex;align-items:center;gap:3px;font-size:10px;line-height:1.4;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:6px;padding:1px 6px;">
+                            <span style="color:#94a3b8;">{{ $flowLabel }}:</span>
+                            <strong style="color:#334155;font-weight:600;">{{ $flowVal }}</strong>
+                        </span>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+
 
 
         {{-- Journey stepper --}}
@@ -114,6 +165,7 @@
                         @endif
                     </div>
                     <span class="v2-j-label">{{ $sLabel }}</span>
+
                 </div>
             @endforeach
         </div>

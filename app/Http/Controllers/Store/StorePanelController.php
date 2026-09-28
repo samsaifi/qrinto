@@ -173,6 +173,8 @@ class StorePanelController extends Controller
             'store'        => $store,
             'queue'        => $queue,
             'recentlyDone' => $recentlyDone,
+            'sizeOptions'  => Store::traySizeOptions(),
+            'sizeDims'     => Store::traySizeDimensions(),
         ]);
     }
 
@@ -452,6 +454,8 @@ class StorePanelController extends Controller
                 'input_bin'       => $t['input_bin'] ?? null,
                 'quality'         => $t['quality'] ?? null,
                 'media_type_live' => $t['media_type_live'] ?? null,
+                'scale_mode'      => $t['scale_mode'] ?? 'fit',
+                'scale_factor'    => $t['scale_factor'] ?? 100,
                 'enabled'     => (bool) $t['enabled'],
                 'printer'     => $t['printer'] ?? '',
                 'recommended' => $matched && $matched['key'] === $t['key'],
@@ -482,6 +486,18 @@ class StorePanelController extends Controller
             ], 422);
         }
 
+        // Derive the PRODUCT page count from its size title — this is reliable,
+        // unlike the PDF's physical page count (a Folded/4-page product is laid
+        // out as 2 physical pages, a Flat/2-page product as 4). The front-end
+        // uses it to orient the media: 4-page (Folded) → portrait, 2-page
+        // (Flat / Flat - double) → landscape.
+        $pagesCount = match ($flow['size_title'] ?? null) {
+            'Folded'        => 4,
+            'Flat - double' => 2,
+            'Flat'          => 1,
+            default         => null,
+        };
+
         return response()->json([
             'ok'          => true,
             'order'       => [
@@ -491,12 +507,18 @@ class StorePanelController extends Controller
                 'size'    => isset($flow['size_width'], $flow['size_height'])
                     ? $flow['size_width'] . ' × ' . $flow['size_height'] . ' ' . ($flow['size_unit'] ?? 'inch')
                     : ($sizeCode ?: null),
+                // Numeric trim size (inches) + size code so the Print Settings modal
+                // can auto-select the matching Paper Size option for this order.
+                'size_width'  => isset($flow['size_width'])  ? (float) $flow['size_width']  : null,
+                'size_height' => isset($flow['size_height']) ? (float) $flow['size_height'] : null,
+                'size_code'   => $sizeCode ?: null,
             ],
             'trays'       => $trays,
             'matched_key' => $matched['key'] ?? null,
             'pdf_url'     => asset('storage/' . ltrim($item->pdf_path, '/')),
             'pdf_base64'  => $pdfBase64,
             'copies'      => $copies,
+            'pages_count' => $pagesCount,
             'advance_url' => route('store.orders.advance', $order),
             'log_url'     => route('storepanel.orders.logPrint', $order),
         ]);
@@ -522,6 +544,8 @@ class StorePanelController extends Controller
             'trays.*.input_bin'   => 'nullable|string|max:160',
             'trays.*.quality'         => 'nullable|string|max:120',
             'trays.*.media_type_live' => 'nullable|string|max:160',
+            'trays.*.scale_mode'      => 'nullable|string|in:fit,fit_area,actual,custom',
+            'trays.*.scale_factor'    => 'nullable|numeric|min:1|max:400',
             'trays.*.enabled'     => 'nullable',
         ]);
 
@@ -548,6 +572,8 @@ class StorePanelController extends Controller
                 'input_bin'       => $t['input_bin'] ?? null,
                 'quality'         => $t['quality'] ?? null,
                 'media_type_live' => $t['media_type_live'] ?? null,
+                'scale_mode'      => $t['scale_mode'] ?? 'fit',
+                'scale_factor'    => isset($t['scale_factor']) && $t['scale_factor'] !== '' ? (float) $t['scale_factor'] : 100,
                 'enabled'     => (bool) ($t['enabled'] ?? false),
             ];
         }
@@ -555,5 +581,97 @@ class StorePanelController extends Controller
         $store->update(['tray_config' => array_values($config)]);
 
         return redirect()->route('storepanel.trays')->with('success', 'Tray setup saved.');
+    }
+
+    /**
+     * Save print settings for a single tray/printer without touching the rest
+     * of the tray_config. Called from the "Change" button in the order print
+     * modal so the operator can adjust one printer inline. Returns the freshly
+     * formatted tray so the modal can refresh its chips.
+     */
+    public function saveTray(Request $request)
+    {
+        $store = $this->currentStore();
+        abort_if(!$store, 404, 'No store to configure.');
+
+        $data = $request->validate([
+            'key'             => 'required|string|max:160',
+            'size'            => 'nullable|string|max:120',
+            'size_width'      => 'nullable|numeric|min:0|max:100',
+            'size_height'     => 'nullable|numeric|min:0|max:100',
+            'landscape'       => 'nullable',
+            'duplex'          => 'nullable|string|max:20',
+            'color'           => 'nullable',
+            'input_bin'       => 'nullable|string|max:160',
+            'quality'         => 'nullable|string|max:120',
+            'media_type_live' => 'nullable|string|max:160',
+            'scale_mode'      => 'nullable|string|in:fit,fit_area,actual,custom',
+            'scale_factor'    => 'nullable|numeric|min:1|max:400',
+        ]);
+
+        $config = $store->tray_config ?? [];
+        $found  = false;
+
+        foreach ($config as $i => $entry) {
+            $entryKey = (string) ($entry['key'] ?? Store::trayKeyFromPrinter((string) ($entry['printer'] ?? '')));
+            if ($entryKey !== $data['key']) continue;
+
+            $config[$i]['size']            = $data['size'] ?? ($entry['size'] ?? null);
+            $config[$i]['size_width']      = isset($data['size_width'])  && $data['size_width']  !== '' ? (float) $data['size_width']  : null;
+            $config[$i]['size_height']     = isset($data['size_height']) && $data['size_height'] !== '' ? (float) $data['size_height'] : null;
+            $config[$i]['landscape']       = filter_var($data['landscape'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $config[$i]['duplex']          = $data['duplex'] ?? 'simplex';
+            $config[$i]['color']           = filter_var($data['color'] ?? true, FILTER_VALIDATE_BOOLEAN);
+            $config[$i]['input_bin']       = $data['input_bin'] ?? null;
+            $config[$i]['quality']         = $data['quality'] ?? null;
+            $config[$i]['media_type_live'] = $data['media_type_live'] ?? null;
+            $config[$i]['scale_mode']      = $data['scale_mode'] ?? ($entry['scale_mode'] ?? 'fit');
+            $config[$i]['scale_factor']    = isset($data['scale_factor']) && $data['scale_factor'] !== '' ? (float) $data['scale_factor'] : ($entry['scale_factor'] ?? 100);
+            $found = true;
+            break;
+        }
+
+        if (!$found) {
+            return response()->json(['ok' => false, 'error' => 'Printer not found in tray setup.'], 404);
+        }
+
+        $store->update(['tray_config' => array_values($config)]);
+
+        // Return the tray in the same shape preparePrint uses so the modal can
+        // swap the chips without another round-trip.
+        $mediaLabels = Store::trayMediaOptions();
+        $sizePretty  = ['4x6' => '4 × 6', '5x7' => '5 × 7', '7x10' => '7 × 10', '8.5x11' => '8.5 × 11'];
+        $row = collect($store->trayRows())->firstWhere('key', $data['key']);
+
+        if (!$row) {
+            return response()->json(['ok' => true, 'tray' => null]);
+        }
+
+        return response()->json([
+            'ok'   => true,
+            'tray' => [
+                'key'             => $row['key'],
+                'label'           => $row['label'],
+                'size'            => $row['size'],
+                'size_pretty'     => $sizePretty[$row['size']] ?? $row['size'],
+                'size_width'      => $row['size_width'] ?? null,
+                'size_height'     => $row['size_height'] ?? null,
+                'media'           => $row['media'],
+                'media_label'     => $mediaLabels[$row['media']] ?? $row['media'],
+                'gsm'             => $row['gsm'],
+                'density'         => $row['density'] ?? null,
+                'user_type'       => $row['user_type'],
+                'landscape'       => (bool) ($row['landscape'] ?? false),
+                'duplex'          => $row['duplex'] ?? 'simplex',
+                'color'           => (bool) ($row['color'] ?? true),
+                'input_bin'       => $row['input_bin'] ?? null,
+                'quality'         => $row['quality'] ?? null,
+                'media_type_live' => $row['media_type_live'] ?? null,
+                'scale_mode'      => $row['scale_mode'] ?? 'fit',
+                'scale_factor'    => $row['scale_factor'] ?? 100,
+                'enabled'         => (bool) $row['enabled'],
+                'printer'         => $row['printer'] ?? '',
+            ],
+        ]);
     }
 }

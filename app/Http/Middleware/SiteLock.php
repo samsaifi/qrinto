@@ -18,6 +18,13 @@ class SiteLock
             return $next($request);
         }
 
+        // Cookie fallback (7-day unlock set on /site-lock/verify) so the site
+        // stays unlocked across sessions / private-window closes.
+        if ($request->cookie('site_unlocked') === '1') {
+            $request->session()->put('site_unlocked', true);
+            return $next($request);
+        }
+
         if ($request->is('site-lock') || $request->is('site-lock/*')) {
             return $next($request);
         }

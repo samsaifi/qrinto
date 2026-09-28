@@ -145,15 +145,25 @@
                                              printer (Media Type / Quality are NOT WIRED, so not shown). --}}
                                         <div class="mt-1.5 flex flex-wrap items-center gap-1">
                                             <template x-if="t.size_pretty">
-                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.size_pretty"></span>
+                                                <span
+                                                    class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200"
+                                                    x-text="t.size_pretty"></span>
                                             </template>
-                                            <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.landscape ? 'Landscape' : 'Portrait'"></span>
+                                            <span
+                                                class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200"
+                                                x-text="t.landscape ? 'Landscape' : 'Portrait'"></span>
                                             <template x-if="t.duplex && t.duplex !== 'simplex'">
-                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.duplex === 'longEdge' ? 'Duplex' : 'Duplex (short)'"></span>
+                                                <span
+                                                    class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200"
+                                                    x-text="t.duplex === 'longEdge' ? 'Duplex' : 'Duplex (short)'"></span>
                                             </template>
-                                            <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.color === false ? 'B&amp;W' : 'Color'"></span>
+                                            <span
+                                                class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200"
+                                                x-text="t.color === false ? 'B&amp;W' : 'Color'"></span>
                                             <template x-if="t.input_bin">
-                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.input_bin"></span>
+                                                <span
+                                                    class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200"
+                                                    x-text="t.input_bin"></span>
                                             </template>
                                         </div>
                                     </div>
@@ -307,6 +317,8 @@
                             input_bin: t.input_bin,
                             quality: t.quality,
                             media_type_live: t.media_type_live,
+                            scale_mode: t.scale_mode,
+                            scale_factor: t.scale_factor,
                         };
                     }
                     return null;
@@ -319,6 +331,23 @@
                 async confirm() {
                     const target = this.chosenTarget();
                     if (!target || this.sending) return;
+
+                    // Enforce orientation by product page count (same rule as the
+                    // customer preview flow): 2-page (Flat - double) → Landscape,
+                    // 4-page (Folded) → Portrait. Block a mismatched tray.
+                    const pages = parseInt(this.payload?.pages_count);
+                    const land = !!target.landscape;
+                    if (pages === 2 && !land) {
+                        alert(
+                            'This design (2-page) is only suitable for Landscape mode. Please pick a Landscape tray.'
+                        );
+                        return;
+                    }
+                    if (pages === 4 && land) {
+                        alert('This design (4-page) is only suitable for Portrait mode. Please pick a Portrait tray.');
+                        return;
+                    }
+
                     this.sending = true;
                     this.error = '';
                     const csrf = document.querySelector('meta[name="csrf-token"]')?.content ||

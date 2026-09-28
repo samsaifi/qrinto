@@ -288,10 +288,10 @@ class LocalPrintController extends Controller
                     'height' => $pdfHeight,
                     'orientation' => $pdfOrientation,
                 ]);
-                $pdf->setPaper([0, 0, $pdfWidth * 72, $pdfHeight * 72]);
+                $pdf->setPaper([0, 0, $pdfWidth, $pdfHeight]);
             } else {
-                $widthVal = floatval($request->input('size_width', $flowData['size_width'] ?? 5));
-                $heightVal = floatval($request->input('size_height', $flowData['size_height'] ?? 7));
+                $pdfWidth =max($width, $height);
+                $pdfHeight =  min($width, $height);
                 $unit = strtolower(trim($request->input('size_unit', $flowData['size_unit'] ?? 'in')));
                 $cssUnit = ($unit === 'inch') ? 'in' : $unit;
 
@@ -303,10 +303,11 @@ class LocalPrintController extends Controller
                     'cssUnit' => $cssUnit,
                     'orientation' => $pdfOrientation,
                 ]);
-                $pdf->setPaper([0, 0, $pdfWidth * 72, $pdfHeight * 72]);
+                $pdf->setPaper([0, 0, $pdfWidth, $pdfHeight]);
             }
 
             $pdf->save($pdfPath);
+             
         } else {
             // Single-page product
             $absolutePath = null;

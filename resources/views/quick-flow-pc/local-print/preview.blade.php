@@ -104,8 +104,27 @@
                         <p><span class="text-slate-900 font-bold">{{ $totalPages }}</span>
                             {{ $totalPages === 1 ? 'page' : 'pages' }}</p>
                         @if (!empty($flowData['size_name']))
-                            <p><span class="text-slate-900 font-bold">{{ $flowData['size_name'] }}</span>
-                                <span>({{ ucfirst($flowData['orientation'] ?? 'portrait') }})</span>
+                            <p><span class="text-slate-900 font-bold">Design Style </span>
+                                {{ ucfirst($flowData['orientation']) }}</p>
+                            <p><span class="text-slate-900 font-bold">Size </span> {{ $flowData['size_name'] }} </p>
+                            <p><span class="text-slate-900 font-bold"> Print Mode : </span>
+                                <span>
+
+                                    @switch((int)$totalPages)
+                                        @case(2)
+                                            Landscape
+                                        @break
+
+                                        @case(4)
+                                            Portrait
+                                        @break
+
+                                        @default
+                                            {{ ucfirst($flowData['orientation']) }}
+                                    @endswitch
+
+                                </span>
+
                             </p>
                         @endif
                     </div>
@@ -128,23 +147,23 @@
 
                     {{-- Dynamic check rows --}}
                     <div class="grid grid-cols-2 md:grid-cols-1 gap-x-4">
-                    <template x-for="c in checks" :key="c.key">
-                        <div class="flex items-start gap-2.5 py-3.5 border-b border-slate-100">
-                            <template x-if="c.ok">
-                                <i data-lucide="check" class="w-4 h-4 text-[#287d3c] mt-0.5 shrink-0"></i>
-                            </template>
-                            <template x-if="!c.ok && c.severity === 'warn'">
-                                <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i>
-                            </template>
-                            <template x-if="!c.ok && c.severity === 'error'">
-                                <i data-lucide="x" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
-                            </template>
-                            <div>
-                                <p class="text-[13px] font-bold text-slate-900" x-text="c.title"></p>
-                                <p class="text-[12px] text-slate-500 mt-0.5" x-text="c.detail"></p>
+                        <template x-for="c in checks" :key="c.key">
+                            <div class="flex items-start gap-2.5 py-3.5 border-b border-slate-100">
+                                <template x-if="c.ok">
+                                    <i data-lucide="check" class="w-4 h-4 text-[#287d3c] mt-0.5 shrink-0"></i>
+                                </template>
+                                <template x-if="!c.ok && c.severity === 'warn'">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i>
+                                </template>
+                                <template x-if="!c.ok && c.severity === 'error'">
+                                    <i data-lucide="x" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                                </template>
+                                <div>
+                                    <p class="text-[13px] font-bold text-slate-900" x-text="c.title"></p>
+                                    <p class="text-[12px] text-slate-500 mt-0.5" x-text="c.detail"></p>
+                                </div>
                             </div>
-                        </div>
-                    </template>
+                        </template>
                     </div>
 
                     <div class="mt-5">
@@ -157,7 +176,8 @@
 
                         {{-- PrintTrays bridge status --}}
                         <div class="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg text-[12px]"
-                            :class="bridgeReady ? 'bg-emerald-50 text-emerald-700' : (bridgeChecking ? 'bg-slate-50 text-slate-500' :
+                            :class="bridgeReady ? 'bg-emerald-50 text-emerald-700' : (bridgeChecking ?
+                                'bg-slate-50 text-slate-500' :
                                 'bg-red-50 text-red-600')">
                             <template x-if="bridgeChecking">
                                 <span>
@@ -169,7 +189,8 @@
                             </template>
                             <template x-if="!bridgeChecking && bridgeReady">
                                 <span><i data-lucide="check-circle" class="w-3.5 h-3.5 inline -mt-0.5"></i> PrintTrays
-                                    connected <span class="text-slate-400" x-show="bridgeVersion" x-text="'v' + bridgeVersion"></span></span>
+                                    connected <span class="text-slate-400" x-show="bridgeVersion"
+                                        x-text="'v' + bridgeVersion"></span></span>
                             </template>
                             <template x-if="!bridgeChecking && !bridgeReady">
                                 <span class="flex items-center gap-1.5 w-full">
@@ -182,7 +203,8 @@
                         </div>
 
                         {{-- PrintTrays download modal --}}
-                        <div x-show="showBridgeModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        <div x-show="showBridgeModal" x-cloak
+                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
                             @keydown.escape.window="showBridgeModal = false">
                             <div class="absolute inset-0 bg-black/40" @click="showBridgeModal = false"></div>
                             <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6" @click.stop>
@@ -202,7 +224,8 @@
                                     <p class="text-sm text-slate-700 font-medium">PrintTrays is required to connect to your
                                         local printer.</p>
                                     <p class="text-[12px] text-slate-500 mt-2 leading-relaxed">
-                                        Download and install PrintTrays, then reload this page. It runs in the background and
+                                        Download and install PrintTrays, then reload this page. It runs in the background
+                                        and
                                         lets your browser communicate with printers on this PC.
                                     </p>
                                 </div>
@@ -217,7 +240,8 @@
                                         class="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
                                         <i data-lucide="download" class="w-4 h-4"></i> Download 931-BL Multi Driver
                                     </a>
-                                    <button type="button" @click="showBridgeModal = false; bridgeChecking = true; initBridge();"
+                                    <button type="button"
+                                        @click="showBridgeModal = false; bridgeChecking = true; initBridge();"
                                         class="w-full flex items-center justify-center gap-2 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
                                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> I've installed it - retry
                                         connection
@@ -240,10 +264,10 @@
                                             :value="p.name" class="accent-[#287d3c] w-4 h-4">
                                         <div class="min-w-0 flex-1">
                                             <span class="font-bold text-[13px] text-slate-900" x-text="p.name"></span>
-                                            <p class="text-[11px] text-slate-400 mt-0.5" x-show="p.driver" x-text="p.driver"></p>
+                                            <p class="text-[11px] text-slate-400 mt-0.5" x-show="p.driver"
+                                                x-text="p.driver"></p>
                                             <template x-if="selectedPrinter === p.name">
-                                                <p class="text-[11px] text-slate-500 mt-0.5"
-                                                    x-text="psSummary()"></p>
+                                                <p class="text-[11px] text-slate-500 mt-0.5" x-text="psSummary()"></p>
                                             </template>
                                         </div>
                                         <template x-if="selectedPrinter === p.name">
@@ -317,6 +341,10 @@
 @endpush
 
 @push('scripts')
+    {{-- pdf-lib: scale/cover-fill the server PDF onto the selected media size so
+         it prints edge-to-edge (the raw design PDF is the DESIGN size, e.g. 5×7,
+         which SumatraPDF would otherwise centre small on a larger sheet). --}}
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
     <script>
         var __ptInstance = null;
@@ -333,7 +361,10 @@
 
             return {
                 // Shared Print Settings modal (state + capability loading).
-                ...window.printSettingsMixin({ sizeOptions: @json($sizeOptions), sizeDims: trayDims }),
+                ...window.printSettingsMixin({
+                    sizeOptions: @json($sizeOptions),
+                    sizeDims: trayDims
+                }),
 
                 slide: 0,
                 touchX: 0,
@@ -353,7 +384,33 @@
                 init() {
                     if (designSize.w && designSize.h) {
                         this.printLandscape = designSize.w > designSize.h;
+                        let pages = parseInt({{ $totalPages }});
+                        if (pages == 2 && this.printLandscape == 0) {
+                            this.printLandscape = 1;
+                        }
+                        if (pages == 4 && this.printLandscape == 1) {
+
+                            this.printLandscape = 0;
+                        }
                     }
+                    // Alert whenever the user switches print orientation
+                    // (portrait ↔ landscape) in the Print Settings modal.
+                    this.$watch('printLandscape', (val) => {
+
+                        let pages = parseInt({{ $totalPages }});
+                        if (pages == 2 && val != 1) {
+                            alert(
+                                'this design is not sutaible for Portrait mode, please switch to Landscape mode'
+                            );
+                            this.printLandscape = 1;
+                        }
+                        if (pages == 4 && val == 1) {
+                            alert(
+                                'this design is not sutaible for Landscape mode, please switch to Portrait mode'
+                            );
+                            this.printLandscape = 0;
+                        }
+                    });
                     this.initBridge();
                 },
 
@@ -440,7 +497,9 @@
                 // ── PrintTrays bridge ──
                 async initBridge() {
                     try {
-                        const { PrintTrays } = await import('{{ asset("js/printtrays.js") }}');
+                        const {
+                            PrintTrays
+                        } = await import('{{ asset('js/printtrays.js') }}');
                         const pp = new PrintTrays({
                             downloadUrl: 'https://noritsucanada.com/print-trays/download/',
                             onNotInstalled: () => {},
@@ -482,7 +541,8 @@
                         .filter(p => p && typeof p.name === 'string' &&
                             p.name.toLowerCase().includes('noritsu'))
                         .sort((a, b) => {
-                            const ra = rank(a.name), rb = rank(b.name);
+                            const ra = rank(a.name),
+                                rb = rank(b.name);
                             if (ra !== rb) return ra - rb;
                             return a.name.localeCompare(b.name);
                         });
@@ -534,49 +594,49 @@
                 // options. The bridge spreads these into qz.configs.create(printer, …),
                 // so the key names here must match QZ's config schema exactly.
                 buildPrintConfig(type) {
+                    // PrintTrays bridge has its OWN high-level option schema (NOT raw
+                    // QZ config). The official demo sends exactly these keys:
+                    //   { type, paperSize:<driver media NAME>, landscape:<bool>,
+                    //     color:<bool>, copies, duplex?, inputBin? }
+                    // Sending QZ-style keys (size:{w,h}, orientation, colorType,
+                    // printerTray, flavor…) makes the bridge ignore them and fall
+                    // back to the printer's DEFAULT media → white space on the sides.
+                    // This is a server-generated real PDF already laid out in the
+                    // design's orientation, so `landscape` is passed straight through.
                     const cfg = {
-                        type: type,
-                        flavor: 'base64',
+                        type: 'pdf',
+                        landscape: !!this.printLandscape,
+                        color: !!this.printColor,
                         copies: this.copies || 1,
-                        orientation: this.printLandscape ? 'landscape' : 'portrait',
-                        colorType: this.printColor ? 'color' : 'grayscale',
                     };
 
-                    // Paper size → explicit media size in inches. Prefer the live
-                    // printer dimensions, then the static tray-dim table.
-                    const dim = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
-                    if (dim) {
-                        cfg.size = {
-                            width: dim.w,
-                            height: dim.h
-                        };
-                        cfg.units = 'in';
+                    // Map the modal's scale choice to the bridge's scaleMode:
+                    //   'fit' (fit-to-paper) & 'fit_area' (fit printable) → 'fit'
+                    //   'actual' → 'actual', 'custom' → 'custom' (+ scaleFactor).
+                    const _m = this.printScaleMode || 'fit';
+                    cfg.scaleMode = (_m === 'actual') ? 'actual' : (_m === 'custom' ? 'custom' : 'fit');
+                    if (_m === 'custom') cfg.scaleFactor = this.printScaleFactor || 100;
+
+                    // paperSize goes STRAIGHT into SumatraPDF's `paper=<name>` on the
+                    // bridge, matched against the driver's own media forms — so it
+                    // must be a REAL driver media name, which only the live
+                    // capabilities give us. A static fallback name (e.g. "Letter")
+                    // doesn't exist on a Noritsu photo printer and makes the whole
+                    // print command FAIL. Send it only when it came from the live
+                    // printer; otherwise omit it and let SumatraPDF use the printer's
+                    // DEFAULT loaded media (the borderless photo paper) → edge-to-edge.
+                    if (this.sizesSource === 'printer' &&
+                        this.dynamicDims && this.dynamicDims[this.printPaperSize]) {
+                        cfg.paperSize = this.printPaperSize;
                     }
 
-                    // Paper source → QZ `printerTray`. Empty means printer default.
-                    if (this.printInputBin) {
-                        cfg.printerTray = this.printInputBin;
-                    }
+                    // Duplex values match the bridge's own select: '' (simplex),
+                    // 'longEdge', 'shortEdge'. Only send when the user picked one.
+                    if (this.printDuplex) cfg.duplex = this.printDuplex;
 
-                    // Duplex: QZ expects false for single-sided, or the two-sided
-                    // long/short-edge strings.
-                    if (this.printDuplex === 'longEdge') {
-                        cfg.duplex = 'two-sided-long-edge';
-                    } else if (this.printDuplex === 'shortEdge') {
-                        cfg.duplex = 'two-sided-short-edge';
-                    } else {
-                        cfg.duplex = false;
-                    }
-
-                    // For PDF jobs QZ frequently ignores `orientation` and honours
-                    // `rotation` (degrees) instead. If the requested orientation
-                    // differs from the design's natural orientation, rotate 90°.
-                    const wantLandscape = this.printLandscape;
-                    const designIsLandscape = (designSize.w && designSize.h) ? designSize.w > designSize.h :
-                        wantLandscape;
-                    if (wantLandscape !== designIsLandscape) {
-                        cfg.rotation = 90;
-                    }
+                    // Paper source → bridge `inputBin` (goes into SumatraPDF `bin=`).
+                    // Only from live capabilities; empty = printer default.
+                    if (this.printInputBin) cfg.inputBin = this.printInputBin;
 
                     console.log('[localprint] print config →', JSON.parse(JSON.stringify(cfg)));
                     return cfg;
@@ -592,15 +652,52 @@
                         const pp = __ptInstance;
                         if (!pp) throw new Error('PrintTrays not connected');
 
-                        const res = await fetch(pdfUrl, { credentials: 'same-origin' });
+                        const res = await fetch(pdfUrl, {
+                            credentials: 'same-origin'
+                        });
                         if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
-                        const b64 = this.arrayBufToBase64(await res.arrayBuffer());
+                        let bytes = new Uint8Array(await res.arrayBuffer());
 
-                        // The bridge reads a top-level `type` (pdf|image) — without it,
-                        // it reports "Unsupported print type: undefined". It also needs
-                        // the QZ `flavor:'base64'` key to actually base64-decode the data;
-                        // otherwise it writes the raw text and Chromium fails to load the
-                        // temp file (ERR_FAILED loading printport-*.pdf).
+                        // The design PDF is the DESIGN size (e.g. 5×7). If the chosen
+                        // media is bigger (e.g. Letter E2E 9.07×11.49), SumatraPDF
+                        // centres it small → margins. So cover-fill the PDF onto the
+                        // selected media size here, exactly like the check page builds
+                        // its image PDF to the media size — guaranteeing edge-to-edge.
+                        // Only cover-fill for 'fit'. For 'actual' the operator wants
+                        // the design at its true size, so leave the PDF untouched.
+                        const media = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
+                        if ((this.printScaleMode || 'fit') === 'fit' && media && media.w > 0 && media.h > 0) {
+                            // Use TRIM dims (parsed from the size code) instead of
+                            // the BLEED sheet dims, so the saved PDF is e.g. 7×10
+                            // rather than 7.57×10.49. The physical print still
+                            // reaches the sheet edges via the driver's E2E form.
+                            let trim = this.trimSizeFromCode(this.printPaperSize) || [media.w, media.h];
+                            // Size codes are portrait (e.g. 7x10). The server already
+                            // builds the design PDF landscape when landscape was
+                            // chosen, so orient the media page the SAME way — swap
+                            // trim W/H when landscape — or the landscape design gets
+                            // cover-filled onto a portrait page and crops.
+                            let tw = trim[0],
+                                th = trim[1];
+                            let pages = parseInt({{ $totalPages }});
+                            // 2-page (double) products are ALWAYS landscape (server
+                            // builds them landscape, and the spec label says so), so
+                            // force landscape even if portrait was chosen — otherwise
+                            // the landscape design cover-fills a portrait page and
+                            // crops. Other page counts follow the chosen orientation.
+                            const wantLandscape = (pages === 2) ? true : this.printLandscape;
+                            if (pages != 4 && wantLandscape && tw < th) {
+                                const t = tw;
+                                tw = th;
+                                th = t;
+                            }
+                            bytes = await this.fitPdfToMedia(bytes, tw * 72, th * 72);
+                        }
+                        const b64 = this.arrayBufToBase64(bytes.buffer);
+
+                        // The bridge decodes PDF jobs with Buffer.from(req.data,
+                        // 'base64') and routes on the top-level `type`. Send RAW
+                        // base64 (no data: prefix, no `flavor` key).
                         await pp.print(this.selectedPrinter, b64, this.buildPrintConfig('pdf'));
                         this.printMsg = 'Sent to ' + this.selectedPrinter + '!';
                         this.printMsgKind = 'success';
@@ -610,6 +707,81 @@
                         this.printMsgKind = 'error';
                     } finally {
                         this.printing = false;
+                    }
+                },
+
+                // Rebuild the PDF so every page is the SELECTED media size, with the
+                // original page cover-filled (scaled to cover, centred) — the same
+                // "fill the media" behaviour the check page uses for images. This is
+                // what makes it print edge-to-edge instead of a small centred design.
+                // Best-effort: returns the original bytes on any failure.
+                // Derive the TRIM size (in inches) from a tray size code —
+                // strips a "-E2E" suffix and parses "WxH" (e.g. '7x10-E2E' →
+                // [7, 10]). Named sizes (Letter, Legal) handled explicitly.
+                // Returns null on an unknown code so the caller can fall back
+                // to the bleed dims from trayDims / dynamicDims.
+                trimSizeFromCode(code) {
+                    const raw = String(code || '').trim();
+                    const base = raw.replace(/[-\s]*e2e$/i, '').trim();
+                    const m = base.match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)$/i);
+                    if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+                    const named = {
+                        'letter': [8.5, 11],
+                        'legal': [8.5, 14]
+                    };
+                    const key = base.toLowerCase();
+                    if (named[key]) return named[key];
+                    return null;
+                },
+
+                async fitPdfToMedia(bytes, mediaWpt, mediaHpt) {
+                    try {
+                        if (!window.PDFLib) return bytes;
+                        const {
+                            PDFDocument,
+                            degrees
+                        } = window.PDFLib;
+                        const src = await PDFDocument.load(bytes);
+                        const out = await PDFDocument.create();
+                        const count = src.getPageCount();
+                        for (let i = 0; i < count; i++) {
+                            const emb = await out.embedPage(src.getPage(i));
+                            const pw = emb.width,
+                                ph = emb.height;
+                            const page = out.addPage([mediaWpt, mediaHpt]);
+                            // If the design's orientation differs from the media page's
+                            // orientation, rotate the DESIGN 90° (not just the page) so
+                            // the content turns with the paper — no cropping.
+                            const rotate = (pw > ph) !== (mediaWpt > mediaHpt);
+                            if (rotate) {
+                                // 90° CCW: the design's footprint swaps axes, so cover
+                                // the media using the swapped extents and offset origin.
+                                const s = Math.max(mediaWpt / ph, mediaHpt / pw);
+                                const wW = ph * s,
+                                    wH = pw * s;
+                                page.drawPage(emb, {
+                                    x: (mediaWpt + wW) / 2,
+                                    y: (mediaHpt - wH) / 2,
+                                    xScale: s,
+                                    yScale: s,
+                                    rotate: degrees(90),
+                                });
+                            } else {
+                                const scale = Math.max(mediaWpt / pw, mediaHpt / ph); // cover
+                                const dw = pw * scale,
+                                    dh = ph * scale;
+                                page.drawPage(emb, {
+                                    x: (mediaWpt - dw) / 2,
+                                    y: (mediaHpt - dh) / 2,
+                                    xScale: scale,
+                                    yScale: scale,
+                                });
+                            }
+                        }
+                        return await out.save();
+                    } catch (e) {
+                        console.warn('[localprint] PDF fit skipped:', e && e.message || e);
+                        return bytes;
                     }
                 },
 

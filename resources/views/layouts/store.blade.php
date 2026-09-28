@@ -55,6 +55,11 @@
         }
     </style>
     @stack('styles')
+    {{-- pdf-lib: used to rotate a server-generated order PDF client-side so the
+         operator's Portrait/Landscape choice is honoured (SumatraPDF on the
+         bridge does NOT rotate PDF content for a `landscape` flag, but it DOES
+         honour a page's own /Rotate, which pdf-lib sets). --}}
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script></script>
 </head>
 
@@ -312,6 +317,144 @@
                 } catch (e) {}
             }
 
+            // Rebuild the order PDF so every page IS the tray's media size, in the
+            // chosen orientation, with the design cover-filled (scaled to cover,
+            // rotated 90° when its orientation differs). This does two things at
+            // once that the bridge/SumatraPDF can't:
+            //   1. Orientation — SumatraPDF won't rotate PDF content for a
+            //      `landscape` flag, so we bake it into the page here.
+            //   2. Edge-to-edge — the raw design PDF is the DESIGN size (e.g. 5×7);
+            //      on a larger sheet SumatraPDF would centre it small with margins.
+            //      Cover-filling onto the media size makes it print edge-to-edge.
+            // mediaWin/mediaHin are the tray's paper size in inches. Best-effort:
+            // returns the original bytes on any failure so a print is never blocked.
+            async function fitPdfToMedia(bytes, mediaWin, mediaHin, wantLandscape) {
+                try {
+                    if (!window.PDFLib || !(mediaWin > 0) || !(mediaHin > 0)) return bytes;
+                    const {
+                        PDFDocument,
+                        degrees
+                    } = window.PDFLib;
+                    const src = await PDFDocument.load(bytes);
+                    const out = await PDFDocument.create();
+                    const n = src.getPageCount();
+                    // `wantLandscape` is decided by the caller from the PRODUCT page
+                    // count (4-page → portrait, 2-page → landscape). Orient the media
+                    // to it; if the design page differs, the loop rotates it to fit.
+                    const mediaWpt = (wantLandscape ? Math.max(mediaWin, mediaHin) : Math.min(mediaWin, mediaHin)) * 72;
+                    const mediaHpt = (wantLandscape ? Math.min(mediaWin, mediaHin) : Math.max(mediaWin, mediaHin)) * 72;
+                    for (let i = 0; i < n; i++) {
+                        const emb = await out.embedPage(src.getPage(i));
+                        const pw = emb.width,
+                            ph = emb.height;
+                        const rotate = (pw > ph) !== (mediaWpt > mediaHpt);
+                        const page = out.addPage([mediaWpt, mediaHpt]);
+                        if (rotate) {
+                            // 90° CCW: the page's footprint swaps axes, so cover the
+                            // media using the swapped extents and offset the origin.
+                            const s = Math.max(mediaWpt / ph, mediaHpt / pw);
+                            const wW = ph * s,
+                                wH = pw * s;
+                            page.drawPage(emb, {
+                                x: (mediaWpt + wW) / 2,
+                                y: (mediaHpt - wH) / 2,
+                                xScale: s,
+                                yScale: s,
+                                rotate: degrees(90),
+                            });
+                        } else {
+                            const s = Math.max(mediaWpt / pw, mediaHpt / ph);
+                            const dw = pw * s,
+                                dh = ph * s;
+                            page.drawPage(emb, {
+                                x: (mediaWpt - dw) / 2,
+                                y: (mediaHpt - dh) / 2,
+                                xScale: s,
+                                yScale: s,
+                            });
+                        }
+                    }
+                    return await out.save();
+                } catch (e) {
+                    console.warn('[store-print] PDF fit skipped:', e && e.message || e);
+                    return bytes;
+                }
+            }
+
+            // Derive the TRIM size (in inches) from the tray's saved size code.
+            // `traySizeDimensions()` returns the full BLEED sheet dims — e.g.
+            //   '7x10-E2E' → [7.57, 10.49]
+            //   '4x6-E2E'  → [4.57, 6.49]
+            //   'Letter-E2E' → [9.07, 11.49]
+            // The saved PDF should be the TRIM page (7×10, 4×6, 8.5×11 …) so
+            // the output matches what /print/pdf/check produces. The physical
+            // printer still prints edge-to-edge because we pin `paperSize` to
+            // the driver's E2E form (see resolveLiveMediaName below) — the
+            // driver expands trim to bleed at print time.
+            function trimSizeFromCode(chosen) {
+                const code = String(chosen && chosen.size || '').trim();
+                // Strip a "-E2E" / " E2E" suffix.
+                const base = code.replace(/[-\s]*e2e$/i, '').trim();
+                // WxH pattern like "7x10", "4x6", "8.5x11".
+                const m = base.match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)$/i);
+                if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+                // Named sizes.
+                const named = { 'letter': [8.5, 11], 'legal': [8.5, 14] };
+                const key = base.toLowerCase();
+                if (named[key]) return named[key];
+                // Unknown code: fall back to the tray's saved (bleed) dims.
+                const sw = parseFloat(chosen && chosen.size_width);
+                const sh = parseFloat(chosen && chosen.size_height);
+                return (sw > 0 && sh > 0) ? [sw, sh] : null;
+            }
+
+            // Ask the bridge for the printer's live paper-size list and find one
+            // whose dimensions match the tray's saved size (either orientation,
+            // within 0.05 inch tolerance). Returns the driver's real media NAME
+            // — safe to pass to the bridge as `paperSize` (goes into SumatraPDF's
+            // `paper=<name>` and pins the print to that specific driver form).
+            // Returns null on any failure (older bridge without getPrinterDetails,
+            // no size match, malformed response) so the caller can fall back to
+            // the driver-default media as before.
+            async function resolveLiveMediaName(pp, printer, mediaWin, mediaHin) {
+                try {
+                    if (!pp || !printer || !(mediaWin > 0) || !(mediaHin > 0)) return null;
+                    const res = await pp.getPrinterDetails(printer);
+                    const raw = (res && (res.sizes || res.paperSizes || res.media)) || [];
+                    if (!raw.length) return null;
+                    const TOL = 0.05;
+                    const targetW = Math.min(mediaWin, mediaHin);
+                    const targetH = Math.max(mediaWin, mediaHin);
+                    let bestName = null;
+                    let bestDelta = Infinity;
+                    for (let i = 0; i < raw.length; i++) {
+                        const s = raw[i];
+                        const name = s.id || s.key || s.name || s.label || s.displayName;
+                        if (!name) continue;
+                        let w = s.width != null ? s.width : s.w;
+                        let h = s.height != null ? s.height : s.h;
+                        if (w == null || h == null) continue;
+                        let units = (s.units || s.unit || '').toLowerCase();
+                        if (!units) {
+                            units = (Math.max(w, h) > 1000) ? 'micron' : (Math.max(w, h) > 100 ? 'mm' : 'in');
+                        }
+                        if (units === 'mm') { w = w / 25.4; h = h / 25.4; }
+                        else if (units === 'micron' || units === 'um') { w = w / 25400; h = h / 25400; }
+                        const sw = Math.min(w, h);
+                        const sh = Math.max(w, h);
+                        const delta = Math.abs(sw - targetW) + Math.abs(sh - targetH);
+                        if (delta <= TOL * 2 && delta < bestDelta) {
+                            bestDelta = delta;
+                            bestName = name;
+                        }
+                    }
+                    return bestName;
+                } catch (e) {
+                    console.info('[store-print] live media lookup skipped:', (e && e.message) || e);
+                    return null;
+                }
+            }
+
             async function printOrder(chosen, payload, csrf) {
                 const t0 = performance.now();
                 const fail = function(message) {
@@ -352,52 +495,112 @@
                 }
 
                 try {
-                    let b64 = payload.pdf_base64;
-                    if (!b64 && payload.pdf_url) {
+                    // Always work from raw bytes so we can rotate the PDF to match
+                    // the chosen orientation before encoding.
+                    let bytes = null;
+                    if (payload.pdf_base64) {
+                        const bin = atob(payload.pdf_base64);
+                        bytes = new Uint8Array(bin.length);
+                        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                    } else if (payload.pdf_url) {
                         const res = await fetch(payload.pdf_url, {
                             credentials: 'same-origin'
                         });
                         if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
-                        const bytes = new Uint8Array(await res.arrayBuffer());
-                        let binary = '';
-                        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-                        b64 = btoa(binary);
+                        bytes = new Uint8Array(await res.arrayBuffer());
                     }
-                    if (!b64) throw new Error('No PDF data available.');
+                    if (!bytes) throw new Error('No PDF data available.');
 
-                    // Translate the saved tray config into QZ Tray's print-config
-                    // schema. These key names MUST match QZ exactly (the bridge
-                    // spreads them into qz.configs.create) — otherwise the tray's
-                    // configured orientation/size/colour/duplex are silently
-                    // ignored and the job prints with the printer's own defaults.
-                    // Kept in sync with quick-flow-pc buildPrintConfig().
+                    // Scale mode from the tray config (default 'fit'). For 'fit' we
+                    // rebuild the PDF to the tray's media size + chosen orientation,
+                    // cover-filled — so it prints edge-to-edge AND in the right
+                    // orientation (see fitPdfToMedia). For 'actual' the operator
+                    // wants the design at its true size, so leave the PDF untouched.
+                    // Best-effort: on any failure, the original bytes print as-is.
+                    const scaleMode = chosen.scale_mode || 'fit';
+                    if (scaleMode === 'fit') {
+                        // Use TRIM dims (not the tray's saved BLEED dims) so the
+                        // rebuilt PDF's page size matches the /print/pdf/check
+                        // output (e.g. 7×10, not 7.57×10.49). The physical print
+                        // is still edge-to-edge because paperSize pins the driver
+                        // to its E2E form (see resolveLiveMediaName below).
+                        const trim = trimSizeFromCode(chosen) ||
+                            [parseFloat(chosen.size_width), parseFloat(chosen.size_height)];
+                        // Orientation from the PRODUCT page count (from size_title):
+                        //   4-page (Folded)          → portrait
+                        //   2-page (Flat - double)   → landscape
+                        //   1-page (Flat) / unknown  → tray flag
+                        let wantLandscape = !!chosen.landscape;
+                        if (payload.pages_count === 4) wantLandscape = false;
+                        else if (payload.pages_count === 2) wantLandscape = true;
+                        bytes = await fitPdfToMedia(
+                            bytes,
+                            trim[0],
+                            trim[1],
+                            wantLandscape
+                        );
+                    }
+
+                    let binary = '';
+                    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+                    const b64 = btoa(binary);
+
+                    // PrintTrays bridge has its OWN high-level option schema — NOT
+                    // raw QZ config. The official demo sends { type, paperSize:<driver
+                    // media NAME>, landscape:<bool>, color:<bool>, copies, duplex?,
+                    // inputBin? }. Sending QZ-style keys (size:{w,h}, orientation,
+                    // colorType, printerTray, flavor…) makes the bridge ignore them
+                    // and fall back to the printer's default media → white space on
+                    // the sides. Kept in sync with quick-flow-pc buildPrintConfig().
                     const printOpts = {
                         type: 'pdf',
-                        flavor: 'base64',
+                        landscape: !!chosen.landscape,
+                        color: chosen.color !== false,
                         copies: payload.copies || 1,
-                        orientation: chosen.landscape ? 'landscape' : 'portrait',
-                        colorType: (chosen.color === false) ? 'grayscale' : 'color',
+                        // Map the tray's scale choice to the bridge's scaleMode:
+                        //   'fit' (fit-to-paper) & 'fit_area' (fit printable) → 'fit'
+                        //   'actual' → 'actual', 'custom' → 'custom' (+ scaleFactor).
+                        scaleMode: (scaleMode === 'actual') ? 'actual' :
+                            (scaleMode === 'custom' ? 'custom' : 'fit'),
                     };
 
-                    // Paper size → explicit media size in inches (QZ wants
-                    // { size:{width,height}, units:'in' }, not a paperSize name).
-                    const sw = parseFloat(chosen.size_width);
-                    const sh = parseFloat(chosen.size_height);
-                    if (sw > 0 && sh > 0) {
-                        printOpts.size = { width: sw, height: sh };
-                        printOpts.units = 'in';
+                    // 'custom' scale → send the saved percentage as scaleFactor.
+                    if (scaleMode === 'custom') {
+                        printOpts.scaleFactor = parseFloat(chosen.scale_factor) || 100;
                     }
 
-                    // Paper source → QZ `printerTray`. Empty means printer default.
-                    if (chosen.input_bin) printOpts.printerTray = chosen.input_bin;
-
-                    // Duplex: QZ expects false, or the two-sided edge strings.
-                    if (chosen.duplex === 'longEdge') {
-                        printOpts.duplex = 'two-sided-long-edge';
-                    } else if (chosen.duplex === 'shortEdge') {
-                        printOpts.duplex = 'two-sided-short-edge';
+                    // paperSize goes STRAIGHT into SumatraPDF's `paper=<name>` on the
+                    // bridge — it MUST be a real driver media name or the whole print
+                    // command fails ("Command failed … paper=Letter"). Store trays are
+                    // configured only with a size_width × size_height in inches, not
+                    // a driver form name, so we ask the bridge for the printer's LIVE
+                    // media list and match by dimensions. When we find a match, pin
+                    // the print to that form (this is what makes /print/pdf/check
+                    // reach the edges — see quick-flow-pc/local-print/check.blade.php
+                    // buildPrintConfig). Without it SumatraPDF falls back to the
+                    // driver's DEFAULT loaded form, whose printable area on a Noritsu
+                    // 931BL is smaller than the borderless form → visible white
+                    // borders. If no match / older bridge, omit paperSize so the
+                    // driver default is used (previous behaviour).
+                    const liveMediaName = await resolveLiveMediaName(
+                        pp, printer,
+                        parseFloat(chosen.size_width),
+                        parseFloat(chosen.size_height)
+                    );
+                    if (liveMediaName) {
+                        printOpts.paperSize = liveMediaName;
+                        console.log('[store-print] pinned paperSize →', liveMediaName);
                     } else {
-                        printOpts.duplex = false;
+                        console.log('[store-print] no live media match; using driver default');
+                    }
+
+                    // Paper source → bridge `inputBin` (goes into SumatraPDF `bin=`).
+                    if (chosen.input_bin) printOpts.inputBin = chosen.input_bin;
+
+                    // Duplex values match the bridge's own schema: 'longEdge' /
+                    // 'shortEdge'. Anything else (simplex) is left unset.
+                    if (chosen.duplex === 'longEdge' || chosen.duplex === 'shortEdge') {
+                        printOpts.duplex = chosen.duplex;
                     }
 
                     await pp.print(printer, b64, printOpts);
