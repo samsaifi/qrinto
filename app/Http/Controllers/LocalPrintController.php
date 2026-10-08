@@ -512,6 +512,135 @@ class LocalPrintController extends Controller
         return view($this->view('sent'), ['summary' => session('print_summary')]);
     }
 
+    /**
+     * Save a browser-regenerated PDF (rebuilt to the selected paper size and
+     * cover-filled) back to storage, overwriting the working print file. Called
+     * from the preview flow's "Apply" button so the SAVED file matches exactly
+     * what will be printed. Returns the fresh public URL.
+     */
+    public function saveRegenerated(Request $request)
+    {
+        $data = $request->validate([
+            'pdf'  => 'required|string',           // raw base64 (no data: prefix)
+            'name' => 'nullable|string|max:255',
+        ]);
+
+        // Strip an optional "data:application/pdf;base64," prefix, then decode.
+        $b64 = preg_replace('/^data:[^;]+;base64,/', '', $data['pdf']);
+        $bin = base64_decode($b64, true);
+        if ($bin === false || strncmp($bin, '%PDF', 4) !== 0) {
+            return response()->json(['ok' => false, 'error' => 'Invalid PDF data.'], 422);
+        }
+
+        $pdfDir = storage_path('app/public/local-print/pdfs');
+        if (!File::isDirectory($pdfDir)) {
+            File::makeDirectory($pdfDir, 0755, true, true);
+        }
+
+        $pdfName = 'LocalPrint_' . now()->format('Ymd_His') . '_' . session()->getId() . '.pdf';
+        $pdfPath = $pdfDir . '/' . $pdfName;
+        File::put($pdfPath, $bin);
+
+        $rel = 'local-print/pdfs/' . $pdfName;
+
+        // NOTE: we intentionally DO NOT overwrite session('local_print_file') here.
+        // That session entry is the ORIGINAL uploaded file shown in the preview on
+        // the check page; overwriting it would replace the uploaded image with this
+        // regenerated PDF on the next page load (refresh). The regenerated file is
+        // only needed for the current print, which the front-end tracks in memory
+        // (savedPdfUrl) and fetches by the URL we return below.
+
+        return response()->json([
+            'ok'   => true,
+            'url'  => asset('storage/' . $rel),
+            'name' => $pdfName,
+            'size' => strlen($bin),
+        ]);
+    }
+
+    /* ── Local-print audit logging (spec §1/§11) ─────────
+     * Both print pages (/print/pdf/check and the customizer preview) call these
+     * two endpoints around their existing pp.print() call. We create ONE record
+     * before sending to PrintTrays and update that SAME record with the result,
+     * without touching the print configuration itself. */
+
+    public function logStart(Request $request, \App\Services\LocalPrintLogService $service)
+    {
+        $payload = $request->validate([
+            'source'           => 'nullable|string|max:60',
+            'source_url'       => 'nullable|string|max:255',
+            'print_type'       => 'nullable|string|max:40',
+            'device_name'      => 'nullable|string|max:160',
+            'file'             => 'nullable|array',
+            'request_payload'  => 'nullable|array',
+            'printer_settings' => 'nullable|array',
+            'design_settings'  => 'nullable|array',
+        ]);
+
+        try {
+            $log = $service->start($payload, $request);
+            return response()->json(['ok' => true, 'id' => $log->id]);
+        } catch (\Throwable $e) {
+            // Logging must never break printing — fail soft with id = null.
+            report($e);
+            return response()->json(['ok' => false, 'id' => null, 'error' => 'log_failed']);
+        }
+    }
+
+    public function logComplete(Request $request, \App\Models\LocalPrintLog $localPrintLog, \App\Services\LocalPrintLogService $service)
+    {
+        $result = $request->validate([
+            'ok'          => 'required|boolean',
+            'error'       => 'nullable|string',
+            'response'    => 'nullable',
+            'job_id'      => 'nullable|string|max:120',
+            'duration_ms' => 'nullable|integer',
+        ]);
+
+        try {
+            $service->complete($localPrintLog, $result);
+            return response()->json(['ok' => true]);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['ok' => false, 'error' => 'log_update_failed']);
+        }
+    }
+
+    /**
+     * Save the exact print-ready PDF that was sent to PrintTrays and attach it to
+     * its audit-log row. The file is uploaded as MULTIPART (binary) — not base64
+     * JSON — so a large print PDF does not blow past the web server's body limit
+     * (which previously caused HTTP 413 on the regenerate-save flow). Fail-soft:
+     * a save error never breaks the print.
+     */
+    public function logAttachFile(Request $request, \App\Models\LocalPrintLog $localPrintLog)
+    {
+        $request->validate([
+            'pdf' => 'required|file|mimetypes:application/pdf|max:51200', // ≤ 50 MB
+        ]);
+
+        try {
+            $dir = storage_path('app/public/local-print/pdfs');
+            if (!File::isDirectory($dir)) {
+                File::makeDirectory($dir, 0755, true, true);
+            }
+
+            $name = 'LPLog_' . $localPrintLog->id . '_' . now()->format('Ymd_His') . '.pdf';
+            $request->file('pdf')->move($dir, $name);
+
+            $rel = 'local-print/pdfs/' . $name;
+            $localPrintLog->update([
+                'generated_pdf_path' => $rel,
+                'generated_pdf_url'  => asset('storage/' . $rel),
+            ]);
+
+            return response()->json(['ok' => true, 'url' => asset('storage/' . $rel)]);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['ok' => false, 'error' => 'pdf_save_failed']);
+        }
+    }
+
     /* ── Helper setup (recovery link) ────────────────── */
     public function setup()
     {

@@ -313,6 +313,7 @@
                             user_type: t.user_type,
                             landscape: t.landscape,
                             duplex: t.duplex,
+                            page_order: t.page_order,
                             color: t.color,
                             input_bin: t.input_bin,
                             quality: t.quality,

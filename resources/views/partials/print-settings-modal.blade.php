@@ -15,7 +15,55 @@
 <div x-show="showPaperModal" x-cloak class="fixed inset-0 z-[90] flex items-center justify-center p-4"
     @keydown.escape.window="showPaperModal = false">
     <div class="absolute inset-0 bg-black/40" @click="showPaperModal = false"></div>
-    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6" @click.stop>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row"
+        :class="psHasPreview ? 'max-w-4xl' : 'max-w-md'" @click.stop>
+
+        {{-- Live preview column (only when the host enables it: check & own-design
+             pages). Shows the design on the selected paper exactly as it will print
+             — E2E fills the sheet, non-E2E leaves the white border, and the Scale /
+             Orientation choices update it in real time. --}}
+        <template x-if="psHasPreview">
+            <div
+                class="w-full md:flex-1 md:w-1/2 bg-[#f2f7f2] border-b md:border-b-0 md:border-r border-slate-200 p-5 flex flex-col items-center justify-center gap-2 overflow-y-auto">
+                <p class="mono text-[10px] text-slate-500 text-center px-2 max-w-full truncate" x-text="trayPaperInfo()">
+                </p>
+                {{-- Page navigation for multi-page files / designs. --}}
+                <div x-show="psPreviewCount > 1" class="flex items-center gap-2 text-[11px] text-slate-500">
+                    <button type="button" @click="psPreviewPrev()" :disabled="psPreviewIndex <= 0"
+                        class="w-6 h-6 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                        <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <span class="tabular-nums"><span x-text="psPreviewIndex + 1"></span> / <span
+                            x-text="psPreviewCount"></span></span>
+                    <button type="button" @click="psPreviewNext()" :disabled="psPreviewIndex >= psPreviewCount - 1"
+                        class="w-6 h-6 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+                <div class="relative shadow-lg border border-slate-800 overflow-hidden" :style="trayPaperStyle()">
+                    <div class="absolute inset-0 pointer-events-none" x-show="!isE2ESelected()"
+                        style="background: repeating-linear-gradient(45deg, #ffffff 0 4px, rgba(229,83,75,.3) 4px 8px);">
+                    </div>
+                    <div class="absolute inset-0 bg-white" x-show="isE2ESelected()"></div>
+                    <div class="absolute bg-white overflow-hidden" :style="trayContentStyle()">
+                        <div class="absolute left-1/2 top-1/2" :style="trayFileStyle()">
+                            <img x-show="psPreviewSrc" :src="psPreviewSrc" class="object-contain"
+                                style="width:100%; height:100%; display:block;" draggable="false">
+                        </div>
+                    </div>
+                </div>
+                <div x-show="!isE2ESelected()" class="flex items-center gap-1.5 text-[10px] text-slate-500 mt-1">
+                    <span class="inline-block w-2.5 h-2.5 shrink-0"
+                        style="background: repeating-linear-gradient(45deg, #ffffff 0 2px, rgba(229,83,75,.3) 2px 4px); border: 1px solid #d1d5db;"></span>
+                    <span>White border on every side</span>
+                </div>
+                <div x-show="isE2ESelected()" class="flex items-center gap-1.5 text-[10px] text-emerald-700 mt-1">
+                    <span>Borderless — prints to the edge</span>
+                </div>
+            </div>
+        </template>
+
+        <div class="flex-1 overflow-y-auto p-6">
         <div class="flex items-center justify-between mb-5">
             <h3 class="font-bold text-slate-900 text-base">Print Settings</h3>
             <button type="button" @click="showPaperModal = false"
@@ -110,6 +158,27 @@
                 </select>
             </div>
 
+            {{-- Page order (MULTI-PAGE only) — mirrors the PrintTrays demo. Only
+                 affects multi-page PDFs; a one-page doc or a photo has no order to
+                 reverse. Guarded with typeof so an older cached print-settings.js
+                 (without printPageOrder) can't crash Alpine. --}}
+            <template x-if="typeof printPageOrder !== 'undefined'">
+                <div>
+                    <label class="text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        Page order
+                        <span
+                            class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded"
+                            title="Only affects multi-page PDFs — a one-page document or photo has no order to reverse">MULTI-PAGE</span>
+                    </label>
+                    <select x-model="printPageOrder"
+                        class="w-full rounded-xl border border-slate-200 text-sm py-2.5 px-3 bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
+                        <template x-for="o in pageOrderOptions" :key="o.value">
+                            <option :value="o.value" x-text="o.label"></option>
+                        </template>
+                    </select>
+                </div>
+            </template>
+
             {{-- Color Mode --}}
             <div x-show="colorCaps.length > 1">
                 <label class="text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
@@ -139,12 +208,21 @@
                         Scale
                     </label>
                     <div class="flex gap-2 items-center">
+                        {{-- On an E2E (borderless) paper only "Crop to Cover" makes
+                             sense, so hide the other modes and force 'fit'. --}}
                         <select x-model="printScaleMode"
+                            x-effect="if (isE2ESelected() && printScaleMode !== 'fit') printScaleMode = 'fit'"
                             class="flex-1 rounded-xl border border-slate-200 text-sm py-2.5 px-3 bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
-                            <option value="fit">Fit to paper </option>
-                            <option value="fit_area">Fit to printable area</option>
-                            <option value="actual">Actual size</option>
-                            <option value="custom">Custom</option>
+                            <option value="fit">Crop to Cover (Edge to edge)</option>
+                            <template x-if="!isE2ESelected()">
+                                <option value="fit_area">Fit to printable area</option>
+                            </template>
+                            <template x-if="!isE2ESelected()">
+                                <option value="actual">Actual size</option>
+                            </template>
+                            <template x-if="!isE2ESelected()">
+                                <option value="custom">Custom</option>
+                            </template>
                         </select>
                         {{-- Custom percentage — only meaningful when "Custom" is picked. --}}
                         <div class="flex items-center gap-1 rounded-xl border px-2 shrink-0 transition"
@@ -155,8 +233,8 @@
                         </div>
                     </div>
                     <p class="text-[11px] text-slate-400 mt-1"
-                        x-text="printScaleMode === 'fit' ? 'Fills the whole sheet edge-to-edge (may crop slightly).' :
-                            (printScaleMode === 'fit_area' ? 'Scales to fit inside the printer\'s margins.' :
+                        x-text="printScaleMode === 'fit' ? 'Crop to cover — fills the whole sheet, no white space (may crop).' :
+                            (printScaleMode === 'fit_area' ? 'Fit to content — whole design fits inside, may leave a white border.' :
                             (printScaleMode === 'actual' ? 'Prints at the file\'s true size.' :
                             'Scales by the percentage you set.'))">
                     </p>
@@ -272,18 +350,22 @@
 
         <div class="flex gap-3 mt-6">
             <button type="button" @click="applyPaperSettings()"
-                :disabled="psShowChecks && !psChecksPrintable(psModalChecks())"
-                class="flex-1 text-white font-bold py-2.5 rounded-xl text-sm transition disabled:bg-slate-300 disabled:cursor-not-allowed"
-                :class="(psShowChecks && !psChecksPrintable(psModalChecks())) ? '' :
+                :disabled="psApplying || (psShowChecks && !psChecksPrintable(psModalChecks()))"
+                class="flex-1 flex items-center justify-center gap-2 text-white font-bold py-2.5 rounded-xl text-sm transition disabled:bg-slate-300 disabled:cursor-not-allowed"
+                :class="(psApplying || (psShowChecks && !psChecksPrintable(psModalChecks()))) ? '' :
                 ((psShowChecks && !psChecksAllClear(psModalChecks())) ?
                     'bg-red-600 hover:bg-red-700' :
                     'bg-[#287d3c] hover:bg-emerald-800')">
-                Apply
+                <template x-if="psApplying">
+                    <span class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+                </template>
+                <span x-text="psApplying ? 'Saving…' : 'Apply'"></span>
             </button>
-            <button type="button" @click="showPaperModal = false"
-                class="flex-1 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
+            <button type="button" @click="showPaperModal = false" :disabled="psApplying"
+                class="flex-1 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
                 Cancel
             </button>
+        </div>
         </div>
     </div>
 </div>

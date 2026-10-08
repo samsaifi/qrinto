@@ -13,6 +13,7 @@
     $storeName = $activeStore->store_name ?? 'Billmeijer Camera';
     $storeCity = $activeStore->city ?? 'Fenton';
     $storeState = $activeStore->state ?? 'Michigan';
+    $editDesignUrl = $firstItem->customization_data['design_url'] ?? null;
 @endphp
 
 @push('styles')
@@ -75,10 +76,10 @@
 
             {{-- Back + Title (single row on mobile) --}}
             <div class="flex items-center gap-2 mb-3 md:flex-col md:items-start md:gap-0 md:mb-6">
-                <a href="{{ route($routePrefix . 'index') }}"
+                <a href="{{ $editDesignUrl ?? url()->previous() }}"
                     class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
                     ←
-                    <span class="hidden md:inline">All products</span>
+                    <span class="hidden md:inline">Edit design</span>
                 </a>
                 <h1 class="text-base md:text-2xl font-extrabold text-[#112419] tracking-tight md:mt-4">
                     Your order

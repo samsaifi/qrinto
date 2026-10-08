@@ -144,6 +144,38 @@
                     </a>
                 @endforeach
 
+                {{-- Print Logs accordion (NAC admin only): Print Logs + Local Print --}}
+                @if (auth()->user()->isAdmin())
+                    @php $printLogsOpen = request()->routeIs('admin.print-logs*') || request()->routeIs('admin.local-print-logs*'); @endphp
+                    <div x-data="{ open: {{ $printLogsOpen ? 'true' : 'false' }} }">
+                        <button @click="open = !open"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {{ $printLogsOpen ? 'text-white' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                            <i data-lucide="printer"
+                                class="w-5 h-5 flex-shrink-0 {{ $printLogsOpen ? 'text-white' : 'text-brand-500' }}"></i>
+                            <span x-show="sidebarOpen" x-transition
+                                class="whitespace-nowrap flex-1 text-left">Print Logs</span>
+                            <i x-show="sidebarOpen" data-lucide="chevron-down"
+                                class="w-4 h-4 flex-shrink-0 transition-transform duration-200"
+                                :class="open ? 'rotate-180' : ''"></i>
+                        </button>
+                        <div x-show="open" x-transition
+                            class="ml-3 pl-3 border-l border-surface-700 space-y-0.5 mt-0.5">
+                            <a href="{{ route('admin.print-logs.index') }}"
+                                class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all {{ request()->routeIs('admin.print-logs*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                                <i data-lucide="file-text"
+                                    class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('admin.print-logs*') ? 'text-white' : 'text-brand-500' }}"></i>
+                                <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">Print Logs</span>
+                            </a>
+                            <a href="{{ route('admin.local-print-logs.index') }}"
+                                class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all {{ request()->routeIs('admin.local-print-logs*') ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-surface-400 hover:bg-surface-800 hover:text-white' }}">
+                                <i data-lucide="hard-drive"
+                                    class="w-4 h-4 flex-shrink-0 {{ request()->routeIs('admin.local-print-logs*') ? 'text-white' : 'text-brand-500' }}"></i>
+                                <span x-show="sidebarOpen" x-transition class="whitespace-nowrap">Local Print</span>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
                 @if (count($catalogItems))
                     <div x-data="{ open: {{ $catalogOpen ? 'true' : 'false' }} }">
                         <button @click="open = !open"

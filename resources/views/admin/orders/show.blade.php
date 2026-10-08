@@ -388,16 +388,66 @@
                                     }
                                 @endphp
 
-                                @if (count($visibleCustomDetails) > 0)
-                                    <div
-                                        class="text-xs text-surface-600 bg-white p-3.5 rounded-xl border border-surface-200/80 space-y-1.5 shadow-2xs">
-                                        @foreach ($visibleCustomDetails as $detailLabel => $detailValue)
-                                            <p class="flex items-center gap-2 text-xs">
-                                                <span
-                                                    class="font-semibold text-surface-500 w-24 flex-shrink-0">{{ $detailLabel }}:</span>
-                                                <span class="text-surface-900 font-bold">{{ $detailValue }}</span>
-                                            </p>
-                                        @endforeach
+                                @php
+                                    // Card flow details (Card Type / Size / Card Style / Print Mode)
+                                    // sourced from the order's flow_data, matching the store queue page.
+                                    $flow = $order->flow_data ?? [];
+                                    $flowChips = [];
+                                    if (!empty($flow) && is_array($flow)) {
+                                        $sizeTitle = $flow['size_title'] ?? null;
+                                        switch ($sizeTitle) {
+                                            case 'Folded':
+                                                $printMode = 'portrait';
+                                                break;
+                                            case 'Flat - double':
+                                                $printMode = 'landscape';
+                                                break;
+                                            default:
+                                                $printMode = 'portrait/landscape';
+                                                break;
+                                        }
+                                        $fW = $flow['size_width'] ?? null;
+                                        $fH = $flow['size_height'] ?? null;
+                                        $fDim = trim(($fW ?? '') . ' × ' . ($fH ?? '') . ' ' . ($flow['size_unit'] ?? ''));
+                                        $flowChips = array_filter(
+                                            [
+                                                'Card Type' => $flow['type_name'] ?? null,
+                                                'Size' => $fW && $fH ? $fDim : null,
+                                                'Card Style' => $sizeTitle,
+                                                'Print Mode' => $printMode,
+                                            ],
+                                            fn($v) => !is_null($v) && $v !== '',
+                                        );
+                                    }
+                                @endphp
+
+                                @if (count($visibleCustomDetails) > 0 || count($flowChips) > 0)
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        @if (count($visibleCustomDetails) > 0)
+                                            <div
+                                                class="text-xs text-surface-600 bg-white p-3.5 rounded-xl border border-surface-200/80 space-y-1.5 shadow-2xs">
+                                                @foreach ($visibleCustomDetails as $detailLabel => $detailValue)
+                                                    <p class="flex items-center gap-2 text-xs">
+                                                        <span
+                                                            class="font-semibold text-surface-500 w-24 flex-shrink-0">{{ $detailLabel }}:</span>
+                                                        <span class="text-surface-900 font-bold">{{ $detailValue }}</span>
+                                                    </p>
+                                                @endforeach
+                                            </div>
+                                        @endif
+
+                                        @if (count($flowChips) > 0)
+                                            <div
+                                                class="text-xs text-surface-600 bg-white p-3.5 rounded-xl border border-surface-200/80 space-y-1.5 shadow-2xs">
+                                                @foreach ($flowChips as $flowLabel => $flowVal)
+                                                    <p class="flex items-center gap-2 text-xs">
+                                                        <span
+                                                            class="font-semibold text-surface-500 w-24 flex-shrink-0">{{ $flowLabel }}:</span>
+                                                        <span class="text-surface-900 font-bold">{{ $flowVal }}</span>
+                                                    </p>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
                                 @endif
 
@@ -421,7 +471,7 @@
                                         </a>
                                     @endif
 
-                                    <a href="{{ route($rPrefix . 'orders.print.page', ['order' => $order->id, 'item' => $item->id]) }}"
+                                    <a href="{{ route('storepanel.home') }}" target="_blank" rel="noopener"
                                         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-600 text-white text-xs font-bold rounded-xl hover:bg-brand-700 transition shadow-xs active:scale-95">
                                         <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print Design
                                     </a>
@@ -518,6 +568,95 @@
                     </h2>
                     <p class="text-sm text-surface-600 leading-relaxed whitespace-pre-wrap">
                         {{ $order->special_instructions }}</p>
+                </div>
+            @endif
+
+            <!-- Printer Log (detailed QZ Tray dispatches - success + failures) -->
+            @if ($order->orderPrintLogs && count($order->orderPrintLogs) > 0)
+                <div class="bg-white rounded-2xl border border-surface-100 shadow-card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-display font-semibold text-lg">Printer Log</h2>
+                        <span class="px-2 py-0.5 text-[11px] font-semibold rounded-lg bg-surface-100 text-surface-600">
+                            {{ count($order->orderPrintLogs) }} {{ \Illuminate\Support\Str::plural('attempt', count($order->orderPrintLogs)) }}
+                        </span>
+                    </div>
+                    <div class="space-y-4">
+                        @foreach ($order->orderPrintLogs as $log)
+                            @php
+                                $ok = $log->status === 'success';
+                                $failed = $log->status === 'failed';
+                                $c = $ok
+                                    ? ['border' => 'border-emerald-400', 'dot' => 'bg-emerald-500', 'badge' => 'bg-emerald-100 text-emerald-700']
+                                    : ($failed
+                                        ? ['border' => 'border-red-400', 'dot' => 'bg-red-500', 'badge' => 'bg-red-100 text-red-700']
+                                        : ['border' => 'border-amber-400', 'dot' => 'bg-amber-500', 'badge' => 'bg-amber-100 text-amber-700']);
+                            @endphp
+                            <div class="relative pl-4 border-l-2 {{ $c['border'] }}">
+                                <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full {{ $c['dot'] }}"></div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-sm font-semibold text-surface-800 truncate">
+                                        {{ $log->printer_name ?: 'Unknown printer' }}
+                                        @if ($log->tray_label)
+                                            <span class="text-xs font-normal text-surface-400">· {{ $log->tray_label }}</span>
+                                        @endif
+                                    </p>
+                                    <span class="shrink-0 px-2 py-0.5 text-[10px] font-bold rounded-lg uppercase {{ $c['badge'] }}">
+                                        {{ $log->status }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-surface-500 mt-1">
+                                    {{ optional($log->printed_at)->format('M d, Y h:i A') }}
+                                    @if ($log->user)
+                                        by {{ $log->user->name }}
+                                    @endif
+                                </p>
+
+                                @php
+                                    // Every column from order_print_logs, label => value.
+                                    $logRows = [
+                                        'Log ID' => $log->id,
+                                        'Order #' => $log->order_number,
+                                        'Order Item ID' => $log->order_item_id,
+                                        'Store ID' => $log->store_id,
+                                        'User' => $log->user ? $log->user->name . ' (#' . $log->user_id . ')' : $log->user_id,
+                                        'User Type' => $log->user_type,
+                                        'Printer' => $log->printer_name,
+                                        'Default Printer' => $log->is_default_printer ? 'Yes' : 'No',
+                                        'Tray Key' => $log->tray_key,
+                                        'Tray Label' => $log->tray_label,
+                                        'Copies' => $log->copies,
+                                        'Size' => $log->size,
+                                        'Media' => $log->media,
+                                        'GSM' => $log->gsm,
+                                        'PDF Path' => $log->pdf_path,
+                                        'PDF Size' => !is_null($log->pdf_bytes) ? number_format($log->pdf_bytes / 1024, 1) . ' KB' : null,
+                                        'PDF SHA-256' => $log->pdf_sha256,
+                                        'Status' => $log->status,
+                                        'Duration' => !is_null($log->duration_ms) ? number_format($log->duration_ms / 1000, 2) . ' s' : null,
+                                        'QZ Tray Version' => $log->qz_tray_version,
+                                        'Client IP' => $log->client_ip,
+                                        'User Agent' => $log->user_agent,
+                                        'Printed At' => optional($log->printed_at)->format('M d, Y h:i:s A'),
+                                        'Logged At' => optional($log->created_at)->format('M d, Y h:i:s A'),
+                                    ];
+                                @endphp
+                                <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 mt-2 text-xs">
+                                    @foreach ($logRows as $k => $v)
+                                        @if (!is_null($v) && $v !== '')
+                                            <dt class="text-surface-400 whitespace-nowrap">{{ $k }}</dt>
+                                            <dd class="text-surface-800 font-medium break-all">{{ $v }}</dd>
+                                        @endif
+                                    @endforeach
+                                </dl>
+
+                                @if ($log->error_message)
+                                    <p class="text-xs text-red-600 mt-2 bg-red-50 p-2 rounded border border-red-100 break-words">
+                                        {{ $log->error_message }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             @endif
 

@@ -394,12 +394,21 @@
          which SumatraPDF would otherwise centre small on a larger sheet). --}}
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
+    <script src="{{ asset('js/local-print-log.js') }}?v={{ filemtime(public_path('js/local-print-log.js')) }}"></script>
+    <script>
+        // Full route URLs so LPLog works under a sub-path (e.g. /qrinto).
+        window.LPLOG_ROUTES = {
+            start: @json(route('localprint.log.start')),
+            completeBase: @json(url('print/log')),
+        };
+    </script>
     <script>
         var __ptInstance = null;
 
         function previewFlow() {
             const pdfUrl = @json($pdfUrl ?? null);
             const trayDims = @json($trayDims);
+            const imageUrls = @json($imageUrls ?? []);
             const totalPages = {{ $totalPages }};
             const designSize = {
                 w: {{ floatval($flowData['size_width'] ?? 0) }},
@@ -417,6 +426,11 @@
                 slide: 0,
                 touchX: 0,
                 copies: 1,
+
+                // The PDF that Print will actually send. Starts as the server's
+                // design-size PDF; "Apply" regenerates it at the selected paper size
+                // (cover-fill), saves it on the server, and points this at that file.
+                savedPdfUrl: pdfUrl,
 
                 // Per-check acknowledgements ({ [check.key]: true }). An error must be
                 // acknowledged before the operator can print; a warning (E2E) shows a
@@ -457,7 +471,25 @@
                     if (designSize.w && designSize.h) {
                         this.psSelectSizeForDims(designSize.w, designSize.h);
                     }
+                    // Live preview inside the Print Settings modal: feed the design
+                    // size + the current slide's rendered page image, and keep the
+                    // artwork in sync as the operator swipes between pages.
+                    this.psHasPreview = true;
+                    if (designSize.w && designSize.h) this.psDesign = { w: designSize.w, h: designSize.h };
+                    this.psPreviewSrc = imageUrls[this.slide] || imageUrls[0] || '';
+                    this.psPreviewCount = imageUrls.length || totalPages || 1;
+                    this.psPreviewIndex = this.slide;
+                    this.$watch('slide', (i) => {
+                        this.psPreviewSrc = imageUrls[i] || imageUrls[0] || '';
+                        this.psPreviewIndex = i;
+                    });
                     this.initBridge();
+                },
+
+                // Modal preview page navigation (overrides the mixin no-op): the
+                // slide watcher keeps psPreviewSrc / psPreviewIndex in sync.
+                psPreviewSync(i) {
+                    this.slide = Math.min((totalPages || 1) - 1, Math.max(0, i));
                 },
 
                 // ── Swipe slider ──
@@ -702,8 +734,62 @@
                     }
                 },
 
-                applyPaperSettings() {
-                    this.showPaperModal = false;
+                // Apply: regenerate the PDF at the selected paper size (cover-fill)
+                // and SAVE it on the server, so Print later fetches the exact file
+                // that will print. Shows a spinner on the button while saving.
+                async applyPaperSettings() {
+                    if (this.psApplying) return;
+                    this.psApplying = true;
+                    try {
+                        // Always start from the ORIGINAL server design PDF so changing
+                        // the size again never crops an already-cropped file.
+                        const res = await fetch(pdfUrl, { credentials: 'same-origin' });
+                        if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
+                        let bytes = new Uint8Array(await res.arrayBuffer());
+
+                        // Match the chosen print orientation, then cover-fill onto the
+                        // selected paper's trim size for the fit modes ('actual' /
+                        // 'custom' keep the design size as-is).
+                        bytes = await this.rotatePdfToOrientation(bytes);
+                        const _sm = this.printScaleMode || 'fit';
+                        if (_sm === 'fit' || _sm === 'fit_area') {
+                            bytes = await this.transformPdfForPrint(bytes);
+                        }
+
+                        const b64 = this.arrayBufToBase64(bytes.buffer || bytes);
+                        const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                        const save = await fetch('{{ route('localprint.save-regenerated') }}', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': token,
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ pdf: b64 }),
+                        });
+                        const json = await save.json().catch(() => ({}));
+                        if (!save.ok || !json.ok) throw new Error(json.error || ('HTTP ' + save.status));
+
+                        this.savedPdfUrl = json.url;
+                        this.printMsg = 'Print file saved (' + this.selectedSizeLabel() + ').';
+                        this.printMsgKind = 'success';
+                        this.showPaperModal = false;
+                    } catch (e) {
+                        console.error('[localprint] regenerate/save failed:', e);
+                        this.printMsg = (e && e.message) || 'Could not save the print file.';
+                        this.printMsgKind = 'error';
+                    } finally {
+                        this.psApplying = false;
+                    }
+                },
+
+                // Human label of the selected paper size (for status text).
+                selectedSizeLabel() {
+                    const live = (this.dynamicSizes || []).find(s => s.value === this.printPaperSize);
+                    if (live && live.label) return String(live.label);
+                    const lbl = this.psSizeOptionsMap && this.psSizeOptionsMap[this.printPaperSize];
+                    return String(lbl || this.printPaperSize || '');
                 },
 
 
@@ -777,6 +863,12 @@
                         landscape: !!this.printLandscape,
                         color: !!this.printColor,
                         copies: this.copies || 1,
+                        // Page order for MULTI-PAGE PDFs. Sent exactly like the
+                        // official PrintTrays demo — 'frontToBack' (normal) or
+                        // 'backToFront' (reversed). The bridge applies it as a reverse
+                        // page-feed instruction (SumatraPDF / CUPS outputorder=reverse);
+                        // single-page jobs ignore it.
+                        pageOrder: this.printPageOrder || 'frontToBack',
                     };
 
                     // Map the modal's scale choice to the bridge's scaleMode:
@@ -819,53 +911,104 @@
                 // capability is found to genuinely require in-browser PDF transformation.
                 forcePdfTransform: false,
 
+                // Assemble the audit-log payload from the current print state.
+                // Records only what is already being sent to PrintTrays (plus file
+                // / design context) — it never influences the print itself.
+                buildLogPayload(cfg) {
+                    const sizeLabel = (this.psSizeOptionsMap && this.psSizeOptionsMap[this.printPaperSize]) || this.printPaperSize || null;
+                    return {
+                        source: 'own_design_customizer_preview',
+                        source_url: '/print/own-design/sizes/customizer/preview',
+                        print_type: 'pdf',
+                        file: {
+                            url: this.savedPdfUrl || pdfUrl || null,
+                            name: (this.savedPdfUrl || pdfUrl || '').split('/').pop() || null,
+                            type: 'pdf',
+                            size: null,
+                            pages: totalPages || null,
+                            dimensions: (designSize.w && designSize.h) ? (designSize.w + ' x ' + designSize.h + ' in') : null,
+                        },
+                        printer_settings: {
+                            printer_name: this.selectedPrinter || null,
+                            printer_model: this.selectedPrinterInfo?.driver || null,
+                            paper_source: cfg.inputBin || null,
+                            paper_size: this.printPaperSize || null,
+                            media_size: sizeLabel,
+                            orientation: this.printLandscape ? 'landscape' : 'portrait',
+                            color_mode: this.printColor ? 'color' : 'grayscale',
+                            duplex: cfg.duplex || 'simplex',
+                            page_order: cfg.pageOrder || 'frontToBack',
+                            scale_mode: cfg.scaleMode || null,
+                            scale_percentage: cfg.scaleFactor || null,
+                            copies: this.copies || 1,
+                        },
+                        request_payload: cfg,
+                        design_settings: {
+                            product_id: @json($product->id ?? null),
+                            size_label: {{ \Illuminate\Support\Js::from($flowData['size_name'] ?? null) }},
+                            size_width: designSize.w || null,
+                            size_height: designSize.h || null,
+                            orientation: designOrientation,
+                            page_count: totalPages || null,
+                        },
+                    };
+                },
+
                 async doPrint() {
                     if (!this.canPrint || this.printing) return;
                     this.printing = true;
                     this.printMsg = 'Sending to printer…';
                     this.printMsgKind = 'info';
 
+                    let job = null;
+                    const cfg = this.buildPrintConfig('pdf');
                     try {
                         const pp = __ptInstance;
                         if (!pp) throw new Error('PrintTrays not connected');
 
-                        // DEFAULT PRINT PATH — no PDF reconstruction.
-                        // Fetch the already-generated server PDF and send those exact
-                        // bytes straight to PrintTrays. The server PDF is the source of
-                        // truth: a 7×10 design PDF stays a 7×10 PDF. Scaling / fit /
-                        // edge-to-edge is left to PrintTrays → the driver → the printer.
-                        const res = await fetch(pdfUrl, {
+                        // Fetch the PDF that Print should send. If the operator hit
+                        // "Apply", savedPdfUrl points at the server file that was already
+                        // regenerated at the selected paper size (cover-filled) — send it
+                        // AS-IS. Otherwise fall back to the original design PDF and do the
+                        // rotate + cover-fill here so a print without Apply still works.
+                        const alreadyPrepared = this.savedPdfUrl && this.savedPdfUrl !== pdfUrl;
+                        const sourceUrl = this.savedPdfUrl || pdfUrl;
+                        const res = await fetch(sourceUrl, {
                             credentials: 'same-origin'
                         });
                         if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
                         let bytes = new Uint8Array(await res.arrayBuffer());
 
-                        // ROTATION-ONLY (no rebuild, no resize). The driver does NOT
-                        // reliably honour the `landscape` flag, so if a page's own
-                        // orientation doesn't match the chosen print orientation we
-                        // rotate it 90° in place — dimensions stay the same (7×10 stays
-                        // 7×10), only a rotation flag is set. This fixes landscape /
-                        // portrait without regenerating the PDF or adding margins.
-                        bytes = await this.rotatePdfToOrientation(bytes);
-
-                        // FALLBACK ONLY — never runs during normal printing. Kept as an
-                        // explicit escape hatch (transformPdfForPrint) for a future
-                        // printer capability that genuinely needs the PDF rebuilt.
-                        if (this.forcePdfTransform &&
-                            (this.printScaleMode || 'fit') === 'fit') {
-                            bytes = await this.transformPdfForPrint(bytes);
+                        if (!alreadyPrepared) {
+                            // ROTATION-ONLY then cover-fill onto the selected paper's trim
+                            // size (fit modes only; actual/custom pass through). The
+                            // driver doesn't reliably honour the `landscape` flag, so we
+                            // bake orientation + size into the PDF itself.
+                            bytes = await this.rotatePdfToOrientation(bytes);
+                            const _sm = this.printScaleMode || 'fit';
+                            if (_sm === 'fit' || _sm === 'fit_area') {
+                                bytes = await this.transformPdfForPrint(bytes);
+                            }
                         }
 
-                        const b64 = this.arrayBufToBase64(bytes.buffer);
+                        const b64 = this.arrayBufToBase64(bytes.buffer || bytes);
+
+                        // Create the audit log BEFORE sending to PrintTrays (non-fatal).
+                        job = await LPLog.start(this.buildLogPayload(cfg));
+                        // Persist the exact print-ready PDF with the log row (non-fatal,
+                        // multipart upload so it never trips the 413 body limit).
+                        LPLog.attachPdf(job, b64);
 
                         // The bridge decodes PDF jobs with Buffer.from(req.data,
                         // 'base64') and routes on the top-level `type`. Send RAW
                         // base64 (no data: prefix, no `flavor` key).
-                        await pp.print(this.selectedPrinter, b64, this.buildPrintConfig('pdf'));
+                        const resp = await pp.print(this.selectedPrinter, b64, cfg);
+                        await LPLog.finish(job, { ok: true, response: resp });
                         this.printMsg = 'Sent to ' + this.selectedPrinter + '!';
                         this.printMsgKind = 'success';
                     } catch (e) {
                         console.error('[localprint] PrintTrays print failed:', e);
+                        await LPLog.finish(job, { ok: false, error: (e && e.message) || 'Print failed.' });
                         this.printMsg = (e && e.message) || 'Print failed.';
                         this.printMsgKind = 'error';
                     } finally {
@@ -944,7 +1087,10 @@
                         tw = th;
                         th = t;
                     }
-                    return await this.fitPdfToMedia(bytes, tw * 72, th * 72);
+                    // 'fit' = crop-to-cover (fill, no white); 'fit_area' = fit-to-content
+                    // (contain, centred, white bars, no cropping).
+                    const cover = (this.printScaleMode || 'fit') !== 'fit_area';
+                    return await this.fitPdfToMedia(bytes, tw * 72, th * 72, cover);
                 },
 
                 // Derive the TRIM size (in inches) from a tray size code —
@@ -954,25 +1100,45 @@
                 // to the bleed dims from trayDims / dynamicDims.
                 trimSizeFromCode(code) {
                     const raw = String(code || '').trim();
-                    const base = raw.replace(/[-\s]*e2e$/i, '').trim();
-                    const m = base.match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)$/i);
-                    if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+                    const num = '(\\d+(?:\\.\\d+)?)';
+                    const pair = num + '\\s*[x×]\\s*' + num;
+                    // A size stated in MILLIMETRES, e.g.
+                    // "16K 184 x 260mm (7.25 × 10.24 in)" — the mm value comes first,
+                    // its inch equivalent is in the trailing "(… in)" part. Use the
+                    // given inch value when present, else convert the mm to inches.
+                    const mm = raw.match(new RegExp(pair + '\\s*mm\\b', 'i'));
+                    const paren = raw.match(new RegExp('\\(\\s*' + pair + '\\s*in\\s*\\)', 'i'));
+                    if (mm) {
+                        if (paren) return [parseFloat(paren[1]), parseFloat(paren[2])];
+                        return [parseFloat(mm[1]) / 25.4, parseFloat(mm[2]) / 25.4];
+                    }
+                    // A LEADING inch size, e.g. "5 x 7in E2E (5.57 × 7.49 in)" — this
+                    // is the TRIM (5 × 7); the parenthesised value is the bleed, which
+                    // we deliberately ignore so E2E still saves at the trim size.
+                    const inLead = raw.match(new RegExp(pair + '\\s*in\\b', 'i'));
+                    if (inLead) return [parseFloat(inLead[1]), parseFloat(inLead[2])];
+                    if (paren) return [parseFloat(paren[1]), parseFloat(paren[2])];
+                    const bare = raw.match(new RegExp(pair, 'i'));
+                    if (bare) return [parseFloat(bare[1]), parseFloat(bare[2])];
                     const named = {
                         'letter': [8.5, 11],
                         'legal': [8.5, 14]
                     };
-                    const key = base.toLowerCase();
+                    const key = raw.replace(/[-\s]*e2e.*$/i, '').trim().toLowerCase();
                     if (named[key]) return named[key];
                     return null;
                 },
 
-                async fitPdfToMedia(bytes, mediaWpt, mediaHpt) {
+                async fitPdfToMedia(bytes, mediaWpt, mediaHpt, cover = true) {
                     try {
                         if (!window.PDFLib) return bytes;
                         const {
                             PDFDocument,
                             degrees
                         } = window.PDFLib;
+                        // cover = true → crop-to-cover (fill, no white, may crop).
+                        // cover = false → contain (fit whole design, white bars, no crop).
+                        const _fit = (a, b) => cover ? Math.max(a, b) : Math.min(a, b);
                         const src = await PDFDocument.load(bytes);
                         const out = await PDFDocument.create();
                         const count = src.getPageCount();
@@ -983,12 +1149,12 @@
                             const page = out.addPage([mediaWpt, mediaHpt]);
                             // If the design's orientation differs from the media page's
                             // orientation, rotate the DESIGN 90° (not just the page) so
-                            // the content turns with the paper — no cropping.
+                            // the content turns with the paper.
                             const rotate = (pw > ph) !== (mediaWpt > mediaHpt);
                             if (rotate) {
-                                // 90° CCW: the design's footprint swaps axes, so cover
-                                // the media using the swapped extents and offset origin.
-                                const s = Math.max(mediaWpt / ph, mediaHpt / pw);
+                                // 90° CCW: the design's footprint swaps axes, so scale
+                                // against the swapped extents and offset the origin.
+                                const s = _fit(mediaWpt / ph, mediaHpt / pw);
                                 const wW = ph * s,
                                     wH = pw * s;
                                 page.drawPage(emb, {
@@ -999,7 +1165,7 @@
                                     rotate: degrees(90),
                                 });
                             } else {
-                                const scale = Math.max(mediaWpt / pw, mediaHpt / ph); // cover
+                                const scale = _fit(mediaWpt / pw, mediaHpt / ph);
                                 const dw = pw * scale,
                                     dh = ph * scale;
                                 page.drawPage(emb, {

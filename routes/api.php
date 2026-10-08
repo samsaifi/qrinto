@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\OrderApiController;
 use App\Http\Controllers\Api\V1\CouponApiController;
 use App\Http\Controllers\Api\V1\AiApiController;
 use App\Http\Controllers\Api\V1\KioskApiController;
+use App\Http\Controllers\Api\V1\LocalPrintLogApiController;
 
 use App\Http\Controllers\Api\Noritsu\StoreController as NoritsuStoreController;
 use App\Http\Controllers\Api\Noritsu\TemplateController as NoritsuTemplateController;
@@ -89,6 +90,15 @@ Route::prefix('v1')->group(function () {
     Route::post('/kiosks', [KioskApiController::class, 'store']);
     Route::put('/kiosks/{id}', [KioskApiController::class, 'update']);
     Route::delete('/kiosks/{id}', [KioskApiController::class, 'destroy']);
+
+    // ── 13. Local Print Logs ──
+    // Same audit trail that /print/pdf/check writes via LPLog, exposed to the
+    // standalone kiosk app. `origin` on each row says whether it came from the
+    // web page or from the standalone software.
+    Route::get('/local-print-logs',                     [LocalPrintLogApiController::class, 'index']);
+    Route::get('/local-print-logs/{localPrintLog}',     [LocalPrintLogApiController::class, 'show']);
+    Route::post('/local-print-logs',                    [LocalPrintLogApiController::class, 'store']);
+    Route::post('/local-print-logs/{localPrintLog}/complete', [LocalPrintLogApiController::class, 'complete']);
 });
 
 /*

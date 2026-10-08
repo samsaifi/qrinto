@@ -450,6 +450,7 @@ class StorePanelController extends Controller
                 'user_type'   => $t['user_type'],
                 'landscape'       => (bool) ($t['landscape'] ?? false),
                 'duplex'          => $t['duplex'] ?? 'simplex',
+                'page_order'      => $t['page_order'] ?? 'frontToBack',
                 'color'           => (bool) ($t['color'] ?? true),
                 'input_bin'       => $t['input_bin'] ?? null,
                 'quality'         => $t['quality'] ?? null,
@@ -540,6 +541,7 @@ class StorePanelController extends Controller
             'trays.*.density'     => 'nullable|string|max:20',
             'trays.*.landscape'   => 'nullable',
             'trays.*.duplex'      => 'nullable|string|max:20',
+            'trays.*.page_order'  => 'nullable|string|in:frontToBack,backToFront',
             'trays.*.color'       => 'nullable',
             'trays.*.input_bin'   => 'nullable|string|max:160',
             'trays.*.quality'         => 'nullable|string|max:120',
@@ -568,6 +570,7 @@ class StorePanelController extends Controller
                 'density'     => $t['density'] ?? null,
                 'landscape'       => filter_var($t['landscape'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'duplex'          => $t['duplex'] ?? 'simplex',
+                'page_order'      => $t['page_order'] ?? 'frontToBack',
                 'color'           => filter_var($t['color'] ?? true, FILTER_VALIDATE_BOOLEAN),
                 'input_bin'       => $t['input_bin'] ?? null,
                 'quality'         => $t['quality'] ?? null,
@@ -601,6 +604,7 @@ class StorePanelController extends Controller
             'size_height'     => 'nullable|numeric|min:0|max:100',
             'landscape'       => 'nullable',
             'duplex'          => 'nullable|string|max:20',
+            'page_order'      => 'nullable|string|in:frontToBack,backToFront',
             'color'           => 'nullable',
             'input_bin'       => 'nullable|string|max:160',
             'quality'         => 'nullable|string|max:120',
@@ -621,6 +625,7 @@ class StorePanelController extends Controller
             $config[$i]['size_height']     = isset($data['size_height']) && $data['size_height'] !== '' ? (float) $data['size_height'] : null;
             $config[$i]['landscape']       = filter_var($data['landscape'] ?? false, FILTER_VALIDATE_BOOLEAN);
             $config[$i]['duplex']          = $data['duplex'] ?? 'simplex';
+            $config[$i]['page_order']      = $data['page_order'] ?? ($entry['page_order'] ?? 'frontToBack');
             $config[$i]['color']           = filter_var($data['color'] ?? true, FILTER_VALIDATE_BOOLEAN);
             $config[$i]['input_bin']       = $data['input_bin'] ?? null;
             $config[$i]['quality']         = $data['quality'] ?? null;
@@ -663,6 +668,7 @@ class StorePanelController extends Controller
                 'user_type'       => $row['user_type'],
                 'landscape'       => (bool) ($row['landscape'] ?? false),
                 'duplex'          => $row['duplex'] ?? 'simplex',
+                'page_order'      => $row['page_order'] ?? 'frontToBack',
                 'color'           => (bool) ($row['color'] ?? true),
                 'input_bin'       => $row['input_bin'] ?? null,
                 'quality'         => $row['quality'] ?? null,

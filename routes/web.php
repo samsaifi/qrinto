@@ -208,6 +208,11 @@ Route::get('/print/pdf', [\App\Http\Controllers\LocalPrintController::class, 'pd
 Route::post('/print/pdf', [\App\Http\Controllers\LocalPrintController::class, 'upload'])->name('localprint.upload');
 Route::get('/print/pdf/check', [\App\Http\Controllers\LocalPrintController::class, 'check'])->name('localprint.check');
 Route::post('/print/pdf/print', [\App\Http\Controllers\LocalPrintController::class, 'doPrint'])->name('localprint.print');
+Route::post('/print/pdf/save-regenerated', [\App\Http\Controllers\LocalPrintController::class, 'saveRegenerated'])->name('localprint.save-regenerated');
+// Local-print audit logging (called from the print pages around pp.print()).
+Route::post('/print/log/start', [\App\Http\Controllers\LocalPrintController::class, 'logStart'])->name('localprint.log.start');
+Route::post('/print/log/{localPrintLog}/complete', [\App\Http\Controllers\LocalPrintController::class, 'logComplete'])->name('localprint.log.complete');
+Route::post('/print/log/{localPrintLog}/file', [\App\Http\Controllers\LocalPrintController::class, 'logAttachFile'])->name('localprint.log.file');
 Route::get('/print/sent', [\App\Http\Controllers\LocalPrintController::class, 'sent'])->name('localprint.sent');
 Route::get('/print/setup', [\App\Http\Controllers\LocalPrintController::class, 'setup'])->name('localprint.setup');
 Route::get('/print/trays', [\App\Http\Controllers\LocalPrintController::class, 'trayScreen'])->name('localprint.trays');
@@ -443,6 +448,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     })->name('analytics.weekly-report.test');
     Route::get('print-logs/export', [\App\Http\Controllers\Admin\PrintLogController::class, 'export'])
         ->name('print-logs.export');
+
+    // Local-print audit logs (spec §7). Registered BEFORE the {orderPrintLog}
+    // wildcard so "local-print" isn't captured as a print-log id.
+    Route::get('local-print-logs', [\App\Http\Controllers\Admin\LocalPrintLogController::class, 'index'])
+        ->name('local-print-logs.index');
+    Route::get('local-print-logs/{localPrintLog}', [\App\Http\Controllers\Admin\LocalPrintLogController::class, 'show'])
+        ->name('local-print-logs.show');
+
     Route::get('print-logs/{orderPrintLog}', [\App\Http\Controllers\Admin\PrintLogController::class, 'show'])
         ->name('print-logs.show');
 });

@@ -27,13 +27,9 @@ return [
                 'label' => 'Orders',
                 'match' => '*.orders*',
             ],
-             
-            [
-                'route' => 'admin.print-logs.index',
-                'icon' => 'printer',
-                'label' => 'Print Logs',
-                'match' => 'admin.print-logs*',
-            ],
+            // NOTE: "Print Logs" now renders as an accordion (Print Logs + Local
+            // Print) directly in layouts/admin.blade.php for the admin role, so it
+            // is intentionally omitted here.
         ],
         'catalog' => [
             [
@@ -102,11 +98,10 @@ return [
                 'match' => '*.orders*',
             ],
             [
-                'route' => 'store.qr',
-                'params_from' => 'store_code',
+                'route' => 'storepanel.qr',
                 'icon' => 'qr-code',
                 'label' => 'Store QR',
-                'match' => 'store.qr*',
+                'match' => 'storepanel.qr*',
             ],
             [
                 'route' => 'store.trays',
@@ -128,11 +123,10 @@ return [
                 'match' => '*.orders*',
             ],
             [
-                'route' => 'store.qr',
-                'params_from' => 'store_code',
+                'route' => 'storepanel.qr',
                 'icon' => 'qr-code',
                 'label' => 'Store QR',
-                'match' => 'store.qr*',
+                'match' => 'storepanel.qr*',
             ],
             [
                 'route' => 'store.trays',

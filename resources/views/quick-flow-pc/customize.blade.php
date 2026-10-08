@@ -1007,7 +1007,9 @@
                         height: displayHeight,
                         backgroundColor: '#ffffff',
                         selection: true,
-                        preserveObjectStacking: false,
+                        // Keep the selected object at its layer position (Canva-style); false would draw
+                        // the active object on top and hide layers above it while selected.
+                        preserveObjectStacking: true,
                         allowTouchScrolling: true
                     });
 

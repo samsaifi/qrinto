@@ -309,7 +309,7 @@ class OrderController extends Controller
             \Log::error("Admin Order Show PDF Auto-Repair Error: " . $e->getMessage(), ['order_id' => $order->id]);
         }
 
-        $order->load('user', 'items.product', 'payments', 'statusHistories.user', 'store');
+        $order->load('user', 'items.product', 'payments', 'statusHistories.user', 'store', 'orderPrintLogs.user');
         return view('admin.orders.show', compact('order'));
     }
 

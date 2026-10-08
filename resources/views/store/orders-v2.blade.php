@@ -777,8 +777,13 @@
 @endpush
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
     <script>
+        if (window['pdfjsLib']) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc =
+                'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+        }
         const V2_STAGES = ['new', 'printing', 'ready', 'done'];
         const V2_LABELS = {
             new: 'New',
@@ -817,6 +822,11 @@
         });
 
         function printPickerV2() {
+            // Kept in a CLOSURE (not on the Alpine component) so Alpine's reactive
+            // Proxy never wraps the pdf.js document — wrapping breaks its private
+            // class fields ("Cannot read private member #d …") on getPage().
+            let _previewPdf = null;
+
             return {
                 // Shared Print Settings modal (state + live-capability loading).
                 ...window.printSettingsMixin({
@@ -859,6 +869,8 @@
                         this.payload = data;
                         const first = data.matched_key || data.trays.find(t => t.enabled)?.key;
                         this.choice = first ? ('tray:' + first) : null;
+                        // Load the order PDF for the live modal preview.
+                        this.psLoadPreviewPdf();
                     } catch (e) {
                         this.error = 'Network error while preparing the order.';
                     } finally {
@@ -911,6 +923,7 @@
                         this.orientationLock = null;
                     }
                     this.printDuplex = t.duplex || 'simplex';
+                    this.printPageOrder = t.page_order || 'frontToBack';
                     this.printColor = t.color !== undefined ? t.color : true;
                     this.printInputBin = t.input_bin || '';
                     this.printQuality = t.quality || '';
@@ -926,6 +939,9 @@
                     };
                     this.psShowChecks = true;
                     this.acks = {}; // reset acknowledgements for this open
+
+                    // Show the live preview column in the shared modal for this order.
+                    this.psHasPreview = true;
 
                     this.psOpen(t.label, t.printer || '', null);
 
@@ -946,6 +962,69 @@
                     })();
                 },
 
+                // ── Live modal preview (order PDF) ──
+                // Load the order's print PDF (base64 from preparePrint) and render its
+                // pages into the shared Print Settings modal preview. pdf.js renders a
+                // page to an offscreen canvas, which we snapshot to psPreviewSrc; the
+                // modal's page arrows call psPreviewSync to switch pages.
+                psB64ToBytes(b64) {
+                    const bin = atob(b64);
+                    const a = new Uint8Array(bin.length);
+                    for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+                    return a;
+                },
+                // Load the order's print-ready PDF and render its pages into the modal
+                // preview (so the operator sees exactly what will print).
+                async psLoadPreviewPdf() {
+                    this.psPreviewSrc = '';
+                    _previewPdf = null;
+                    this.psPreviewCount = 1;
+                    this.psPreviewIndex = 0;
+                    if (!window.pdfjsLib || !this.payload?.pdf_base64) return;
+                    try {
+                        const bytes = this.psB64ToBytes(this.payload.pdf_base64);
+                        // cMapUrl / standardFontDataUrl are REQUIRED for PDFs with
+                        // embedded or CID fonts — without them pdf.js render() hangs or
+                        // produces a blank page even though getDocument() succeeds.
+                        const CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/';
+                        _previewPdf = await pdfjsLib.getDocument({
+                            data: bytes,
+                            cMapUrl: CDN + 'cmaps/',
+                            cMapPacked: true,
+                            standardFontDataUrl: CDN + 'standard_fonts/',
+                        }).promise;
+                        this.psPreviewCount = _previewPdf.numPages || 1;
+                        await this.psRenderPreviewPage(0);
+                    } catch (e) {
+                        console.warn('[orders] preview PDF load failed:', e);
+                    }
+                },
+                async psRenderPreviewPage(i) {
+                    if (!_previewPdf) return;
+                    const pg = await _previewPdf.getPage(i + 1);
+                    const vp = pg.getViewport({ scale: 1.5 });
+                    // Render into a canvas ATTACHED to the document (off-screen). pdf.js
+                    // can hang/fail on a detached or display:none canvas, so we append
+                    // a real one to <body>, snapshot it, then remove it.
+                    const cv = document.createElement('canvas');
+                    cv.width = vp.width;
+                    cv.height = vp.height;
+                    cv.style.cssText = 'position:fixed; left:-99999px; top:0; pointer-events:none;';
+                    document.body.appendChild(cv);
+                    try {
+                        await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+                        this.psPreviewSrc = cv.toDataURL('image/png');
+                    } catch (e) {
+                        console.warn('[orders] preview render failed:', e);
+                    } finally {
+                        cv.remove();
+                    }
+                },
+                psPreviewSync(i) {
+                    this.psPreviewIndex = Math.min(this.psPreviewCount - 1, Math.max(0, i));
+                    this.psRenderPreviewPage(this.psPreviewIndex);
+                },
+
                 // Called by the modal's Apply button — persist this one tray's
                 // settings, then refresh its chips from the server response.
                 async applyPaperSettings() {
@@ -961,6 +1040,7 @@
                         size_height: dim ? dim.h : '',
                         landscape: this.printLandscape ? 1 : 0,
                         duplex: this.printDuplex,
+                        page_order: this.printPageOrder,
                         color: this.printColor ? 1 : 0,
                         input_bin: this.printInputBin,
                         quality: this.printQuality,
@@ -1017,6 +1097,7 @@
                             user_type: t.user_type,
                             landscape: t.landscape,
                             duplex: t.duplex,
+                            page_order: t.page_order,
                             color: t.color,
                             input_bin: t.input_bin,
                             quality: t.quality,

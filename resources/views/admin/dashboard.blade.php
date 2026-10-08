@@ -228,7 +228,7 @@
 
                 {{-- Action Buttons --}}
                 <div class="flex items-center gap-2 w-full">
-                    <a href="{{ route('store.qr', $store->store_code) }}" target="_blank"
+                    <a href="{{ route('storepanel.qr') }}" target="_blank"
                         class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition shadow-md">
                         <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                         Full QR Page

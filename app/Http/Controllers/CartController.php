@@ -85,8 +85,16 @@ class CartController extends Controller
                 : (float) $product->base_price;
         }
 
+        // Remember the editor page this design came from so checkout can link back to it.
+        $previousUrl = url()->previous();
+        $designUrl = (str_contains($previousUrl, '/design')
+            && parse_url($previousUrl, PHP_URL_HOST) === $request->getHost())
+            ? $previousUrl
+            : null;
+
         $customizationData = [
             'upload_ids' => $uploadIds,
+            'design_url' => $designUrl,
             'size_name' => $flowData['size_name'] ?? null,
             'size_width' => $flowData['size_width'] ?? null,
             'size_height' => $flowData['size_height'] ?? null,

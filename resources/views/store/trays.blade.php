@@ -148,6 +148,7 @@
                         <input type="hidden" :name="`trays[${i}][density]`" :value="row.density">
                         <input type="hidden" :name="`trays[${i}][landscape]`" :value="row.landscape ? 1 : 0">
                         <input type="hidden" :name="`trays[${i}][duplex]`" :value="row.duplex">
+                        <input type="hidden" :name="`trays[${i}][page_order]`" :value="row.pageOrder">
                         <input type="hidden" :name="`trays[${i}][input_bin]`" :value="row.inputBin">
                         <input type="hidden" :name="`trays[${i}][quality]`" :value="row.quality">
                         <input type="hidden" :name="`trays[${i}][media_type_live]`" :value="row.mediaTypeLive">
@@ -323,6 +324,7 @@
                     if (row.size) this.printPaperSize = row.size;
                     this.printLandscape = row.landscape || false;
                     this.printDuplex = row.duplex || 'simplex';
+                    this.printPageOrder = row.pageOrder || 'frontToBack';
                     this.printColor = row.color !== undefined ? row.color : true;
                     this.printInputBin = row.inputBin || '';
                     this.printQuality = row.quality || '';
@@ -339,6 +341,7 @@
                         r.size = this.printPaperSize;
                         r.landscape = this.printLandscape;
                         r.duplex = this.printDuplex;
+                        r.pageOrder = this.printPageOrder;
                         r.color = this.printColor;
                         r.inputBin = this.printInputBin;
                         r.quality = this.printQuality;
@@ -426,6 +429,7 @@
                                 density: prior.density || '',
                                 landscape: prior.landscape || false,
                                 duplex: prior.duplex || 'simplex',
+                                pageOrder: prior.page_order || 'frontToBack',
                                 margins: prior.margins || 'default',
                                 color: prior.color !== undefined ? prior.color : true,
                                 scale: prior.scale || 100,

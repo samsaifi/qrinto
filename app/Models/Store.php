@@ -277,6 +277,7 @@ class Store extends Model
                 'density'     => $entry['density'] ?? null,
                 'landscape'       => (bool) ($entry['landscape'] ?? false),
                 'duplex'          => $entry['duplex'] ?? 'simplex',
+                'page_order'      => $entry['page_order'] ?? 'frontToBack',
                 'color'           => (bool) ($entry['color'] ?? true),
                 'input_bin'       => $entry['input_bin'] ?? null,
                 'quality'         => $entry['quality'] ?? null,

@@ -59,6 +59,17 @@
             //   null | 'portrait' (portrait-only) | 'landscape' (landscape-only)
             orientationLock: null,
             printDuplex: 'simplex',
+            // Page order for MULTI-PAGE PDFs only (mirrors the PrintTrays demo).
+            // Sent to the bridge as cfg.pageOrder:
+            //   'frontToBack' → normal (page 1 first)
+            //   'backToFront' → reversed (last page first)
+            // A one-page document or a photo has no order to reverse, so this is
+            // ignored by the bridge for single-page jobs.
+            printPageOrder: 'backToFront',
+            pageOrderOptions: [
+                { value: 'backToFront', label: 'Back to Front' },
+                { value: 'frontToBack', label: 'Front to Back' },
+            ],
             printColor: true,
             printInputBin: '',
             printQuality: '',
@@ -70,6 +81,9 @@
             // Default 'fit' so prints are edge-to-edge unless the operator changes it.
             printScaleMode: 'fit',
             printScaleFactor: 100,
+            // True while "Apply" is regenerating + saving the PDF on the server
+            // (preview flow). The shared modal disables Apply and shows a spinner.
+            psApplying: false,
 
             // ── capability state (static defaults until the bridge answers) ──
             sizesLoading: false,
@@ -101,6 +115,16 @@
             // Dimensions (inches) of the selected paper size, or null.
             psDim: function () {
                 return this.dynamicDims[this.printPaperSize] || this.psStaticDims[this.printPaperSize] || null;
+            },
+
+            // Is the currently selected paper an edge-to-edge / borderless media?
+            // Checks the size code AND its human label (either may carry "E2E").
+            isE2ESelected: function () {
+                if (/e2e/i.test(String(this.printPaperSize || ''))) return true;
+                var live = (this.dynamicSizes || []).find(function (s) { return s.value === this.printPaperSize; }, this);
+                if (live && /e2e/i.test(String(live.label || ''))) return true;
+                var lbl = this.psSizeOptionsMap && this.psSizeOptionsMap[this.printPaperSize];
+                return /e2e/i.test(String(lbl || ''));
             },
 
             // ── Shared preflight checks (size / orientation / borderless) ──
@@ -491,6 +515,108 @@
                 if (wantLandscape !== natural) cfg.rotation = 90;
 
                 return cfg;
+            },
+
+            // ── Live print preview (shared by the check & own-design pages) ──
+            // A host opts in by setting psHasPreview = true and feeding psDesign
+            // ({ w, h } in inches) + psPreviewSrc (an image URL / dataURL of the
+            // artwork). The geometry below mirrors the actual print: paper in the
+            // chosen orientation, the ~0.2in white margin on non-E2E media, the
+            // Scale dropdown (crop-to-cover / fit / actual / custom) and a 90° turn
+            // when the chosen orientation differs from the design's. Pages that
+            // already define these methods (e.g. the check page, which drives them
+            // off its own live `dims`) override these and keep working unchanged.
+            psHasPreview: false,
+            psPreviewSrc: '',
+
+            // Multi-page navigation for the modal preview. A host sets psPreviewCount
+            // (total pages) and overrides psPreviewSync(index) to swap psPreviewSrc to
+            // that page (and, on the check page, render it). The arrows below drive it.
+            psPreviewCount: 1,
+            psPreviewIndex: 0,
+            psPreviewSync: function (i) {},
+            psPreviewPrev: function () {
+                if (this.psPreviewIndex > 0) { this.psPreviewIndex--; this.psPreviewSync(this.psPreviewIndex); }
+            },
+            psPreviewNext: function () {
+                if (this.psPreviewIndex < this.psPreviewCount - 1) { this.psPreviewIndex++; this.psPreviewSync(this.psPreviewIndex); }
+            },
+
+            psFmt: function (n) {
+                return (Math.round(n * 100) / 100).toFixed(2).replace(/\.00$/, '');
+            },
+
+            // Paper dims (inches) in the chosen print orientation.
+            trayPaperDims: function () {
+                var d = this.psDim() || { w: 8.5, h: 11 };
+                var land = !!this.printLandscape;
+                return {
+                    w: land ? Math.max(d.w, d.h) : Math.min(d.w, d.h),
+                    h: land ? Math.min(d.w, d.h) : Math.max(d.w, d.h),
+                };
+            },
+
+            // Printable area (inches): full sheet on E2E, else minus the ~0.2in margin.
+            trayPrintableDims: function () {
+                var p = this.trayPaperDims();
+                if (this.isE2ESelected()) return { w: p.w, h: p.h };
+                var m = 0.2;
+                return { w: Math.max(0.1, p.w - 2 * m), h: Math.max(0.1, p.h - 2 * m) };
+            },
+
+            // Shared px-per-inch: fit the LARGER of design & paper into the box.
+            previewScale: function () {
+                var f = (this.psDesign && this.psDesign.w) ? this.psDesign : { w: 1, h: 1 };
+                var p = this.trayPaperDims();
+                var narrow = typeof window !== 'undefined' && window.innerWidth < 768;
+                var boxW = narrow ? 230 : 300;
+                var boxH = narrow ? 240 : 300;
+                return Math.min(boxW / Math.max(f.w, p.w), boxH / Math.max(f.h, p.h));
+            },
+
+            trayPaperStyle: function () {
+                var d = this.trayPaperDims(), s = this.previewScale();
+                return 'width: ' + Math.max(60, Math.round(d.w * s)) + 'px; height: ' +
+                    Math.max(60, Math.round(d.h * s)) + 'px;';
+            },
+
+            trayContentStyle: function () {
+                if (this.isE2ESelected()) return 'inset: 0;';
+                var d = this.trayPaperDims(), m = 0.2;
+                var mw = Math.min(45, (m / d.w) * 100), mh = Math.min(45, (m / d.h) * 100);
+                return 'top: ' + mh.toFixed(2) + '%; bottom: ' + mh.toFixed(2) + '%; left: ' +
+                    mw.toFixed(2) + '%; right: ' + mw.toFixed(2) + '%;';
+            },
+
+            trayFileStyle: function () {
+                var f = (this.psDesign && this.psDesign.w) ? this.psDesign : { w: 1, h: 1 };
+                var fileLandscape = f.w > f.h;
+                var needSwap = !!this.printLandscape !== fileLandscape;
+                var ew = needSwap ? f.h : f.w, eh = needSwap ? f.w : f.h;
+                var c = this.trayPrintableDims(), s = this.previewScale();
+                var mode = this.printScaleMode || 'fit';
+                var k;
+                if (mode === 'actual') k = 1;
+                else if (mode === 'custom') k = Math.max(0.01, (this.printScaleFactor || 100) / 100);
+                else if (mode === 'fit_area') k = Math.min(c.w / ew, c.h / eh);
+                else k = Math.max(c.w / ew, c.h / eh); // 'fit' = crop to cover
+                var w = Math.max(8, Math.round(f.w * k * s));
+                var h = Math.max(8, Math.round(f.h * k * s));
+                var rot = needSwap ? ' rotate(90deg)' : '';
+                return 'width: ' + w + 'px; height: ' + h + 'px; transform: translate(-50%, -50%)' + rot + ';';
+            },
+
+            trayPaperInfo: function () {
+                var d = this.psDim();
+                var live = (this.dynamicSizes || []).find(function (x) { return x.value === this.printPaperSize; }, this);
+                var label = (live && live.label) ||
+                    (this.psSizeOptionsMap && this.psSizeOptionsMap[this.printPaperSize]) ||
+                    this.printPaperSize || '';
+                var sz = d ? (this.psFmt(d.w) + ' × ' + this.psFmt(d.h) + ' in') : '';
+                var parts = [label || 'Selected paper'];
+                if (sz && String(label).indexOf(sz) === -1) parts.push(sz);
+                parts.push(this.isE2ESelected() ? 'Edge-to-edge' : 'With white border');
+                return parts.join(' · ');
             },
         };
     };

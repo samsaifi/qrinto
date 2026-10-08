@@ -429,12 +429,30 @@
             // the driver's E2E form (see resolveLiveMediaName below) — the
             // driver expands trim to bleed at print time.
             function trimSizeFromCode(chosen) {
-                const code = String(chosen && chosen.size || '').trim();
-                // Strip a "-E2E" / " E2E" suffix.
-                const base = code.replace(/[-\s]*e2e$/i, '').trim();
-                // WxH pattern like "7x10", "4x6", "8.5x11".
-                const m = base.match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)$/i);
-                if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+                const raw = String(chosen && chosen.size || '').trim();
+                const num = '(\\d+(?:\\.\\d+)?)';
+                const pair = num + '\\s*[x×]\\s*' + num;
+                // A size stated in MILLIMETRES, e.g.
+                // "16K 184 x 260mm (7.25 × 10.24 in)" — the mm value comes first,
+                // its inch equivalent is in the trailing "(… in)" part. Use the given
+                // inch value when present, else convert the mm to inches.
+                const mm = raw.match(new RegExp(pair + '\\s*mm\\b', 'i'));
+                const paren = raw.match(new RegExp('\\(\\s*' + pair + '\\s*in\\s*\\)', 'i'));
+                if (mm) {
+                    if (paren) return [parseFloat(paren[1]), parseFloat(paren[2])];
+                    return [parseFloat(mm[1]) / 25.4, parseFloat(mm[2]) / 25.4];
+                }
+                // A LEADING inch size, e.g. "5 x 7in E2E (5.57 × 7.49 in)" — this is
+                // the TRIM (5 × 7); the parenthesised value is the bleed, ignored so
+                // E2E still uses the trim size. Also matches plain "7x10" / "4x6".
+                const inLead = raw.match(new RegExp(pair + '\\s*in\\b', 'i'));
+                if (inLead) return [parseFloat(inLead[1]), parseFloat(inLead[2])];
+                if (paren) return [parseFloat(paren[1]), parseFloat(paren[2])];
+                // Bare "W x H" (internal tray codes like "7x10-E2E", "4x6") — strip a
+                // trailing "-E2E"/" E2E" first, then parse.
+                const base = raw.replace(/[-\s]*e2e.*$/i, '').trim();
+                const bare = base.match(new RegExp(pair, 'i'));
+                if (bare) return [parseFloat(bare[1]), parseFloat(bare[2])];
                 // Named sizes.
                 const named = { 'letter': [8.5, 11], 'legal': [8.5, 14] };
                 const key = base.toLowerCase();
@@ -629,6 +647,11 @@
                     if (chosen.duplex === 'longEdge' || chosen.duplex === 'shortEdge') {
                         printOpts.duplex = chosen.duplex;
                     }
+
+                    // Page order for MULTI-PAGE PDFs — sent exactly like the demo
+                    // ('frontToBack' / 'backToFront'). The bridge applies it as a
+                    // reverse page-feed instruction; single-page jobs ignore it.
+                    printOpts.pageOrder = chosen.page_order || 'frontToBack';
 
                     await pp.print(printer, b64, printOpts);
                 } catch (e) {
