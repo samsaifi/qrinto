@@ -1073,11 +1073,12 @@
                     const media = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
                     if (!(media && media.w > 0 && media.h > 0)) return bytes;
 
-                    // Use TRIM dims (parsed from the size code) instead of the BLEED
-                    // sheet dims, so the saved PDF is e.g. 7×10 rather than 7.57×10.49.
-                    let trim = this.trimSizeFromCode(this.printPaperSize) || [media.w, media.h];
-                    let tw = trim[0],
-                        th = trim[1];
+                    // Use the FULL media (BLEED) dims — e.g. 5x7-E2E → 5.57 × 7.49 —
+                    // NOT the trim size, so the regenerated PDF is exactly the
+                    // printer's paper size and the design cover-fills the WHOLE sheet
+                    // edge-to-edge (no white border / white space on the page).
+                    let tw = media.w,
+                        th = media.h;
                     let pages = parseInt({{ $totalPages }});
                     // 2-page (double) products are ALWAYS landscape; other page counts
                     // follow the chosen orientation.
