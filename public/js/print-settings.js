@@ -102,14 +102,27 @@
             psStaticDims: sizeDims,
 
             // Options rendered in the Paper Size <select> — live list if we have
-            // one, else the static server list.
+            // one, else the static server list. E2E (borderless) options are sorted
+            // to the TOP so the operator sees edge-to-edge forms first; the relative
+            // order within each group is preserved (stable sort).
             psPaperSizeList: function () {
+                var list;
                 if (this.dynamicSizes.length) {
-                    return this.dynamicSizes.map(function (s) { return { value: s.value, label: s.label }; });
+                    list = this.dynamicSizes.map(function (s) { return { value: s.value, label: s.label }; });
+                } else {
+                    list = Object.entries(this.psSizeOptionsMap).map(function (e) {
+                        return { value: e[0], label: e[1] };
+                    });
                 }
-                return Object.entries(this.psSizeOptionsMap).map(function (e) {
-                    return { value: e[0], label: e[1] };
-                });
+                var isE2E = function (o) {
+                    return /e2e/i.test(String(o.value || '')) || /e2e/i.test(String(o.label || ''));
+                };
+                // Stable sort: E2E first (0), rest after (1), keeping original order
+                // within each group via the index tiebreaker.
+                return list
+                    .map(function (o, i) { return { o: o, i: i, k: isE2E(o) ? 0 : 1 }; })
+                    .sort(function (a, b) { return a.k - b.k || a.i - b.i; })
+                    .map(function (x) { return x.o; });
             },
 
             // Dimensions (inches) of the selected paper size, or null.
@@ -197,22 +210,9 @@
                         ackLabel: match ? null : 'I understand. Print anyway.',
                     });
 
-                    // Orientation: design's REQUIRED orientation vs the chosen one.
-                    var wantLandscape;
-                    if (pages === 2) wantLandscape = true;
-                    else if (pages === 4) wantLandscape = false;
-                    else wantLandscape = dW > dH;
-                    var chosenLandscape = !!cfg.chosenLandscape;
-                    var orientOk = wantLandscape === chosenLandscape;
-                    list.push({
-                        key: 'orient', ok: orientOk, severity: orientOk ? 'ok' : 'error',
-                        title: orientOk ? 'Orientation matches' : 'Orientation mismatch',
-                        detail: orientOk
-                            ? 'Design and print are both ' + (wantLandscape ? 'landscape' : 'portrait') + '.'
-                            : 'Design needs ' + (wantLandscape ? 'landscape' : 'portrait') + ', but ' +
-                            (chosenLandscape ? 'landscape' : 'portrait') + ' is selected.',
-                        ackLabel: orientOk ? null : 'I understand. Print anyway.',
-                    });
+                    // Orientation check REMOVED: the final print is ALWAYS portrait (a
+                    // landscape design is rotated -90° into a portrait page), so an
+                    // "Orientation mismatch" error is meaningless here.
                 }
 
                 // Borderless / E2E.

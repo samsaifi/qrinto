@@ -507,10 +507,9 @@
                         return n === null ? -1 : n;
                     };
                     return (list || [])
-                        .filter(p => p && typeof p.name === 'string')
-                        // Noritsu-only filter DISABLED for now — show ALL printers.
-                        // .filter(p => p && typeof p.name === 'string' &&
-                        //     p.name.toLowerCase().includes('noritsu'))
+                        // Noritsu-only filter — show ONLY Noritsu printer queues.
+                        .filter(p => p && typeof p.name === 'string' &&
+                            p.name.toLowerCase().includes('noritsu'))
                         .sort((a, b) => {
                             const ra = rank(a.name),
                                 rb = rank(b.name);
@@ -588,13 +587,46 @@
                             // Output is ALWAYS portrait — the landscape toggle only
                             // drives the preview, never the printed/saved PDF.
                             const outLandscape = false;
-                            const dim = this.psDim() || { w: 8.5, h: 11 };
+                            // Use the TRIM size (e.g. 5x7-E2E → 5 × 7), NOT the full bleed
+                            // (5.57 × 7.49): the PDF is saved/printed at the trim size and
+                            // the driver's pinned E2E media form expands trim to bleed at
+                            // print time for a borderless result. Matches the image path.
+                            // Fall back to live/static dims (w > 0 guard) when no trim can
+                            // be parsed from the size code/label.
+                            const _trim = this.trimSizeFromCode(this.printPaperSize) ||
+                                this.trimSizeFromCode(this.selectedSizeLabel());
+                            const _live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
+                            const _stat = this.trayDims && this.trayDims[this.printPaperSize];
+                            const dim = _trim ? { w: _trim[0], h: _trim[1] } :
+                                ((_live && _live.w > 0) ? _live :
+                                    ((_stat && _stat.w > 0) ? _stat :
+                                        (this.psDim() || { w: 8.5, h: 11 })));
+                            console.log('[localprint] pdf→print paper dim →', {
+                                code: this.printPaperSize, trim: _trim, live: _live, stat: _stat, dim,
+                            });
                             const rawMax = Math.max(dim.w, dim.h), rawMin = Math.min(dim.w, dim.h);
                             const pageW = (outLandscape ? rawMax : rawMin) * PT;
                             const pageH = (outLandscape ? rawMin : rawMax) * PT;
 
                             const out = await PDFDocument.create();
                             const mode = this.printScaleMode || 'fit';
+
+                            // Diagnostic: source page size vs target paper size. If the
+                            // output still shows white, compare the source page dims here
+                            // against the target (pageW/pageH ÷ 72) — a big white border
+                            // usually means the uploaded PDF has margins baked INTO its
+                            // own page (scaling the page can't remove in-content white).
+                            try {
+                                const _s0 = srcPages[0];
+                                const _ss = _s0 ? _s0.getSize() : { width: 0, height: 0 };
+                                console.log('[localprint] pdf→print re-lay →', {
+                                    sourcePage_in: { w: +(_ss.width / 72).toFixed(3), h: +(_ss.height / 72).toFixed(3) },
+                                    targetPaper_in: { w: +(pageW / 72).toFixed(3), h: +(pageH / 72).toFixed(3) },
+                                    paperCode: this.printPaperSize,
+                                    scaleMode: mode,
+                                    pages: srcPages.length,
+                                });
+                            } catch (_e) {}
 
                             for (const sp of srcPages) {
                                 const emb = await out.embedPage(sp);
@@ -611,13 +643,14 @@
                                 const drawW = sw * k, drawH = sh * k;
                                 const page = out.addPage([pageW, pageH]);
                                 if (needSwap) {
-                                    // 90° turn, centred: a (drawW×drawH) page rotated 90°
-                                    // occupies drawH×drawW; place the pivot accordingly.
+                                    // -90° (clockwise) turn, centred: a (drawW×drawH) page
+                                    // rotated -90° occupies drawH×drawW; place the pivot
+                                    // on the sheet's left/top for a clockwise turn.
                                     page.drawPage(emb, {
-                                        x: (pageW + drawH) / 2,
-                                        y: (pageH - drawW) / 2,
+                                        x: (pageW - drawH) / 2,
+                                        y: (pageH + drawW) / 2,
                                         xScale: k, yScale: k,
-                                        rotate: degrees(90),
+                                        rotate: degrees(-90),
                                     });
                                 } else {
                                     page.drawPage(emb, {
@@ -628,8 +661,12 @@
                                 }
                             }
                             bytes = await out.save();
+                            console.log('[localprint] pdf→print re-lay OK (cover-filled to paper size).');
                         } catch (e) {
-                            console.warn('[localprint] PDF re-lay skipped:', e && e.message || e);
+                            // IMPORTANT: on failure we fall back to the ORIGINAL PDF bytes
+                            // (design size, e.g. 5×7) — which on a larger media prints with
+                            // a WHITE BORDER. If you see this, the cover-fill did NOT run.
+                            console.error('[localprint] PDF re-lay FAILED — sending ORIGINAL (may show white border):', e && e.message || e);
                         }
                     }
                     return this.arrayBufToBase64(bytes.buffer || bytes);
@@ -850,7 +887,7 @@
                     // below gives it the ew × eh footprint on the sheet.
                     const w = Math.max(8, Math.round(f.w * k * s));
                     const h = Math.max(8, Math.round(f.h * k * s));
-                    const rot = needSwap ? ' rotate(90deg)' : '';
+                    const rot = needSwap ? ' rotate(-90deg)' : ''; // -90° (clockwise), matches print
                     return `width: ${w}px; height: ${h}px; transform: translate(-50%, -50%)${rot};`;
                 },
 
@@ -1240,14 +1277,47 @@
 
                         // The bridge only accepts type 'pdf' ("Unsupported print type: image").
                         let b64;
+                        let _usedSaved = false;
                         if (this.savedPdfB64) {
                             // "Apply" already regenerated the PDF at the selected paper
                             // size and kept it in memory — send that exact file as-is.
                             b64 = this.savedPdfB64;
+                            _usedSaved = true;
                         } else {
                             // No Apply yet — build the print PDF on the fly.
                             b64 = await this.buildPrintPdfBase64();
                         }
+
+                        // Print-time log: ALWAYS fires on every Print (whether the PDF was
+                        // pre-built by Apply or built just now), showing the FINAL page size
+                        // actually sent to the printer. Parses the first page via pdf-lib.
+                        try {
+                            if (window.PDFLib) {
+                                const _bin = atob(String(b64).replace(/^data:[^;]+;base64,/, ''));
+                                const _u8 = new Uint8Array(_bin.length);
+                                for (let _i = 0; _i < _bin.length; _i++) _u8[_i] = _bin.charCodeAt(_i);
+                                const _doc = await window.PDFLib.PDFDocument.load(_u8);
+                                const _p0 = _doc.getPage(0);
+                                const _sz = _p0.getSize();
+                                const _w = +(_sz.width / 72).toFixed(2);
+                                const _h = +(_sz.height / 72).toFixed(2);
+                                console.log('[localprint] PRINT → sending PDF', {
+                                    source: _usedSaved ? 'applied (saved)' : 'built on print',
+                                    pdfPage_in: { w: _w, h: _h },
+                                    paperCode: this.printPaperSize,
+                                    scaleMode: cfg.scaleMode,
+                                    paperSize: cfg.paperSize || '(driver default)',
+                                    copies: cfg.copies,
+                                    printer: this.selectedPrinter,
+                                });
+                                // Show it ON-SCREEN too (visible toast), so the operator can
+                                // confirm the PDF size + paper the job is going out at.
+                                this.printMsg = 'Printing PDF ' + _w + ' × ' + _h + ' in' +
+                                    ' · paper: ' + (this.selectedSizeLabel ? this.selectedSizeLabel() : this.printPaperSize) +
+                                    ' · ' + (cfg.copies || 1) + ' ' + ((cfg.copies || 1) == 1 ? 'copy' : 'copies');
+                                this.printMsgKind = 'info';
+                            }
+                        } catch (_e) { console.info('[localprint] print-time dim log skipped:', _e && _e.message); }
 
                         // Create the audit log BEFORE sending to PrintTrays (non-fatal).
                         job = await LPLog.start(this.buildLogPayload(cfg));
@@ -1308,11 +1378,12 @@
                                 // the LIVE driver dims (dynamicDims), then the
                                 // static bleed table (trayDims). Letter is only a
                                 // last-resort default when nothing is known.
-                                // TRIM filter DISABLED — we want the PDF at the FULL
-                                // bleed size (e.g. 5.57 × 7.49), not the trimmed 5 × 7.
-                                // const trim = this.trimSizeFromCode(this.printPaperSize) ||
-                                //     this.trimSizeFromCode(this.selectedSizeLabel());
-                                const trim = null;
+                                // Use the TRIM size (e.g. 5x7-E2E → 5 × 7), NOT the full
+                                // bleed (5.57 × 7.49): the PDF is saved/printed at the trim
+                                // size and the driver's pinned E2E media form expands trim
+                                // to bleed at print time for a borderless result.
+                                const trim = this.trimSizeFromCode(this.printPaperSize) ||
+                                    this.trimSizeFromCode(this.selectedSizeLabel());
                                 const live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
                                 const stat = this.trayDims && this.trayDims[this.printPaperSize];
                                 const dim = trim ? { w: trim[0], h: trim[1] } :
@@ -1376,7 +1447,7 @@
                                 }
                                 ctx.save();
                                 ctx.translate(outW / 2, outH / 2);
-                                if (needSwap) ctx.rotate(Math.PI / 2);
+                                if (needSwap) ctx.rotate(-Math.PI / 2); // -90° (clockwise)
                                 const drawW = iw * scale;
                                 const drawH = ih * scale;
                                 ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);

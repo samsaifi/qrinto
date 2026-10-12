@@ -208,12 +208,12 @@
                         Scale
                     </label>
                     <div class="flex gap-2 items-center">
-                        {{-- On an E2E (borderless) paper only "Crop to Cover" makes
+                        {{-- On an E2E (borderless) paper only "Fit to paper" makes
                              sense, so hide the other modes and force 'fit'. --}}
                         <select x-model="printScaleMode"
                             x-effect="if (isE2ESelected() && printScaleMode !== 'fit') printScaleMode = 'fit'"
                             class="flex-1 rounded-xl border border-slate-200 text-sm py-2.5 px-3 bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
-                            <option value="fit">Crop to Cover (Edge to edge)</option>
+                            <option value="fit">Fit to paper</option>
                             <template x-if="!isE2ESelected()">
                                 <option value="fit_area">Fit to printable area</option>
                             </template>
@@ -233,7 +233,7 @@
                         </div>
                     </div>
                     <p class="text-[11px] text-slate-400 mt-1"
-                        x-text="printScaleMode === 'fit' ? 'Crop to cover — fills the whole sheet, no white space (may crop).' :
+                        x-text="printScaleMode === 'fit' ? 'Fit to paper — fills the whole sheet, no white space (may crop).' :
                             (printScaleMode === 'fit_area' ? 'Fit to content — whole design fits inside, may leave a white border.' :
                             (printScaleMode === 'actual' ? 'Prints at the file\'s true size.' :
                             'Scales by the percentage you set.'))">

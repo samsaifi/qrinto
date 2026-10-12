@@ -427,9 +427,12 @@
                 touchX: 0,
                 copies: 1,
 
-                // The PDF that Print will actually send. Starts as the server's
-                // design-size PDF; "Apply" regenerates it at the selected paper size
-                // (cover-fill), saves it on the server, and points this at that file.
+                // The PDF that Print will actually send. savedPdfB64 holds the
+                // regenerated print-ready PDF IN MEMORY after "Apply" (base64) — no
+                // server round trip, so a large cover-filled PDF never trips HTTP 413.
+                // null = not applied yet, so Print builds it on the fly. savedPdfUrl is
+                // kept only for the audit-log file reference (the original server PDF).
+                savedPdfB64: null,
                 savedPdfUrl: pdfUrl,
 
                 // Per-check acknowledgements ({ [check.key]: true }). An error must be
@@ -450,19 +453,22 @@
 
                 init() {
                     let pages = parseInt({{ $totalPages }});
-                    // Some products only work in one orientation:
-                    //   2-page (double) → landscape-only
-                    //   4-page          → portrait-only
-                    // Lock the orientation so the modal can grey/redden the other
-                    // option (instead of the old alert()), and force the correct one.
+                    // Pre-tick the size / orientation / E2E acknowledgements so those
+                    // check rows come up CHECKED (and don't block printing) even after
+                    // the operator changes the paper size — same as the /print/pdf/check
+                    // page. They can still un-tick one explicitly if they want to.
+                    this.acks = Object.assign({ size: true, orient: true, e2e: true }, this.acks);
+                    // The print PDF is ALWAYS re-laid in portrait (a landscape design is
+                    // rotated -90° to fit), so the Orientation toggle only drives the
+                    // on-screen preview — it never blocks or changes the printed output.
+                    // Therefore DON'T lock orientation (no red/blocked Portrait button);
+                    // just default the toggle to the design's own orientation for preview.
+                    this.orientationLock = null;
                     if (pages == 2) {
-                        this.orientationLock = 'landscape';
                         this.printLandscape = true;
                     } else if (pages == 4) {
-                        this.orientationLock = 'portrait';
                         this.printLandscape = false;
                     } else if (designSize.w && designSize.h) {
-                        this.orientationLock = null;
                         this.printLandscape = designSize.w > designSize.h;
                     }
                     // Auto-select the Paper Size that matches the DESIGN's actual size
@@ -482,6 +488,14 @@
                     this.$watch('slide', (i) => {
                         this.psPreviewSrc = imageUrls[i] || imageUrls[0] || '';
                         this.psPreviewIndex = i;
+                    });
+                    // Invalidate the pre-built ("Applied") print PDF whenever a setting
+                    // that affects its size/orientation/scaling changes, so Print always
+                    // rebuilds at the CURRENT paper instead of sending a stale PDF.
+                    ['printPaperSize', 'printLandscape', 'printScaleMode', 'printScaleFactor',
+                        'selectedPrinter'
+                    ].forEach((k) => {
+                        this.$watch(k, () => { this.savedPdfB64 = null; });
                     });
                     this.initBridge();
                 },
@@ -580,42 +594,9 @@
                                 ackLabel: match ? null : 'I understand. Print anyway.',
                             });
 
-                            // Orientation — compare the INTENDED print orientation (the
-                            // one the job will actually print in) against the selected
-                            // paper's orientation. The print orientation follows the
-                            // product page count (2-page → landscape, 4-page → portrait)
-                            // and otherwise the chosen printLandscape toggle — NOT the
-                            // design's raw stored dimensions (a 2-page card is stored
-                            // 7×10 portrait but prints landscape).
-                            // Match the "Print Mode" shown on the page exactly:
-                            //   2-page → Landscape, 4-page → Portrait,
-                            //   otherwise → the design's own orientation.
-                            const pages = parseInt({{ $totalPages }});
-                            let wantLandscape;
-                            if (pages === 2) wantLandscape = true;
-                            else if (pages === 4) wantLandscape = false;
-                            else wantLandscape = String(designOrientation).toLowerCase() === 'landscape';
-
-                            // Compare the design's REQUIRED orientation against the
-                            // orientation the operator selected in Print Settings
-                            // (printLandscape) — NOT the paper's trim aspect. The paper
-                            // is printed in the chosen orientation (a 3×5 card printed
-                            // Landscape becomes 5×3), so the chosen toggle is the real
-                            // "paper" orientation. This updates live as the toggle changes.
-                            const chosenLandscape = !!this.printLandscape;
-                            const orientOk = wantLandscape === chosenLandscape;
-                            const needOrient = wantLandscape ? 'landscape' : 'portrait';
-                            const chosenOrient = chosenLandscape ? 'landscape' : 'portrait';
-                            list.push({
-                                key: 'orient',
-                                ok: orientOk,
-                                severity: orientOk ? 'ok' : 'error',
-                                title: orientOk ? 'Orientation matches' : 'Orientation mismatch',
-                                detail: orientOk ?
-                                    'Design and print are both ' + needOrient + '.' : 'Design needs ' +
-                                    needOrient + ', but ' + chosenOrient + ' is selected.',
-                                ackLabel: orientOk ? null : 'I understand. Print anyway.',
-                            });
+                            // Orientation check REMOVED: the final print is ALWAYS portrait
+                            // (a landscape design is rotated -90° into a portrait page), so
+                            // an "Orientation mismatch" error is meaningless here.
                         }
                     }
 
@@ -750,34 +731,30 @@
                         // Match the chosen print orientation, then cover-fill onto the
                         // selected paper's trim size for the fit modes ('actual' /
                         // 'custom' keep the design size as-is).
-                        bytes = await this.rotatePdfToOrientation(bytes);
                         const _sm = this.printScaleMode || 'fit';
                         if (_sm === 'fit' || _sm === 'fit_area') {
+                            // Re-lays onto a PORTRAIT media page and rotates a landscape
+                            // design 90° itself — no separate rotate step (would double-rotate).
                             bytes = await this.transformPdfForPrint(bytes);
+                        } else {
+                            // actual/custom keep the design size; just turn landscape → portrait.
+                            bytes = await this.rotatePdfToOrientation(bytes);
                         }
 
-                        const b64 = this.arrayBufToBase64(bytes.buffer || bytes);
-                        const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
-                        const save = await fetch('{{ route('localprint.save-regenerated') }}', {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': token,
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({ pdf: b64 }),
-                        });
-                        const json = await save.json().catch(() => ({}));
-                        if (!save.ok || !json.ok) throw new Error(json.error || ('HTTP ' + save.status));
-
-                        this.savedPdfUrl = json.url;
-                        this.printMsg = 'Print file saved (' + this.selectedSizeLabel() + ').';
+                        // Keep the regenerated PDF IN MEMORY (base64) — do NOT POST it to
+                        // the server (save-regenerated). A large cover-filled PDF makes the
+                        // JSON body exceed the web server's body-size limit → HTTP 413. The
+                        // file is only needed for THIS print (sent to the local PrintTrays
+                        // bridge), so keeping it in memory avoids the round trip and the
+                        // 413 entirely — exactly like /print/pdf/check.
+                        this.savedPdfB64 = this.arrayBufToBase64(bytes.buffer || bytes);
+                        this.printMsg = 'Print file ready (' + this.selectedSizeLabel() + ').';
                         this.printMsgKind = 'success';
                         this.showPaperModal = false;
                     } catch (e) {
-                        console.error('[localprint] regenerate/save failed:', e);
-                        this.printMsg = (e && e.message) || 'Could not save the print file.';
+                        console.error('[localprint] regenerate failed:', e);
+                        this.savedPdfB64 = null;
+                        this.printMsg = (e && e.message) || 'Could not prepare the print file.';
                         this.printMsgKind = 'error';
                     } finally {
                         this.psApplying = false;
@@ -856,11 +833,14 @@
                     // Sending QZ-style keys (size:{w,h}, orientation, colorType,
                     // printerTray, flavor…) makes the bridge ignore them and fall
                     // back to the printer's DEFAULT media → white space on the sides.
-                    // This is a server-generated real PDF already laid out in the
-                    // design's orientation, so `landscape` is passed straight through.
+                    // The print PDF is ALWAYS re-laid in PORTRAIT (rotatePdfToOrientation
+                    // / transformPdfForPrint bake a landscape design 90° into a portrait
+                    // page, like the /print/pdf/check page). The page is therefore already
+                    // correctly oriented, so we always tell the bridge `landscape: false` —
+                    // sending the toggle here would rotate it a SECOND time at the printer.
                     const cfg = {
                         type: 'pdf',
-                        landscape: !!this.printLandscape,
+                        landscape: false,
                         color: !!this.printColor,
                         copies: this.copies || 1,
                         // Page order for MULTI-PAGE PDFs. Sent exactly like the
@@ -966,32 +946,58 @@
                         const pp = __ptInstance;
                         if (!pp) throw new Error('PrintTrays not connected');
 
-                        // Fetch the PDF that Print should send. If the operator hit
-                        // "Apply", savedPdfUrl points at the server file that was already
-                        // regenerated at the selected paper size (cover-filled) — send it
-                        // AS-IS. Otherwise fall back to the original design PDF and do the
-                        // rotate + cover-fill here so a print without Apply still works.
-                        const alreadyPrepared = this.savedPdfUrl && this.savedPdfUrl !== pdfUrl;
-                        const sourceUrl = this.savedPdfUrl || pdfUrl;
-                        const res = await fetch(sourceUrl, {
-                            credentials: 'same-origin'
-                        });
-                        if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
-                        let bytes = new Uint8Array(await res.arrayBuffer());
-
-                        if (!alreadyPrepared) {
+                        // If the operator hit "Apply", savedPdfB64 holds the regenerated
+                        // print-ready PDF IN MEMORY (base64) — send it AS-IS. No server
+                        // round trip, so a large cover-filled PDF never trips HTTP 413
+                        // (the old save-regenerated POST did). Otherwise fetch the original
+                        // design PDF and do the rotate + cover-fill here so a print without
+                        // Apply still works.
+                        const alreadyPrepared = !!this.savedPdfB64;
+                        let bytes;
+                        if (alreadyPrepared) {
+                            const _bin = atob(this.savedPdfB64);
+                            bytes = new Uint8Array(_bin.length);
+                            for (let _i = 0; _i < _bin.length; _i++) bytes[_i] = _bin.charCodeAt(_i);
+                        } else {
+                            const res = await fetch(pdfUrl, { credentials: 'same-origin' });
+                            if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
+                            bytes = new Uint8Array(await res.arrayBuffer());
                             // ROTATION-ONLY then cover-fill onto the selected paper's trim
-                            // size (fit modes only; actual/custom pass through). The
-                            // driver doesn't reliably honour the `landscape` flag, so we
-                            // bake orientation + size into the PDF itself.
-                            bytes = await this.rotatePdfToOrientation(bytes);
+                            // size (fit modes only; actual/custom pass through). The driver
+                            // doesn't reliably honour the `landscape` flag, so we bake
+                            // orientation + size into the PDF itself.
                             const _sm = this.printScaleMode || 'fit';
                             if (_sm === 'fit' || _sm === 'fit_area') {
                                 bytes = await this.transformPdfForPrint(bytes);
+                            } else {
+                                bytes = await this.rotatePdfToOrientation(bytes);
                             }
                         }
 
                         const b64 = this.arrayBufToBase64(bytes.buffer || bytes);
+
+                        // Print-time log + ON-SCREEN message: fires on every Print, showing
+                        // the FINAL PDF page size actually sent to the printer.
+                        try {
+                            if (window.PDFLib) {
+                                const _doc = await window.PDFLib.PDFDocument.load(bytes);
+                                const _sz = _doc.getPage(0).getSize();
+                                const _w = +(_sz.width / 72).toFixed(2);
+                                const _h = +(_sz.height / 72).toFixed(2);
+                                console.log('[localprint] PRINT → sending PDF', {
+                                    source: alreadyPrepared ? 'applied (saved)' : 'built on print',
+                                    pdfPage_in: { w: _w, h: _h },
+                                    paperCode: this.printPaperSize,
+                                    scaleMode: cfg.scaleMode,
+                                    paperSize: cfg.paperSize || '(driver default)',
+                                    copies: cfg.copies, printer: this.selectedPrinter,
+                                });
+                                this.printMsg = 'Printing PDF ' + _w + ' × ' + _h + ' in' +
+                                    ' · paper: ' + (this.selectedSizeLabel ? this.selectedSizeLabel() : this.printPaperSize) +
+                                    ' · ' + (cfg.copies || 1) + ' ' + ((cfg.copies || 1) == 1 ? 'copy' : 'copies');
+                                this.printMsgKind = 'info';
+                            }
+                        } catch (_e) { console.info('[localprint] print-time dim log skipped:', _e && _e.message); }
 
                         // Create the audit log BEFORE sending to PrintTrays (non-fatal).
                         job = await LPLog.start(this.buildLogPayload(cfg));
@@ -1031,13 +1037,11 @@
                             degrees
                         } = window.PDFLib;
 
-                        let pages = parseInt({{ $totalPages }});
-                        // 2-page (double) products are ALWAYS landscape; 4-page ALWAYS
-                        // portrait; otherwise follow the modal's chosen orientation.
-                        let wantLandscape;
-                        if (pages === 2) wantLandscape = true;
-                        else if (pages === 4) wantLandscape = false;
-                        else wantLandscape = !!this.printLandscape;
+                        // Output is ALWAYS portrait — exactly like the /print/pdf/check
+                        // page. A landscape design is rotated 90° so it is saved/printed
+                        // in PORTRAIT mode. The modal's landscape toggle only drives the
+                        // on-screen preview, never the printed PDF.
+                        const wantLandscape = false;
 
                         const src = await PDFDocument.load(bytes);
                         const list = src.getPages();
@@ -1049,9 +1053,9 @@
                             } = page.getSize();
                             const isLandscape = width > height;
                             if (isLandscape === wantLandscape) continue; // already correct
-                            // Add 90° to whatever rotation the page already has.
+                            // Subtract 90° (clockwise, -90) from the page's current rotation.
                             const cur = page.getRotation().angle || 0;
-                            page.setRotation(degrees((cur + 90) % 360));
+                            page.setRotation(degrees((cur - 90 + 360) % 360));
                             changed = true;
                         }
                         if (!changed) return bytes; // nothing to do → original bytes
@@ -1073,21 +1077,21 @@
                     const media = this.dynamicDims[this.printPaperSize] || trayDims[this.printPaperSize];
                     if (!(media && media.w > 0 && media.h > 0)) return bytes;
 
-                    // Use the FULL media (BLEED) dims — e.g. 5x7-E2E → 5.57 × 7.49 —
-                    // NOT the trim size, so the regenerated PDF is exactly the
-                    // printer's paper size and the design cover-fills the WHOLE sheet
-                    // edge-to-edge (no white border / white space on the page).
-                    let tw = media.w,
-                        th = media.h;
-                    let pages = parseInt({{ $totalPages }});
-                    // 2-page (double) products are ALWAYS landscape; other page counts
-                    // follow the chosen orientation.
-                    const wantLandscape = (pages === 2) ? true : this.printLandscape;
-                    if (pages != 4 && wantLandscape && tw < th) {
-                        const t = tw;
-                        tw = th;
-                        th = t;
-                    }
+                    // Use the TRIM size (e.g. 5x7-E2E → 5 × 7), NOT the full bleed
+                    // (5.57 × 7.49): the PDF is saved/printed at the trim size and the
+                    // driver's pinned E2E media form expands trim to bleed at print time
+                    // for a borderless result. Falls back to the media (bleed) dims when
+                    // no trim can be parsed from the size code/label.
+                    //
+                    // Target is ALWAYS PORTRAIT (width = shorter side, height = longer),
+                    // matching the /print/pdf/check page. fitPdfToMedia rotates a
+                    // landscape design 90° so it is saved/printed in portrait mode.
+                    const _trim = this.trimSizeFromCode(this.printPaperSize) ||
+                        this.trimSizeFromCode(this.selectedSizeLabel ? this.selectedSizeLabel() : '');
+                    const dw = _trim ? _trim[0] : media.w;
+                    const dh = _trim ? _trim[1] : media.h;
+                    const tw = Math.min(dw, dh);
+                    const th = Math.max(dw, dh);
                     // 'fit' = crop-to-cover (fill, no white); 'fit_area' = fit-to-content
                     // (contain, centred, white bars, no cropping).
                     const cover = (this.printScaleMode || 'fit') !== 'fit_area';
@@ -1153,17 +1157,18 @@
                             // the content turns with the paper.
                             const rotate = (pw > ph) !== (mediaWpt > mediaHpt);
                             if (rotate) {
-                                // 90° CCW: the design's footprint swaps axes, so scale
-                                // against the swapped extents and offset the origin.
+                                // -90° CW: the design's footprint swaps axes, so scale
+                                // against the swapped extents and offset the origin. For a
+                                // clockwise turn the pivot is the sheet's left/top side.
                                 const s = _fit(mediaWpt / ph, mediaHpt / pw);
                                 const wW = ph * s,
                                     wH = pw * s;
                                 page.drawPage(emb, {
-                                    x: (mediaWpt + wW) / 2,
-                                    y: (mediaHpt - wH) / 2,
+                                    x: (mediaWpt - wW) / 2,
+                                    y: (mediaHpt + wH) / 2,
                                     xScale: s,
                                     yScale: s,
-                                    rotate: degrees(90),
+                                    rotate: degrees(-90),
                                 });
                             } else {
                                 const scale = _fit(mediaWpt / pw, mediaHpt / ph);

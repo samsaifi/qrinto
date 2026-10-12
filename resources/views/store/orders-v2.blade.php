@@ -852,7 +852,10 @@
                     this.payload = null;
                     this.choice = null;
                     this.error = '';
-                    this.acks = {}; // fresh acknowledgements per order
+                    // Pre-tick size/orientation/E2E so those check rows come up CHECKED
+                    // and never block printing (same as /print/pdf/check & the own-design
+                    // preview page). The operator can still un-tick one explicitly.
+                    this.acks = { size: true, orient: true, e2e: true };
                     try {
                         const res = await fetch(prepareUrl, {
                             credentials: 'same-origin',
@@ -908,20 +911,12 @@
                     if (t.size) this.printPaperSize = t.size;
                     this.printLandscape = t.landscape || false;
 
-                    // Lock orientation by the order's product page count (same rule as
-                    // the customer preview flow): 2-page → Landscape-only, 4-page →
-                    // Portrait-only. The shared modal greys/reddens the disallowed
-                    // option and forces the correct one. null = both allowed.
-                    const pages = parseInt(this.payload?.pages_count);
-                    if (pages === 2) {
-                        this.orientationLock = 'landscape';
-                        this.printLandscape = true;
-                    } else if (pages === 4) {
-                        this.orientationLock = 'portrait';
-                        this.printLandscape = false;
-                    } else {
-                        this.orientationLock = null;
-                    }
+                    // The printed PDF is ALWAYS re-laid in portrait (a landscape design
+                    // is baked -90° into a portrait page), so the Orientation toggle only
+                    // drives the on-screen preview — it never blocks or changes the print.
+                    // Therefore DON'T lock orientation (no red/blocked button); the toggle
+                    // just lets the operator view the design either way.
+                    this.orientationLock = null;
                     this.printDuplex = t.duplex || 'simplex';
                     this.printPageOrder = t.page_order || 'frontToBack';
                     this.printColor = t.color !== undefined ? t.color : true;
@@ -932,18 +927,32 @@
                     this.printScaleFactor = t.scale_factor || 100;
 
                     // Enable the shared modal's preflight checks against THIS order.
+                    // Seed psDesign from the order's stored size as a FALLBACK; it is
+                    // immediately corrected below to the REAL PDF page orientation.
                     this.psDesign = {
                         w: parseFloat(this.payload?.order?.size_width) || 0,
                         h: parseFloat(this.payload?.order?.size_height) || 0,
                         pages: parseInt(this.payload?.pages_count) || 0,
                     };
                     this.psShowChecks = true;
-                    this.acks = {}; // reset acknowledgements for this open
+                    // Pre-tick size/orientation/E2E so the check rows open CHECKED and
+                    // don't block printing (same as the own-design preview page).
+                    this.acks = { size: true, orient: true, e2e: true };
 
                     // Show the live preview column in the shared modal for this order.
                     this.psHasPreview = true;
 
                     this.psOpen(t.label, t.printer || '', null);
+
+                    // A Flat-double card's PDF is LANDSCAPE while the order's stored size
+                    // is portrait — re-render the current preview page so psDesign is set
+                    // from the REAL page dims (rotate + cover-fill), instead of showing it
+                    // letter-boxed with white bands until the operator changes the slide.
+                    if (_previewPdf) {
+                        this.$nextTick(() => this.psRenderPreviewPage(this.psPreviewIndex || 0));
+                    } else {
+                        this.psLoadPreviewPdf();
+                    }
 
                     // Auto-select the Paper Size that matches THIS ORDER's size
                     // (e.g. a 5 × 7 order → the 5 × 7 paper option), ignoring
@@ -1003,6 +1012,20 @@
                     if (!_previewPdf) return;
                     const pg = await _previewPdf.getPage(i + 1);
                     const vp = pg.getViewport({ scale: 1.5 });
+                    // Sync psDesign to the ACTUAL PDF page orientation/size (inches), so
+                    // the preview's rotate + cover-fill logic uses the real design shape.
+                    // A Flat-double card's PDF is LANDSCAPE while the order's stored size
+                    // is portrait (5×7); without this the landscape page would sit
+                    // letter-boxed with white bands instead of rotating to fill the sheet.
+                    const pageW = vp.width / (1.5 * 72);
+                    const pageH = vp.height / (1.5 * 72);
+                    if (pageW > 0 && pageH > 0) {
+                        this.psDesign = {
+                            w: pageW,
+                            h: pageH,
+                            pages: (this.psDesign && this.psDesign.pages) || this.psPreviewCount || 1,
+                        };
+                    }
                     // Render into a canvas ATTACHED to the document (off-screen). pdf.js
                     // can hang/fail on a detached or display:none canvas, so we append
                     // a real one to <body>, snapshot it, then remove it.

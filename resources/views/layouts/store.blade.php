@@ -60,7 +60,16 @@
          bridge does NOT rotate PDF content for a `landscape` flag, but it DOES
          honour a page's own /Rotate, which pdf-lib sets). --}}
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script></script>
+    {{-- Local-print audit log (same system as /print/pdf/check): records every
+         print attempt AND saves the exact print-ready PDF to the log row. --}}
+    <script src="{{ asset('js/local-print-log.js') }}?v={{ filemtime(public_path('js/local-print-log.js')) }}"></script>
+    <script>
+        // Full route URLs so LPLog works under a sub-path (e.g. /qrinto).
+        window.LPLOG_ROUTES = {
+            start: @json(route('localprint.log.start')),
+            completeBase: @json(url('print/log')),
+        };
+    </script>
 </head>
 
 <body class="min-h-screen antialiased">
@@ -354,7 +363,7 @@
                         const isLandscape = width > height;
                         if (isLandscape === wantLandscape) continue; // already correct
                         const cur = page.getRotation().angle || 0;
-                        page.setRotation(degrees((cur + 90) % 360));
+                        page.setRotation(degrees((cur - 90 + 360) % 360)); // -90° (clockwise)
                         changed = true;
                     }
                     if (!changed) return bytes; // nothing to do → original bytes
@@ -387,17 +396,18 @@
                         const rotate = (pw > ph) !== (mediaWpt > mediaHpt);
                         const page = out.addPage([mediaWpt, mediaHpt]);
                         if (rotate) {
-                            // 90° CCW: the page's footprint swaps axes, so cover the
-                            // media using the swapped extents and offset the origin.
+                            // -90° (clockwise): the page's footprint swaps axes, so cover
+                            // the media using the swapped extents; for a clockwise turn the
+                            // pivot sits on the sheet's left/top side.
                             const s = Math.max(mediaWpt / ph, mediaHpt / pw);
                             const wW = ph * s,
                                 wH = pw * s;
                             page.drawPage(emb, {
-                                x: (mediaWpt + wW) / 2,
-                                y: (mediaHpt - wH) / 2,
+                                x: (mediaWpt - wW) / 2,
+                                y: (mediaHpt + wH) / 2,
                                 xScale: s,
                                 yScale: s,
-                                rotate: degrees(90),
+                                rotate: degrees(-90),
                             });
                         } else {
                             const s = Math.max(mediaWpt / pw, mediaHpt / ph);
@@ -426,7 +436,7 @@
             // The saved PDF should be the TRIM page (7×10, 4×6, 8.5×11 …) so
             // the output matches what /print/pdf/check produces. The physical
             // printer still prints edge-to-edge because we pin `paperSize` to
-            // the driver's E2E form (see resolveLiveMediaName below) — the
+            // the driver's E2E form (see resolveLiveMedia below) — the
             // driver expands trim to bleed at print time.
             function trimSizeFromCode(chosen) {
                 const raw = String(chosen && chosen.size || '').trim();
@@ -471,7 +481,11 @@
             // Returns null on any failure (older bridge without getPrinterDetails,
             // no size match, malformed response) so the caller can fall back to
             // the driver-default media as before.
-            async function resolveLiveMediaName(pp, printer, mediaWin, mediaHin) {
+            // Resolve the LIVE driver media that best matches the tray's size.
+            // Returns { name, w, h } with the media's REAL dimensions (inches,
+            // portrait-normalised w≤h) so the PDF can be rebuilt at the exact
+            // paper size that will actually be printed — or null if no match.
+            async function resolveLiveMedia(pp, printer, mediaWin, mediaHin) {
                 try {
                     if (!pp || !printer || !(mediaWin > 0) || !(mediaHin > 0)) return null;
                     const res = await pp.getPrinterDetails(printer);
@@ -480,7 +494,7 @@
                     const TOL = 0.05;
                     const targetW = Math.min(mediaWin, mediaHin);
                     const targetH = Math.max(mediaWin, mediaHin);
-                    let bestName = null;
+                    let best = null;
                     let bestDelta = Infinity;
                     for (let i = 0; i < raw.length; i++) {
                         const s = raw[i];
@@ -500,10 +514,10 @@
                         const delta = Math.abs(sw - targetW) + Math.abs(sh - targetH);
                         if (delta <= TOL * 2 && delta < bestDelta) {
                             bestDelta = delta;
-                            bestName = name;
+                            best = { name: name, w: sw, h: sh };
                         }
                     }
-                    return bestName;
+                    return best;
                 } catch (e) {
                     console.info('[store-print] live media lookup skipped:', (e && e.message) || e);
                     return null;
@@ -512,6 +526,9 @@
 
             async function printOrder(chosen, payload, csrf) {
                 const t0 = performance.now();
+                // Audit-log row (local-print-log system). Declared here so the print
+                // try/catch below can record both success and failure on it.
+                let lpJob = null;
                 const fail = function(message) {
                     logPrint(payload, chosen, 'failed', {
                         error_message: message,
@@ -574,16 +591,40 @@
                     // margins. Scaling / edge-to-edge is left to the driver via
                     // paperSize + scaleMode. For 'actual' the operator wants the true
                     // size AND orientation, so the PDF is left completely untouched.
+                    // Resolve the LIVE driver media that will actually be printed, so we
+                    // can rebuild the PDF at the EXACT paper size that goes to the
+                    // printer (its real dims) and pin the same media name below. Falls
+                    // back to the tray's configured size when no live match is found.
+                    const liveMedia = await resolveLiveMedia(
+                        pp, printer,
+                        parseFloat(chosen.size_width),
+                        parseFloat(chosen.size_height)
+                    );
+
                     const scaleMode = chosen.scale_mode || 'fit';
                     if (scaleMode === 'fit') {
-                        // Orientation from the PRODUCT page count (from size_title):
-                        //   4-page (Folded)          → portrait
-                        //   2-page (Flat - double)   → landscape
-                        //   1-page (Flat) / unknown  → tray flag
-                        let wantLandscape = !!chosen.landscape;
-                        if (payload.pages_count === 4) wantLandscape = false;
-                        else if (payload.pages_count === 2) wantLandscape = true;
-                        bytes = await rotatePdfToOrientation(bytes, wantLandscape);
+                        // Output is ALWAYS portrait — same as the own-design preview &
+                        // /print/pdf/check pages. A landscape design is rotated -90°
+                        // (clockwise) to fit the portrait sheet. The tray's landscape
+                        // flag / page count no longer changes the saved orientation.
+                        const wantLandscape = false;
+                        // Regenerate the PDF at the TRIM size (e.g. 5x7-E2E → 5 × 7), NOT
+                        // the full bleed (5.57 × 7.49): the PDF is saved/printed at the
+                        // trim size and the driver's pinned E2E media form (paperSize,
+                        // below) expands trim to bleed at print time for a borderless
+                        // result. Falls back to live/tray dims when no trim is parseable.
+                        const _trim = trimSizeFromCode(chosen);
+                        const mw = _trim ? _trim[0] : (liveMedia ? liveMedia.w : parseFloat(chosen.size_width));
+                        const mh = _trim ? _trim[1] : (liveMedia ? liveMedia.h : parseFloat(chosen.size_height));
+                        if (mw > 0 && mh > 0) {
+                            bytes = await fitPdfToMedia(bytes, mw, mh, wantLandscape);
+                        } else {
+                            bytes = await rotatePdfToOrientation(bytes, wantLandscape);
+                        }
+                    } else {
+                        // actual / custom keep the design's true size, but still save in
+                        // PORTRAIT — a landscape design is rotated -90° to portrait.
+                        bytes = await rotatePdfToOrientation(bytes, false);
                     }
 
                     let binary = '';
@@ -599,7 +640,11 @@
                     // the sides. Kept in sync with quick-flow-pc buildPrintConfig().
                     const printOpts = {
                         type: 'pdf',
-                        landscape: !!chosen.landscape,
+                        // The PDF is ALWAYS re-laid in portrait (a landscape design is
+                        // baked -90° into a portrait page), so tell the bridge
+                        // landscape:false — sending the tray flag would rotate it a
+                        // SECOND time at the printer (double rotation).
+                        landscape: false,
                         color: chosen.color !== false,
                         copies: payload.copies || 1,
                         // Map the tray's scale choice to the bridge's scaleMode:
@@ -627,14 +672,10 @@
                     // 931BL is smaller than the borderless form → visible white
                     // borders. If no match / older bridge, omit paperSize so the
                     // driver default is used (previous behaviour).
-                    const liveMediaName = await resolveLiveMediaName(
-                        pp, printer,
-                        parseFloat(chosen.size_width),
-                        parseFloat(chosen.size_height)
-                    );
-                    if (liveMediaName) {
-                        printOpts.paperSize = liveMediaName;
-                        console.log('[store-print] pinned paperSize →', liveMediaName);
+                    if (liveMedia && liveMedia.name) {
+                        printOpts.paperSize = liveMedia.name;
+                        console.log('[store-print] pinned paperSize →', liveMedia.name,
+                            '(' + liveMedia.w + ' × ' + liveMedia.h + ' in)');
                     } else {
                         console.log('[store-print] no live media match; using driver default');
                     }
@@ -653,7 +694,82 @@
                     // reverse page-feed instruction; single-page jobs ignore it.
                     printOpts.pageOrder = chosen.page_order || 'frontToBack';
 
-                    await pp.print(printer, b64, printOpts);
+                    // Record the attempt AND save the exact print-ready PDF to the
+                    // local-print log — same system as /print/pdf/check. Fail-soft:
+                    // a logging error never blocks or breaks the print.
+                    try {
+                        lpJob = await LPLog.start({
+                            source: 'store_orders',
+                            source_url: location.pathname,
+                            print_type: 'pdf',
+                            device_name: printer || null,
+                            file: {
+                                url: payload.pdf_url || null,
+                                name: (payload.pdf_url || '').split('/').pop() || null,
+                                type: 'pdf',
+                                pages: payload.pages_count || null,
+                                dimensions: liveMedia ? (liveMedia.w + ' x ' + liveMedia.h + ' in') :
+                                    ((chosen.size_width && chosen.size_height) ?
+                                        (chosen.size_width + ' x ' + chosen.size_height + ' in') : null),
+                            },
+                            printer_settings: {
+                                printer_name: printer || null,
+                                tray_key: chosen.tray_key || null,
+                                tray_label: chosen.label || null,
+                                paper_size: printOpts.paperSize || chosen.size || null,
+                                media: chosen.media || null,
+                                gsm: chosen.gsm || null,
+                                paper_source: printOpts.inputBin || null,
+                                orientation: 'portrait',
+                                color_mode: printOpts.color ? 'color' : 'grayscale',
+                                duplex: printOpts.duplex || 'simplex',
+                                page_order: printOpts.pageOrder || 'frontToBack',
+                                scale_mode: printOpts.scaleMode || null,
+                                scale_percentage: printOpts.scaleFactor || null,
+                                copies: payload.copies || 1,
+                            },
+                            request_payload: printOpts,
+                            design_settings: {
+                                order_id: payload.order?.id || null,
+                                order_number: payload.order?.number || null,
+                                order_item_id: payload.order?.item_id || null,
+                                size_width: parseFloat(payload.order?.size_width) || chosen.size_width || null,
+                                size_height: parseFloat(payload.order?.size_height) || chosen.size_height || null,
+                                page_count: payload.pages_count || null,
+                                user_type: chosen.user_type || null,
+                            },
+                        });
+                        LPLog.attachPdf(lpJob, b64);
+                    } catch (e) { /* non-fatal */ }
+
+                    // Print-time log + ON-SCREEN toast: fires on every Print, showing the
+                    // FINAL PDF page size actually sent to the printer.
+                    try {
+                        if (window.PDFLib) {
+                            const _doc = await window.PDFLib.PDFDocument.load(bytes);
+                            const _sz = _doc.getPage(0).getSize();
+                            const _w = +(_sz.width / 72).toFixed(2);
+                            const _h = +(_sz.height / 72).toFixed(2);
+                            console.log('[store-print] PRINT → sending PDF', {
+                                pdfPage_in: { w: _w, h: _h },
+                                paperCode: chosen.size,
+                                scaleMode: printOpts.scaleMode,
+                                paperSize: printOpts.paperSize || '(driver default)',
+                                copies: printOpts.copies, printer: printer,
+                            });
+                            toast('Printing PDF ' + _w + ' × ' + _h + ' in · paper: ' +
+                                (chosen.size || '') + ' · ' + (printOpts.copies || 1) +
+                                ' ' + ((printOpts.copies || 1) == 1 ? 'copy' : 'copies'), 'info');
+                        }
+                    } catch (_e) { console.info('[store-print] print-time dim log skipped:', _e && _e.message); }
+
+                    try {
+                        await pp.print(printer, b64, printOpts);
+                        await LPLog.finish(lpJob, { ok: true });
+                    } catch (ePrint) {
+                        await LPLog.finish(lpJob, { ok: false, error: (ePrint && ePrint.message) || 'Print failed.' });
+                        throw ePrint;
+                    }
                 } catch (e) {
                     console.error(e);
                     const msg = (e && e.message) ? e.message : 'unknown error';
