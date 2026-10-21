@@ -67,7 +67,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-surface-700 mb-1">Store Email</label>
-                        <input type="email" name="email" value="{{ old('email', $store->email ?? '') }}"
+                        <input type="email" name="email" value="{{ old('email', $store->email ?? '') }}" autocomplete="off"
                             class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500" {!! $readonlyAtts !!}
                             placeholder="store@example.com">
                         @error('email') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
@@ -81,7 +81,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-surface-700 mb-1">Admin Password</label>
-                        <input type="password" name="password"
+                        <input type="password" name="password" autocomplete="new-password"
                             class="w-full rounded-xl border-surface-200 focus:border-brand-500 focus:ring-brand-500" {!! $readonlyAtts !!}
                             placeholder="{{ isset($store) ? 'Leave blank to keep current' : 'Current email used as login' }}">
                         @error('password') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror

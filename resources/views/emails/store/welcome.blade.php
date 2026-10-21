@@ -46,14 +46,25 @@
                         <td align="center" style="padding: 8px 32px 4px;">
                             <h1
                                 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">
-                                Welcome to {{ config('app.name') }}!</h1>
+                                @if (!empty($isPasswordUpdate))
+                                    Your Password Has Been Updated
+                                @else
+                                    Welcome to {{ config('app.name') }}!
+                                @endif
+                            </h1>
                         </td>
                     </tr>
                     <tr>
                         <td align="center" style="padding: 0 32px 20px;">
                             <p style="margin: 0; font-size: 14px; color: #0ea5e9; font-weight: 500; line-height: 1.5;">
-                                Hi {{ $user->name }}, your account has been created to manage <strong
-                                    style="color: #0f172a;">{{ $user->store->store_name }}</strong></p>
+                                @if (!empty($isPasswordUpdate))
+                                    Hi {{ $user->name }}, the login password for <strong
+                                        style="color: #0f172a;">{{ $user->store->store_name ?? '' }}</strong> has been changed.
+                                @else
+                                    Hi {{ $user->name }}, your account has been created to manage <strong
+                                        style="color: #0f172a;">{{ $user->store->store_name ?? '' }}</strong>
+                                @endif
+                            </p>
                         </td>
                     </tr>
 
@@ -63,6 +74,48 @@
                             <div style="border-top: 1px solid #e2e8f0;"></div>
                         </td>
                     </tr>
+
+                    @php
+                        $mailStore = $user->store;
+                        $storeRows = $mailStore ? array_filter([
+                            'Store Name' => $mailStore->store_name,
+                            'Store Code' => $mailStore->store_code,
+                            'Owner'      => $mailStore->owner_name,
+                            'Phone'      => $mailStore->phone,
+                            'Address'    => implode(', ', array_filter([
+                                $mailStore->address, $mailStore->city, $mailStore->state,
+                                $mailStore->zip_code, $mailStore->country,
+                            ])),
+                        ]) : [];
+                    @endphp
+
+                    @if (count($storeRows))
+                        <!-- Store Details Section -->
+                        <tr>
+                            <td style="padding: 24px 32px 0;">
+                                <h2
+                                    style="margin: 0 0 16px; font-size: 18px; font-weight: 800; color: #1e293b; font-style: italic; font-family: Georgia, 'Times New Roman', serif;">
+                                    Store Details</h2>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0 32px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                    style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+                                    @foreach ($storeRows as $label => $value)
+                                        <tr>
+                                            <td
+                                                style="padding: 14px 16px; font-size: 13px; font-weight: 600; color: #0ea5e9; width: 35%; background: #f8fafc; {{ $loop->last ? '' : 'border-bottom: 1px solid #f1f5f9;' }}">
+                                                {{ $label }}</td>
+                                            <td
+                                                style="padding: 14px 16px; font-size: 14px; font-weight: 700; color: #0f172a; {{ $loop->last ? '' : 'border-bottom: 1px solid #f1f5f9;' }}">
+                                                {{ $value }}</td>
+                                        </tr>
+                                    @endforeach
+                                </table>
+                            </td>
+                        </tr>
+                    @endif
 
                     <!-- Login Credentials Section -->
                     <tr>

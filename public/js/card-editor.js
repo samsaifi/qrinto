@@ -1,804 +1,601 @@
-/* =============================================================================
- * card-editor.js — Qrinto Card Editor
- * -----------------------------------------------------------------------------
- * One reusable, data-driven editor system. A single canvas renderer draws
- * portrait cards, open two-page spreads, image/text layouts and stickers from
- * plain data. The same renderer powers the live canvas, the bottom page
- * thumbnails and the "Change layout" previews, so everything stays consistent.
- *
- * Shared editor state drives selection, context toolbars, side panels and an
- * undo/redo history. Elements use a logical coordinate system (600x900 for a
- * portrait page, 1200x900 for a spread) and scale proportionally to the
- * available workspace — the logical size never changes.
- * ========================================================================== */
-(function () {
-  'use strict';
+(function(){
+'use strict';
+const W=360,H=504,KEY='qrinto-card-editor-v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 
-  /* ------------------------------------------------------------------ utils */
-  const uid   = (p) => (p || 'e') + Math.random().toString(36).slice(2, 9);
-  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-  const $     = (s, r = document) => r.querySelector(s);
-  const $$    = (s, r = document) => [...r.querySelectorAll(s)];
-  const clone = (o) => JSON.parse(JSON.stringify(o));
-  const el    = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
-  const QRINTO_LOGO = (window.QRINTO_LOGO_URL) || '/qrinto/public/logo/Qrinto-logo-small.png';
+const ICONS={
+  undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  redo:'<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  layout:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M15 10h3M15 13h3"/>',
+  text:'<path d="M4 7V5h16v2M9 19h6M12 5v14"/>',
+  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
+  smile:'<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/>',
+  qr:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/>',
+  drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
+  trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
+  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+  up:'<path d="M12 19V5M5 12l7-7 7 7"/>',
+  down:'<path d="M12 5v14M5 12l7 7 7-7"/>',
+  chevL:'<path d="m15 18-6-6 6-6"/>',chevR:'<path d="m9 18 6-6-6-6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  pencil:'<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
+  alignL:'<path d="M4 6h16M4 12h10M4 18h14"/>',alignC:'<path d="M4 6h16M7 12h10M5 18h14"/>',alignR:'<path d="M4 6h16M10 12h10M6 18h14"/>',
+  margins:'<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" stroke-dasharray="2 2"/>',
+  upload:'<path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
+  refresh:'<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
+  alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>'
+};
+const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 
-  const LOGICAL = { portrait: { w: 600, h: 900 }, spread: { w: 1200, h: 900 } };
+const FONTS=[['Onest',"'Onest',system-ui,sans-serif"],['Playfair Display',"'Playfair Display',Georgia,serif"],['Cormorant Garamond',"'Cormorant Garamond',Georgia,serif"],['DM Serif Display',"'DM Serif Display',Georgia,serif"],['Great Vibes',"'Great Vibes',cursive"],['Pinyon Script',"'Pinyon Script',cursive"],['Caveat',"'Caveat',cursive"],['Bebas Neue',"'Bebas Neue',Impact,sans-serif"],['Josefin Sans',"'Josefin Sans',system-ui,sans-serif"]];
+const fontCss=n=>(FONTS.find(f=>f[0]===n)||FONTS[0])[1];
+const VIEWS={front:['front'],inside:['inL','inR'],back:['back']};
+const ORDER=['front','inside','back'];
+const VIEW_LABEL={front:'Front',inside:'Inside',back:'Back'};
+const PAGE_LABEL={front:'Front',inL:'Inside left',inR:'Inside right',back:'Back'};
 
-  const FONTS = ['Inter', 'Poppins', 'Montserrat', 'Playfair Display', 'Dancing Script', 'Georgia', 'Arial', 'Times New Roman', 'Courier New'];
+let uidN=0;const uid=()=>'e'+Date.now().toString(36)+(uidN++).toString(36);
+const T=o=>({id:uid(),type:'text',x:20,y:200,w:320,text:'Your text',font:'Onest',size:20,color:'#2a2a2a',align:'center',bold:false,italic:false,lh:1.35,ls:0,...o});
+const P=o=>({id:uid(),type:'photo',x:30,y:30,w:300,h:300,src:null,fit:'cover',shape:'rounded',...o});
+const S=o=>({id:uid(),type:'sticker',x:140,y:200,w:80,h:80,char:'💖',...o});
+const Q=o=>({id:uid(),type:'qr',x:120,y:150,w:120,h:120,url:'',color:'#14201a',src:null,...o});
 
-  const STICKERS = {
-    Love:            ['❤️','💕','💖','💘','💝','😍','🥰','💋','🌹','💐','💌','😘'],
-    Birthday:        ['🎂','🎈','🎉','🥳','🎁','🍰','🎊','🕯️','🎇','🧁','🎀','🪅'],
-    'Thank You':     ['🙏','💐','🌷','😊','🌻','💚','✨','🤗','🌸','🍀'],
-    Congratulations: ['🎓','🏆','🥇','🎉','👏','🌟','🎊','💫','🙌','🎯'],
-    Celebration:     ['🥂','🍾','🎆','🎇','🎉','✨','🪩','🎊','🕺','💃'],
-    Flowers:         ['🌸','🌷','🌹','🌻','🌺','💐','🌼','🏵️','🌿','🍀'],
-    Fun:             ['😎','🤩','😜','🤪','🥸','🙃','😁','🤗','👻','🦄'],
-    Animals:         ['🐶','🐱','🐰','🐻','🦊','🐼','🐨','🦁','🐯','🐷','🐸','🐥'],
-    Travel:          ['✈️','🌍','🏝️','🗺️','🧳','🚗','⛰️','🏖️','🚂','🎒'],
+const TEMPLATES=[
+ {name:'Anniversary',make:()=>({
+  front:{bg:'#fbe9ec',els:[P({x:30,y:30,w:300,h:290}),T({y:336,text:'Happy anniversary',font:'Great Vibes',size:46,color:'#9b2242'}),T({x:40,y:412,w:280,text:'To many more years together',font:'Cormorant Garamond',size:18,italic:true,color:'#6b3a47'})]},
+  inL:{bg:'#ffffff',els:[]},
+  inR:{bg:'#ffffff',els:[T({x:40,y:150,w:280,text:'Every year with you is my favourite year so far. Here is to the next one, and all the ones after that.',font:'Cormorant Garamond',size:20,color:'#4a2a33',lh:1.5}),T({x:40,y:330,w:280,text:'All my love, Sam',font:'Great Vibes',size:32,color:'#9b2242'})]},
+  back:{bg:'#fbe9ec',els:[]}})},
+ {name:'Birthday',make:()=>({
+  front:{bg:'#fff3d1',els:[S({x:36,y:42,w:70,h:70,char:'🎈'}),S({x:262,y:58,w:60,h:60,char:'🎉'}),S({x:125,y:108,w:110,h:110,char:'🎂'}),T({y:232,text:'HAPPY',font:'Bebas Neue',size:84,color:'#e4572e',ls:4,lh:1}),T({y:322,text:'birthday!',font:'Caveat',size:64,color:'#2b59c3',bold:true,lh:1.1}),T({x:40,y:420,w:280,text:'Make it a big one',font:'Josefin Sans',size:15,color:'#7a5b12',ls:2})]},
+  inL:{bg:'#ffffff',els:[]},
+  inR:{bg:'#ffffff',els:[T({x:40,y:160,w:280,text:'Another trip around the sun, and you still make it look easy. Hope today is loud, sweet and full of cake.',font:'Caveat',size:26,color:'#2b2b2b',lh:1.3}),T({x:40,y:350,w:280,text:'Love, Jo',font:'Caveat',size:32,color:'#e4572e',bold:true})]},
+  back:{bg:'#fff3d1',els:[]}})},
+ {name:'Wedding',make:()=>({
+  front:{bg:'#ffffff',els:[S({x:150,y:40,w:60,h:60,char:'🌿'}),T({y:116,text:'ON YOUR',font:'Cormorant Garamond',size:16,color:'#7a5c2e',ls:6}),T({y:144,text:'Wedding',font:'Pinyon Script',size:76,color:'#7a5c2e',lh:1.2}),T({y:246,text:'DAY',font:'Cormorant Garamond',size:16,color:'#7a5c2e',ls:6}),T({y:300,text:'Ana & Theo',font:'Pinyon Script',size:40,color:'#7a5c2e',lh:1.3}),T({y:372,text:'August 28, 2026',font:'Cormorant Garamond',size:16,color:'#5a4520',ls:2}),T({y:398,text:'Fort Point',font:'Cormorant Garamond',size:16,italic:true,color:'#5a4520'})]},
+  inL:{bg:'#ffffff',els:[]},
+  inR:{bg:'#ffffff',els:[T({x:40,y:170,w:280,text:'Wishing you a lifetime of love that grows and overflows with happiness. Congratulations!',font:'Cormorant Garamond',size:20,color:'#5a4520',lh:1.6,ls:1})]},
+  back:{bg:'#ffffff',els:[]}})},
+ {name:'Thank you',make:()=>({
+  front:{bg:'#e3efe8',els:[S({x:145,y:70,w:70,h:70,char:'🌿'}),T({y:158,text:'Thank you',font:'Playfair Display',size:58,color:'#0b5d3b',italic:true,lh:1.2}),T({y:240,text:'for everything',font:'Caveat',size:32,color:'#2e7d57',lh:1.2}),P({x:105,y:310,w:150,h:150,shape:'circle'})]},
+  inL:{bg:'#ffffff',els:[]},
+  inR:{bg:'#ffffff',els:[T({x:40,y:190,w:280,text:'Your kindness meant more than you know. Thank you for showing up when it mattered.',font:'Onest',size:17,color:'#1e3b2e',lh:1.55})]},
+  back:{bg:'#e3efe8',els:[]}})}
+];
+
+const LAYOUTS={
+ front:[
+  {name:'Photo and caption',make:()=>({front:[P({x:30,y:30,w:300,h:290}),T({y:340,text:'Add a heading',font:'Great Vibes',size:42}),T({x:40,y:412,w:280,text:'Add a short line',size:16})]})},
+  {name:'Full photo',make:()=>({front:[P({x:0,y:0,w:360,h:504,shape:'square'}),T({y:404,text:'Add a heading',font:'Playfair Display',size:42,color:'#ffffff'})]})},
+  {name:'Circle photo',make:()=>({front:[P({x:80,y:56,w:200,h:200,shape:'circle'}),T({y:286,text:'Add a heading',font:'Playfair Display',size:42}),T({x:40,y:372,w:280,text:'Add a short line',size:16})]})},
+  {name:'Words only',make:()=>({front:[T({y:166,text:'Add a heading',font:'Playfair Display',size:54,lh:1.15}),T({x:40,y:300,w:280,text:'Add a short line',size:18})]})}
+ ],
+ inside:[
+  {name:'Message on the right',make:()=>({inL:[],inR:[T({x:40,y:180,w:280,text:'Write your message here',font:'Cormorant Garamond',size:20,lh:1.55})]})},
+  {name:'Message on both sides',make:()=>({inL:[T({x:40,y:180,w:280,text:'Write your message here',font:'Cormorant Garamond',size:20,lh:1.55})],inR:[T({x:40,y:180,w:280,text:'And a little more here',font:'Cormorant Garamond',size:20,lh:1.55})]})},
+  {name:'Photo and message',make:()=>({inL:[P({x:30,y:30,w:300,h:444})],inR:[T({x:40,y:180,w:280,text:'Write your message here',font:'Cormorant Garamond',size:20,lh:1.55})]})},
+  {name:'Blank inside',make:()=>({inL:[],inR:[]})}
+ ],
+ back:[
+  {name:'QR video message',make:()=>({back:[Q({x:120,y:150,w:120,h:120}),T({x:40,y:286,w:280,text:'Scan for a video message',size:14,color:'#444444'})]})},
+  {name:'Short note',make:()=>({back:[T({x:40,y:200,w:280,text:'Made with love',font:'Cormorant Garamond',size:18,italic:true})]})},
+  {name:'Blank back',make:()=>({back:[]})}
+ ]
+};
+
+const STICKERS={Love:['💖','💕','💞','❤️','💌','🌹','💐','💍'],Celebrate:['🎉','🎈','🎂','🎁','🥂','✨','🎊','🍾'],Nature:['🌿','🌸','🌼','🌻','🍃','🌙','☀️','🌈'],Fun:['😊','🥳','😍','🤗','👏','🙌','⭐','🦋']};
+const BG_COLORS=['#ffffff','#f6f1e7','#fbe9ec','#fde2d2','#fff3d1','#e3efe8','#ddebf7','#e9e3f5','#1f2a44','#14201a'];
+const QR_COLORS=['#14201a','#0b7a49','#9b2242','#1f3a93','#7a5c2e'];
+const PAIRS=[
+ [{text:'Happy anniversary',font:'Great Vibes',size:44,color:'#9b2242'},{text:'with all my love',font:'Cormorant Garamond',size:18,italic:true,color:'#6b3a47'}],
+ [{text:'CONGRATS',font:'Bebas Neue',size:64,color:'#e4572e',ls:3,lh:1},{text:'you did it!',font:'Caveat',size:34,color:'#2b59c3',bold:true}],
+ [{text:'Thank you',font:'Playfair Display',size:48,italic:true,color:'#0b5d3b'},{text:'FOR BEING YOU',font:'Josefin Sans',size:14,color:'#2e5d47',ls:3}],
+ [{text:'Merry & bright',font:'DM Serif Display',size:44,color:'#8e1b1b'},{text:'Warm wishes from all of us',font:'Onest',size:14,color:'#3b3b3b'}]
+];
+
+/* ---------- State ---------- */
+let state={title:'Anniversary card',pages:TEMPLATES[0].make()};
+try{const raw=localStorage.getItem(KEY);if(raw){const d=JSON.parse(raw);if(d&&d.pages&&d.pages.front&&d.pages.inL&&d.pages.inR&&d.pages.back)state={title:d.title||'Untitled card',pages:d.pages};}}catch(e){}
+
+let view='front',sel=null,activePage='front',editingId=null,zoom=1,zoomMode='fit',panel='templates',showSafe=false,library=[],pendingPhoto=null,addCount=0,pvView='front';
+let qrDraft={url:'',color:'#14201a'};
+let past=[],future=[],present=JSON.stringify(state.pages);
+
+const stage=$('#stage'),wrap=$('#wrap'),sheet=$('#sheet'),caps=$('#caps'),ctx=$('#ctx'),rail=$('#rail'),panelEl=$('#panel'),strip=$('#strip'),fileInput=$('#filePick'),toastEl=$('#toast'),modal=$('#modal');
+
+function findEl(id){for(const pid in state.pages){const arr=state.pages[pid].els;const idx=arr.findIndex(e=>e.id===id);if(idx>-1)return{pid,el:arr[idx],idx};}return null;}
+const nodeOf=id=>sheet.querySelector(`.el[data-id="${id}"]`);
+function targetPage(){const pids=VIEWS[view];if(sel&&pids.includes(sel.pid))return sel.pid;if(pids.includes(activePage))return activePage;return view==='inside'?'inR':pids[0];}
+
+/* ---------- History & saving ---------- */
+function commit(){const snap=JSON.stringify(state.pages);if(snap===present)return;past.push(present);if(past.length>80)past.shift();present=snap;future=[];afterChange();}
+function afterChange(){updateUndo();scheduleSave();scheduleThumbs();}
+function undo(){finishEditing();if(!past.length)return;future.push(present);present=past.pop();state.pages=JSON.parse(present);restore();}
+function redo(){finishEditing();if(!future.length)return;past.push(present);present=future.pop();state.pages=JSON.parse(present);restore();}
+function restore(){if(sel&&!findEl(sel.id))sel=null;renderStage();renderStrip();renderCtx();updateUndo();scheduleSave();if(['layouts','background','qr'].includes(panel))renderPanel();}
+function updateUndo(){$('#undoBtn').disabled=!past.length;$('#redoBtn').disabled=!future.length;}
+let saveT;
+function scheduleSave(){setStatus('saving');clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify({title:state.title,pages:state.pages}));setStatus('saved');}catch(e){setStatus('error');}},500);}
+function setStatus(s){const el=$('#status');el.className='status '+s;el.innerHTML=s==='error'?`${ic('alert',16)}<span class="hide-sm">Too large to save in this browser</span>`:`${ic('check',16)}<span class="hide-sm">${s==='saving'?'Saving…':'Saved'}</span>`;}
+let thumbR;function scheduleThumbs(){cancelAnimationFrame(thumbR);thumbR=requestAnimationFrame(renderStrip);}
+
+/* ---------- Rendering ---------- */
+function applyTextStyle(t,el){const s=t.style;s.fontFamily=fontCss(el.font);s.fontSize=el.size+'px';s.color=el.color;s.textAlign=el.align;s.fontWeight=el.bold?'700':'400';s.fontStyle=el.italic?'italic':'normal';s.lineHeight=el.lh;s.letterSpacing=(el.ls||0)+'px';}
+function buildEl(el){
+  const d=document.createElement('div');d.className='el el-'+el.type;d.dataset.id=el.id;
+  d.style.left=el.x+'px';d.style.top=el.y+'px';d.style.width=el.w+'px';if(el.type!=='text')d.style.height=el.h+'px';
+  if(el.type==='text'){const t=document.createElement('div');t.className='txt';t.textContent=el.text;applyTextStyle(t,el);d.appendChild(t);}
+  else if(el.type==='photo'){d.classList.add('shape-'+(el.shape||'rounded'));
+    if(el.src){const img=document.createElement('img');img.src=el.src;img.alt='';img.draggable=false;img.style.objectFit=el.fit||'cover';d.appendChild(img);}
+    else{d.classList.add('empty');d.innerHTML=`<div class="ph">${ic('image',22)}<span>Add photo</span><small>optional</small></div>`;}}
+  else if(el.type==='sticker'){const s=document.createElement('span');s.textContent=el.char;s.style.fontSize=Math.round(el.h*.84)+'px';d.appendChild(s);}
+  else if(el.type==='qr'){if(el.src){const img=document.createElement('img');img.src=el.src;img.alt='QR code';img.draggable=false;d.appendChild(img);}
+    else{d.classList.add('empty');d.innerHTML=`<div class="ph">${ic('qr',22)}<span>Add QR code</span></div>`;}}
+  return d;
+}
+function buildPage(pg,pid,mode){
+  const p=document.createElement('div');p.className='page';p.dataset.page=pid;
+  const c=document.createElement('div');c.className='content';c.style.background=pg.bg;
+  pg.els.forEach(el=>{
+    if(mode==='preview'){if((el.type==='photo'||el.type==='qr')&&!el.src)return;if(el.type==='text'&&!el.text.trim())return;}
+    c.appendChild(buildEl(el));
+  });
+  if(pid==='back')c.insertAdjacentHTML('beforeend','<div class="backmark">made with <b>qrinto</b></div>');
+  p.appendChild(c);
+  if(mode==='edit')p.insertAdjacentHTML('beforeend','<div class="safe"></div><div class="guide-v"></div><div class="guide-h"></div>');
+  return p;
+}
+function mini(arr,s,mode='thumb'){
+  const m=document.createElement('div');m.className='mini';m.style.width=W*arr.length*s+'px';m.style.height=H*s+'px';
+  const inner=document.createElement('div');inner.className='mini-inner'+(arr.length>1?' spread':'');inner.style.transform=`scale(${s})`;
+  arr.forEach(([pg,pid])=>inner.appendChild(buildPage(pg,pid,mode)));m.appendChild(inner);return m;
+}
+function renderStage(){
+  finishEditing();
+  const pids=VIEWS[view];sheet.innerHTML='';
+  sheet.classList.toggle('spread',pids.length>1);sheet.classList.toggle('show-safe',showSafe);
+  pids.forEach(pid=>sheet.appendChild(buildPage(state.pages[pid],pid,'edit')));
+  caps.innerHTML=pids.map(p=>`<span>${PAGE_LABEL[p]}</span>`).join('');
+  $('#prevBtn').hidden=view==='front';$('#nextPageBtn').hidden=view==='back';
+  applyZoom();drawSelection();
+}
+function renderStrip(){
+  if(!strip.querySelector('#stripRow'))strip.innerHTML='<div class="strip-ind" id="stripInd" aria-hidden="true"></div><div class="strip-row" id="stripRow"></div>';
+  const row=strip.querySelector('#stripRow');row.innerHTML='';
+  ORDER.forEach(v=>{
+    const b=document.createElement('button');b.className='thumb'+(v===view?' active':'');b.setAttribute('aria-label',VIEW_LABEL[v]+' of card');
+    if(v===view)b.setAttribute('aria-current','page');
+    const fold=document.createElement('div');fold.className='fold fold-'+v;
+    if(v!=='inside')fold.insertAdjacentHTML('beforeend','<div class="sheet-behind"></div>');
+    fold.appendChild(mini(VIEWS[v].map(pid=>[state.pages[pid],pid]),.14));
+    b.appendChild(fold);
+    b.insertAdjacentHTML('beforeend',`<span>${VIEW_LABEL[v]}</span>`);
+    b.onclick=()=>setView(v);row.appendChild(b);
+  });
+  placeIndicator();
+}
+function placeIndicator(){const ind=document.getElementById('stripInd');const a=strip.querySelector('.thumb.active');if(!ind||!a)return;ind.style.width=a.offsetWidth+'px';ind.style.transform=`translateX(${a.offsetLeft}px)`;if(!ind.classList.contains('ready'))requestAnimationFrame(()=>requestAnimationFrame(()=>ind.classList.add('ready')));}
+window.addEventListener('resize',placeIndicator);
+function setView(v){if(v===view)return;const from=view;view=v;sel=null;zoomMode='fit';renderStage();renderStrip();renderCtx();if(['layouts','background','text','qr'].includes(panel))renderPanel();animateFlip(from,v);}
+/* Card open / close animation: a ghost of the outgoing page turns on the spine while the incoming page lands */
+function animateFlip(from,to){
+  if(!sheet.animate||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const dur=760,easing='cubic-bezier(.45,.05,.25,1)',PS='perspective(2200px) ';
+  const pg=pid=>sheet.querySelector(`.page[data-page="${pid}"]`);
+  const anims=[];let g=null;
+  const ghost=(pid,left)=>{g=buildPage(state.pages[pid],pid,'thumb');g.classList.add('ghost');g.style.left=left+'px';sheet.appendChild(g);return g;};
+  const turn=(node,origin,a,b)=>{if(!node)return;node.style.transformOrigin=origin;node.style.backfaceVisibility='hidden';anims.push(node.animate([{transform:PS+`rotateY(${a}deg)`},{transform:PS+`rotateY(${b}deg)`}],{duration:dur,easing}));};
+  const pair=from+'>'+to;
+  if(pair==='front>inside'){turn(ghost('front',W),'left center',0,-180);turn(pg('inL'),'right center',180,0);}
+  else if(pair==='inside>front'){turn(ghost('inL',-W),'right center',0,180);turn(pg('front'),'left center',-180,0);}
+  else if(pair==='inside>back'){turn(ghost('inR',W),'left center',0,-180);turn(pg('back'),'right center',180,0);}
+  else if(pair==='back>inside'){turn(ghost('back',0),'right center',0,180);turn(pg('inR'),'left center',-180,0);}
+  else{const n=pg(VIEWS[to][0]);if(n){n.style.transformOrigin='center';anims.push(n.animate([{transform:PS+'rotateY(-90deg)',opacity:0},{transform:PS+'rotateY(0deg)',opacity:1}],{duration:dur*.7,easing:'cubic-bezier(.2,.8,.3,1)'}));}}
+  sheet.classList.add('flipping');
+  Promise.all(anims.map(a=>a.finished.catch(()=>{}))).then(()=>{if(g)g.remove();sheet.classList.remove('flipping');sheet.querySelectorAll('.page').forEach(n=>{n.style.transformOrigin='';n.style.backfaceVisibility='';});});
+}
+
+/* ---------- Zoom ---------- */
+function contentW(){return W*VIEWS[view].length;}
+function fitZoom(){const cs=getComputedStyle(stage);const pw=stage.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);const ph=stage.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-30;return clamp(Math.min(pw/contentW(),ph/H),.2,1.6);}
+function applyZoom(){if(zoomMode==='fit')zoom=fitZoom();wrap.style.width=contentW()*zoom+'px';wrap.style.height=H*zoom+'px';sheet.style.transform=`scale(${zoom})`;sheet.style.setProperty('--inv',(1/zoom).toFixed(4));caps.style.width=contentW()*zoom+'px';$('#zoomPct').textContent=Math.round(zoom*100)+'%';}
+function zoomBy(f){zoomMode='manual';zoom=clamp(zoom*f,.25,3);applyZoom();}
+
+/* ---------- Selection ---------- */
+function drawSelection(){
+  sheet.querySelectorAll('.selbox').forEach(n=>n.remove());
+  if(!sel)return;const node=nodeOf(sel.id);const f=findEl(sel.id);if(!node||!f){sel=null;return;}
+  const box=document.createElement('div');box.className='selbox';
+  const dirs=f.el.type==='text'?['w','e']:['nw','ne','sw','se'];
+  box.innerHTML=dirs.map(d=>`<div class="handle h-${d}" data-dir="${d}"></div>`).join('');
+  node.closest('.page').appendChild(box);positionSelbox();if(editingId)box.hidden=true;
+}
+function positionSelbox(){const box=sheet.querySelector('.selbox');if(!box||!sel)return;const node=nodeOf(sel.id);if(!node)return;box.style.left=node.offsetLeft+'px';box.style.top=node.offsetTop+'px';box.style.width=node.offsetWidth+'px';box.style.height=node.offsetHeight+'px';}
+function select(pid,id){
+  if(editingId&&id!==editingId)finishEditing();
+  sel=id?{pid,id}:null;if(pid)activePage=pid;
+  drawSelection();renderCtx();
+  if(['qr','background','photos','stickers'].includes(panel))renderPanel();
+}
+
+/* ---------- Pointer interaction ---------- */
+sheet.addEventListener('pointerdown',e=>{
+  if(e.button!==0)return;
+  const h=e.target.closest('.handle');if(h){startResize(e,h);return;}
+  const node=e.target.closest('.el');const pageNode=e.target.closest('.page');
+  if(node&&pageNode){const id=node.dataset.id,pid=pageNode.dataset.page;if(editingId===id)return;
+    const wasSel=!!(sel&&sel.id===id);if(!wasSel)select(pid,id);e.preventDefault();startDrag(e,pid,id,wasSel);return;}
+  if(pageNode){activePage=pageNode.dataset.page;select(null);if(panel==='background')renderPanel();}
+});
+sheet.addEventListener('dblclick',e=>{const node=e.target.closest('.el-text');if(node)startEdit(node.dataset.id);});
+stage.addEventListener('pointerdown',e=>{if(e.target===stage||e.target.classList.contains('canvas-col')||e.target===caps)select(null);});
+
+function startDrag(e,pid,id,wasSel){
+  const f=findEl(id);if(!f)return;const el=f.el;const node=nodeOf(id);const pageNode=node.closest('.page');
+  const sx=e.clientX,sy=e.clientY,ox=el.x,oy=el.y;let moved=false;
+  const gv=pageNode.querySelector('.guide-v'),gh=pageNode.querySelector('.guide-h');
+  try{node.setPointerCapture(e.pointerId);}catch(_){}
+  const move=ev=>{
+    const dx=(ev.clientX-sx)/zoom,dy=(ev.clientY-sy)/zoom;
+    if(!moved&&Math.hypot(ev.clientX-sx,ev.clientY-sy)<4)return;moved=true;
+    let nx=ox+dx,ny=oy+dy;const w=el.w,h=node.offsetHeight;let sv=false,sh=false;
+    if(Math.abs(nx+w/2-W/2)<6){nx=W/2-w/2;sv=true;}
+    if(Math.abs(ny+h/2-H/2)<6){ny=H/2-h/2;sh=true;}
+    nx=clamp(nx,20-w,W-20);ny=clamp(ny,20-h,H-20);
+    el.x=Math.round(nx);el.y=Math.round(ny);node.style.left=el.x+'px';node.style.top=el.y+'px';
+    gv.classList.toggle('on',sv);gh.classList.toggle('on',sh);positionSelbox();
   };
-
-  const FILTERS = {
-    Original:   'none',
-    Grayscale:  'grayscale(1)',
-    Warm:       'saturate(1.3) sepia(.25) hue-rotate(-8deg)',
-    Cool:       'saturate(1.1) hue-rotate(15deg) brightness(1.03)',
-    Vintage:    'sepia(.45) contrast(.95) saturate(1.2)',
-    Brightness: 'brightness(1.2)',
-    Contrast:   'contrast(1.35)',
+  const up=()=>{
+    node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',up);node.removeEventListener('pointercancel',up);
+    gv.classList.remove('on');gh.classList.remove('on');
+    if(moved){commit();return;}
+    if(el.type==='photo'&&!el.src)pickPhotoFor(pid,id);
+    else if(el.type==='qr'&&!el.src)openPanel('qr');
+    else if(wasSel&&el.type==='text')startEdit(id);
   };
-  const MAGIC = {
-    Original:    'none',
-    Illustrated: 'saturate(1.5) contrast(1.2)',
-    Watercolor:  'saturate(1.3) brightness(1.1) blur(.4px)',
-    Vintage:     'sepia(.5) contrast(1.05)',
-    Sketch:      'grayscale(1) contrast(1.6) brightness(1.1)',
-    Cartoon:     'saturate(2) contrast(1.4)',
+  node.addEventListener('pointermove',move);node.addEventListener('pointerup',up);node.addEventListener('pointercancel',up);
+}
+function startResize(e,h){
+  e.preventDefault();e.stopPropagation();
+  const f=sel&&findEl(sel.id);if(!f)return;const el=f.el;const node=nodeOf(el.id);
+  const dir=h.dataset.dir,sx=e.clientX,sy=e.clientY;
+  const o={x:el.x,y:el.y,w:el.w,h:el.type==='text'?node.offsetHeight:el.h};const ratio=o.w/o.h;const keep=el.type==='sticker'||el.type==='qr';
+  try{h.setPointerCapture(e.pointerId);}catch(_){}
+  const move=ev=>{
+    const dx=(ev.clientX-sx)/zoom,dy=(ev.clientY-sy)/zoom;let w=o.w,hh=o.h;
+    if(dir.includes('e'))w=o.w+dx;if(dir.includes('w'))w=o.w-dx;
+    if(el.type!=='text'){if(dir.includes('s'))hh=o.h+dy;if(dir.includes('n'))hh=o.h-dy;}
+    w=Math.max(30,w);hh=Math.max(30,hh);
+    if(keep){const sc=Math.max(w/o.w,hh/o.h);w=Math.max(30,o.w*sc);hh=w/ratio;}
+    let x=o.x,y=o.y;if(dir.includes('w'))x=o.x+o.w-w;if(dir.includes('n'))y=o.y+o.h-hh;
+    el.x=Math.round(x);el.w=Math.round(w);node.style.left=el.x+'px';node.style.width=el.w+'px';
+    if(el.type!=='text'){el.y=Math.round(y);el.h=Math.round(hh);node.style.top=el.y+'px';node.style.height=el.h+'px';if(el.type==='sticker')node.firstChild.style.fontSize=Math.round(el.h*.84)+'px';}
+    positionSelbox();
   };
+  const up=()=>{h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',up);h.removeEventListener('pointercancel',up);commit();};
+  h.addEventListener('pointermove',move);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
+}
 
-  const ICON = {
-    image:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>',
-    plus:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 5v14M5 12h14"/></svg>',
-  };
+/* ---------- Text editing ---------- */
+function startEdit(id){
+  const f=findEl(id);if(!f||f.el.type!=='text')return;const node=nodeOf(id);if(!node)return;
+  if(!sel||sel.id!==id)select(f.pid,id);
+  const t=node.querySelector('.txt');editingId=id;node.classList.add('editing');
+  const box=sheet.querySelector('.selbox');if(box)box.hidden=true;
+  t.setAttribute('contenteditable','true');t.focus();
+  const r=document.createRange();r.selectNodeContents(t);const s=window.getSelection();s.removeAllRanges();s.addRange(r);
+  const onPaste=ev=>{ev.preventDefault();const txt=(ev.clipboardData||window.clipboardData).getData('text/plain');document.execCommand('insertText',false,txt);};
+  const onKey=ev=>{if(ev.key==='Escape'){ev.preventDefault();t.blur();}ev.stopPropagation();};
+  const onInput=()=>positionSelbox();
+  t.addEventListener('paste',onPaste);t.addEventListener('keydown',onKey);t.addEventListener('input',onInput);
+  t.addEventListener('blur',()=>{
+    t.removeEventListener('paste',onPaste);t.removeEventListener('keydown',onKey);t.removeEventListener('input',onInput);
+    t.removeAttribute('contenteditable');node.classList.remove('editing');editingId=null;
+    const f2=findEl(id);if(f2)f2.el.text=t.innerText.replace(/\n+$/,'');
+    commit();positionSelbox();const b=sheet.querySelector('.selbox');if(b)b.hidden=false;
+  },{once:true});
+}
+function finishEditing(){if(!editingId)return;const node=nodeOf(editingId);const t=node&&node.querySelector('.txt');if(t)t.blur();else editingId=null;}
 
-  /* ============================================================= templates */
-  function starter(size) {
-    return [
-      { id: uid('p'), name: 'Page 1', kind: 'portrait', bg: '#ffffff', layoutId: 'p-photo', elements: [
-        { id: uid(), type: 'image', x: 60,  y: 70,  w: 480, h: 380, rot: 0, src: null, filter: 'none' },
-        { id: uid(), type: 'text',  x: 60,  y: 500, w: 480, h: 90,  rot: 0, text: 'Enter text...',
-          style: { fontFamily: 'Dancing Script', fontSize: 44, color: '#202124', fontWeight: 400, fontStyle: 'normal', textAlign: 'center', lineHeight: 1.2, letterSpacing: 0, textTransform: 'none' } },
-        brand(),
-      ]},
-      { id: uid('p'), name: 'Page 2', kind: 'spread', bg: '#ffffff', layoutId: 's-blank', elements: [
-        { id: uid(), type: 'text', x: 720, y: 380, w: 400, h: 160, rot: 0, text: 'HAPPY\nALL OUR DAYS\nTOGETHER DAY!',
-          style: { fontFamily: 'Montserrat', fontSize: 30, color: '#e11d48', fontWeight: 700, fontStyle: 'normal', textAlign: 'center', lineHeight: 1.3, letterSpacing: 1, textTransform: 'uppercase' } },
-      ]},
-      { id: uid('p'), name: 'Page 3', kind: 'portrait', bg: '#ffffff', layoutId: 'p-photo', elements: [
-        { id: uid(), type: 'image', x: 90,  y: 120, w: 420, h: 320, rot: 0, src: null, filter: 'none' },
-        { id: uid(), type: 'text',  x: 60,  y: 480, w: 480, h: 80,  rot: 0, text: 'Enter text...',
-          style: { fontFamily: 'Playfair Display', fontSize: 34, color: '#202124', fontWeight: 400, fontStyle: 'italic', textAlign: 'center', lineHeight: 1.2, letterSpacing: 0, textTransform: 'none' } },
-        brand(),
-      ]},
-    ];
-    function brand() { return { id: uid(), type: 'brand', x: 230, y: 830, w: 140, h: 34, rot: 0 }; }
+/* ---------- Element operations ---------- */
+function refreshNode(id){const f=findEl(id);const node=nodeOf(id);if(!f||!node)return;
+  if(editingId===id)applyTextStyle(node.querySelector('.txt'),f.el);else node.replaceWith(buildEl(f.el));positionSelbox();}
+function patch(id,obj,doCommit=true){const f=findEl(id);if(!f)return;Object.assign(f.el,obj);refreshNode(id);if(doCommit)commit();}
+function addElement(el,pid){pid=pid||targetPage();state.pages[pid].els.push(el);renderStage();select(pid,el.id);commit();return el;}
+function stagger(){return (addCount++%5)*14;}
+function duplicate(){const f=sel&&findEl(sel.id);if(!f)return;const c=JSON.parse(JSON.stringify(f.el));c.id=uid();c.x+=14;c.y+=14;state.pages[f.pid].els.splice(f.idx+1,0,c);renderStage();select(f.pid,c.id);commit();}
+function removeSel(){const f=sel&&findEl(sel.id);if(!f)return;state.pages[f.pid].els.splice(f.idx,1);sel=null;renderStage();renderCtx();commit();toast('Deleted','Undo',undo);}
+
+/* ---------- Context bar ---------- */
+function renderCtx(){
+  const f=sel&&findEl(sel.id);
+  const common=`<span class="sep"></span><button class="tb" data-act="forward" title="Bring forward" aria-label="Bring forward">${ic('up',18)}</button><button class="tb" data-act="backward" title="Send backward" aria-label="Send backward">${ic('down',18)}</button><button class="tb" data-act="dup" title="Duplicate (Ctrl+D)" aria-label="Duplicate">${ic('copy',18)}</button><button class="tb danger" data-act="del" title="Delete" aria-label="Delete">${ic('trash',18)}</button>`;
+  if(!f){ctx.innerHTML=`<span class="label">${VIEW_LABEL[view]}</span><span class="sep"></span><span class="muted">Click anything on the card to edit it. Double-click text to type.</span>`;return;}
+  const el=f.el;
+  if(el.type==='text'){
+    ctx.innerHTML=`<select data-k="font" aria-label="Font">${FONTS.map(([n,c])=>`<option value="${n}" ${n===el.font?'selected':''} style="font-family:${c}">${n}</option>`).join('')}</select>
+    <div class="size"><button data-act="size-" aria-label="Smaller">${ic('minus',16)}</button><input data-k="size" type="number" min="6" max="200" value="${el.size}" aria-label="Font size"><button data-act="size+" aria-label="Bigger">${ic('plus',16)}</button></div>
+    <label class="colorpick" title="Text colour"><i style="background:${el.color}"></i><input type="color" data-k="color" value="${el.color}" aria-label="Text colour"></label>
+    <span class="sep"></span>
+    <button class="tb" data-act="bold" aria-pressed="${el.bold}" title="Bold" aria-label="Bold"><b>B</b></button>
+    <button class="tb" data-act="italic" aria-pressed="${el.italic}" title="Italic" aria-label="Italic"><i style="font-family:Georgia,serif;font-size:15px">I</i></button>
+    <div class="seg" role="group" aria-label="Alignment">${['left','center','right'].map(a=>`<button class="tb" data-act="align" data-v="${a}" aria-pressed="${el.align===a}" title="Align ${a}" aria-label="Align ${a}">${ic('align'+a[0].toUpperCase(),18)}</button>`).join('')}</div>
+    <select data-k="lh" aria-label="Line spacing" title="Line spacing">${[1,1.2,1.35,1.5,1.75,2].map(v=>`<option value="${v}" ${Number(el.lh)===v?'selected':''}>Line ${v}</option>`).join('')}</select>${common}`;
+  }else if(el.type==='photo'){
+    ctx.innerHTML=`<button class="tb" data-act="replace">${ic(el.src?'refresh':'upload',18)}${el.src?'Replace':'Add photo'}</button>
+    ${el.src?`<span class="sep"></span><div class="seg" role="group" aria-label="Photo fit"><button class="tb" data-act="fit" data-v="cover" aria-pressed="${el.fit!=='contain'}">Fill</button><button class="tb" data-act="fit" data-v="contain" aria-pressed="${el.fit==='contain'}">Fit</button></div>`:''}
+    <span class="sep"></span><div class="seg" role="group" aria-label="Shape">${['square','rounded','circle'].map(s=>`<button class="tb" data-act="shape" data-v="${s}" aria-pressed="${(el.shape||'rounded')===s}">${s[0].toUpperCase()+s.slice(1)}</button>`).join('')}</div>
+    ${el.src?`<button class="tb" data-act="clear">Remove photo</button>`:''}${common}`;
+  }else if(el.type==='sticker'){
+    ctx.innerHTML=`<button class="tb" data-act="swap">${ic('smile',18)}Change sticker</button>${common}`;
+  }else if(el.type==='qr'){
+    ctx.innerHTML=`<button class="tb" data-act="editqr">${ic('qr',18)}${el.src?'Edit link':'Add link'}</button>${el.url?`<span class="muted">${esc(el.url.replace(/^https?:\/\//,'').slice(0,32))}</span>`:''}${common}`;
   }
-
-  /* -------- layout library (previews rendered from the same element data) -- */
-  const LAYOUTS = [
-    { id: 'p-photo',  name: 'Photo + text', kind: 'portrait', elements: [
-      { type: 'image', x: 60, y: 70, w: 480, h: 380 },
-      { type: 'text',  x: 60, y: 500, w: 480, h: 90, text: 'Enter text...' }, brandDef() ] },
-    { id: 'p-rows',   name: 'Three rows', kind: 'portrait', elements: [
-      { type: 'image', x: 60, y: 70,  w: 230, h: 210 }, { type: 'text', x: 320, y: 120, w: 230, h: 110, text: 'Enter text' },
-      { type: 'image', x: 60, y: 320, w: 230, h: 210 }, { type: 'text', x: 320, y: 370, w: 230, h: 110, text: 'Enter text' },
-      { type: 'image', x: 60, y: 570, w: 230, h: 210 }, { type: 'text', x: 320, y: 620, w: 230, h: 110, text: 'Enter text' } ] },
-    { id: 'p-stack',  name: 'Stacked blocks', kind: 'portrait', elements: [
-      { type: 'image', x: 60, y: 60,  w: 480, h: 250 }, { type: 'text', x: 60, y: 330, w: 480, h: 70, text: 'Enter text' },
-      { type: 'image', x: 60, y: 430, w: 480, h: 250 }, { type: 'text', x: 60, y: 700, w: 480, h: 70, text: 'Enter text' } ] },
-    { id: 'p-hero',   name: 'Single image', kind: 'portrait', elements: [
-      { type: 'image', x: 40, y: 60, w: 520, h: 560 }, { type: 'text', x: 60, y: 680, w: 480, h: 120, text: 'Enter text...' } ] },
-    { id: 'p-grid',   name: 'Image grid', kind: 'portrait', elements: [
-      { type: 'image', x: 60, y: 70,  w: 230, h: 200 }, { type: 'text',  x: 320, y: 70, w: 230, h: 420, text: 'Enter text' },
-      { type: 'image', x: 60, y: 300, w: 230, h: 200 } ] },
-    { id: 'p-cols',   name: 'Photos & text', kind: 'portrait', elements: [
-      { type: 'image', x: 60, y: 70,  w: 210, h: 180 }, { type: 'text', x: 300, y: 90,  w: 240, h: 120, text: 'Enter text' },
-      { type: 'image', x: 60, y: 290, w: 210, h: 180 }, { type: 'text', x: 300, y: 310, w: 240, h: 120, text: 'Enter text' },
-      { type: 'image', x: 60, y: 510, w: 210, h: 180 }, { type: 'text', x: 300, y: 530, w: 240, h: 120, text: 'Enter text' } ] },
-    { id: 's-blank',  name: 'Open — greeting', kind: 'spread', elements: [
-      { type: 'text', x: 720, y: 380, w: 400, h: 160, text: 'Enter greeting...' } ] },
-    { id: 's-photo',  name: 'Open — photo + note', kind: 'spread', elements: [
-      { type: 'image', x: 90, y: 200, w: 420, h: 500 }, { type: 'text', x: 700, y: 350, w: 440, h: 200, text: 'Enter text...' } ] },
-    { id: 's-two',    name: 'Open — two photos', kind: 'spread', elements: [
-      { type: 'image', x: 90, y: 180, w: 420, h: 540 }, { type: 'image', x: 690, y: 180, w: 420, h: 540 } ] },
-  ];
-  function brandDef() { return { type: 'brand', x: 230, y: 830, w: 140, h: 34 }; }
-
-  /* ============================================================== EDITOR */
-  class QrintoEditor {
-    constructor(root, opts) {
-      this.root = root;
-      this.opts = opts || {};
-      this.state = {
-        pages: starter(opts),
-        current: 0,
-        selectedElementId: null,
-        mode: 'normal',              // normal | text | image | sticker
-        history: [], histIndex: -1,
-      };
-      this._load();
-      this._cache();
-      this._buildStatic();
-      this._bind();
-      this._snapshot(true);
-      this.render();
-      this._syncLayoutPanel();
-      window.addEventListener('resize', () => this._fit());
-    }
-
-    /* ------------------------------------------------------------- caching */
-    _cache() {
-      this.stage   = $('#qe-stage', this.root);
-      this.work    = $('#qe-work', this.root);
-      this.ctx     = $('#qe-ctx', this.root);
-      this.thumbs  = $('#qe-thumbs', this.root);
-      this.layoutSide  = $('#qe-layoutside', this.root);
-      this.stickerSide = $('#qe-stickerside', this.root);
-      this.file    = $('#qe-file', this.root);
-    }
-    get page() { return this.state.pages[this.state.current]; }
-    // logical dims depend on kind (portrait/spread) AND orientation
-    _logicalOf(page) {
-      const land = page.orient === 'landscape';
-      const w0 = land ? 900 : 600, h0 = land ? 600 : 900;
-      return page.kind === 'spread' ? { w: w0 * 2, h: h0 } : { w: w0, h: h0 };
-    }
-    get logical() { return this._logicalOf(this.page); }
-    // coordinate space that LAYOUT defs are authored in (portrait orientation)
-    _kindBase(kind) { return kind === 'spread' ? { w: 1200, h: 900 } : { w: 600, h: 900 }; }
-    _mapRect(r, from, to) {
-      const rx = to.w / from.w, ry = to.h / from.h;
-      return { x: r.x * rx, y: r.y * ry, w: r.w * rx, h: r.h * ry };
-    }
-    get sel() { return this.page.elements.find(e => e.id === this.state.selectedElementId); }
-
-    /* ------------------------------------------------------- static build */
-    _buildStatic() {
-      // sticker categories + grid
-      const cat = $('#qe-stkcat', this.root);
-      Object.keys(STICKERS).forEach(c => { const o = el('option'); o.value = c; o.textContent = c; cat.appendChild(o); });
-      this._stkCat = 'Love';
-      this._renderStickerGrid();
-    }
-
-    _bind() {
-      // header tools
-      $$('.qe-tool', this.root).forEach(b => b.onclick = () => this._toolClick(b.dataset.tool));
-      $('#qe-undo', this.root).onclick = () => this.undo();
-      $('#qe-redo', this.root).onclick = () => this.redo();
-      $('#qe-orient', this.root).onclick = () => this.toggleOrient();
-      $('#qe-save', this.root).onclick = () => this.save(true);
-      $('#qe-continue', this.root).onclick = () => this.continueNext();
-      $('#qe-prev', this.root).onclick = () => this.goPage(this.state.current - 1);
-      $('#qe-next', this.root).onclick = () => this.goPage(this.state.current + 1);
-
-      // sticker panel
-      $('#qe-stk-close', this.root).onclick = () => this._setMode('normal');
-      $('#qe-stkcat', this.root).onchange = (e) => { this._stkCat = e.target.value; this._renderStickerGrid(); };
-      $('#qe-stksearch', this.root).oninput = (e) => this._renderStickerGrid(e.target.value);
-      $('#qe-stkmagic', this.root).onclick = () => this._toast('Magic sticker generation is not enabled on this environment');
-
-      // image upload
-      this.file.onchange = (e) => this._onFile(e);
-
-      // stage empty click → deselect
-      this.stage.addEventListener('mousedown', (e) => { if (e.target === this.stage || e.target.classList.contains('qe-page') || e.target.classList.contains('qe-layer')) this.select(null); });
-
-      // keyboard
-      document.addEventListener('keydown', (e) => this._onKey(e));
-      // click outside menus
-      document.addEventListener('mousedown', (e) => { if (!e.target.closest('.qe-menu') && !e.target.closest('[data-menu]')) this._closeMenus(); });
-    }
-
-    /* ============================================================ RENDER */
-    render() { this._renderStage(); this._renderThumbs(); this._renderLayouts(); this._syncHeader(); this._syncOrientBtn(); }
-
-    _fit() {
-      const L = this.logical;
-      const pad = 8;
-      const availW = this.work.clientWidth - 56;
-      const availH = this.work.clientHeight - 56;
-      const s = Math.min(availW / L.w, availH / L.h);
-      const w = Math.round(L.w * s), h = Math.round(L.h * s);
-      this.stage.style.width = w + 'px';
-      this.stage.style.height = h + 'px';
-      this.stage.style.setProperty('--s', (w / L.w).toFixed(5));
-    }
-
-    _renderStage() {
-      const page = this.page, L = this.logical;
-      this.stage.className = page.kind === 'spread' ? 'spread' : '';
-      this.stage.innerHTML = '';
-
-      if (page.kind === 'spread') {
-        const gap = 0;
-        const left = el('div', 'qe-page'); Object.assign(left.style, { left: '0%', width: '50%', height: '100%', background: page.bg });
-        const right = el('div', 'qe-page'); Object.assign(right.style, { left: '50%', width: '50%', height: '100%', background: page.bg });
-        this.stage.append(left, right, el('div', 'qe-fold'));
-      } else {
-        const sheet = el('div', 'qe-page'); Object.assign(sheet.style, { left: '0', width: '100%', height: '100%', background: page.bg });
-        this.stage.append(sheet);
-      }
-      const layer = el('div', 'qe-layer');
-      Object.assign(layer.style, { position: 'absolute', inset: '0', zIndex: 3 });
-      this.stage.append(layer);
-      this._layer = layer;
-
-      page.elements.forEach(elm => { this._clampEl(elm); layer.appendChild(this._node(elm)); });
-      this._fit();
-      // reselect visual
-      if (this.state.selectedElementId) {
-        const n = $(`.qe-el[data-id="${this.state.selectedElementId}"]`, layer);
-        if (n) n.classList.add('sel');
-      }
-    }
-
-    _node(elm) {
-      const L = this.logical;
-      const n = el('div', 'qe-el ' + elm.type);
-      n.dataset.id = elm.id;
-      n.style.left = (elm.x / L.w * 100) + '%';
-      n.style.top = (elm.y / L.h * 100) + '%';
-      n.style.width = (elm.w / L.w * 100) + '%';
-      n.style.height = (elm.h / L.h * 100) + '%';
-      n.style.transform = `rotate(${elm.rot || 0}deg)`;
-
-      if (elm.type === 'text') {
-        const b = el('div', 'body'); b.textContent = elm.text || '';
-        this._applyTextStyle(b, elm.style);
-        n.appendChild(b);
-        n.addEventListener('dblclick', () => this._editText(n, b, elm));
-      } else if (elm.type === 'image') {
-        if (elm.src) {
-          const img = el('img', 'body'); img.src = elm.src; img.draggable = false;
-          img.style.filter = this._imgFilter(elm);
-          img.style.transform = `scale(${elm.scale || 1}) scaleX(${elm.flipH ? -1 : 1}) scaleY(${elm.flipV ? -1 : 1})`;
-          n.appendChild(img);
-        } else {
-          n.classList.add('placeholder');
-          n.appendChild(el('div', 'ph', ICON.plus + '<span>Add photo</span>'));
-          n.addEventListener('dblclick', () => this._uploadTo(elm.id));
-          n.addEventListener('click', (e) => { if (!this._dragged) this._uploadTo(elm.id); });
-        }
-      } else if (elm.type === 'sticker') {
-        const b = el('div', 'body'); b.textContent = elm.char;
-        b.style.fontSize = `calc(var(--s) * ${Math.min(elm.w, elm.h) * 0.86}px)`;
-        n.appendChild(b);
-      } else if (elm.type === 'video') {
-        const b = el('div', 'body'); b.style.cssText = 'display:flex;align-items:center;justify-content:center;background:#111;color:#fff;border-radius:6px';
-        b.innerHTML = '<svg viewBox="0 0 24 24" width="30%" fill="#fff"><path d="M8 5v14l11-7z"/></svg>';
-        n.appendChild(b);
-      } else if (elm.type === 'brand') {
-        const b = el('div', 'body'); b.style.cssText = 'display:flex;align-items:center;justify-content:center;opacity:.75';
-        const img = el('img'); img.src = QRINTO_LOGO; img.alt = 'Qrinto'; img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain';
-        b.appendChild(img); n.appendChild(b);
-      }
-
-      ['tl','tr','bl','br','rot'].forEach(p => { const h = el('span', 'qe-h ' + p); h.dataset.pos = p; n.appendChild(h); });
-      n.appendChild(el('span', 'qe-rotstem'));
-      n.addEventListener('mousedown', (e) => this._down(e, n, elm));
-      return n;
-    }
-
-    _applyTextStyle(b, s) {
-      s = s || {};
-      b.style.fontFamily = s.fontFamily || 'Inter';
-      b.style.fontSize = `calc(var(--s) * ${s.fontSize || 28}px)`;
-      b.style.color = s.color || '#202124';
-      b.style.fontWeight = s.fontWeight || 400;
-      b.style.fontStyle = s.fontStyle || 'normal';
-      b.style.textAlign = s.textAlign || 'center';
-      b.style.lineHeight = s.lineHeight || 1.2;
-      b.style.letterSpacing = `calc(var(--s) * ${s.letterSpacing || 0}px)`;
-      b.style.textTransform = s.textTransform || 'none';
-    }
-    _imgFilter(elm) {
-      const f = FILTERS[elm.filterName] || elm.filter || 'none';
-      const m = MAGIC[elm.magicName] || '';
-      return [f === 'none' ? '' : f, m === 'none' ? '' : m].filter(Boolean).join(' ') || 'none';
-    }
-
-    /* ------------------------------------------------------------ toolClick */
-    _toolClick(tool) {
-      if (tool === 'text') { this.addText(); }
-      else if (tool === 'sticker') { this._setMode(this.state.mode === 'sticker' ? 'normal' : 'sticker'); }
-      else if (tool === 'image') { this._addImage(); }
-    }
-    _setMode(mode) {
-      this.state.mode = mode;
-      this.stickerSide.classList.toggle('open', mode === 'sticker');
-      $('#qe-t-sticker', this.root).classList.toggle('active', mode === 'sticker');
-      // layout panel: visible whenever a page has selectable layouts and not in sticker mode
-      this._syncLayoutPanel();
-    }
-    _syncLayoutPanel() {
-      const show = this.state.mode !== 'sticker';
-      this.layoutSide.classList.toggle('open', show);
-    }
-
-    /* ============================================================ SELECT */
-    select(id) {
-      this.state.selectedElementId = id;
-      $$('.qe-el', this.stage).forEach(n => n.classList.toggle('sel', n.dataset.id === id));
-      const e = this.sel;
-      $('#qe-t-image', this.root).classList.toggle('active', !!e && e.type === 'image' && !!e.src);
-      this._renderContext();
-    }
-
-    _renderContext() {
-      const e = this.sel;
-      this.ctx.classList.remove('show');
-      this.ctx.innerHTML = '';
-      if (!e) return;
-      if (e.type === 'text')      this._textToolbar(e);
-      else if (e.type === 'image' && e.src) this._imageToolbar(e);
-      else if (e.type === 'sticker') this._stickerToolbar(e);
-      else return;
-      this.ctx.classList.add('show');
-    }
-
-    /* ---------------------------------------------------------- text toolbar */
-    _textToolbar(e) {
-      const s = e.style;
-      const fontOpts = FONTS.map(f => `<option value="${f}" style="font-family:${f}" ${f===s.fontFamily?'selected':''}>${f}</option>`).join('');
-      this.ctx.innerHTML = `
-        <div class="grp"><select id="tb-font">${fontOpts}</select></div>
-        <div class="grp"><span class="qe-num"><button data-fs="-1">−</button><input id="tb-size" type="number" min="6" max="200" value="${s.fontSize}"><button data-fs="1">+</button></span></div>
-        <input class="qe-color" id="tb-color" type="color" value="${this._hex(s.color)}" title="Color">
-        <span class="qe-ctxsep"></span>
-        <button class="qe-tb ${s.fontWeight>=600?'on':''}" id="tb-bold"><b>B</b></button>
-        <button class="qe-tb ${s.fontStyle==='italic'?'on':''}" id="tb-italic"><i>I</i></button>
-        <span class="qe-ctxsep"></span>
-        <button class="qe-tb ${s.textAlign==='left'?'on':''}" data-al="left" title="Align left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h13"/></svg></button>
-        <button class="qe-tb ${s.textAlign==='center'?'on':''}" data-al="center" title="Center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M7 12h10M6 18h12"/></svg></button>
-        <button class="qe-tb ${s.textAlign==='right'?'on':''}" data-al="right" title="Align right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M10 12h10M7 18h13"/></svg></button>
-        <span class="qe-ctxsep"></span>
-        <span class="qe-slider" title="Line spacing"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg><input id="tb-line" type="range" min="1" max="2.4" step="0.1" value="${s.lineHeight}"></span>
-        <span class="qe-slider" title="Letter spacing"><b style="font-size:11px;color:#9ca3af">AV</b><input id="tb-letter" type="range" min="-2" max="12" step="0.5" value="${s.letterSpacing}"></span>
-        <span class="qe-ctxsep"></span>
-        <button class="qe-tb" id="tb-case" data-menu>Aa</button>
-        <span class="qe-ctxsep"></span>
-        <button class="qe-tb danger" id="tb-del" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>`;
-      const set = (patch) => { Object.assign(e.style, patch); this._rerenderEl(e); this.commit(); this._renderContext(); };
-      $('#tb-font', this.ctx).onchange = (ev) => set({ fontFamily: ev.target.value });
-      $('#tb-size', this.ctx).onchange = (ev) => set({ fontSize: clamp(+ev.target.value, 6, 200) });
-      $$('[data-fs]', this.ctx).forEach(b => b.onclick = () => set({ fontSize: clamp(e.style.fontSize + (+b.dataset.fs), 6, 200) }));
-      $('#tb-color', this.ctx).oninput = (ev) => { e.style.color = ev.target.value; this._rerenderEl(e); };
-      $('#tb-color', this.ctx).onchange = () => this.commit();
-      $('#tb-bold', this.ctx).onclick = () => set({ fontWeight: e.style.fontWeight >= 600 ? 400 : 700 });
-      $('#tb-italic', this.ctx).onclick = () => set({ fontStyle: e.style.fontStyle === 'italic' ? 'normal' : 'italic' });
-      $$('[data-al]', this.ctx).forEach(b => b.onclick = () => set({ textAlign: b.dataset.al }));
-      $('#tb-line', this.ctx).oninput = (ev) => { e.style.lineHeight = +ev.target.value; this._rerenderEl(e); };
-      $('#tb-line', this.ctx).onchange = () => this.commit();
-      $('#tb-letter', this.ctx).oninput = (ev) => { e.style.letterSpacing = +ev.target.value; this._rerenderEl(e); };
-      $('#tb-letter', this.ctx).onchange = () => this.commit();
-      $('#tb-del', this.ctx).onclick = () => this.remove();
-      $('#tb-case', this.ctx).onclick = (ev) => this._menu(ev.currentTarget, [
-        ['Original','none'],['UPPERCASE','uppercase'],['lowercase','lowercase'],['Capitalize','capitalize']
-      ].map(([label,val]) => ({ label, onClick: () => set({ textTransform: val }) })));
-    }
-
-    /* -------------------------------------------------------- image toolbar */
-    _imageToolbar(e) {
-      this.ctx.innerHTML = `
-        <span class="qe-slider" title="Image size"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="12" height="10" rx="1"/></svg>
-          <input id="ib-size" type="range" min="0.5" max="2.5" step="0.05" value="${e.scale||1}">
-          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="18" height="14" rx="1"/></svg></span>
-        <span class="qe-ctxsep"></span>
-        <button class="qe-tb" id="ib-magic" data-menu>✨ Magic styles</button>
-        <button class="qe-tb" id="ib-filter" data-menu>Filters</button>
-        <button class="qe-tb" id="ib-rmbg">Remove BG</button>
-        <span class="qe-ctxsep"></span>
-        <button class="qe-tb" id="ib-fliph" title="Flip horizontal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg></button>
-        <button class="qe-tb" id="ib-flipv" title="Flip vertical"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12h18M8 7 12 3l4 4M8 17l4 4 4-4"/></svg></button>
-        <button class="qe-tb" id="ib-rot" title="Rotate 90°"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v5h-5"/></svg></button>
-        <span class="qe-ctxsep"></span>
-        <button class="qe-tb" id="ib-replace">Replace</button>
-        <button class="qe-tb danger" id="ib-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>`;
-      $('#ib-size', this.ctx).oninput = (ev) => { e.scale = +ev.target.value; this._rerenderEl(e); };
-      $('#ib-size', this.ctx).onchange = () => this.commit();
-      $('#ib-fliph', this.ctx).onclick = () => { e.flipH = !e.flipH; this._rerenderEl(e); this.commit(); };
-      $('#ib-flipv', this.ctx).onclick = () => { e.flipV = !e.flipV; this._rerenderEl(e); this.commit(); };
-      $('#ib-rot', this.ctx).onclick = () => { e.rot = ((e.rot || 0) + 90) % 360; this._rerenderEl(e); this.commit(); };
-      $('#ib-replace', this.ctx).onclick = () => this._uploadTo(e.id);
-      $('#ib-del', this.ctx).onclick = () => this.remove();
-      $('#ib-rmbg', this.ctx).onclick = () => this._toast('Background removal is not enabled on this environment');
-      $('#ib-filter', this.ctx).onclick = (ev) => this._menu(ev.currentTarget, Object.keys(FILTERS).map(name => ({
-        label: name, swatch: FILTERS[name] !== 'none', onClick: () => { e.filterName = name; delete e.filter; this._rerenderEl(e); this.commit(); } })));
-      $('#ib-magic', this.ctx).onclick = (ev) => this._menu(ev.currentTarget, Object.keys(MAGIC).map(name => ({
-        label: name, onClick: () => { e.magicName = name; this._rerenderEl(e); this.commit(); } })));
-    }
-
-    _stickerToolbar(e) {
-      this.ctx.innerHTML = `
-        <span class="qe-slider" title="Size"><b style="font-size:11px;color:#9ca3af">◦</b>
-          <input id="sk-size" type="range" min="60" max="360" step="4" value="${Math.round((e.w+e.h)/2)}">
-          <b style="font-size:13px;color:#9ca3af">◯</b></span>
-        <button class="qe-tb" id="sk-rotl" title="Rotate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v5h-5"/></svg></button>
-        <button class="qe-tb" id="sk-dup" title="Duplicate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
-        <button class="qe-tb danger" id="sk-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>`;
-      $('#sk-size', this.ctx).oninput = (ev) => { const v = +ev.target.value; e.w = v; e.h = v; this._rerenderEl(e); };
-      $('#sk-size', this.ctx).onchange = () => this.commit();
-      $('#sk-rotl', this.ctx).onclick = () => { e.rot = ((e.rot || 0) + 45) % 360; this._rerenderEl(e); this.commit(); };
-      $('#sk-dup', this.ctx).onclick = () => this.duplicate();
-      $('#sk-del', this.ctx).onclick = () => this.remove();
-    }
-
-    _menu(anchor, items) {
-      this._closeMenus();
-      const m = el('div', 'qe-menu open');
-      items.forEach(it => {
-        const b = el('button');
-        if (it.swatch) { const sw = el('span', 'swatch'); b.appendChild(sw); }
-        b.appendChild(document.createTextNode(it.label));
-        b.onclick = () => { it.onClick(); this._closeMenus(); };
-        m.appendChild(b);
-      });
-      document.body.appendChild(m);
-      const r = anchor.getBoundingClientRect();
-      m.style.left = Math.min(r.left, window.innerWidth - m.offsetWidth - 8) + 'px';
-      m.style.top = (r.bottom + 6) + 'px';
-      this._openMenu = m;
-    }
-    _closeMenus() { if (this._openMenu) { this._openMenu.remove(); this._openMenu = null; } }
-
-    /* ------------------------------------------------------ rerender single */
-    _rerenderEl(e) {
-      const old = $(`.qe-el[data-id="${e.id}"]`, this._layer);
-      if (!old) return;
-      const fresh = this._node(e);
-      if (e.id === this.state.selectedElementId) fresh.classList.add('sel');
-      old.replaceWith(fresh);
-    }
-
-    /* ============================================================ ELEMENTS */
-    _add(elm) {
-      elm.id = uid();
-      this.page.elements.push(elm);
-      this.render(); this.select(elm.id); this.commit();
-    }
-    _addImage() {
-      this._pendingImageForId = null; // new element
-      this.file.click();
-    }
-    _addVideo() {
-      const L = this.logical;
-      this._add({ type: 'video', x: L.w/2-160, y: L.h/2-110, w: 320, h: 220, rot: 0 });
-      this._toast('Video placeholder added');
-    }
-    _uploadTo(id) { this._pendingImageForId = id; this.file.click(); }
-    _onFile(e) {
-      const f = e.target.files && e.target.files[0];
-      e.target.value = '';
-      if (!f) return;
-      const r = new FileReader();
-      r.onload = () => {
-        if (this._pendingImageForId) {
-          const t = this.page.elements.find(x => x.id === this._pendingImageForId);
-          if (t) { t.type = 'image'; t.src = r.result; t.filter = 'none'; delete t.filterName; delete t.magicName; }
-          this._pendingImageForId = null;
-          this.render(); if (t) this.select(t.id); this.commit();
-        } else {
-          const L = this.logical;
-          this._add({ type: 'image', x: L.w*0.2, y: L.h*0.2, w: L.w*0.55, h: L.h*0.4, rot: 0, src: r.result, filter: 'none' });
-        }
-      };
-      r.readAsDataURL(f);
-    }
-    addText() {
-      const L = this.logical;
-      this._add({ type: 'text', x: L.w/2-220, y: L.h/2-45, w: 440, h: 90, rot: 0, text: 'Your text',
-        style: { fontFamily: 'Inter', fontSize: 32, color: '#202124', fontWeight: 400, fontStyle: 'normal', textAlign: 'center', lineHeight: 1.2, letterSpacing: 0, textTransform: 'none' } });
-    }
-    addSticker(char) {
-      const L = this.logical;
-      this._add({ type: 'sticker', x: L.w/2-70, y: L.h/2-70, w: 140, h: 140, rot: 0, char });
-    }
-    duplicate() {
-      const e = this.sel; if (!e) return;
-      const c = clone(e); c.x += 24; c.y += 24;
-      this._add(c);
-    }
-    remove() {
-      const e = this.sel; if (!e) return;
-      this.page.elements = this.page.elements.filter(x => x.id !== e.id);
-      this.select(null); this.render(); this.commit();
-    }
-
-    // keep an element fully inside the page canvas (ignores rotation)
-    _clampEl(e) {
-      const L = this.logical;
-      e.w = Math.min(e.w, L.w); e.h = Math.min(e.h, L.h);
-      e.x = clamp(e.x, 0, L.w - e.w);
-      e.y = clamp(e.y, 0, L.h - e.h);
-    }
-
-    /* -------------------------------------------------------- interactions */
-    _down(e, node, elm) {
-      if (node.classList.contains('editing')) return;
-      if (e.target.classList.contains('qe-h')) return this._resize(e, node, elm, e.target.dataset.pos);
-      this.select(elm.id);
-      if (elm.type === 'image' && !elm.src) return; // placeholder handles click
-      e.preventDefault();
-      const rect = this._layer.getBoundingClientRect(), L = this.logical;
-      const sx = e.clientX, sy = e.clientY, ox = elm.x, oy = elm.y;
-      this._dragged = false;
-      const move = (ev) => {
-        const dx = (ev.clientX - sx) / rect.width * L.w;
-        const dy = (ev.clientY - sy) / rect.height * L.h;
-        if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 3) this._dragged = true;
-        elm.x = ox + dx; elm.y = oy + dy;
-        this._clampEl(elm);
-        node.style.left = (elm.x / L.w * 100) + '%';
-        node.style.top = (elm.y / L.h * 100) + '%';
-      };
-      const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
-        if (this._dragged) this.commit(); setTimeout(() => this._dragged = false, 0); };
-      document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
-    }
-
-    _resize(e, node, elm, pos) {
-      e.preventDefault(); e.stopPropagation();
-      const rect = this._layer.getBoundingClientRect(), L = this.logical;
-      const o = { x: elm.x, y: elm.y, w: elm.w, h: elm.h };
-      const cx = rect.left + (elm.x + elm.w / 2) / L.w * rect.width;
-      const cy = rect.top + (elm.y + elm.h / 2) / L.h * rect.height;
-      const sx = e.clientX, sy = e.clientY;
-      const isRot = pos === 'rot';
-      const move = (ev) => {
-        if (isRot) { elm.rot = Math.round(Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI + 90); node.style.transform = `rotate(${elm.rot}deg)`; return; }
-        const dx = (ev.clientX - sx) / rect.width * L.w;
-        const dy = (ev.clientY - sy) / rect.height * L.h;
-        if (pos.includes('r')) elm.w = clamp(o.w + dx, 30, L.w);
-        if (pos.includes('b')) elm.h = clamp(o.h + dy, 24, L.h);
-        if (pos.includes('l')) { elm.w = clamp(o.w - dx, 30, L.w); elm.x = o.x + dx; }
-        if (pos.includes('t')) { elm.h = clamp(o.h - dy, 24, L.h); elm.y = o.y + dy; }
-        // never let a handle push the element past the page edges
-        if (elm.x < 0) { elm.w += elm.x; elm.x = 0; }
-        if (elm.y < 0) { elm.h += elm.y; elm.y = 0; }
-        elm.w = Math.min(elm.w, L.w - elm.x);
-        elm.h = Math.min(elm.h, L.h - elm.y);
-        Object.assign(node.style, { left: elm.x/L.w*100+'%', top: elm.y/L.h*100+'%', width: elm.w/L.w*100+'%', height: elm.h/L.h*100+'%' });
-        if (elm.type === 'sticker') { const b = node.querySelector('.body'); if (b) b.style.fontSize = `calc(var(--s) * ${Math.min(elm.w, elm.h)*0.86}px)`; }
-      };
-      const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); this.commit(); };
-      document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
-    }
-
-    /* --------------------------------------------------------- text editing */
-    _editText(node, body, elm) {
-      node.classList.add('editing');
-      body.contentEditable = 'true'; body.focus();
-      document.execCommand && document.getSelection().selectAllChildren(body);
-      const finish = () => {
-        node.classList.remove('editing');
-        body.contentEditable = 'false';
-        elm.text = body.innerText;
-        body.removeEventListener('blur', finish);
-        this.commit();
-      };
-      body.addEventListener('blur', finish);
-    }
-
-    /* ========================================================= ORIENTATION */
-    toggleOrient() {
-      const from = this.logical;
-      this.page.orient = this.page.orient === 'landscape' ? 'portrait' : 'landscape';
-      const to = this.logical;
-      // remap every element proportionally so the design keeps its relative layout
-      this.page.elements.forEach(el => {
-        const m = this._mapRect(el, from, to);
-        el.x = m.x; el.y = m.y; el.w = m.w; el.h = m.h;
-        if (el.type === 'text' && el.style) {
-          const ry = to.h / from.h;
-          el.style.fontSize = Math.max(6, Math.round(el.style.fontSize * ry));
-          el.style.letterSpacing = (el.style.letterSpacing || 0) * ry;
-        }
-      });
-      this.select(null); this.render(); this.commit();
-      this._syncOrientBtn();
-    }
-    _syncOrientBtn() {
-      const b = $('#qe-orient', this.root); if (!b) return;
-      const land = this.page.orient === 'landscape';
-      b.classList.toggle('on', land);
-      b.title = land ? 'Switch to portrait' : 'Switch to landscape';
-    }
-
-    /* =========================================================== NAVIGATION */
-    goPage(i) {
-      i = clamp(i, 0, this.state.pages.length - 1);
-      if (i === this.state.current) return;
-      this.state.current = i;
-      this.select(null);
-      this.render();
-    }
-
-    /* ============================================================ THUMBS */
-    _renderThumbs() {
-      this.thumbs.innerHTML = '';
-      this.state.pages.forEach((p, i) => {
-        const L = this._logicalOf(p);
-        const H = 74, W = Math.round(H * L.w / L.h);
-        const t = el('button', 'qe-thumb' + (i === this.state.current ? ' active' : '') + (p.kind === 'spread' ? ' spread' : ''));
-        t.style.width = W + 'px'; t.style.height = H + 'px';
-        const mini = el('div', 'mini');
-        this._renderMini(mini, p, W, H);
-        t.appendChild(mini);
-        if (p.kind === 'spread') t.appendChild(el('div', 'midline'));
-        t.appendChild(el('div', 'num', p.name));
-        t.onclick = () => this.goPage(i);
-        this.thumbs.appendChild(t);
-      });
-    }
-
-    // faithful miniature of a page (used by thumbnails)
-    _renderMini(box, page, W, H) {
-      const L = this._logicalOf(page);
-      box.style.background = page.bg;
-      const s = W / L.w;
-      page.elements.forEach(e => {
-        const n = el('div');
-        Object.assign(n.style, { position: 'absolute', left: e.x/L.w*100+'%', top: e.y/L.h*100+'%',
-          width: e.w/L.w*100+'%', height: e.h/L.h*100+'%', transform: `rotate(${e.rot||0}deg)`, overflow: 'hidden' });
-        if (e.type === 'image' && e.src) { const img = el('img'); img.src = e.src; img.style.cssText = 'width:100%;height:100%;object-fit:cover;filter:'+this._imgFilter(e); n.appendChild(img); }
-        else if (e.type === 'image') { n.style.background = '#eef1f5'; n.style.border = '1px dashed #d5dbe3'; }
-        else if (e.type === 'text') { n.style.cssText += `display:flex;flex-direction:column;justify-content:center;color:${e.style.color};font-family:${e.style.fontFamily};font-size:${Math.max(3,e.style.fontSize*s)}px;line-height:${e.style.lineHeight};text-align:${e.style.textAlign};text-transform:${e.style.textTransform};font-weight:${e.style.fontWeight};font-style:${e.style.fontStyle};overflow:hidden`; n.textContent = e.text; }
-        else if (e.type === 'sticker') { n.style.cssText += `display:flex;align-items:center;justify-content:center;font-size:${Math.min(e.w,e.h)*s*0.8}px`; n.textContent = e.char; }
-        else if (e.type === 'brand') { const img = el('img'); img.src = QRINTO_LOGO; img.style.cssText = 'width:100%;height:100%;object-fit:contain;opacity:.7'; n.appendChild(img); }
-        else if (e.type === 'video') { n.style.background = '#111'; }
-        box.appendChild(n);
-      });
-    }
-
-    /* ============================================================ LAYOUTS */
-    _renderLayouts() {
-      const list = $('#qe-layoutlist', this.root);
-      list.innerHTML = '';
-      const kind = this.page.kind;
-      const base = this._kindBase(kind), L = this.logical;
-      LAYOUTS.filter(l => l.kind === kind).forEach(lay => {
-        const card = el('div', 'qe-lay' + (lay.id === this.page.layoutId ? ' sel' : ''));
-        card.appendChild(el('div', 'crown', '👑'));
-        const pw = this.layoutSide.clientWidth - 32 - 12; // inner width
-        const prevW = pw > 0 ? pw : 140;
-        const prevH = Math.round(prevW * L.h / L.w);
-        const prev = el('div', 'prev'); prev.style.height = prevH + 'px';
-        lay.elements.forEach(def => {
-          const e = this._mapRect(def, base, L);
-          const m = el('div', 'qe-mini ' + (def.type === 'brand' ? 'sticker' : def.type));
-          Object.assign(m.style, { left: e.x/L.w*100+'%', top: e.y/L.h*100+'%', width: e.w/L.w*100+'%', height: e.h/L.h*100+'%' });
-          e.type = def.type;
-          if (e.type === 'image') m.innerHTML = ICON.image;
-          else if (e.type === 'text') m.innerHTML = '<i style="width:90%"></i><i style="width:70%"></i><i style="width:80%"></i>';
-          else if (e.type === 'brand') m.textContent = 'Qrinto';
-          prev.appendChild(m);
-        });
-        card.appendChild(prev);
-        card.onclick = () => this.selectLayout(lay.id);
-        list.appendChild(card);
-      });
-    }
-
-    // apply a layout to the CURRENT page, preserving user content where possible
-    selectLayout(layoutId) {
-      const lay = LAYOUTS.find(l => l.id === layoutId); if (!lay) return;
-      const old = this.page.elements;
-      const pool = { image: old.filter(e => e.type === 'image' && e.src), text: old.filter(e => e.type === 'text'), sticker: old.filter(e => e.type === 'sticker') };
-      const keptStickers = pool.sticker.slice(); // stickers always preserved as-is
-      const base = this._kindBase(this.page.kind), L = this.logical;
-      const next = [];
-      lay.elements.forEach(def => {
-        const r = this._mapRect(def, base, L); // remap into current orientation
-        if (def.type === 'brand') { next.push({ id: uid(), type: 'brand', x: r.x, y: r.y, w: r.w, h: r.h, rot: 0 }); return; }
-        const src = pool[def.type] && pool[def.type].shift();
-        if (def.type === 'image') {
-          next.push({ id: uid(), type: 'image', x: r.x, y: r.y, w: r.w, h: r.h, rot: 0,
-            src: src ? src.src : null, filter: src ? (src.filter || 'none') : 'none',
-            filterName: src && src.filterName, magicName: src && src.magicName, scale: src && src.scale, flipH: src && src.flipH, flipV: src && src.flipV });
-        } else if (def.type === 'text') {
-          next.push({ id: uid(), type: 'text', x: r.x, y: r.y, w: r.w, h: r.h, rot: 0,
-            text: src ? src.text : def.text,
-            style: src ? src.style : { fontFamily: 'Inter', fontSize: 28, color: '#202124', fontWeight: 400, fontStyle: 'normal', textAlign: 'center', lineHeight: 1.2, letterSpacing: 0, textTransform: 'none' } });
-        }
-      });
-      // re-add any leftover stickers so they are never destroyed
-      keptStickers.forEach(s => next.push(clone(s)));
-      this.page.elements = next;
-      this.page.layoutId = layoutId;
-      this.select(null);
-      this.render(); this.commit();
-    }
-
-    /* ============================================================ HISTORY */
-    _snapshot(reset) {
-      const snap = clone({ pages: this.state.pages, current: this.state.current });
-      if (reset) { this.state.history = [snap]; this.state.histIndex = 0; }
-      this._syncHeader();
-    }
-    commit() {
-      this.save(false);
-      const snap = clone({ pages: this.state.pages, current: this.state.current });
-      this.state.history = this.state.history.slice(0, this.state.histIndex + 1);
-      this.state.history.push(snap);
-      if (this.state.history.length > 60) this.state.history.shift();
-      this.state.histIndex = this.state.history.length - 1;
-      this._syncHeader();
-    }
-    _restore(snap) {
-      this.state.pages = clone(snap.pages);
-      this.state.current = clamp(snap.current, 0, this.state.pages.length - 1);
-      this.select(null); this.render();
-    }
-    undo() { if (this.state.histIndex > 0) { this.state.histIndex--; this._restore(this.state.history[this.state.histIndex]); this._syncHeader(); } }
-    redo() { if (this.state.histIndex < this.state.history.length - 1) { this.state.histIndex++; this._restore(this.state.history[this.state.histIndex]); this._syncHeader(); } }
-    _syncHeader() {
-      const u = $('#qe-undo', this.root), r = $('#qe-redo', this.root);
-      if (u) u.disabled = this.state.histIndex <= 0;
-      if (r) r.disabled = this.state.histIndex >= this.state.history.length - 1;
-    }
-
-    /* ============================================================ KEYBOARD */
-    _onKey(e) {
-      const editing = document.activeElement && document.activeElement.isContentEditable;
-      const meta = e.ctrlKey || e.metaKey;
-      if (meta && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? this.redo() : this.undo(); return; }
-      if (meta && e.key.toLowerCase() === 'y') { e.preventDefault(); this.redo(); return; }
-      if (editing) return;
-      if (e.key === 'Escape') { this.select(null); this._setMode('normal'); this._closeMenus(); }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && this.sel) { e.preventDefault(); this.remove(); }
-    }
-
-    /* ============================================================ STICKERS */
-    _renderStickerGrid(query) {
-      const grid = $('#qe-stkgrid', this.root); grid.innerHTML = '';
-      let list = STICKERS[this._stkCat] || [];
-      if (query && query.trim()) { const all = [].concat(...Object.values(STICKERS)); list = [...new Set(all)]; }
-      list.forEach(ch => { const b = el('button', 'qe-stk', ch); b.onclick = () => this.addSticker(ch); grid.appendChild(b); });
-    }
-
-    /* ============================================================ PERSIST */
-    _key() { return 'qe-draft-' + (this.opts.productId || 'default'); }
-    save(notify) {
-      try { localStorage.setItem(this._key(), JSON.stringify({ pages: this.state.pages })); } catch (e) {}
-      if (notify) this._toast('Draft saved');
-    }
-    _load() {
-      try {
-        const raw = localStorage.getItem(this._key()); if (!raw) return;
-        const d = JSON.parse(raw);
-        if (d && Array.isArray(d.pages) && d.pages.length) this.state.pages = d.pages;
-      } catch (e) {}
-    }
-    continueNext() { this.save(false); this._toast('Saved — continuing…'); /* hook: navigate to next step */ }
-
-    /* ------------------------------------------------------------- helpers */
-    _hex(c) {
-      if (!c) return '#202124';
-      if (c[0] === '#') return c.length === 4 ? '#' + [...c.slice(1)].map(x => x + x).join('') : c;
-      const m = c.match(/\d+/g); if (!m) return '#202124';
-      return '#' + m.slice(0, 3).map(n => (+n).toString(16).padStart(2, '0')).join('');
-    }
-    _toast(msg) {
-      const t = $('#qe-toast', this.root); if (!t) return;
-      t.textContent = msg; t.classList.add('show');
-      clearTimeout(this._tt); this._tt = setTimeout(() => t.classList.remove('show'), 1900);
-    }
+}
+ctx.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||!sel)return;act(b.dataset.act,b.dataset.v);});
+ctx.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k||!sel)return;let v=e.target.value;
+  if(k==='size'){const n=parseInt(v,10);if(!(n>=6&&n<=200))return;v=n;}
+  if(k==='lh')v=parseFloat(v);
+  patch(sel.id,{[k]:v},false);
+  if(k==='color'){const i=e.target.parentElement.querySelector('i');if(i)i.style.background=v;}});
+ctx.addEventListener('change',e=>{const k=e.target.dataset.k;if(!k||!sel)return;
+  if(k==='size'){const f=findEl(sel.id);const n=clamp(parseInt(e.target.value,10)||f.el.size,6,200);patch(sel.id,{size:n},false);e.target.value=n;}
+  commit();});
+function act(a,v){
+  const f=findEl(sel.id);if(!f)return;const el=f.el;const arr=state.pages[f.pid].els;
+  switch(a){
+    case 'size-':patch(el.id,{size:Math.max(6,el.size-2)});renderCtx();break;
+    case 'size+':patch(el.id,{size:Math.min(200,el.size+2)});renderCtx();break;
+    case 'bold':patch(el.id,{bold:!el.bold});renderCtx();break;
+    case 'italic':patch(el.id,{italic:!el.italic});renderCtx();break;
+    case 'align':patch(el.id,{align:v});renderCtx();break;
+    case 'fit':patch(el.id,{fit:v});renderCtx();break;
+    case 'shape':patch(el.id,{shape:v});renderCtx();break;
+    case 'replace':pickPhotoFor(f.pid,el.id);break;
+    case 'clear':patch(el.id,{src:null});renderCtx();break;
+    case 'swap':openPanel('stickers');break;
+    case 'editqr':openPanel('qr');break;
+    case 'forward':if(f.idx<arr.length-1){arr.splice(f.idx,1);arr.splice(f.idx+1,0,el);renderStage();commit();}else toast('Already at the front');break;
+    case 'backward':if(f.idx>0){arr.splice(f.idx,1);arr.splice(f.idx-1,0,el);renderStage();commit();}else toast('Already at the back');break;
+    case 'dup':duplicate();break;
+    case 'del':removeSel();break;
   }
+}
 
-  window.initCardEditor = function (opts) {
-    const root = document.getElementById('qe');
-    if (root) window.qrintoEditor = new QrintoEditor(root, opts || {});
-  };
+/* ---------- Rail & panels ---------- */
+const TOOLS=[['templates','Templates','grid'],['layouts','Layouts','layout'],['text','Text','text'],['photos','Photos','image'],['stickers','Stickers','smile'],['qr','QR code','qr'],['background','Background','drop']];
+function renderRail(){rail.innerHTML=TOOLS.map(([id,label,icon])=>`<button data-tool="${id}" aria-pressed="${panel===id&&!panelEl.hidden}">${ic(icon,22)}<span>${label}</span></button>`).join('');}
+rail.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(b)togglePanel(b.dataset.tool);});
+function openPanel(name){panel=name;panelEl.hidden=false;renderRail();renderPanel();}
+function togglePanel(name){if(panel===name&&!panelEl.hidden){panelEl.hidden=true;panel=null;}else{panel=name;panelEl.hidden=false;}renderRail();renderPanel();}
+const head=t=>`<div class="phead"><h2>${t}</h2><button class="iconbtn" data-closepanel aria-label="Close panel">${ic('x',18)}</button></div>`;
+panelEl.addEventListener('click',e=>{if(e.target.closest('[data-closepanel]')){panelEl.hidden=true;panel=null;renderRail();}});
+
+function renderPanel(){
+  if(panelEl.hidden||!panel){panelEl.innerHTML='';return;}
+  const inner=document.createElement('div');inner.className='panel-inner';
+  const f=sel&&findEl(sel.id);
+  if(panel==='templates'){
+    inner.innerHTML=head('Templates')+`<p class="hint">Start from a finished design. It replaces your whole card, and you can undo it.</p><div class="tiles"></div>`;
+    const g=inner.querySelector('.tiles');
+    TEMPLATES.forEach(t=>{const pages=t.make();const b=document.createElement('button');b.className='tile';b.appendChild(mini([[pages.front,'front']],.29));b.insertAdjacentHTML('beforeend',`<span>${t.name}</span>`);b.onclick=()=>applyTemplate(t);g.appendChild(b);});
+  }
+  else if(panel==='layouts'){
+    inner.innerHTML=head('Layouts')+`<p class="hint">Arrange the ${VIEW_LABEL[view].toLowerCase()} of your card. Your words and photos carry over.</p><div class="tiles ${view==='inside'?'one':''}"></div>`;
+    const g=inner.querySelector('.tiles');
+    LAYOUTS[view].forEach(ly=>{const made=ly.make();const arr=VIEWS[view].map(pid=>[{bg:state.pages[pid].bg,els:made[pid]||[]},pid]);
+      const b=document.createElement('button');b.className='tile';b.appendChild(mini(arr,view==='inside'?.33:.29));b.insertAdjacentHTML('beforeend',`<span>${ly.name}</span>`);b.onclick=()=>applyLayout(ly);g.appendChild(b);});
+  }
+  else if(panel==='text'){
+    inner.innerHTML=head('Text')+`<p class="hint">Adds to the ${PAGE_LABEL[targetPage()].toLowerCase()}. Start typing right away.</p>
+      <button class="addtext" data-add="heading"><span style="font:700 26px 'Playfair Display',Georgia,serif">Add a heading</span></button>
+      <button class="addtext" data-add="sub"><span style="font:italic 400 21px 'Cormorant Garamond',Georgia,serif">Add a subheading</span></button>
+      <button class="addtext" data-add="body"><span style="font:400 15px 'Onest',system-ui,sans-serif">Add a short message</span></button>
+      <div class="sec">Font pairs</div><div class="tiles"></div>`;
+    const g=inner.querySelector('.tiles');
+    PAIRS.forEach(pair=>{const b=document.createElement('button');b.className='tile';
+      b.innerHTML=`<div class="pair">${pair.map(p=>`<span style="font-family:${fontCss(p.font)};font-size:${Math.round(p.size*.42)}px;color:${p.color};font-style:${p.italic?'italic':'normal'};font-weight:${p.bold?700:400};letter-spacing:${(p.ls||0)*.4}px;line-height:1.1">${esc(p.text)}</span>`).join('')}</div>`;
+      b.onclick=()=>addPair(pair);g.appendChild(b);});
+    inner.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addText(b.dataset.add));
+  }
+  else if(panel==='photos'){
+    const fill=f&&f.el.type==='photo';
+    inner.innerHTML=head('Photos')+`<p class="hint">${fill?'Pick a photo to put in the selected frame.':'Upload photos, then click one to add it. You can also drop photos straight onto the card.'}</p>
+      <button class="drop" id="dropZone">${ic('upload',24)}<b>Upload photos</b><span>JPG, PNG or WebP. Drag and drop works too.</span></button>
+      ${library.length?`<div class="sec">Your uploads</div><div class="lib">${library.map((p,i)=>`<button data-lib="${i}" aria-label="Use photo ${i+1}"><img src="${p.src}" alt=""></button>`).join('')}</div>`:''}
+      <div class="sec">Frames</div><button class="addtext" data-add="frame">${ic('image',18)}<span>Add an empty photo frame</span></button>`;
+    const dz=inner.querySelector('#dropZone');
+    dz.onclick=()=>{pendingPhoto=null;fileInput.value='';fileInput.click();};
+    dz.ondragover=e=>{e.preventDefault();dz.classList.add('over');};dz.ondragleave=()=>dz.classList.remove('over');
+    dz.ondrop=e=>{e.preventDefault();e.stopPropagation();dz.classList.remove('over');handleUploads([...e.dataTransfer.files]);};
+    inner.querySelectorAll('[data-lib]').forEach(b=>b.onclick=()=>useLibrary(library[+b.dataset.lib]));
+    inner.querySelector('[data-add="frame"]').onclick=()=>{const o=stagger();addElement(P({x:70+o,y:120+o,w:220,h:220}));};
+  }
+  else if(panel==='stickers'){
+    const swap=f&&f.el.type==='sticker';
+    inner.innerHTML=head('Stickers')+`<p class="hint">${swap?'Pick a sticker to swap the selected one.':'Click a sticker to add it. Drag a corner to resize.'}</p>`+
+      Object.entries(STICKERS).map(([cat,list])=>`<div class="sec">${cat}</div><div class="stickers">${list.map(c=>`<button data-st="${c}" aria-label="Sticker ${c}">${c}</button>`).join('')}</div>`).join('');
+    inner.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const c=b.dataset.st;const cur=sel&&findEl(sel.id);
+      if(cur&&cur.el.type==='sticker'){patch(cur.el.id,{char:c});}else{const o=stagger();addElement(S({char:c,x:140+o,y:212+o}));}});
+  }
+  else if(panel==='qr'){
+    const editing=f&&f.el.type==='qr';const url=editing?(f.el.url||''):qrDraft.url;const color=editing?(f.el.color||'#14201a'):qrDraft.color;
+    inner.innerHTML=head('QR code')+`<p class="hint">Link the printed card to a video message, playlist, photo album or gift registry. Anyone can scan it with a phone camera.</p>
+      <label class="field-label" for="qrUrl">Link</label><input id="qrUrl" class="input" type="url" inputmode="url" autocomplete="off" placeholder="https://" value="${esc(url)}">
+      <div class="err" id="qrErr" hidden></div>
+      <span class="field-label">Colour</span><div class="swatches" id="qrCols">${QR_COLORS.map(c=>`<button class="sw" data-c="${c}" style="background:${c}" aria-label="Colour ${c}" aria-pressed="${c===color}"></button>`).join('')}</div>
+      <div class="qr-prev" id="qrPrev">Your QR code shows up here</div>
+      <button class="btn primary wide" id="qrGo">${editing?'Update QR code':'Add QR code to card'}</button>
+      ${editing?'':`<p class="hint small">It goes on the ${PAGE_LABEL[targetPage()].toLowerCase()}. The back is the usual spot, so people find it after reading.</p>`}`;
+    let cur={url,color};const input=inner.querySelector('#qrUrl'),prev=inner.querySelector('#qrPrev'),err=inner.querySelector('#qrErr');
+    const preview=()=>{err.hidden=true;if(!cur.url.trim()){prev.textContent='Your QR code shows up here';return;}const src=makeQR(normUrl(cur.url),cur.color);if(src)prev.innerHTML=`<img src="${src}" alt="QR code preview">`;else prev.textContent='Preview unavailable';};
+    let qt;input.oninput=()=>{cur.url=input.value;if(!editing)qrDraft.url=input.value;clearTimeout(qt);qt=setTimeout(preview,250);};
+    inner.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{cur.color=b.dataset.c;if(!editing)qrDraft.color=cur.color;inner.querySelectorAll('[data-c]').forEach(x=>x.setAttribute('aria-pressed',x===b));preview();});
+    inner.querySelector('#qrGo').onclick=()=>{
+      const showErr=m=>{err.textContent=m;err.hidden=false;input.focus();};
+      if(typeof QRCode==='undefined'){showErr('The QR generator did not load. Check your connection and reload the page.');return;}
+      if(!cur.url.trim()){showErr('Paste a link to create a QR code.');return;}
+      const u=normUrl(cur.url);const src=makeQR(u,cur.color);if(!src){showErr('That link is too long for a QR code. Try a shorter link.');return;}
+      if(editing){patch(f.el.id,{url:u,color:cur.color,src});renderCtx();toast('QR code updated');}
+      else{const ph=state.pages[targetPage()].els.find(e=>e.type==='qr'&&!e.src);
+        if(ph){patch(ph.id,{url:u,color:cur.color,src});select(targetPage(),ph.id);}
+        else addElement(Q({url:u,color:cur.color,src,y:150+stagger()}));
+        qrDraft.url='';toast('QR code added');}
+    };
+    setTimeout(preview,0);
+  }
+  else if(panel==='background'){
+    const pid=targetPage();const bg=state.pages[pid].bg;
+    inner.innerHTML=head('Background')+`<p class="hint">Paper colour for the ${PAGE_LABEL[pid].toLowerCase()}.</p>
+      <div class="swatches">${BG_COLORS.map(c=>`<button class="sw" data-bg="${c}" style="background:${c}" aria-label="Colour ${c}" aria-pressed="${c===bg}"></button>`).join('')}</div>
+      <label class="custom"><input type="color" id="bgCustom" value="${bg}"> Custom colour</label>
+      <button class="btn wide" id="bgAll">Use on every page</button>`;
+    const setBg=(c,doCommit)=>{state.pages[pid].bg=c;const n=sheet.querySelector(`.page[data-page="${pid}"] .content`);if(n)n.style.background=c;if(doCommit){commit();}};
+    inner.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{setBg(b.dataset.bg,true);inner.querySelectorAll('[data-bg]').forEach(x=>x.setAttribute('aria-pressed',x===b));inner.querySelector('#bgCustom').value=b.dataset.bg;});
+    const cc=inner.querySelector('#bgCustom');cc.oninput=()=>setBg(cc.value,false);cc.onchange=()=>commit();
+    inner.querySelector('#bgAll').onclick=()=>{const c=state.pages[pid].bg;Object.values(state.pages).forEach(p=>p.bg=c);renderStage();commit();toast('Background used on every page','Undo',undo);};
+  }
+  panelEl.innerHTML='';panelEl.appendChild(inner);
+}
+
+function applyTemplate(t){finishEditing();state.pages=t.make();sel=null;view='front';zoomMode='fit';renderStage();renderStrip();renderCtx();commit();toast(`${t.name} template applied`,'Undo',undo);}
+function applyLayout(ly){
+  finishEditing();const pids=VIEWS[view];const texts=[],photos=[],qrs=[];
+  pids.forEach(pid=>[...state.pages[pid].els].sort((a,b)=>a.y-b.y).forEach(el=>{if(el.type==='text'&&el.text.trim())texts.push(el);if(el.type==='photo'&&el.src)photos.push(el);if(el.type==='qr'&&el.src)qrs.push(el);}));
+  const made=ly.make();
+  pids.forEach(pid=>{const els=made[pid]||[];els.forEach(el=>{
+    if(el.type==='text'&&texts.length){const o=texts.shift();Object.assign(el,{text:o.text,font:o.font,color:o.color,bold:o.bold,italic:o.italic,ls:o.ls});}
+    if(el.type==='photo'&&photos.length){const o=photos.shift();el.src=o.src;el.fit=o.fit;}
+    if(el.type==='qr'&&qrs.length){const o=qrs.shift();Object.assign(el,{src:o.src,url:o.url,color:o.color});}
+  });state.pages[pid].els=els;});
+  sel=null;renderStage();renderCtx();commit();toast('Layout applied','Undo',undo);
+}
+function addText(kind){
+  const o=stagger();let el;
+  if(kind==='heading')el=T({text:'Your heading',font:'Playfair Display',size:34,bold:true,y:190+o});
+  else if(kind==='sub')el=T({x:40,w:280,text:'Add a subheading',font:'Cormorant Garamond',size:22,italic:true,y:200+o});
+  else el=T({x:40,w:280,text:'Write your message here',font:'Onest',size:16,lh:1.5,y:210+o});
+  addElement(el);startEdit(el.id);
+}
+function addPair(pair){
+  const pid=targetPage();let y=170+stagger();const ids=[];
+  pair.forEach(p=>{const el=T({...p,y});state.pages[pid].els.push(el);ids.push(el.id);y+=Math.round(p.size*(p.lh||1.35))+14;});
+  renderStage();select(pid,ids[0]);commit();
+}
+
+/* ---------- Photos ---------- */
+function loadImage(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const max=1400;const s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);const g=c.getContext('2d');const png=file.type==='image/png';if(!png){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);}g.drawImage(img,0,0,c.width,c.height);res({src:c.toDataURL(png?'image/png':'image/jpeg',.86),w:c.width,h:c.height});};img.onerror=rej;img.src=fr.result;};fr.onerror=rej;fr.readAsDataURL(file);});}
+function pickPhotoFor(pid,id){pendingPhoto={pid,id};fileInput.value='';fileInput.click();}
+fileInput.addEventListener('change',()=>{const files=[...fileInput.files];if(files.length)handleUploads(files);});
+async function handleUploads(files,dropAt){
+  files=files.filter(f=>f.type.startsWith('image/'));if(!files.length){toast('Choose an image file: JPG, PNG or WebP');return;}
+  let imgs=[];try{imgs=await Promise.all(files.map(loadImage));}catch(e){toast('That photo could not be opened. Try a different file.');return;}
+  library.unshift(...imgs);library=library.slice(0,24);
+  const first=imgs[0];
+  if(pendingPhoto&&findEl(pendingPhoto.id)){const {pid,id}=pendingPhoto;patch(id,{src:first.src});select(pid,id);}
+  else if(dropAt&&dropAt.id){patch(dropAt.id,{src:first.src});select(dropAt.pid,dropAt.id);}
+  else{const cur=sel&&findEl(sel.id);if(cur&&cur.el.type==='photo'&&!dropAt){patch(cur.el.id,{src:first.src});renderCtx();}else addPhoto(first,dropAt&&dropAt.pid,dropAt&&dropAt.x,dropAt&&dropAt.y);}
+  pendingPhoto=null;
+  if(imgs.length>1)toast(`${imgs.length} photos uploaded. Find the rest under Photos.`);
+  if(panel==='photos')renderPanel();
+}
+function addPhoto(img,pid,cx,cy){const m=240;const s=Math.min(m/img.w,m/img.h);const w=Math.round(img.w*s),h=Math.round(img.h*s);const o=cx==null?stagger():0;
+  cx=cx==null?W/2+o:cx;cy=cy==null?H/2+o:cy;addElement(P({x:Math.round(cx-w/2),y:Math.round(cy-h/2),w,h,src:img.src,shape:'rounded'}),pid);}
+function useLibrary(img){const cur=sel&&findEl(sel.id);if(cur&&cur.el.type==='photo'){patch(cur.el.id,{src:img.src});renderCtx();renderPanel();}else addPhoto(img);}
+stage.addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){e.preventDefault();stage.classList.add('dropping');}});
+stage.addEventListener('dragleave',e=>{if(!stage.contains(e.relatedTarget))stage.classList.remove('dropping');});
+stage.addEventListener('drop',e=>{e.preventDefault();stage.classList.remove('dropping');const files=[...e.dataTransfer.files];if(!files.length)return;
+  const pageNode=e.target.closest('.page');const photoNode=e.target.closest('.el-photo');let at=null;
+  if(pageNode){const r=pageNode.getBoundingClientRect();at={pid:pageNode.dataset.page,x:(e.clientX-r.left)/zoom,y:(e.clientY-r.top)/zoom};if(photoNode)at.id=photoNode.dataset.id;}
+  else at={pid:targetPage()};
+  handleUploads(files,at);});
+
+/* ---------- QR ---------- */
+function normUrl(u){u=u.trim();return /^[a-z][a-z0-9+.-]*:/i.test(u)?u:'https://'+u;}
+function makeQR(text,color){if(typeof QRCode==='undefined')return null;try{const box=document.createElement('div');new QRCode(box,{text,width:480,height:480,colorDark:color,colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});const c=box.querySelector('canvas');return c?c.toDataURL('image/png'):null;}catch(e){return null;}}
+
+/* ---------- Review ---------- */
+function measureH(el){if(el.type!=='text')return el.h;const m=$('#measure');m.innerHTML='';const n=buildEl(el);n.style.position='relative';n.style.left='0';n.style.top='0';m.appendChild(n);const h=n.offsetHeight;m.innerHTML='';return h;}
+function runChecks(){
+  const out=[];
+  ORDER.forEach(v=>VIEWS[v].forEach(pid=>state.pages[pid].els.forEach(el=>{
+    const where=PAGE_LABEL[pid].toLowerCase();const item=msg=>out.push({v,pid,id:el.id,msg});
+    if(el.type==='photo'&&!el.src)return item(`A photo frame on the ${where} is empty. It will print blank.`);
+    if(el.type==='qr'&&!el.src)return item(`The QR code spot on the ${where} has no link yet.`);
+    if(el.type==='text'&&!el.text.trim())return item(`There's an empty text box on the ${where}.`);
+    if(el.type==='photo')return;
+    const h=measureH(el),m=12;
+    if(el.x<m||el.y<m||el.x+el.w>W-m||el.y+h>H-m)item(`${el.type==='text'?'Text':el.type==='qr'?'The QR code':'A sticker'} on the ${where} sits close to the edge and could be trimmed.`);
+  })));
+  return out;
+}
+function openReview(){finishEditing();modal.hidden=false;pvView=view;renderReview();$('#dlgClose').focus();}
+function closeReview(){modal.hidden=true;}
+function renderReview(){
+  $('#pvTabs').querySelectorAll('[data-pv]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pv===pvView));
+  const area=$('#pvStage');area.innerHTML='';const pids=VIEWS[pvView];
+  const aw=Math.max(220,area.clientWidth||520)-8,ah=Math.min(440,window.innerHeight*.5);
+  const s=Math.min(ah/H,aw/(W*pids.length),1);
+  area.appendChild(mini(pids.map(pid=>[state.pages[pid],pid]),s,'preview'));
+  const issues=runChecks();const list=$('#checkList');
+  list.innerHTML=issues.length?issues.map((it,i)=>`<div class="check"><span class="ic warn">${ic('alert',18)}</span><div><p>${esc(it.msg)}</p><button class="link" data-fix="${i}">Show me</button></div></div>`).join('')
+    :`<div class="check"><span class="ic ok">${ic('check',18)}</span><p>Everything looks ready to print.</p></div>`;
+  list.querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>{const it=issues[+b.dataset.fix];closeReview();setView(it.v);if(findEl(it.id))select(it.pid,it.id);});
+}
+$('#pvTabs').addEventListener('click',e=>{const b=e.target.closest('[data-pv]');if(b){pvView=b.dataset.pv;renderReview();}});
+modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('[data-close]'))closeReview();});
+$('#confirmBtn').onclick=()=>{closeReview();toast('Design saved. Next up: paper and delivery options.');};
+$('#nextBtn').onclick=openReview;
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg,label,fn){toastEl.innerHTML=`<span>${esc(msg)}</span>${label?`<button>${label}</button>`:''}`;if(label)toastEl.querySelector('button').onclick=()=>{fn();hideToast();};toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(hideToast,4200);}
+function hideToast(){toastEl.classList.remove('show');}
+
+/* ---------- Keyboard ---------- */
+let nudgeT;
+document.addEventListener('keydown',e=>{
+  const t=e.target;const typing=t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable;
+  const mod=e.metaKey||e.ctrlKey;const k=e.key.toLowerCase();
+  if(!modal.hidden){if(e.key==='Escape')closeReview();return;}
+  if(mod&&k==='z'&&!typing){e.preventDefault();e.shiftKey?redo():undo();return;}
+  if(mod&&k==='y'&&!typing){e.preventDefault();redo();return;}
+  if(typing)return;
+  if(sel){
+    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();removeSel();return;}
+    if(mod&&k==='d'){e.preventDefault();duplicate();return;}
+    if(e.key==='Escape'){select(null);return;}
+    if(e.key==='Enter'){const f=findEl(sel.id);if(f&&f.el.type==='text'){e.preventDefault();startEdit(sel.id);}return;}
+    if(e.key.startsWith('Arrow')){e.preventDefault();const d=e.shiftKey?10:1;const f=findEl(sel.id);if(!f)return;
+      if(e.key==='ArrowLeft')f.el.x-=d;if(e.key==='ArrowRight')f.el.x+=d;if(e.key==='ArrowUp')f.el.y-=d;if(e.key==='ArrowDown')f.el.y+=d;
+      const n=nodeOf(sel.id);n.style.left=f.el.x+'px';n.style.top=f.el.y+'px';positionSelbox();clearTimeout(nudgeT);nudgeT=setTimeout(commit,350);}
+  }else{
+    if(e.key==='ArrowRight'){const i=ORDER.indexOf(view);if(i<2)setView(ORDER[i+1]);}
+    if(e.key==='ArrowLeft'){const i=ORDER.indexOf(view);if(i>0)setView(ORDER[i-1]);}
+  }
+});
+
+/* ---------- Wire up chrome ---------- */
+$('#undoBtn').innerHTML=ic('undo');$('#redoBtn').innerHTML=ic('redo');$('#pencil').innerHTML=ic('pencil',15);
+$('#prevBtn').innerHTML=ic('chevL');$('#nextPageBtn').innerHTML=ic('chevR');$('#dlgClose').innerHTML=ic('x');
+$('#zoomIn').innerHTML=ic('plus',18);$('#zoomOut').innerHTML=ic('minus',18);$('#safeBtn').innerHTML=ic('margins',18);
+$('#undoBtn').onclick=undo;$('#redoBtn').onclick=redo;
+$('#prevBtn').onclick=()=>{const i=ORDER.indexOf(view);if(i>0)setView(ORDER[i-1]);};
+$('#nextPageBtn').onclick=()=>{const i=ORDER.indexOf(view);if(i<2)setView(ORDER[i+1]);};
+$('#zoomIn').onclick=()=>zoomBy(1.15);$('#zoomOut').onclick=()=>zoomBy(1/1.15);
+$('#zoomPct').onclick=()=>{zoomMode='fit';applyZoom();};
+$('#safeBtn').onclick=()=>{showSafe=!showSafe;$('#safeBtn').setAttribute('aria-pressed',showSafe);sheet.classList.toggle('show-safe',showSafe);if(showSafe)toast('Keep important things inside the dashed line');};
+const titleIn=$('#title');titleIn.value=state.title;document.title=state.title+' | qrinto';
+titleIn.oninput=()=>{state.title=titleIn.value||'Untitled card';document.title=state.title+' | qrinto';scheduleSave();};
+titleIn.onkeydown=e=>{if(e.key==='Enter')titleIn.blur();};
+if('ResizeObserver' in window)new ResizeObserver(()=>{if(zoomMode==='fit')applyZoom();}).observe(stage);
+else window.addEventListener('resize',()=>{if(zoomMode==='fit')applyZoom();});
+if(window.matchMedia('(max-width:760px)').matches){panelEl.hidden=true;panel=null;}
+
+renderRail();renderPanel();renderStage();renderStrip();renderCtx();updateUndo();setStatus('saved');
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{positionSelbox();renderStrip();});
 })();

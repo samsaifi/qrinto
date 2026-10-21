@@ -86,6 +86,10 @@ Route::get('/storage-link', function () {
 
     return 'Storage link created successfully!';
 });
+
+// Lock screen shown to store admins / staff whose store is inactive.
+Route::view('/store-inactive', 'auth.store-inactive')->name('store.inactive');
+
 /*
 | Standalone Store Panel (separate layout from the NAC admin panel).
 | Defined BEFORE the /store/{storeCode} scan wildcard so the static panel
@@ -196,6 +200,12 @@ Route::get('/track', fn() => $flowController()->trackForm())->name('canonical.tr
 Route::post('/track', fn(Request $request) => $flowController()->track($request))->name('canonical.track');
 Route::get('/track/{orderNumber}', fn($orderNumber) => $flowController()->trackOrder($orderNumber))->name('canonical.track.order');
 
+// Public store self-registration (no auth): creates store + store_admin user, emails admin & store
+Route::get('/store-registration', [\App\Http\Controllers\StoreRegistrationController::class, 'create'])->name('store-registration.create');
+Route::get('/store-registration/thank-you', [\App\Http\Controllers\StoreRegistrationController::class, 'thankYou'])->name('store-registration.thank-you');
+Route::post('/store-registration', [\App\Http\Controllers\StoreRegistrationController::class, 'store'])
+    ->middleware('throttle:20,1')->name('store-registration.store');
+
 // Direct Print on 931BL
 // Direct print on the customer's own 931BL (spec §6). Windows/desktop flow.
 Route::get('/local-print', [\App\Http\Controllers\LocalPrintController::class, 'start'])->name('localprint.index');
@@ -207,6 +217,11 @@ Route::post('/print/own-design/sizes/customizer/preview', [\App\Http\Controllers
 Route::get('/print/pdf', [\App\Http\Controllers\LocalPrintController::class, 'pdf'])->name('localprint.pdf');
 Route::post('/print/pdf', [\App\Http\Controllers\LocalPrintController::class, 'upload'])->name('localprint.upload');
 Route::get('/print/pdf/check', [\App\Http\Controllers\LocalPrintController::class, 'check'])->name('localprint.check');
+// Testing duplicate of the PDF check page (loads test-print-settings.js + test modal).
+Route::get('/testing/print/pdf/check', [\App\Http\Controllers\LocalPrintController::class, 'testCheck'])->name('localprint.test-check');
+// Testing page for the NEW PrintTrays (Adobe) bridge on ports 8191/18191/28191
+// (loads new-testing-printtrays.js + new-test-print-settings.js + new test modal).
+Route::get('/new-testing/print/pdf/check', [\App\Http\Controllers\LocalPrintController::class, 'newTestCheck'])->name('localprint.new-test-check');
 Route::post('/print/pdf/print', [\App\Http\Controllers\LocalPrintController::class, 'doPrint'])->name('localprint.print');
 Route::post('/print/pdf/save-regenerated', [\App\Http\Controllers\LocalPrintController::class, 'saveRegenerated'])->name('localprint.save-regenerated');
 // Local-print audit logging (called from the print pages around pp.print()).

@@ -101,6 +101,14 @@
                                 $itemImages = [];
 
                                 if (!empty($uploadIds)) {
+                                    // Page order (frame → sample → background → overlay = page 1 → 4)
+                                    // so the flip preview shows front / inside / back correctly.
+                                    if (is_array($uploadIds)) {
+                                        $slotOrder = ['frame_image', 'sample_image', 'background_image', 'overlay_image'];
+                                        uksort($uploadIds, fn($a, $b) =>
+                                            (array_search($a, $slotOrder, true) === false ? 99 : array_search($a, $slotOrder, true))
+                                            <=> (array_search($b, $slotOrder, true) === false ? 99 : array_search($b, $slotOrder, true)));
+                                    }
                                     $uArr = is_array($uploadIds) ? array_values($uploadIds) : [$uploadIds];
                                     foreach ($uArr as $upId) {
                                         if ($upId) {
@@ -143,7 +151,7 @@
                                         class="flex gap-1.5 shrink-0 {{ count($itemImages) > 2 ? 'flex-wrap max-w-[120px]' : '' }}">
                                         @forelse ($itemImages as $imgIdx => $img)
                                             <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-100 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
-                                                @click="openGallery({{ json_encode($itemImages) }}, {{ $imgIdx }})">
+                                                @click="openPreview('cart-preview-{{ $item->id }}')">
                                                 <img src="{{ $img }}" alt="{{ $item->product->name }}"
                                                     class="w-full h-full object-cover">
                                             </div>
@@ -154,6 +162,16 @@
                                             </div>
                                         @endforelse
                                     </div>
+
+                                    {{-- Card flip preview for this item (cloned into the preview modal on click). --}}
+                                    @if (!empty($itemImages))
+                                        <template id="cart-preview-{{ $item->id }}">
+                                            @include('quick-flow-pc.local-print.partials.book-preview', [
+                                                'images' => $itemImages,
+                                                'orientation' => 'auto',
+                                            ])
+                                        </template>
+                                    @endif
 
                                     {{-- Title & Specs --}}
                                     <div>
@@ -357,33 +375,16 @@
 
         </div>
 
-        {{-- Image Gallery Modal --}}
+        {{-- Design Preview Modal: card flip preview of the clicked item.
+             The item's <template> is cloned in on open and removed on close. --}}
         <template x-teleport="body">
-            <div x-cloak x-show="galleryOpen"
-                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-                @click.self="galleryOpen = false" @keydown.escape.window="galleryOpen = false"
-                @keydown.arrow-right.window="galleryOpen && nextImg()"
-                @keydown.arrow-left.window="galleryOpen && prevImg()">
-                <div class="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center" @click.stop>
-                    {{-- Close --}}
-                    <button @click="galleryOpen = false"
+            <div x-cloak x-show="previewOpen"
+                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+                @click.self="closePreview()" @keydown.escape.window="previewOpen && closePreview()">
+                <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl p-4 sm:p-5" @click.stop>
+                    <button @click="closePreview()"
                         class="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-white shadow-lg text-slate-600 hover:text-slate-900 flex items-center justify-center font-bold text-lg cursor-pointer">✕</button>
-
-                    {{-- Image --}}
-                    <img :src="galleryImages[galleryIdx]"
-                        class="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain bg-white" alt="Preview">
-
-                    {{-- Nav arrows --}}
-                    <template x-if="galleryImages.length > 1">
-                        <div class="flex items-center gap-4 mt-4">
-                            <button @click="prevImg()"
-                                class="w-10 h-10 rounded-full bg-white/90 shadow text-slate-700 hover:bg-white flex items-center justify-center font-bold text-lg cursor-pointer">‹</button>
-                            <span class="text-white text-xs font-bold tabular-nums"
-                                x-text="(galleryIdx + 1) + ' / ' + galleryImages.length"></span>
-                            <button @click="nextImg()"
-                                class="w-10 h-10 rounded-full bg-white/90 shadow text-slate-700 hover:bg-white flex items-center justify-center font-bold text-lg cursor-pointer">›</button>
-                        </div>
-                    </template>
+                    <div id="cart-preview-body" class="rounded-xl bg-[#f2f7f2] p-2 pb-3"></div>
                 </div>
             </div>
         </template>
@@ -471,9 +472,7 @@
                 isProcessing: false,
                 paymentSuccess: false,
                 paypalRendered: false,
-                galleryOpen: false,
-                galleryImages: [],
-                galleryIdx: 0,
+                previewOpen: false,
 
                 couponInput: '{{ $cart->coupon->code ?? '' }}',
                 appliedCoupon: {!! $cart->coupon ? "'" . $cart->coupon->code . "'" : 'null' !!},
@@ -503,16 +502,19 @@
                     return symbol + (val * rate).toFixed(2);
                 },
 
-                openGallery(images, idx) {
-                    this.galleryImages = images;
-                    this.galleryIdx = idx || 0;
-                    this.galleryOpen = true;
+                // Card flip preview modal (book-preview partial).
+                openPreview(templateId) {
+                    const tpl = document.getElementById(templateId);
+                    if (!tpl) return;
+                    this.previewOpen = true;
+                    // Insert once visible so the preview can measure its stage.
+                    this.$nextTick(() => {
+                        document.getElementById('cart-preview-body').replaceChildren(tpl.content.cloneNode(true));
+                    });
                 },
-                nextImg() {
-                    this.galleryIdx = (this.galleryIdx + 1) % this.galleryImages.length;
-                },
-                prevImg() {
-                    this.galleryIdx = (this.galleryIdx - 1 + this.galleryImages.length) % this.galleryImages.length;
+                closePreview() {
+                    this.previewOpen = false;
+                    document.getElementById('cart-preview-body').replaceChildren();
                 },
 
                 calculateTotal() {

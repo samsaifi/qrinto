@@ -3,7 +3,17 @@
 
 @section('content')
     @php
-        $uploadList = $uploads->values();
+        // Images in PAGE order (frame → sample → background → overlay = page 1 → 4),
+        // not DB order, so the book preview shows front / inside / back correctly.
+        $slotOrder = ['frame_image', 'sample_image', 'background_image', 'overlay_image'];
+        $uploadList = collect($uploadIds ?? [])
+            ->sortBy(fn($uid, $slot) => ($i = array_search($slot, $slotOrder, true)) === false ? 99 : $i)
+            ->map(fn($uid) => $uploads->get($uid))
+            ->filter()
+            ->values();
+        if ($uploadList->isEmpty()) {
+            $uploadList = $uploads->values();
+        }
         $imageUrls = $uploadList->map(fn($u) => asset('storage/' . ltrim($u->file_path ?? $u->path, '/')))->all();
         $totalPages = count($imageUrls);
     @endphp
@@ -21,83 +31,26 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
 
-                {{-- ═══ Left: swipe slider preview ═══ --}}
+                {{-- ═══ Left: book-style design preview ═══ --}}
                 <div class="bg-white border border-slate-200/80 rounded-xl md:rounded-2xl p-4 md:p-6">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <h2 class="font-bold text-slate-900 text-sm">Your Design</h2>
-                            @if (!empty($flowData['size_name']))
-                                <p class="mono text-[11px] text-slate-400 mt-0.5">
-                                    {{ $flowData['size_name'] }} · {{ ucfirst($flowData['orientation'] ?? 'portrait') }}
-                                </p>
-                            @endif
-                        </div>
-                        @if ($totalPages > 1)
-                            <div class="flex items-center gap-1.5 shrink-0">
-                                <button type="button" @click="slidePrev()" :disabled="slide <= 0"
-                                    class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
-                                    <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
-                                </button>
-                                <span class="mono text-[11px] text-slate-500 tabular-nums w-14 text-center">
-                                    <span x-text="slide + 1"></span> / {{ $totalPages }}
-                                </span>
-                                <button type="button" @click="slideNext()" :disabled="slide >= {{ $totalPages - 1 }}"
-                                    class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
-                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </div>
+                    <div class="min-w-0">
+                        <h2 class="font-bold text-slate-900 text-sm">Your Design</h2>
+                        @if (!empty($flowData['size_name']))
+                            <p class="mono text-[11px] text-slate-400 mt-0.5">
+                                {{ $flowData['size_name'] }} · {{ ucfirst($flowData['orientation'] ?? 'portrait') }}
+                            </p>
                         @endif
                     </div>
 
-                    {{-- Swipe slider --}}
-                    <div class="slider-viewport rounded-xl mt-4 bg-[#f2f7f2] overflow-hidden relative"
-                        @keydown.right.window="slideNext()" @keydown.left.window="slidePrev()"
-                        @touchstart.passive="touchStart($event)" @touchend.passive="touchEnd($event)">
-                        <div class="slider-track flex"
-                            :style="'transform: translateX(-' + (slide * 100) +
-                            '%); transition: transform 0.4s cubic-bezier(.4,0,.2,1);'">
-                            @foreach ($imageUrls as $idx => $url)
-                                <div class="slider-slide flex-shrink-0 w-full flex items-center justify-center p-4"
-                                    style="min-height: 150px;">
-                                    <img src="{{ $url }}" alt="Page {{ $idx + 1 }}"
-                                        class="max-w-full max-h-[170px] md:max-h-[340px] rounded-lg bg-white object-contain"
-                                        style="box-shadow: 0 4px 20px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.04);"
-                                        draggable="false">
-                                </div>
-                            @endforeach
-                        </div>
-
-                        {{-- Prev/Next overlay arrows for mouse --}}
-                        @if ($totalPages > 1)
-                            <button type="button" @click="slidePrev()" x-show="slide > 0"
-                                class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center text-slate-600 hover:bg-white hover:scale-110 transition z-10">
-                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                            </button>
-                            <button type="button" @click="slideNext()" x-show="slide < {{ $totalPages - 1 }}"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center text-slate-600 hover:bg-white hover:scale-110 transition z-10">
-                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                            </button>
-                        @endif
+                    {{-- Single → static; 2 pages → card turns over; 4 pages → opens like a book.
+                         Keeps `slide` (print-settings modal preview) on the visible page. --}}
+                    <div class="rounded-xl mt-4 bg-[#f2f7f2] p-2 pb-3"
+                        @book-preview-page="slide = $event.detail.index">
+                        @include('quick-flow-pc.local-print.partials.book-preview', [
+                            'images' => $imageUrls,
+                            'orientation' => $flowData['orientation'] ?? 'portrait',
+                        ])
                     </div>
-
-                    {{-- Page dots --}}
-                    @if ($totalPages > 1)
-                        <div class="flex items-center justify-center gap-1.5 mt-3">
-                            @foreach ($imageUrls as $idx => $url)
-                                <button type="button" @click="slide = {{ $idx }}"
-                                    class="w-2 h-2 rounded-full transition-all duration-300"
-                                    :class="slide === {{ $idx }} ? 'bg-[#287d3c] scale-125' :
-                                        'bg-slate-300 hover:bg-slate-400'">
-                                </button>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    {{-- Page label --}}
-                    @if ($totalPages > 1)
-                        <p class="text-center text-[11px] text-slate-400 mt-1 font-medium" x-text="'Page ' + (slide + 1)">
-                        </p>
-                    @endif
 
                     {{-- Specs --}}
                     <div class="mono text-[13px] text-slate-500 mt-4 space-y-1.5">
@@ -371,23 +324,6 @@
     </div>
 @endsection
 
-@push('styles')
-    <style>
-        .slider-viewport {
-            touch-action: pan-y;
-            user-select: none;
-        }
-
-        .slider-track {
-            will-change: transform;
-        }
-
-        .slider-slide img {
-            pointer-events: none;
-        }
-    </style>
-@endpush
-
 @push('scripts')
     {{-- pdf-lib: scale/cover-fill the server PDF onto the selected media size so
          it prints edge-to-edge (the raw design PDF is the DESIGN size, e.g. 5×7,
@@ -423,8 +359,7 @@
                     sizeDims: trayDims
                 }),
 
-                slide: 0,
-                touchX: 0,
+                slide: 0, // page shown in the book preview (synced via book-preview-page)
                 copies: 1,
 
                 // The PDF that Print will actually send. savedPdfB64 holds the
@@ -504,23 +439,6 @@
                 // slide watcher keeps psPreviewSrc / psPreviewIndex in sync.
                 psPreviewSync(i) {
                     this.slide = Math.min((totalPages || 1) - 1, Math.max(0, i));
-                },
-
-                // ── Swipe slider ──
-                slideNext() {
-                    if (this.slide < totalPages - 1) this.slide++;
-                },
-                slidePrev() {
-                    if (this.slide > 0) this.slide--;
-                },
-                touchStart(e) {
-                    this.touchX = e.changedTouches[0].clientX;
-                },
-                touchEnd(e) {
-                    const dx = e.changedTouches[0].clientX - this.touchX;
-                    if (Math.abs(dx) > 40) {
-                        dx < 0 ? this.slideNext() : this.slidePrev();
-                    }
                 },
 
                 // ── Checks ──

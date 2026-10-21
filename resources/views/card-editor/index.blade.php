@@ -1,323 +1,342 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Card Editor — {{ config('app.name', 'Qrinto') }}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;700&family=Dancing+Script:wght@400;700&family=Montserrat:wght@400;600;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --primary:#16c784; --primary-600:#12a869; --primary-50:#e9faf2;
-      --workspace:#f1f1f1; --white:#ffffff; --text:#202124; --muted:#9ca3af;
-      --border:#e5e7eb; --line-soft:#eeeeee;
-      --hdr-h:58px; --ctx-h:56px; --foot-h:104px; --layout-w:184px;
-      --shadow-card:0 2px 8px rgba(0,0,0,.08);
-      --shadow-pop:0 6px 24px rgba(16,24,40,.10);
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;height:100%;overflow:hidden;
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      color:var(--text);background:var(--workspace);-webkit-font-smoothing:antialiased}
-    button{font-family:inherit;cursor:pointer;color:inherit}
-    input,select{font-family:inherit}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Card editor — {{ config('app.name', 'Qrinto') }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Great+Vibes&family=Pinyon+Script&family=Caveat:wght@400;700&family=Bebas+Neue&family=Josefin+Sans:wght@300;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#F2F4F3;--surface:#FFFFFF;--surface-2:#F4F7F5;--ink:#14201A;--muted:#5E6B65;--line:#DDE4E0;
+  --brand:#11A463;--brand-strong:#0B7A49;--brand-soft:#E2F5EB;--stage:#E6EBE8;--dot:rgba(20,32,26,.10);
+  --danger:#C2412D;--warn:#B7791F;
+  --shadow:0 1px 2px rgba(20,32,26,.06),0 8px 24px rgba(20,32,26,.08);
+  --page-shadow:0 2px 4px rgba(0,0,0,.06),0 18px 40px rgba(20,32,26,.18);
+  --inv:1;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111613;--surface:#19201C;--surface-2:#202823;--ink:#E7EEEA;--muted:#9AA8A1;--line:#2C3631;
+    --brand:#2BC77F;--brand-strong:#5FDCA0;--brand-soft:#173527;--stage:#0E1310;--dot:rgba(255,255,255,.07);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111613;--surface:#19201C;--surface-2:#202823;--ink:#E7EEEA;--muted:#9AA8A1;--line:#2C3631;
+  --brand:#2BC77F;--brand-strong:#5FDCA0;--brand-soft:#173527;--stage:#0E1310;--dot:rgba(255,255,255,.07);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+*,*::before,*::after{box-sizing:inherit}
+body{background:var(--bg);color:var(--ink);font-family:'Onest',ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+[hidden]{display:none!important}
 
-    /* ---------------------------------------------------------------- shell */
-    #qe{display:flex;flex-direction:column;height:100vh;width:100vw;overflow:hidden}
+.app{height:100%;display:grid;grid-template-rows:60px minmax(0,1fr) auto}
 
-    /* --------------------------------------------------------------- header */
-    .qe-header{height:var(--hdr-h);flex:0 0 var(--hdr-h);position:relative;display:flex;align-items:center;
-      background:var(--white);border-bottom:1px solid var(--line-soft);z-index:40}
-    .qe-logo{position:absolute;left:24px;top:0;height:100%;display:flex;align-items:center;z-index:2}
-    .qe-logo img{height:37px;width:auto;display:block}
-    /* tools centered over the canvas area (full width minus the left panel) */
-    .qe-htools{flex:1;height:100%;display:flex;align-items:center;justify-content:center;gap:10px;
-      padding-left:var(--layout-w);padding-right:24px}
-    .qe-hright{position:absolute;right:24px;top:0;height:100%;display:flex;align-items:center;gap:8px;z-index:2}
+/* Header */
+.top{display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:20px;letter-spacing:-.02em;flex:none}
+.vsep{width:1px;height:26px;background:var(--line);margin:0 4px;flex:none}
+.title-field{display:flex;align-items:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:5px 8px;color:var(--muted);min-width:0}
+.title-field:hover,.title-field:focus-within{border-color:var(--line)}
+.title-field input{border:0;background:transparent;font:inherit;font-weight:600;font-size:15px;color:var(--ink);width:clamp(110px,22vw,260px);outline:none;min-width:0}
+.spacer{flex:1}
+.iconbtn{width:36px;height:36px;display:grid;place-items:center;border-radius:8px;border:0;background:transparent;color:var(--ink);cursor:pointer;flex:none}
+.iconbtn:hover{background:var(--surface-2)}
+.iconbtn:disabled{opacity:.35;cursor:default;background:transparent}
+.status{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;white-space:nowrap;padding:0 6px}
+.status.saving svg{opacity:.4}
+.status.error{color:var(--danger)}
+.btn{height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;flex:none}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-strong);border-color:var(--brand-strong)}
+.btn.wide{width:100%;margin-top:14px}
 
-    /* header tool button (Sticker / Image / Video) */
-    .qe-tool{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:20px;
-      border:1px solid var(--border);background:var(--white);font-size:14px;font-weight:500;color:var(--text);transition:.15s}
-    .qe-tool svg{width:18px;height:18px;stroke:var(--text);fill:none;stroke-width:1.6}
-    .qe-tool:hover{border-color:#d0d5dd;background:#fafafa}
-    .qe-tool.active{background:var(--primary-50);border-color:var(--primary);color:var(--primary-600);font-weight:600}
-    .qe-tool.active svg{stroke:var(--primary-600)}
+/* Main */
+.main{position:relative;display:grid;grid-template-columns:76px minmax(0,1fr);min-height:0}
+.rail{grid-column:1;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;padding:10px 7px;overflow-y:auto;z-index:21}
+.rail button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 2px;border-radius:10px;border:0;background:transparent;color:var(--muted);font-size:11.5px;font-weight:500;cursor:pointer}
+.rail button:hover{background:var(--surface-2);color:var(--ink)}
+.rail button[aria-pressed="true"]{background:var(--brand-soft);color:var(--brand-strong)}
 
-    .qe-icbtn{width:36px;height:36px;display:grid;place-items:center;border-radius:9px;border:1px solid transparent;background:transparent;transition:.15s}
-    .qe-icbtn svg{width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.7}
-    .qe-icbtn:hover{background:#f3f4f6}
-    .qe-icbtn:disabled{cursor:default}
-    .qe-icbtn:disabled svg{stroke:#d1d5db}
-    .qe-icbtn.on{background:var(--primary-50)}
-    .qe-icbtn.on svg{stroke:var(--primary-600)}
-    .qe-divider{width:1px;height:24px;background:var(--border);margin:0 4px}
-    .qe-link{background:none;border:none;font-size:14px;font-weight:600;color:var(--primary-600);padding:8px 10px;border-radius:8px}
-    .qe-link:hover{background:var(--primary-50)}
-    .qe-next{height:40px;min-width:92px;padding:0 18px;border:none;border-radius:20px;background:var(--primary);
-      color:#fff;font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
-    .qe-next:hover{background:var(--primary-600)}
+.panel{position:absolute;left:76px;top:0;bottom:0;z-index:20;width:300px;background:var(--surface);border-right:1px solid var(--line);overflow-y:auto;overflow-x:hidden;box-shadow:6px 0 24px rgba(20,32,26,.08)}
+.panel-inner{padding:16px 18px 28px}
+.phead{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.phead h2{font-size:16px;margin:0;font-weight:650}
+.hint{color:var(--muted);font-size:13px;line-height:1.45;margin:0 0 14px}
+.hint.small{font-size:12.5px;margin-top:10px}
+.sec{font-size:13px;font-weight:600;margin:20px 0 8px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tiles.one{grid-template-columns:1fr}
+.tile{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface-2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12.5px;font-weight:500;text-align:center}
+.tile:hover{border-color:var(--brand)}
+.addtext{width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:10px;line-height:1.15}
+.addtext:hover{border-color:var(--brand);background:var(--surface-2)}
+.pair{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:82px;width:100%;background:#fff;border-radius:6px;color:#222;overflow:hidden;padding:6px}
+.drop{border:1.5px dashed var(--line);border-radius:12px;padding:22px 14px;text-align:center;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;background:transparent;width:100%;font-size:12.5px}
+.drop b{color:var(--ink);font-size:14px}
+.drop:hover,.drop.over{border-color:var(--brand);background:var(--brand-soft)}
+.lib{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lib button{padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:1;cursor:pointer;background:var(--surface-2)}
+.lib button:hover{border-color:var(--brand)}
+.lib img{width:100%;height:100%;object-fit:cover;display:block}
+.stickers{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stickers button{aspect-ratio:1;border:0;border-radius:10px;background:var(--surface-2);font-size:28px;cursor:pointer;line-height:1}
+.stickers button:hover{background:var(--brand-soft)}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:32px;height:32px;border-radius:50%;border:1px solid rgba(0,0,0,.14);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--brand)}
+.custom{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:13px;font-weight:500;cursor:pointer}
+.custom input{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--surface);cursor:pointer}
+.field-label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
+.input{width:100%;height:40px;border:1px solid var(--line);border-radius:8px;padding:0 12px;font:inherit;background:var(--surface);color:var(--ink)}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px}
+.err{color:var(--danger);font-size:12.5px;margin-top:6px}
+.qr-prev{margin-top:14px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;height:170px;color:var(--muted);font-size:12.5px;text-align:center;padding:10px}
+.qr-prev img{width:130px;height:130px;background:#fff;padding:8px;border-radius:8px}
 
-    /* ------------------------------------------------------- context toolbar */
-    /* Always reserve the context-toolbar height so opening/closing it never
-       resizes the canvas. Contents are only shown when an element is selected. */
-    .qe-ctx{height:var(--ctx-h);flex:0 0 var(--ctx-h);display:flex;align-items:center;gap:8px;
-      background:var(--white);border-bottom:1px solid var(--line-soft);padding:0 18px;overflow-x:auto;z-index:30}
-    .qe-ctx:not(.show){visibility:hidden}
-    .qe-ctx .grp{display:flex;align-items:center;gap:6px}
-    .qe-ctx select,.qe-ctx .qe-num{height:36px;border:1px solid var(--border);border-radius:9px;background:#fff;font-size:13px}
-    .qe-ctx select{padding:0 28px 0 10px;min-width:120px;appearance:none;
-      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
-      background-repeat:no-repeat;background-position:right 9px center}
-    .qe-ctx select:focus,.qe-ctx .qe-num:focus-within{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-50)}
-    .qe-num{display:inline-flex;align-items:center;overflow:hidden}
-    .qe-num button{width:32px;height:100%;border:none;background:#fff;font-size:16px;color:var(--muted)}
-    .qe-num button:hover{background:#f3f4f6;color:var(--text)}
-    .qe-num input{width:42px;height:100%;border:none;text-align:center;font-size:13px;-moz-appearance:textfield}
-    .qe-num input::-webkit-outer-spin-button,.qe-num input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-    .qe-tb{height:36px;min-width:36px;padding:0 9px;border:1px solid var(--border);border-radius:9px;background:#fff;
-      display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500}
-    .qe-tb svg{width:18px;height:18px;stroke:var(--text);fill:none;stroke-width:1.7}
-    .qe-tb:hover{border-color:#d0d5dd;background:#fafafa}
-    .qe-tb.on{background:var(--primary-50);border-color:var(--primary);color:var(--primary-600)}
-    .qe-tb.on svg{stroke:var(--primary-600)}
-    .qe-tb.danger:hover{border-color:#fca5a5;color:#dc2626;background:#fef2f2}
-    .qe-tb.danger:hover svg{stroke:#dc2626}
-    .qe-color{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--border);cursor:pointer;padding:0;overflow:hidden}
-    .qe-color::-webkit-color-swatch-wrapper{padding:0}
-    .qe-color::-webkit-color-swatch{border:none;border-radius:50%}
-    .qe-ctxsep{width:1px;height:26px;background:var(--border);margin:0 4px;flex:0 0 auto}
-    .qe-slider{display:inline-flex;align-items:center;gap:8px}
-    .qe-slider svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:1.7}
-    .qe-slider input[type=range]{width:120px;accent-color:var(--primary)}
+/* Stage */
+.stagewrap{grid-column:2;position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--stage)}
+.stage{flex:1;overflow:auto;display:flex;padding:86px 76px 30px;background-image:radial-gradient(var(--dot) 1px,transparent 1.3px);background-size:18px 18px}
+.stage.dropping{box-shadow:inset 0 0 0 3px var(--brand)}
+.canvas-col{margin:auto;display:flex;flex-direction:column;align-items:center;gap:12px}
+.sheet-wrap{position:relative;flex:none}
+.sheet{position:absolute;left:0;top:0;transform-origin:0 0;display:flex;box-shadow:var(--page-shadow)}
+.page{position:relative;width:360px;height:504px;flex:none}
+.content{position:absolute;inset:0;overflow:hidden;background:#fff}
+.spread>.page+.page .content{box-shadow:inset 14px 0 18px -16px rgba(0,0,0,.35)}
+.spread>.page:first-child .content{box-shadow:inset -10px 0 14px -14px rgba(0,0,0,.25)}
+.caps{display:flex;color:var(--muted);font-size:12.5px;font-weight:500}
+.caps span{flex:1;text-align:center}
+.sheet.flipping{box-shadow:none;pointer-events:none}
+.sheet.flipping>.page{box-shadow:var(--page-shadow)}
+.ghost{position:absolute;top:0;z-index:5;pointer-events:none}
 
-    /* menu popover (magic styles / filters / case) */
-    .qe-menu{position:absolute;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-pop);
-      padding:6px;z-index:60;display:none;min-width:160px}
-    .qe-menu.open{display:block}
-    .qe-menu button{display:flex;width:100%;align-items:center;gap:8px;padding:9px 12px;border:none;background:none;
-      border-radius:8px;font-size:13px;text-align:left}
-    .qe-menu button:hover{background:#f3f4f6}
-    .qe-menu .swatch{width:28px;height:22px;border-radius:5px;border:1px solid var(--border);flex:0 0 auto}
+.el{position:absolute;touch-action:none;cursor:move;user-select:none;-webkit-user-select:none}
+.txt{padding:4px 6px;white-space:pre-wrap;overflow-wrap:break-word;outline:none;min-height:1.2em}
+.txt:empty::before{content:'Type something';opacity:.35}
+.sheet .el-text:hover{outline:calc(1px * var(--inv)) dashed rgba(17,164,99,.8)}
+.sheet .el-text.editing{outline:calc(1.5px * var(--inv)) dashed var(--brand);cursor:text;user-select:text;-webkit-user-select:text}
+.el-text.editing .txt{user-select:text;-webkit-user-select:text;cursor:text}
+.el-photo{overflow:hidden}
+.shape-rounded{border-radius:14px}
+.shape-circle{border-radius:50%}
+.shape-square{border-radius:0}
+.el-photo img,.el-qr img{width:100%;height:100%;display:block;pointer-events:none}
+.el.empty{background:rgba(20,32,26,.05);border:1.5px dashed rgba(20,32,26,.28);display:grid;place-items:center;cursor:pointer}
+.ph{display:flex;flex-direction:column;align-items:center;gap:4px;color:#46514C;font-family:'Onest',system-ui,sans-serif;font-size:13px;font-weight:500;text-align:center;padding:4px}
+.ph small{color:#7A8580;font-size:11px;font-weight:400}
+.el-sticker{display:grid;place-items:center}
+.el-sticker span{line-height:1}
+.el-qr{background:#fff;padding:6%;border-radius:6px}
+.el-qr.empty{padding:0}
+.backmark{position:absolute;bottom:18px;left:0;right:0;text-align:center;font:500 10px 'Onest',system-ui,sans-serif;color:rgba(0,0,0,.45);pointer-events:none}
+.backmark b{color:#11A463;font-weight:700}
+.safe{position:absolute;inset:12px;border:calc(1px * var(--inv)) dashed rgba(194,65,45,.6);pointer-events:none;display:none}
+.show-safe .safe{display:block}
+.guide-v,.guide-h{position:absolute;pointer-events:none;display:none}
+.guide-v{top:0;bottom:0;left:50%;border-left:calc(1px * var(--inv)) solid #E2457A}
+.guide-h{left:0;right:0;top:50%;border-top:calc(1px * var(--inv)) solid #E2457A}
+.guide-v.on,.guide-h.on{display:block}
+.selbox{position:absolute;outline:calc(1.5px * var(--inv)) solid var(--brand);pointer-events:none;z-index:3}
+.handle{position:absolute;width:calc(12px * var(--inv));height:calc(12px * var(--inv));background:#fff;border:calc(1.5px * var(--inv)) solid var(--brand);border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;touch-action:none}
+.h-nw{left:0;top:0;cursor:nwse-resize}.h-se{left:100%;top:100%;cursor:nwse-resize}
+.h-ne{left:100%;top:0;cursor:nesw-resize}.h-sw{left:0;top:100%;cursor:nesw-resize}
+.h-e,.h-w{top:50%;width:calc(7px * var(--inv));height:calc(20px * var(--inv));border-radius:calc(4px * var(--inv));cursor:ew-resize}
+.h-e{left:100%}.h-w{left:0}
 
-    /* ------------------------------------------------------------------ body */
-    .qe-body{flex:1;display:flex;min-height:0;position:relative}
-    /* right column holds the context toolbar (over the canvas only) + workspace,
-       so the left side panel can run all the way up to just below the header */
-    .qe-main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+/* Context bar */
+.ctx{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:6;max-width:calc(100% - 24px);display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:var(--shadow);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.ctx::-webkit-scrollbar{display:none}
+.ctx .sep{width:1px;height:22px;background:var(--line);margin:0 4px;flex:none}
+.ctx select{height:34px;border:1px solid var(--line);border-radius:8px;padding:0 8px;font:inherit;background:var(--surface);color:var(--ink);max-width:170px;flex:none;cursor:pointer}
+.ctx .label{font-weight:600;padding:0 8px}
+.ctx .muted{color:var(--muted);font-size:13px;padding:0 8px 0 2px}
+.size{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;height:34px;flex:none}
+.size input{width:38px;text-align:center;border:0;background:transparent;font:inherit;color:var(--ink);-moz-appearance:textfield}
+.size input::-webkit-inner-spin-button{-webkit-appearance:none}
+.size button{width:28px;height:32px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;border-radius:6px}
+.size button:hover{background:var(--surface-2)}
+.colorpick{position:relative;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;flex:none}
+.colorpick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.colorpick i{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.tb{height:34px;min-width:34px;padding:0 8px;border-radius:8px;border:0;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;flex:none}
+.tb:hover{background:var(--surface-2)}
+.tb[aria-pressed="true"]{background:var(--brand-soft);color:var(--brand-strong)}
+.tb.danger:hover{color:var(--danger)}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:9px;padding:2px;flex:none}
+.seg .tb{height:30px}
 
-    /* left panels (layout / sticker) */
-    .qe-side{flex:0 0 auto;background:var(--white);border-right:1px solid var(--line-soft);
-      display:none;flex-direction:column;min-height:0;z-index:20}
-    .qe-side.open{display:flex}
-    #qe-layoutside{width:184px}
-    #qe-stickerside{width:340px}
-    .qe-side-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;flex:0 0 auto}
-    .qe-side-head h3{margin:0;font-size:15px;font-weight:600}
-    .qe-side-close{width:30px;height:30px;border:none;background:none;border-radius:8px;font-size:20px;color:var(--muted);line-height:1}
-    .qe-side-close:hover{background:#f3f4f6;color:var(--text)}
-    .qe-side-scroll{flex:1;overflow-y:auto;padding:4px 16px 20px}
-    .qe-side-scroll::-webkit-scrollbar{width:8px}
-    .qe-side-scroll::-webkit-scrollbar-thumb{background:#e0e3e8;border-radius:8px}
+.nav{position:absolute;top:50%;margin-top:-22px;width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer;z-index:4}
+.nav:hover{border-color:var(--brand)}
+.nav.prev{left:16px}.nav.next{right:16px}
+.zoom{position:absolute;right:14px;bottom:14px;display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;box-shadow:var(--shadow);z-index:4}
+.zoom .iconbtn{width:32px;height:32px}
+.zoom .pct{min-width:52px;height:32px;border:0;background:transparent;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer}
+.zoom .pct:hover{background:var(--surface-2)}
+.zoom .iconbtn[aria-pressed="true"]{background:var(--brand-soft);color:var(--brand-strong)}
 
-    /* layout previews */
-    #qe-layoutlist{display:flex;flex-direction:column;gap:12px}
-    .qe-lay{position:relative;border:1.5px solid var(--border);border-radius:10px;background:#fff;padding:6px;cursor:pointer;transition:.15s}
-    .qe-lay:hover{border-color:#cbd5e1}
-    .qe-lay.sel{border-color:var(--primary);background:var(--primary-50)}
-    .qe-lay .prev{position:relative;width:100%;background:#fff;border-radius:6px;overflow:hidden;box-shadow:inset 0 0 0 1px #f0f0f0}
-    .qe-lay .crown{position:absolute;top:-8px;right:-6px;font-size:15px;display:none}
-    .qe-lay.sel .crown{display:block}
-    .qe-mini{position:absolute;box-sizing:border-box}
-    .qe-mini.image{background:#eef1f5;border:1px dashed #cfd6df;display:flex;align-items:center;justify-content:center}
-    .qe-mini.image svg{width:38%;height:38%;stroke:#b8c0cc;fill:none;stroke-width:1.6;max-width:22px}
-    .qe-mini.text{display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden}
-    .qe-mini.text i{display:block;height:3px;border-radius:2px;background:#d4d9e0}
-    .qe-mini.sticker{display:flex;align-items:center;justify-content:center;font-size:10px}
+/* Page strip: folded-card thumbnails with a sliding tab */
+.strip{position:relative;display:flex;justify-content:center;padding:0 16px 10px;background:var(--surface);border-top:1px solid var(--line)}
+.strip-row{position:relative;z-index:1;display:flex;gap:6px}
+.strip-ind{position:absolute;left:0;top:-1px;height:calc(100% - 9px);background:var(--stage);border-radius:0 0 16px 16px;pointer-events:none}
+.strip-ind.ready{transition:transform .45s cubic-bezier(.3,1.25,.4,1),width .45s cubic-bezier(.3,1.25,.4,1)}
+.thumb{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;padding:16px 22px 8px;border:0;border-radius:0 0 16px 16px;background:transparent;cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:500;transition:color .2s}
+.thumb:hover{color:var(--ink)}
+.thumb.active{color:var(--brand-strong);font-weight:600}
+.fold{position:relative;perspective:420px;transition:transform .3s cubic-bezier(.3,.7,.3,1)}
+.thumb:hover .fold{transform:translateY(-3px)}
+.thumb:active .fold{transform:translateY(-1px) scale(.96)}
+.fold .mini{transition:transform .5s cubic-bezier(.3,.7,.3,1)}
+.fold .sheet-behind{position:absolute;inset:0;background:#c6cdc9;border-radius:2px;transition:transform .5s cubic-bezier(.3,.7,.3,1)}
+.fold-front .sheet-behind{transform-origin:left bottom;transform:translate(3px,-2px) skewY(-6deg)}
+.fold-back .sheet-behind{transform-origin:right bottom;transform:translate(-3px,-2px) skewY(6deg)}
+.fold-front .mini{transform-origin:left center}
+.fold-back .mini{transform-origin:right center}
+.thumb:hover .fold-front .mini{transform:rotateY(-30deg)}
+.thumb:hover .fold-back .mini{transform:rotateY(30deg)}
+.thumb:hover .fold-front .sheet-behind{transform:translate(5px,-3px) skewY(-9deg)}
+.thumb:hover .fold-back .sheet-behind{transform:translate(-5px,-3px) skewY(9deg)}
+.fold-inside .mini{overflow:visible;background:transparent;box-shadow:none}
+.fold-inside .mini-inner{perspective:1400px}
+.fold-inside .page{background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .5s cubic-bezier(.3,.7,.3,1)}
+.fold-inside .page:first-child{transform-origin:right center}
+.fold-inside .page+.page{transform-origin:left center}
+.thumb:hover .fold-inside .page:first-child{transform:rotateY(20deg)}
+.thumb:hover .fold-inside .page+.page{transform:rotateY(-20deg)}
+.mini{position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.2);border-radius:2px;background:#fff;flex:none}
+.mini-inner{position:absolute;left:0;top:0;transform-origin:0 0;display:flex;pointer-events:none}
+.mini .el.empty{border-width:3px}
 
-    /* sticker sidebar */
-    .qe-search{position:relative;margin-bottom:12px}
-    .qe-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:1.8}
-    .qe-search input{width:100%;height:40px;border:1px solid var(--border);border-radius:22px;padding:0 14px 0 36px;font-size:14px}
-    .qe-search input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-50)}
-    #qe-stkcat{width:100%;height:40px;border:1px solid var(--border);border-radius:10px;padding:0 30px 0 12px;font-size:14px;
-      appearance:none;margin-bottom:12px;background:#fff;
-      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
-      background-repeat:no-repeat;background-position:right 12px center}
-    .qe-magic{width:100%;height:44px;border:none;border-radius:24px;color:#fff;font-size:14px;font-weight:600;margin-bottom:16px;
-      display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(90deg,#8b5cf6,#ec4899)}
-    .qe-magic:hover{filter:brightness(1.04)}
-    #qe-stkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .qe-stk{aspect-ratio:1;border:none;background:none;border-radius:10px;font-size:34px;display:flex;align-items:center;justify-content:center;transition:.15s}
-    .qe-stk:hover{background:#f3f4f6;transform:scale(1.08)}
+/* Toast */
+.toast{position:fixed;left:50%;bottom:120px;transform:translate(-50%,8px);background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:10px;font-size:13.5px;display:flex;gap:14px;align-items:center;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:60;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{background:none;border:0;color:var(--brand);font-weight:700;cursor:pointer;padding:0}
 
-    /* --------------------------------------------------------- workspace */
-    .qe-work{flex:1;position:relative;display:flex;align-items:center;justify-content:center;
-      background:var(--workspace);min-width:0;padding:28px}
-    #qe-stage{position:relative;transition:width .2s,height .2s}
-    .qe-page{position:absolute;top:0;background:#fff;box-shadow:var(--shadow-card);overflow:hidden}
-    #qe-stage.spread .qe-fold{position:absolute;top:0;bottom:0;left:50%;width:1px;transform:translateX(-.5px);
-      background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.12),rgba(0,0,0,.05));z-index:6;pointer-events:none}
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(10,18,14,.55);display:grid;place-items:center;z-index:50;padding:16px}
+.dialog{background:var(--surface);border-radius:16px;width:min(980px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 14px 22px;border-bottom:1px solid var(--line)}
+.dlg-head h2{margin:0;font-size:18px}
+.dlg-body{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0;overflow:auto}
+.pv{background:var(--stage);padding:20px;display:flex;flex-direction:column;align-items:center;gap:18px;min-height:440px}
+.pv-stage{flex:1;width:100%;display:flex;align-items:center;justify-content:center}
+.pv .mini{box-shadow:var(--page-shadow)}
+.checks{padding:18px 20px;border-left:1px solid var(--line)}
+.checks h3{margin:0 0 4px;font-size:15px}
+.check{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.45}
+.check p{margin:0}
+.check .ic{flex:none;margin-top:1px}
+.check .ic.warn{color:var(--warn)}
+.check .ic.ok{color:var(--brand)}
+.link{background:none;border:0;padding:0;margin-top:4px;color:var(--brand-strong);font-weight:600;cursor:pointer;font-size:13px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
+.measure{position:absolute;left:-9999px;top:0;visibility:hidden;width:360px}
 
-    /* elements */
-    .qe-el{position:absolute;cursor:move;user-select:none}
-    .qe-el .body{width:100%;height:100%;pointer-events:none}
-    .qe-el.text .body{display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap;word-break:break-word;overflow:hidden}
-    .qe-el.text.editing{cursor:text}
-    .qe-el.text.editing .body{pointer-events:auto;cursor:text;outline:none}
-    .qe-el img.body{object-fit:cover;display:block}
-    .qe-el.sticker .body{display:flex;align-items:center;justify-content:center;line-height:1}
-    .qe-el.placeholder{border:1.5px dashed #cbd5e1;background:#f8fafc;border-radius:6px;display:flex;align-items:center;justify-content:center}
-    .qe-el.placeholder .ph{display:flex;flex-direction:column;align-items:center;gap:6px;color:#94a3b8;font-size:13px;pointer-events:none}
-    .qe-el.placeholder .ph svg{width:26px;height:26px;stroke:#94a3b8;fill:none;stroke-width:1.6}
-    .qe-el:hover{outline:1px solid rgba(22,199,132,.4)}
-    .qe-el.sel{outline:2px solid var(--primary);z-index:50}
-    .qe-el.sel:hover{outline:2px solid var(--primary)}
-    .qe-h{position:absolute;width:12px;height:12px;background:#fff;border:2px solid var(--primary);border-radius:50%;display:none;z-index:5}
-    .qe-el.sel .qe-h{display:block}
-    .qe-h.tl{left:-7px;top:-7px;cursor:nwse-resize}
-    .qe-h.tr{right:-7px;top:-7px;cursor:nesw-resize}
-    .qe-h.bl{left:-7px;bottom:-7px;cursor:nesw-resize}
-    .qe-h.br{right:-7px;bottom:-7px;cursor:nwse-resize}
-    .qe-h.rot{left:50%;top:-30px;transform:translateX(-50%);cursor:grab;background:var(--primary)}
-    .qe-el.sel .qe-rotstem{position:absolute;left:50%;top:-18px;width:1px;height:18px;background:var(--primary);display:block}
-    .qe-rotstem{display:none}
-
-    /* nav arrows */
-    .qe-nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:#fff;
-      border:1px solid var(--border);box-shadow:var(--shadow-card);display:grid;place-items:center;z-index:15;transition:.15s}
-    .qe-nav svg{width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:2}
-    .qe-nav:hover{transform:translateY(-50%) scale(1.06);border-color:#d0d5dd}
-    .qe-nav:disabled{opacity:.35;cursor:default}
-    #qe-prev{left:20px} #qe-next{right:20px}
-
-    /* --------------------------------------------------------- thumbnails */
-    .qe-foot{height:var(--foot-h);flex:0 0 var(--foot-h);background:var(--white);border-top:1px solid var(--line-soft);
-      display:flex;align-items:center;justify-content:center;z-index:20}
-    #qe-thumbs{display:flex;gap:20px;align-items:center;max-width:100%;overflow-x:auto;padding:0 24px;height:100%}
-    .qe-thumb{position:relative;flex:0 0 auto;height:74px;border:1.5px solid var(--border);border-radius:4px;background:#fff;
-      cursor:pointer;transition:.15s;overflow:hidden;box-shadow:var(--shadow-card)}
-    .qe-thumb:hover{border-color:#cbd5e1;transform:translateY(-2px)}
-    .qe-thumb.active{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-50),var(--shadow-card)}
-    .qe-thumb .mini{position:absolute;inset:0}
-    .qe-thumb .num{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:9px;color:var(--muted);
-      background:rgba(255,255,255,.9);padding:1px 0}
-    .qe-thumb.active .num{background:var(--primary);color:#fff;font-weight:600}
-    .qe-thumb.spread .midline{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--border)}
-
-    /* toast */
-    #qe-toast{position:fixed;bottom:calc(var(--foot-h) + 16px);left:50%;transform:translateX(-50%) translateY(16px);
-      background:var(--text);color:#fff;padding:10px 18px;border-radius:22px;opacity:0;transition:.25s;z-index:80;
-      pointer-events:none;font-size:14px}
-    #qe-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-    /* ------------------------------------------------------------ responsive */
-    @media (max-width:1024px){
-      #qe-stickerside{width:280px}
-      #qe-layoutside{width:160px}
-    }
-    @media (max-width:640px){
-      :root{--hdr-h:52px}
-      .qe-header{padding:0 12px;gap:8px}
-      .qe-logo img{height:30px}
-      .qe-htools{position:fixed;bottom:0;left:0;right:0;height:60px;background:#fff;border-top:1px solid var(--line-soft);
-        justify-content:space-around;gap:0;z-index:45;padding:0 8px}
-      .qe-hright .qe-link,.qe-divider{display:none}
-      .qe-side{position:fixed;inset:var(--hdr-h) 0 0 0;width:100%!important;z-index:60}
-      .qe-foot{--foot-h:88px;margin-bottom:60px}
-      .qe-work{padding:12px}
-    }
-  </style>
+@media (max-width:760px){
+  .app{grid-template-rows:56px minmax(0,1fr) auto}
+  body{padding-bottom:64px}
+  .hide-sm{display:none!important}
+  .top{gap:4px;padding:0 8px}
+  .brand span{display:none}
+  .title-field input{width:110px}
+  .btn{padding:0 14px}
+  .main{grid-template-columns:minmax(0,1fr)}
+  .rail{position:fixed;left:0;right:0;bottom:0;flex-direction:row;justify-content:space-around;border-right:0;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));z-index:30;overflow-x:auto}
+  .rail button{flex:1;min-width:52px;padding:6px 2px;font-size:10.5px}
+  .panel{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));height:52vh;width:auto;z-index:25;border-right:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.15)}
+  .stage{padding:70px 14px 20px}
+  .nav{display:none}
+  .ctx{top:10px;justify-content:flex-start}
+  .zoom{right:10px;bottom:10px}
+  .dlg-body{grid-template-columns:1fr}
+  .checks{border-left:0;border-top:1px solid var(--line)}
+  .pv{min-height:320px}
+  .toast{bottom:150px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
 </head>
 <body>
-  <div id="qe">
-    <!-- ===================================================== MAIN HEADER -->
-    <header class="qe-header">
-      <div class="qe-logo"><img src="{{ asset('logo/Qrinto-logo-med.png') }}" alt="Qrinto"></div>
-
-      <div class="qe-htools">
-        <button class="qe-tool" id="qe-t-text" data-tool="text">
-          <svg viewBox="0 0 24 24"><path d="M5 4h14v3M12 4v16M9 20h6"/></svg>
-          Text
-        </button>
-        <button class="qe-tool" id="qe-t-sticker" data-tool="sticker">
-          <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 8-8 8 8 0 0 0-8 8Z"/><path d="M12 4v6a2 2 0 0 0 2 2h6"/><path d="M9 10h.01M15 10h.01M9.5 14a3 3 0 0 0 5 0"/></svg>
-          Sticker
-        </button>
-        <button class="qe-tool" id="qe-t-image" data-tool="image">
-          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>
-          Image
-        </button>
-      </div>
-
-      <div class="qe-hright">
-        <button class="qe-icbtn" id="qe-undo" title="Undo" disabled>
-          <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>
-        </button>
-        <button class="qe-icbtn" id="qe-redo" title="Redo" disabled>
-          <svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/></svg>
-        </button>
-        <span class="qe-divider"></span>
-        <button class="qe-icbtn qe-orient" id="qe-orient" title="Switch to landscape">
-          <svg viewBox="0 0 24 24"><rect x="4" y="6" width="10" height="14" rx="2"/><path d="M14 13h5a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-5"/><path d="m16 6-2-2 2-2" transform="translate(1.5 3.2)"/></svg>
-        </button>
-        <span class="qe-divider"></span>
-        <button class="qe-link" id="qe-save">Save draft</button>
-        <button class="qe-next" id="qe-continue">Next
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </button>
-      </div>
-    </header>
-
-    <!-- ============================================================ BODY -->
-    <div class="qe-body">
-      <!-- Change layout panel -->
-      <aside class="qe-side" id="qe-layoutside">
-        <div class="qe-side-head"><h3>Change layout</h3></div>
-        <div class="qe-side-scroll"><div id="qe-layoutlist"></div></div>
-      </aside>
-
-      <!-- Sticker panel -->
-      <aside class="qe-side" id="qe-stickerside">
-        <div class="qe-side-head"><h3>Stickers</h3><button class="qe-side-close" id="qe-stk-close">&times;</button></div>
-        <div class="qe-side-scroll">
-          <div class="qe-search">
-            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" id="qe-stksearch" placeholder="Search stickers">
-          </div>
-          <select id="qe-stkcat"></select>
-          <button class="qe-magic" id="qe-stkmagic">✧ Create Magic sticker</button>
-          <div id="qe-stkgrid"></div>
-        </div>
-      </aside>
-
-      <!-- Main column: context toolbar (over canvas only) + workspace -->
-      <div class="qe-main">
-        <div class="qe-ctx" id="qe-ctx"></div>
-        <div class="qe-work" id="qe-work">
-          <button class="qe-nav" id="qe-prev" title="Previous"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-          <div id="qe-stage"></div>
-          <button class="qe-nav" id="qe-next" title="Next"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-        </div>
-      </div>
+<div class="app">
+  <header class="top">
+    <div class="brand" aria-label="qrinto">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#11A463"/><rect x="7" y="7" width="7" height="7" rx="1.5" fill="#fff"/><rect x="18" y="7" width="7" height="7" rx="1.5" fill="#fff"/><rect x="7" y="18" width="7" height="7" rx="1.5" fill="#fff"/><circle cx="21.5" cy="21.5" r="3.5" fill="#fff"/></svg>
+      <span>qrinto</span>
     </div>
+    <div class="vsep hide-sm"></div>
+    <label class="title-field" title="Rename card">
+      <input id="title" aria-label="Card name" maxlength="60">
+      <span id="pencil"></span>
+    </label>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo"></button>
+    <button class="iconbtn" id="redoBtn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"></button>
+    <div class="vsep hide-sm"></div>
+    <span class="status" id="status" role="status"></span>
+    <button class="btn primary" id="nextBtn">Review<span class="hide-sm">&nbsp;and print</span></button>
+  </header>
 
-    <!-- ====================================================== THUMBNAILS -->
-    <div class="qe-foot"><div id="qe-thumbs"></div></div>
-
-    <input type="file" id="qe-file" accept="image/*" hidden>
-    <div id="qe-toast"></div>
+  <div class="main">
+    <nav class="rail" id="rail" aria-label="Tools"></nav>
+    <aside class="panel" id="panel" aria-label="Tool options"></aside>
+    <section class="stagewrap">
+      <div class="ctx" id="ctx" role="toolbar" aria-label="Edit selection"></div>
+      <button class="nav prev" id="prevBtn" aria-label="Previous page"></button>
+      <button class="nav next" id="nextPageBtn" aria-label="Next page"></button>
+      <div class="stage" id="stage">
+        <div class="canvas-col">
+          <div class="sheet-wrap" id="wrap"><div class="sheet" id="sheet"></div></div>
+          <div class="caps" id="caps"></div>
+        </div>
+      </div>
+      <div class="zoom">
+        <button class="iconbtn" id="safeBtn" title="Show print margins" aria-label="Show print margins" aria-pressed="false"></button>
+        <button class="iconbtn" id="zoomOut" aria-label="Zoom out"></button>
+        <button class="pct" id="zoomPct" title="Fit to screen">100%</button>
+        <button class="iconbtn" id="zoomIn" aria-label="Zoom in"></button>
+      </div>
+    </section>
   </div>
 
-  <script>window.QRINTO_LOGO_URL = @json(asset('logo/Qrinto-logo-small.png'));</script>
-  <script src="{{ asset('js/card-editor.js') }}?v={{ time() }}"></script>
-  <script>
-    initCardEditor({
-      productId: @json($product->id ?? null),
-      width: @json($size['width'] ?? 5),
-      height: @json($size['height'] ?? 7),
-      unit: @json($size['unit'] ?? 'in'),
-    });
-  </script>
+  <footer class="strip" id="strip" aria-label="Pages"></footer>
+</div>
+
+<input type="file" id="filePick" accept="image/*" multiple hidden>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="measure" id="measure"></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <div class="dlg-head"><h2 id="dlgTitle">Review your card</h2><button class="iconbtn" data-close aria-label="Close" id="dlgClose"></button></div>
+    <div class="dlg-body">
+      <div class="pv">
+        <div class="seg" id="pvTabs" role="group" aria-label="Preview side">
+          <button class="tb" data-pv="front">Front</button><button class="tb" data-pv="inside">Inside</button><button class="tb" data-pv="back">Back</button>
+        </div>
+        <div class="pv-stage" id="pvStage"></div>
+      </div>
+      <aside class="checks">
+        <h3>Before printing</h3>
+        <p class="hint">5 × 7 in folded card. Anything outside the dashed margin may be trimmed.</p>
+        <div id="checkList"></div>
+      </aside>
+    </div>
+    <div class="dlg-foot"><button class="btn" data-close>Keep editing</button><button class="btn primary" id="confirmBtn">Looks good, continue</button></div>
+  </div>
+</div>
+
+<script src="{{ asset('js/card-editor.js') }}?v={{ time() }}"></script>
 </body>
 </html>

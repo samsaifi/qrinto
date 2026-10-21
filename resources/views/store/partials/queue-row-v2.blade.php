@@ -39,6 +39,18 @@
         }
     }
 
+    // Design preview (eye button → book-style modal). First item with images.
+    $previewImages = [];
+    foreach ($order->items as $previewItem) {
+        $previewImages = $previewItem->designImageUrls();
+        if ($previewImages) {
+            break;
+        }
+    }
+    // Preview only: orientation comes from the page-1 image itself
+    // (width > height → landscape, otherwise portrait), decided in the browser.
+    $previewOrientation = 'auto';
+
     $journeyStages = ['new' => 'New', 'printing' => 'Printing', 'ready' => 'Ready', 'done' => 'Delivered'];
     $stageKeys = array_keys($journeyStages);
     $currentIdx = array_search($stage, $stageKeys);
@@ -93,23 +105,6 @@
         {{-- Display selected flow data columns from here .. --}}
         @if (!empty($flow) && is_array($flow))
             @php
-
-                $sizelabel = $flow['size_title'];
-                switch ($sizelabel) {
-                    case 'Folded':
-                        $pagescount = 'portrait';
-                        break;
-                    case 'Flat - double':
-                        $pagescount = 'landscape';
-                        break;
-                    case 'Flat':
-                        $pagescount = 'portrait/landscape';
-                        break;
-                    default:
-                        $pagescount = 'portrait/landscape';
-                        break;
-                }
-
                 $sizeW = $flow['size_width'] ?? null;
                 $sizeH = $flow['size_height'] ?? null;
                 $sizeDim = trim(($sizeW ?? '') . ' × ' . ($sizeH ?? '') . ' ' . ($flow['size_unit'] ?? ''));
@@ -120,13 +115,12 @@
                 if (!$orientation && $sizeW && $sizeH) {
                     $orientation = (float) $sizeH >= (float) $sizeW ? 'portrait' : 'landscape';
                 }
-                //'Orientation' => $orientation ? ucfirst($orientation) : null,
+
                 $flowChips = [
                     'Card Type' => $flow['type_name'] ?? null,
                     'Size' => $sizeW && $sizeH ? $sizeDim : null,
                     'Card Style' => $flow['size_title'] ?? null,
-
-                    'Print Mode' => $pagescount,
+                    'Orientation' => $orientation ? ucfirst($orientation) : null,
                 ];
             @endphp
             <div class="v2-flow" style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">
@@ -186,11 +180,14 @@
     <div class="v2-col-action">
         @if ($action)
             @if ($stage === \App\Models\Order::STAGE_NEW)
-                <button type="button" data-pt-print data-order-id="{{ $order->id }}"
-                    data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}" class="v2-btn-primary">
-                    <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
-                    {{ $action['label'] }}
-                </button>
+                <div class="v2-btn-group">
+                    <button type="button" data-pt-print data-order-id="{{ $order->id }}"
+                        data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}" class="v2-btn-primary">
+                        <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
+                        {{ $action['label'] }}
+                    </button>
+                    @include('store.partials._design-preview-button')
+                </div>
             @elseif ($stage === \App\Models\Order::STAGE_READY)
                 <form method="POST" action="{{ route($rPrefix . 'orders.advance', $order) }}">
                     @csrf
@@ -208,12 +205,15 @@
                     </button>
                 </form>
                 @if ($stage === \App\Models\Order::STAGE_PRINTING)
-                    <button type="button" data-pt-print data-order-id="{{ $order->id }}"
-                        data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}"
-                        class="v2-btn-primary">
-                        <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
-                        Print Again
-                    </button>
+                    <div class="v2-btn-group">
+                        <button type="button" data-pt-print data-order-id="{{ $order->id }}"
+                            data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}"
+                            class="v2-btn-primary">
+                            <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
+                            Print Again
+                        </button>
+                        @include('store.partials._design-preview-button')
+                    </div>
                 @endif
             @endif
         @elseif ($isDone)

@@ -15,14 +15,19 @@ class StoreUserWelcomeMail extends Mailable
 
     public $user;
     public $password;
+    public $isPasswordUpdate;
 
     /**
      * Create a new message instance.
+     *
+     * $isPasswordUpdate = true when an existing store admin's password was
+     * changed from the store edit form (changes subject + intro copy).
      */
-    public function __construct($user, $password)
+    public function __construct($user, $password, $isPasswordUpdate = false)
     {
         $this->user = $user;
         $this->password = $password;
+        $this->isPasswordUpdate = $isPasswordUpdate;
     }
 
     /**
@@ -31,7 +36,9 @@ class StoreUserWelcomeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Store User Welcome Mail',
+            subject: $this->isPasswordUpdate
+                ? 'Your ' . config('app.name') . ' Store Password Has Been Updated'
+                : 'Welcome to ' . config('app.name') . ' - Your Store Login Details',
         );
     }
 

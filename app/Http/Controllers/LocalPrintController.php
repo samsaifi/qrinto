@@ -482,6 +482,77 @@ class LocalPrintController extends Controller
         ]);
     }
 
+    /**
+     * Testing duplicate of check(): identical data, renders the test-check
+     * view (which loads js/test-print-settings.js and the test modal partial).
+     * Reached via /testing/print/pdf/check.
+     */
+    public function testCheck()
+    {
+        return $this->renderTestCheck('test-check');
+    }
+
+    /**
+     * Same data as testCheck(), rendering new-test-check — the testing page for
+     * the NEW PrintTrays (Adobe) bridge. Reached via /new-testing/print/pdf/check.
+     */
+    public function newTestCheck()
+    {
+        return $this->renderTestCheck('new-test-check');
+    }
+
+    protected function renderTestCheck(string $viewName)
+    {
+        $file = session('local_print_file');
+        if (!$file) {
+            return redirect()->route('localprint.pdf');
+        }
+
+        $file['url']   = asset('storage/' . ltrim($file['path'], '/'));
+        $absPath       = storage_path('app/public/' . $file['path']);
+        $file['bytes'] = is_file($absPath) ? filesize($absPath) : ($file['size'] ?? 0);
+        $file['type']  = $file['type'] ?? 'pdf';
+
+        $trayDims = \App\Models\Store::traySizeDimensions();
+        $trayDimsJs = [];
+        foreach ($trayDims as $key => [$w, $h]) {
+            $trayDimsJs[$key] = ['w' => $w, 'h' => $h];
+        }
+
+        $user  = auth()->user();
+        $store = ($user && $user->store_id) ? $user->store : null;
+
+        if ($store) {
+            $storeTrays = collect($store->trayRows())->where('enabled', true)->values();
+            $trays = $storeTrays->map(fn($r) => [
+                'key'      => $r['key'],
+                'label'    => $r['label'],
+                'printer'  => $r['printer'],
+                'size'     => $r['size'],
+                'media'    => $r['media'],
+                'gsm'      => $r['gsm'],
+                'density'  => $r['density'] ?? null,
+                'loaded'   => true,
+                'out'      => false,
+                'desc'     => trim(($r['size'] ? str_replace('x', ' × ', $r['size']) : '') . ' ' . ($r['media'] ?? '')),
+                'user_type' => $r['user_type'] ?? null,
+            ])->all();
+        } else {
+            $trays = [];
+        }
+
+        return view($this->view($viewName), [
+            'file'         => $file,
+            'trays'        => $trays,
+            'trayDims'     => $trayDimsJs,
+            'loggedIn'     => (bool) $store,
+            'storeName'    => $store->store_name ?? null,
+            'sizeOptions'  => \App\Models\Store::traySizeOptions(),
+            'mediaOptions' => \App\Models\Store::trayMediaOptions(),
+            'gsmOptions'   => \App\Models\Store::trayGsmOptions(),
+        ]);
+    }
+
     public function doPrint(Request $request)
     {
         $data = $request->validate([

@@ -354,7 +354,9 @@ function customizerBase(config) {
                 this.canvases[this.activeCanvas]?.fabricCanvas?.requestRenderAll();
                 this._saveCanvasState(this.activeCanvas);
                 if (!value.trim()) this.handleRemove();
-            } else if (value.trim()) {
+            } else if (value.trim() && !this._addingText) {
+                // addText() is async (waits for the font), so later keystrokes must not add more boxes;
+                // the box picks up the latest input value when it is created.
                 this.addText();
             }
         },
@@ -376,8 +378,9 @@ function customizerBase(config) {
             const key = this.activeCanvas;
             const cv = this.canvases[key];
             if (!cv || (this._config.multiCanvas && !this.canvasEnabled[key])) return;
+            if (this._addingText) return;
+            this._addingText = true;
             const ti = document.getElementById('text-input');
-            const str = (ti && ti.value.trim()) ? ti.value.trim() : 'Your Text Here';
             const ffSelect = document.getElementById('font-family-select');
             const fsSelect = document.getElementById('font-size-select');
             const tcInput = document.getElementById('text-color-input');
@@ -388,6 +391,8 @@ function customizerBase(config) {
             const align = taSelect ? taSelect.value : this.textAlign;
 
             document.fonts.load('1em "' + fontFamily + '"').then(() => {
+                this._addingText = false;
+                const str = (ti && ti.value.trim()) ? ti.value.trim() : 'Your Text Here';
                 const W = cv.fabricCanvas.width, H = cv.fabricCanvas.height;
                 const t = new fabric.Textbox(str, {
                     left: W / 2, top: H / 2, originX: 'center', originY: 'center',
@@ -404,7 +409,8 @@ function customizerBase(config) {
                 this.selectedObject = t;
                 this.updateUI();
                 if (t.canvas) { t.set('fontFamily', fontFamily); t.setCoords(); t.canvas.requestRenderAll(); }
-            }).catch(() => { });
+                this._saveCanvasState(key);
+            }).catch(() => { this._addingText = false; });
         },
 
         // ═══════════════════════════════════════════════
@@ -945,6 +951,8 @@ function customizerBase(config) {
                 if (ungroupBtn) ungroupBtn.onclick = (e) => { e.stopPropagation(); cv.fabricCanvas.setActiveObject(obj); this.ungroupSelected(); };
                 if (upBtn) upBtn.onclick = (e) => { e.stopPropagation(); this.moveLayerUp(obj); };
                 if (downBtn) downBtn.onclick = (e) => { e.stopPropagation(); this.moveLayerDown(obj); };
+                if (upBtn && displayIndex === 0) { upBtn.disabled = true; upBtn.classList.add('opacity-30', 'pointer-events-none'); }
+                if (downBtn && displayIndex === reversed.length - 1) { downBtn.disabled = true; downBtn.classList.add('opacity-30', 'pointer-events-none'); }
                 if (deleteBtn) deleteBtn.onclick = (e) => {
                     e.stopPropagation(); cv.fabricCanvas.remove(obj);
                     if (this.selectedObject === obj) this.selectedObject = null;
@@ -964,39 +972,52 @@ function customizerBase(config) {
             if (window.lucide) window.lucide.createIcons();
         },
 
+        // Layers shown in the panel, bottom-to-top (same order as the fabric stack).
+        _getLayerObjects(cv) {
+            return cv.fabricCanvas.getObjects().filter(o => (!o.name || !o.name.startsWith('mask_guide_')) && o !== cv.fabricCanvas.backgroundImage);
+        },
+
+        // Writes a new bottom-to-top order for the panel layers back into the fabric stack,
+        // reusing their existing slots so hidden objects (mask guides etc.) keep their positions.
+        _applyLayerOrder(key, newOrder, selectObj) {
+            const cv = this.canvases[key]; const fc = cv.fabricCanvas;
+            const all = fc.getObjects();
+            const slots = this._getLayerObjects(cv).map(o => all.indexOf(o)).sort((a, b) => a - b);
+            slots.forEach((slot, i) => { all[slot] = newOrder[i]; });
+            fc._objects.length = 0;
+            all.forEach(o => fc._objects.push(o));
+            if (this._enforceZOrder) this._enforceZOrder(key);
+            if (selectObj) { fc.setActiveObject(selectObj); this.selectedObject = selectObj; }
+            fc.renderAll(); this._saveCanvasState(key);
+            this.renderLayersPanel();
+            if (selectObj) this.updateUI();
+        },
+
         moveLayerUp(obj) {
             const key = this.activeCanvas; const cv = this.canvases[key]; if (!cv || !obj) return;
-            cv.fabricCanvas.bringForward(obj);
-            if (this._enforceZOrder) this._enforceZOrder(key);
-            cv.fabricCanvas.renderAll(); this._saveCanvasState(key); this.renderLayersPanel();
+            const layers = this._getLayerObjects(cv); const i = layers.indexOf(obj);
+            if (i < 0 || i === layers.length - 1) return;
+            [layers[i], layers[i + 1]] = [layers[i + 1], layers[i]];
+            this._applyLayerOrder(key, layers, obj);
         },
 
         moveLayerDown(obj) {
             const key = this.activeCanvas; const cv = this.canvases[key]; if (!cv || !obj) return;
-            cv.fabricCanvas.sendBackwards(obj);
-            if (this._enforceZOrder) this._enforceZOrder(key);
-            cv.fabricCanvas.renderAll(); this._saveCanvasState(key); this.renderLayersPanel();
+            const layers = this._getLayerObjects(cv); const i = layers.indexOf(obj);
+            if (i <= 0) return;
+            [layers[i], layers[i - 1]] = [layers[i - 1], layers[i]];
+            this._applyLayerOrder(key, layers, obj);
         },
 
         reorderLayers(fromDisplayIndex, toDisplayIndex) {
             const key = this.activeCanvas; const cv = this.canvases[key];
             if (!cv || !cv.fabricCanvas) return;
-            const allObjects = cv.fabricCanvas.getObjects();
-            const manageableObjects = allObjects.filter(o => (!o.name || !o.name.startsWith('mask_guide_')) && o !== cv.fabricCanvas.backgroundImage);
-            if (manageableObjects.length === 0) return;
-            const reversed = [...manageableObjects].reverse();
+            const reversed = this._getLayerObjects(cv).reverse();
             if (fromDisplayIndex < 0 || fromDisplayIndex >= reversed.length) return;
             if (toDisplayIndex < 0 || toDisplayIndex >= reversed.length) return;
             const [movedObj] = reversed.splice(fromDisplayIndex, 1);
             reversed.splice(toDisplayIndex, 0, movedObj);
-            const newCanvasOrder = [...reversed].reverse();
-            const originalIndices = manageableObjects.map(o => allObjects.indexOf(o)).sort((a, b) => a - b);
-            newCanvasOrder.forEach((obj, idx) => {
-                const targetFabricIndex = originalIndices[idx] !== undefined ? originalIndices[idx] : idx;
-                cv.fabricCanvas.moveTo(obj, targetFabricIndex);
-            });
-            if (this._enforceZOrder) this._enforceZOrder(key);
-            cv.fabricCanvas.renderAll(); this._saveCanvasState(key); this.renderLayersPanel();
+            this._applyLayerOrder(key, reversed.reverse(), movedObj);
         },
 
         setShapeColor(colorVal) {

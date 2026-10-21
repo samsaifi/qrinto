@@ -115,4 +115,9 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    | Where admin notifications (e.g. new store registrations) are sent.
+    */
+    'admin_address' => env('ADMIN_EMAIL', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+
 ];

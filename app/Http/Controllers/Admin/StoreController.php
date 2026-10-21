@@ -121,7 +121,7 @@ class StoreController extends Controller
         if (!empty($request->password) && !empty($request->email)) {
             $userExists = User::where('email', $request->email)->exists();
             if (!$userExists) {
-                User::create([
+                $user = User::create([
                     'name'     => $data['owner_name'],
                     'email'    => $data['email'],
                     'password' => Hash::make($request->password),
@@ -131,6 +131,9 @@ class StoreController extends Controller
                     'is_active'=> true
                 ]);
                 $msg = 'Store and Store Admin user created successfully.';
+                $msg .= $this->sendStoreAdminMail($user, $request->password)
+                    ? ' Login details emailed to ' . $user->email . '.'
+                    : ' (Login details email could not be sent.)';
             } else {
                 $msg = 'Store created successfully, but user creation failed (email already exists).';
             }
@@ -161,6 +164,31 @@ class StoreController extends Controller
         }
 
         $store = Store::findOrFail($id);
+
+        // Store email and the store admin's login email are kept in sync:
+        // changing the store email here also changes the admin's login email.
+        $newEmail   = trim((string) $request->email);
+        $storeAdmin = User::where('store_id', $store->id)
+            ->where('role', 'store_admin')
+            ->where('email', $store->email ?? '')
+            ->first()
+            ?? User::where('store_id', $store->id)->where('role', 'store_admin')->first();
+
+        $syncAdminEmail = $storeAdmin && strcasecmp($storeAdmin->email, $newEmail) !== 0;
+
+        if ($syncAdminEmail) {
+            if ($newEmail === '') {
+                return redirect()->back()->withInput()->withErrors([
+                    'email' => 'Store email is required because it is the store admin login email.',
+                ]);
+            }
+            if (User::where('email', $newEmail)->where('id', '!=', $storeAdmin->id)->exists()) {
+                return redirect()->back()->withInput()->withErrors([
+                    'email' => 'This email is already used by another user account.',
+                ]);
+            }
+        }
+
         $data = $request->validated();
         $data['is_active'] = $request->has('is_active');
         $data['is_test']   = $request->has('is_test');
@@ -177,27 +205,27 @@ class StoreController extends Controller
 
         $msg = 'Store updated successfully.';
 
-        if (!empty($request->password)) {
-            $userToUpdate = User::where('store_id', $store->id)
-                ->where('role', 'store_admin')
-                ->where('email', $request->email ?? '')
-                ->first();
+        if ($syncAdminEmail) {
+            $storeAdmin->update(['email' => $newEmail]);
+            $msg .= ' Store admin login email changed to ' . $newEmail . '.';
+        }
 
-            if (!$userToUpdate) {
-                 $userToUpdate = User::where('store_id', $store->id)
-                     ->where('role', 'store_admin')
-                     ->first();
-            }
+        if (!empty($request->password)) {
+            $userToUpdate = $storeAdmin;
 
             if ($userToUpdate) {
                 $userToUpdate->update([
                     'password' => Hash::make($request->password)
                 ]);
-                $msg = 'Store and Admin Password updated successfully.';
+                $msg = 'Store and Admin Password updated successfully.'
+                    . ($syncAdminEmail ? ' Login email changed to ' . $newEmail . '.' : '');
+                $msg .= $this->sendStoreAdminMail($userToUpdate, $request->password, true)
+                    ? ' New password emailed to ' . $userToUpdate->email . '.'
+                    : ' (Password email could not be sent.)';
             } else if (!empty($request->email)) {
                 $userExists = User::where('email', $request->email)->exists();
                 if (!$userExists) {
-                    User::create([
+                    $user = User::create([
                         'name'     => $request->owner_name,
                         'email'    => $request->email,
                         'password' => Hash::make($request->password),
@@ -207,6 +235,9 @@ class StoreController extends Controller
                         'is_active'=> true
                     ]);
                     $msg = 'Store updated and new Admin user created successfully.';
+                    $msg .= $this->sendStoreAdminMail($user, $request->password)
+                        ? ' Login details emailed to ' . $user->email . '.'
+                        : ' (Login details email could not be sent.)';
                 }
             }
         }
@@ -216,6 +247,24 @@ class StoreController extends Controller
         }
         
         return redirect()->back()->with('success', $msg);
+    }
+
+    /**
+     * Email a store admin their store details + login password.
+     * Returns false (and logs) on SMTP failure so the save itself never fails.
+     */
+    private function sendStoreAdminMail(User $user, string $plainPassword, bool $isPasswordUpdate = false): bool
+    {
+        try {
+            $user->loadMissing('store');
+            Mail::to($user->email)
+                ->cc('saddam.hussain@arclance.in')
+                ->send(new StoreUserWelcomeMail($user, $plainPassword, $isPasswordUpdate));
+            return true;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Store admin email failed for ' . $user->email . ': ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**

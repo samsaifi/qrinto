@@ -1,6 +1,6 @@
   <div class="printo-ref">
       <main class="mx-auto max-w-[1060px] px-6 pt-9  ">
-          <a class="back inline-block text-sm font-medium no-underline" href="#">← Back</a>
+          <a class="back inline-block text-sm font-medium no-underline" href="https://qrinto.com/local-print">← Back</a>
           <h1 class="mt-3.5 mb-1.5 text-[30px] leading-[1.15] tracking-[-0.015em] font-bold">Upload a Media</h1>
           <p class="lede mt-0 mb-7 max-w-[60ch] text-[color:var(--muted)]">Tell us what you're printing and we'll show
               you
@@ -19,7 +19,7 @@
                               <path d="M13 27l5-6 4 4 3-3 3 5" fill="none" stroke="var(--green)" stroke-width="1.8"
                                   stroke-linejoin="round" />
                           </svg>
-                          <span><span class="t">Single-sided</span>
+                          <span><span class="t">Single-sided Card</span>
                               <br><span class="s">Photo, poster, one
                                   side</span></span>
                       </label>
@@ -44,7 +44,7 @@
                                   d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
                           </svg>
 
-                          <span><span class="t">Folded card</span>
+                          <span><span class="t">Folded Card</span>
                               <br><span class="s">4 sides, folds in
                                   half</span></span>
                       </label>

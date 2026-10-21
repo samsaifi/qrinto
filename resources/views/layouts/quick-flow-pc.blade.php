@@ -163,6 +163,7 @@
                                 <i data-lucide="package" class="w-4 h-4 text-slate-400"></i>
                                 <span>Resource Center</span>
                             </a>
+
                             <div class="my-1 border-t border-slate-100"></div>
 
                             <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"

@@ -257,6 +257,33 @@
         {{-- Shared per-printer "Print Settings" modal (opened by the Change button). --}}
         @include('partials.print-settings-modal')
     </div>
+
+    {{-- Design preview modal: opened by a row's eye button ([data-design-preview]).
+         The row's <template> (book-preview partial) is cloned into the body on open
+         and removed on close, which also stops its animation. --}}
+    <div x-data="designPreviewModal()" x-cloak x-show="visible" @keydown.escape.window="close()"
+        class="fixed inset-0 z-[85] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-slate-900/50" @click="close()"></div>
+        <div class="relative bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-xl p-5 md:p-6"
+            @click.stop>
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="font-display font-bold text-lg text-slate-900">Design preview</h3>
+                    <p class="text-[13px] text-slate-500 mt-0.5">
+                        Order <span class="mono text-slate-700" x-text="orderNumber"></span>
+                    </p>
+                </div>
+                <button type="button" @click="close()" aria-label="Close"
+                    class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="rounded-xl mt-4 bg-[#f2f7f2] p-2 pb-3" x-ref="body"></div>
+        </div>
+    </div>
 @endsection
 
 @push('styles')
@@ -773,10 +800,71 @@
                 padding: 8px 14px;
             }
         }
+
+        /* Print button + eye (design preview) button side by side. */
+        .v2-btn-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .v2-btn-eye {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: background .15s, border-color .15s, color .15s;
+        }
+
+        .v2-btn-eye:hover {
+            border-color: #1c7a43;
+            color: #1c7a43;
+            background: #f2f7f2;
+        }
     </style>
 @endpush
 
 @push('scripts')
+    <script>
+        // Design preview modal (markup: "Design preview modal" block in the content section).
+        function designPreviewModal() {
+            return {
+                visible: false,
+                orderNumber: '',
+
+                init() {
+                    // Delegated so rows re-rendered later still work.
+                    document.addEventListener('click', (e) => {
+                        const btn = e.target.closest('[data-design-preview]');
+                        if (btn) this.open(btn.dataset.designPreview, btn.dataset.orderNumber);
+                    });
+                },
+
+                open(templateId, orderNumber) {
+                    const tpl = document.getElementById(templateId);
+                    if (!tpl) return;
+                    this.orderNumber = orderNumber || '';
+                    this.visible = true;
+                    // Insert once the modal is visible so the preview can measure its stage.
+                    this.$nextTick(() => {
+                        this.$refs.body.replaceChildren(tpl.content.cloneNode(true));
+                    });
+                },
+
+                close() {
+                    this.visible = false;
+                    this.$refs.body.replaceChildren();
+                },
+            };
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
     <script>

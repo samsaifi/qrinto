@@ -165,7 +165,7 @@
 
         {{-- ── 1. STUDIO EDITOR WORKSPACE (DOTTED BACKGROUND) ── --}}
         <section class="cust-workspace w-full relative py-3 px-3 sm:px-6 border-b border-slate-200/80"
-            style="background-color: #f8fafc; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
+            style="background-color: #1c7a43; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
 
             <div class="max-w-7xl mx-auto">
 

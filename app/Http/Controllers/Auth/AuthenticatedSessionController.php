@@ -28,6 +28,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->authenticate();
 
+        // Inactive store → don't keep the user logged in, show the lock screen.
+        if (Auth::user()->hasInactiveStore()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('store.inactive');
+        }
+
         $cartService->mergeGuestCart($oldSessionId);
 
         $user = Auth::user();

@@ -54,6 +54,21 @@ class User extends Authenticatable
         return in_array($this->role, ['admin', 'store_admin', 'staff']);
     }
 
+    /**
+     * Store-side users (store admin / staff) whose store has been deactivated
+     * are not allowed to log in.
+     */
+    public function hasInactiveStore(): bool
+    {
+        if (!in_array($this->role, ['store_admin', 'storeadmin', 'staff']) || !$this->store_id) {
+            return false;
+        }
+
+        $store = $this->store;
+
+        return $store && !$store->is_active;
+    }
+
     public function isCustomer(): bool
     {
         return $this->role === 'customer';
