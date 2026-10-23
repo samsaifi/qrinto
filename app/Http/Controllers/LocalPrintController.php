@@ -463,7 +463,8 @@ class LocalPrintController extends Controller
                 'density'  => $r['density'] ?? null,
                 'loaded'   => true,
                 'out'      => false,
-                'desc'     => trim(($r['size'] ? str_replace('x', ' × ', $r['size']) : '') . ' ' . ($r['media'] ?? '')),
+                'desc'     => trim((\App\Models\Store::customTraySizeLabel($r)
+                    ?? ($r['size'] ? str_replace('x', ' × ', $r['size']) : '')) . ' ' . ($r['media'] ?? '')),
                 'user_type' => $r['user_type'] ?? null,
             ])->all();
         } else {
@@ -534,7 +535,8 @@ class LocalPrintController extends Controller
                 'density'  => $r['density'] ?? null,
                 'loaded'   => true,
                 'out'      => false,
-                'desc'     => trim(($r['size'] ? str_replace('x', ' × ', $r['size']) : '') . ' ' . ($r['media'] ?? '')),
+                'desc'     => trim((\App\Models\Store::customTraySizeLabel($r)
+                    ?? ($r['size'] ? str_replace('x', ' × ', $r['size']) : '')) . ' ' . ($r['media'] ?? '')),
                 'user_type' => $r['user_type'] ?? null,
             ])->all();
         } else {

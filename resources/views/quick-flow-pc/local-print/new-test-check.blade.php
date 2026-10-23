@@ -77,14 +77,12 @@
 
                         {{-- "Your file" view: the artwork at the SHARED preview scale,
                              so it is the exact same display size as in the tray view. --}}
-                        <div x-show="viewMode === 'file' && ready && !pdfError"
-                            class="flex items-center justify-center">
+                        <div x-show="viewMode === 'file' && ready && !pdfError" class="flex items-center justify-center">
                             <div class="rounded-sm shadow-lg bg-white overflow-hidden" :style="fileBoxStyle()">
                                 <canvas x-show="file.type === 'pdf'" x-ref="pdfCanvas"
                                     style="width:100%; height:100%; display:block;"></canvas>
                                 <img x-ref="imgPreview" x-show="file.type === 'image'" :src="file.url"
-                                    class="object-contain"
-                                    style="width:100%; height:100%; display:block;" />
+                                    class="object-contain" style="width:100%; height:100%; display:block;" />
                             </div>
                         </div>
 
@@ -111,8 +109,7 @@
                                     <div class="absolute left-1/2 top-1/2" :style="trayFileStyle()">
                                         <canvas x-show="file.type === 'pdf'" x-ref="pdfCanvasTray"
                                             style="width:100%; height:100%; display:block;"></canvas>
-                                        <img x-show="file.type === 'image'" :src="file.url"
-                                            class="object-contain"
+                                        <img x-show="file.type === 'image'" :src="file.url" class="object-contain"
                                             style="width:100%; height:100%; display:block;" />
                                     </div>
                                 </div>
@@ -247,7 +244,7 @@
                                 </div>
 
                                 <div class="space-y-2 mt-4">
-                                    <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank"
+                                    <a href="https://noritsucanada.com/print-trays/download/" target="_blank"
                                         class="w-full flex items-center justify-center gap-2 bg-[#287d3c] hover:bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
                                         <i data-lucide="download" class="w-4 h-4"></i> Download PrintTrays
                                     </a>
@@ -259,7 +256,8 @@
                                     </a>
                                     <button type="button" @click="trustCertificate()"
                                         class="w-full flex items-center justify-center gap-2 border border-amber-300 bg-amber-50 text-amber-800 font-semibold py-2.5 rounded-xl text-sm hover:bg-amber-100 transition">
-                                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Trust PrintTrays's certificate
+                                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Trust PrintTrays's
+                                        certificate
                                     </button>
                                     <p class="text-[11px] text-slate-400 text-center leading-snug">
                                         Click <em>Advanced → Proceed</em> in the window that opens, then close it — the
@@ -340,25 +338,6 @@
                                     x-text="blocker || 'Not ready to print'"></span></template>
                         </button>
 
-                        <button type="button" x-show="bridgeReady && selectedPrinter" @click="printTestPage()"
-                            :disabled="testPagePrinting"
-                            class="w-full mt-2 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span x-text="testPagePrinting ? 'Sending test page…' : 'Print HTML test page'"></span>
-                        </button>
-
-                        {{-- Activity log (new demo) --}}
-                        <div class="mt-4">
-                            <button type="button" @click="showPtLog = !showPtLog"
-                                class="text-[12px] font-semibold text-slate-500 hover:text-slate-700 inline-flex items-center gap-1">
-                                <span x-text="showPtLog ? '▾' : '▸'"></span> Activity log
-                                <span class="text-slate-400" x-show="ptLogLines.length"
-                                    x-text="'(' + ptLogLines.length + ')'"></span>
-                            </button>
-                            <pre x-show="showPtLog" x-cloak
-                                class="mt-2 max-h-56 overflow-auto bg-slate-50 border border-slate-200 rounded-lg p-3 text-[11px] leading-relaxed text-slate-600 whitespace-pre-wrap"
-                                x-text="ptLogLines.length ? ptLogLines.join('\n') : '(nothing yet)'"></pre>
-                        </div>
-
                         <p class="text-center mt-3">
                             <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank"
                                 class="text-[12px] text-slate-400 hover:text-[#287d3c] transition inline-flex items-center gap-1">
@@ -381,7 +360,9 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="{{ asset('js/new-test-print-settings.js') }}?v={{ filemtime(public_path('js/new-test-print-settings.js')) }}"></script>
+    <script
+        src="{{ asset('js/new-test-print-settings.js') }}?v={{ filemtime(public_path('js/new-test-print-settings.js')) }}">
+    </script>
     <script src="{{ asset('js/local-print-log.js') }}?v={{ filemtime(public_path('js/local-print-log.js')) }}"></script>
     <script>
         // Full route URLs so LPLog works under a sub-path (e.g. /qrinto).
@@ -475,7 +456,8 @@
                     this.ptLog("Opening PrintTrays's certificate page in a small window...");
                     const w = window.open(url, 'printtrays-trust', 'width=520,height=420');
                     if (!w) {
-                        this.ptLog('Popup blocked — allow popups for this site, or open ' + url + ' manually in a new tab.');
+                        this.ptLog('Popup blocked — allow popups for this site, or open ' + url +
+                        ' manually in a new tab.');
                         return;
                     }
                     const t = setInterval(() => {
@@ -507,7 +489,12 @@
                         this.printPaperSize !== this.psCustomSizeValue) cfg.paperSize = this.printPaperSize;
                     if (this.printDuplex && this.printDuplex !== 'simplex') cfg.duplex = this.printDuplex;
                     if (this.printScaleMode === 'custom') cfg.scaleFactor = this.printScaleFactor || 100;
-                    const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+                    const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;'
+                    })[c]);
                     const html = '<html><body style="font-family:sans-serif;padding:40px">' +
                         '<h1>PrintTrays test page</h1>' +
                         '<p>If you can read this on paper, the bridge is working.</p>' +
@@ -519,7 +506,10 @@
                     this.ptLog('Sending HTML test page to "' + this.selectedPrinter + '" (' + label +
                         (cfg.landscape ? ', landscape' : '') + (cfg.duplex ? ', duplex ' + cfg.duplex : '') +
                         (cfg.color ? '' : ', grayscale') + ')...');
-                    console.log('[localprint] HTML test print — request:', { printer: this.selectedPrinter, ...cfg });
+                    console.log('[localprint] HTML test print — request:', {
+                        printer: this.selectedPrinter,
+                        ...cfg
+                    });
                     try {
                         await pp.print(this.selectedPrinter, html, cfg);
                         this.ptLog('Test page sent successfully.');
@@ -548,7 +538,11 @@
                     // Pre-tick the size / orientation / E2E acknowledgements so those
                     // check rows show checked and don't block printing until the
                     // operator explicitly un-checks one.
-                    this.acks = Object.assign({ size: true, orient: true, e2e: true }, this.acks);
+                    this.acks = Object.assign({
+                        size: true,
+                        orient: true,
+                        e2e: true
+                    }, this.acks);
                     // Show the live preview inside the Print Settings modal too.
                     this.psHasPreview = true;
                     if (file.type === 'image') {
@@ -577,7 +571,9 @@
                     try {
                         const {
                             PrintTrays
-                        } = await import('{{ asset('js/new-testing-printtrays.js') }}?v={{ filemtime(public_path('js/new-testing-printtrays.js')) }}');
+                        } = await import(
+                            '{{ asset('js/new-testing-printtrays.js') }}?v={{ filemtime(public_path('js/new-testing-printtrays.js')) }}'
+                            );
                         const pp = new PrintTrays({
                             downloadUrl: 'https://noritsucanada.com/new-print-trays/download/',
                             onNotInstalled: () => {},
@@ -589,7 +585,8 @@
                         this.bridgeReady = true;
                         this.bridgeVersion = pp.version || null;
 
-                        this.ptLog('Connected to PrintTrays v' + (pp.version || 'unknown') + '. Fetching printer list...');
+                        this.ptLog('Connected to PrintTrays v' + (pp.version || 'unknown') +
+                            '. Fetching printer list...');
                         const list = await pp.getPrinters();
                         const raw = Array.isArray(list) ? list : [list].filter(Boolean);
                         this.printers = this.orderPrinters(raw);
@@ -623,9 +620,8 @@
                     };
                     return (list || [])
                         .filter(p => p && typeof p.name === 'string')
-                        // Noritsu-only filter — DISABLED on the testing page so ALL
-                        // printer queues show. Uncomment to restore Noritsu-only.
-                        // .filter(p => p.name.toLowerCase().includes('noritsu'))
+                        // Noritsu-only filter — show ONLY Noritsu printer queues.
+                        .filter(p => p.name.toLowerCase().includes('noritsu'))
                         .sort((a, b) => {
                             const ra = rank(a.name),
                                 rb = rank(b.name);
@@ -685,12 +681,17 @@
                     if (this.file.type === 'image') {
                         return await this.imageToPdfBase64(this.file.url);
                     }
-                    const res = await fetch(this.file.url, { credentials: 'same-origin' });
+                    const res = await fetch(this.file.url, {
+                        credentials: 'same-origin'
+                    });
                     if (!res.ok) throw new Error('Failed to fetch file: HTTP ' + res.status);
                     let bytes = new Uint8Array(await res.arrayBuffer());
                     if (window.PDFLib) {
                         try {
-                            const { PDFDocument, degrees } = window.PDFLib;
+                            const {
+                                PDFDocument,
+                                degrees
+                            } = window.PDFLib;
                             const src = await PDFDocument.load(bytes);
                             const srcPages = src.getPages();
 
@@ -703,33 +704,85 @@
                             // Output is ALWAYS portrait — the landscape toggle only
                             // drives the preview, never the printed/saved PDF.
                             const outLandscape = false;
-                            // Use the FULL paper/bleed dims (e.g. 5.57 × 7.49), so the
-                            // output PDF page size matches the selected paper exactly —
-                            // NOT the trim size (5 × 7). Prefer live driver dims, then the
-                            // static table, then psDim().
+                            // Start from the paper dims (live driver dims, then the static
+                            // table, then psDim()); E2E paper is reduced to its trim below.
                             const _live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
                             const _stat = this.trayDims && this.trayDims[this.printPaperSize];
                             let dim = ((_live && _live.w > 0) ? _live :
                                 ((_stat && _stat.w > 0) ? _stat :
-                                    (this.psDim() || { w: 8.5, h: 11 })));
+                                    (this.psDim() || {
+                                        w: 8.5,
+                                        h: 11
+                                    })));
                             // Driver CUSTOM page size: use the reported dims as-is
-                            // (no E2E bleed subtraction).
+                            // (the 0.57 / 0.49 in trim is applied below, as for E2E).
                             if (this.printPaperSize === this.psCustomSizeValue) {
                                 const _cd = this.psDim();
                                 if (_cd && _cd.w > 0 && _cd.h > 0) {
-                                    const _mn = Math.min(_cd.w, _cd.h), _mx = Math.max(_cd.w, _cd.h);
-                                    dim = { w: _mn, h: _mx };
+                                    const _mn = Math.min(_cd.w, _cd.h),
+                                        _mx = Math.max(_cd.w, _cd.h);
+                                    dim = {
+                                        w: _mn,
+                                        h: _mx
+                                    };
+                                }
+                            }
+                            // E2E paper: the PDF is built at the TRIM size — bleed dims minus
+                            // 0.57 in (width) / 0.49 in (height), e.g. 7.57 × 10.49 → 7 × 10 —
+                            // not at the bleed size. The driver's E2E form adds the bleed.
+                            const _e2e = this.trimsBleed();
+                            if (_e2e) dim = this.e2eTrimDims(dim);
+                            // PDF already AT the selected paper's trim size (e.g. a 5 × 7
+                            // PDF on "5 x 7in E2E (5.57 × 7.49 in)"): do NOT rebuild it.
+                            // Portrait → send the original bytes untouched (same as the new
+                            // demo, which never rebuilds a PDF); landscape → only turn it
+                            // portrait, keeping the trim page size.
+                            if (_e2e || this.printPaperSize !== this.psCustomSizeValue) {
+                                const _trim = _e2e ? [dim.w, dim.h] : (this.trimSizeFromCode(this.printPaperSize) ||
+                                    this.trimSizeFromCode(this.selectedSizeLabel ? this.selectedSizeLabel() : ''));
+                                if (_trim) {
+                                    const tMin = Math.min(_trim[0], _trim[1]),
+                                        tMax = Math.max(_trim[0], _trim[1]);
+                                    const TOL = 0.03; // inches
+                                    let allPortrait = true;
+                                    const allMatch = srcPages.length > 0 && srcPages.every((sp) => {
+                                        const b = (sp.getCropBox && sp.getCropBox()) || sp.getMediaBox();
+                                        let w = b.width / 72,
+                                            h = b.height / 72;
+                                        const rot = ((sp.getRotation && sp.getRotation().angle) || 0) % 180;
+                                        if (rot)[w, h] = [h, w];
+                                        if (w > h) allPortrait = false;
+                                        return Math.abs(Math.min(w, h) - tMin) <= TOL && Math.abs(Math.max(w,
+                                            h) - tMax) <= TOL;
+                                    });
+                                    if (allMatch) {
+                                        console.log('[localprint] pdf→print: source already at trim ' + tMin + ' × ' +
+                                            tMax +
+                                            ' in — ' + (allPortrait ? 'sending ORIGINAL PDF (no rebuild).' :
+                                                'rotating only, keeping trim size.'));
+                                        if (allPortrait) return this.arrayBufToBase64(bytes.buffer || bytes);
+                                        dim = {
+                                            w: tMin,
+                                            h: tMax
+                                        };
+                                    }
                                 }
                             }
                             console.log('[localprint] pdf→print paper dim →', {
-                                code: this.printPaperSize, live: _live, stat: _stat, dim,
+                                code: this.printPaperSize,
+                                live: _live,
+                                stat: _stat,
+                                dim,
                             });
-                            const rawMax = Math.max(dim.w, dim.h), rawMin = Math.min(dim.w, dim.h);
+                            const rawMax = Math.max(dim.w, dim.h),
+                                rawMin = Math.min(dim.w, dim.h);
                             const pageW = (outLandscape ? rawMax : rawMin) * PT;
                             const pageH = (outLandscape ? rawMin : rawMax) * PT;
 
                             const out = await PDFDocument.create();
-                            const mode = this.printScaleMode || 'fit';
+                            // E2E: always zoom from the centre until the page covers the
+                            // trim sheet edge to edge ('fit' = cover), whatever the shape.
+                            const mode = _e2e ? 'fit' : (this.printScaleMode || 'fit');
 
                             // Diagnostic: source page size vs target paper size. If the
                             // output still shows white, compare the source page dims here
@@ -738,10 +791,19 @@
                             // own page (scaling the page can't remove in-content white).
                             try {
                                 const _s0 = srcPages[0];
-                                const _ss = _s0 ? _s0.getSize() : { width: 0, height: 0 };
+                                const _ss = _s0 ? _s0.getSize() : {
+                                    width: 0,
+                                    height: 0
+                                };
                                 console.log('[localprint] pdf→print re-lay →', {
-                                    sourcePage_in: { w: +(_ss.width / 72).toFixed(3), h: +(_ss.height / 72).toFixed(3) },
-                                    targetPaper_in: { w: +(pageW / 72).toFixed(3), h: +(pageH / 72).toFixed(3) },
+                                    sourcePage_in: {
+                                        w: +(_ss.width / 72).toFixed(3),
+                                        h: +(_ss.height / 72).toFixed(3)
+                                    },
+                                    targetPaper_in: {
+                                        w: +(pageW / 72).toFixed(3),
+                                        h: +(pageH / 72).toFixed(3)
+                                    },
                                     paperCode: this.printPaperSize,
                                     scaleMode: mode,
                                     pages: srcPages.length,
@@ -761,25 +823,33 @@
                                 let emb;
                                 try {
                                     const cb = (sp.getCropBox && sp.getCropBox()) || sp.getMediaBox();
-                                    const ox = cb.x || 0, oy = cb.y || 0;
+                                    const ox = cb.x || 0,
+                                        oy = cb.y || 0;
                                     if (ox || oy) {
-                                        emb = await out.embedPage(sp,
-                                            { left: ox, bottom: oy, right: ox + cb.width, top: oy + cb.height },
+                                        emb = await out.embedPage(sp, {
+                                                left: ox,
+                                                bottom: oy,
+                                                right: ox + cb.width,
+                                                top: oy + cb.height
+                                            },
                                             [1, 0, 0, 1, -ox, -oy]);
                                     }
                                 } catch (_e) {}
                                 if (!emb) emb = await out.embedPage(sp);
-                                const sw = emb.width, sh = emb.height;
+                                const sw = emb.width,
+                                    sh = emb.height;
                                 const srcLandscape = sw > sh;
                                 const needSwap = outLandscape !== srcLandscape;
                                 // Footprint on the sheet after any 90° turn.
-                                const ew = needSwap ? sh : sw, eh = needSwap ? sw : sh;
+                                const ew = needSwap ? sh : sw,
+                                    eh = needSwap ? sw : sh;
                                 let k;
                                 if (mode === 'actual') k = 1;
                                 else if (mode === 'custom') k = Math.max(0.01, (this.printScaleFactor || 100) / 100);
                                 else if (mode === 'fit_area') k = Math.min(pageW / ew, pageH / eh);
                                 else k = Math.max(pageW / ew, pageH / eh); // 'fit' = crop to cover
-                                const drawW = sw * k, drawH = sh * k;
+                                const drawW = sw * k,
+                                    drawH = sh * k;
                                 const page = out.addPage([pageW, pageH]);
                                 if (needSwap) {
                                     // -90° (clockwise) turn, centred: a (drawW×drawH) page
@@ -788,14 +858,16 @@
                                     page.drawPage(emb, {
                                         x: (pageW - drawH) / 2,
                                         y: (pageH + drawW) / 2,
-                                        xScale: k, yScale: k,
+                                        xScale: k,
+                                        yScale: k,
                                         rotate: degrees(-90),
                                     });
                                 } else {
                                     page.drawPage(emb, {
                                         x: (pageW - drawW) / 2,
                                         y: (pageH - drawH) / 2,
-                                        xScale: k, yScale: k,
+                                        xScale: k,
+                                        yScale: k,
                                     });
                                 }
                             }
@@ -805,7 +877,8 @@
                             // IMPORTANT: on failure we fall back to the ORIGINAL PDF bytes
                             // (design size, e.g. 5×7) — which on a larger media prints with
                             // a WHITE BORDER. If you see this, the cover-fill did NOT run.
-                            console.error('[localprint] PDF re-lay FAILED — sending ORIGINAL (may show white border):', e && e.message || e);
+                            console.error('[localprint] PDF re-lay FAILED — sending ORIGINAL (may show white border):',
+                                e && e.message || e);
                         }
                     }
                     return this.arrayBufToBase64(bytes.buffer || bytes);
@@ -943,7 +1016,9 @@
                         other.getContext('2d').drawImage(main, 0, 0);
                     }
                     // Snapshot the rendered page as the modal preview's artwork.
-                    try { this.psPreviewSrc = main.toDataURL('image/png'); } catch (e) {}
+                    try {
+                        this.psPreviewSrc = main.toDataURL('image/png');
+                    } catch (e) {}
                 },
 
                 setViewMode(mode) {
@@ -972,7 +1047,10 @@
                 // Based on fitting the LARGER of the file and the selected paper into
                 // the preview box (the paper is the bigger object in the tray view).
                 previewScale() {
-                    const f = (this.dims && this.dims.w) ? this.dims : { w: 1, h: 1 };
+                    const f = (this.dims && this.dims.w) ? this.dims : {
+                        w: 1,
+                        h: 1
+                    };
                     const p = this.trayPaperDims();
                     const narrow = typeof window !== 'undefined' && window.innerWidth < 768;
                     const boxW = narrow ? 230 : 330;
@@ -984,7 +1062,10 @@
 
                 // Pixel size of the file artwork at the shared scale (its own orientation).
                 fileBoxStyle() {
-                    const f = (this.dims && this.dims.w) ? this.dims : { w: 1, h: 1 };
+                    const f = (this.dims && this.dims.w) ? this.dims : {
+                        w: 1,
+                        h: 1
+                    };
                     const s = this.previewScale();
                     return `width: ${Math.max(20, Math.round(f.w * s))}px; height: ${Math.max(20, Math.round(f.h * s))}px;`;
                 },
@@ -993,9 +1074,15 @@
                 // sheet minus the ~0.2 in unprintable margin otherwise.
                 trayPrintableDims() {
                     const p = this.trayPaperDims();
-                    if (this.isE2ESelected()) return { w: p.w, h: p.h };
+                    if (this.isE2ESelected()) return {
+                        w: p.w,
+                        h: p.h
+                    };
                     const m = 0.2;
-                    return { w: Math.max(0.1, p.w - 2 * m), h: Math.max(0.1, p.h - 2 * m) };
+                    return {
+                        w: Math.max(0.1, p.w - 2 * m),
+                        h: Math.max(0.1, p.h - 2 * m)
+                    };
                 },
 
                 // Size + rotation (px) of the artwork on the sheet. Mirrors what the
@@ -1008,7 +1095,10 @@
                 //   fit_area           → contain: whole design fits, white around it.
                 //   actual             → true size.  custom → true size × factor.
                 trayFileStyle() {
-                    const f = (this.dims && this.dims.w) ? this.dims : { w: 1, h: 1 };
+                    const f = (this.dims && this.dims.w) ? this.dims : {
+                        w: 1,
+                        h: 1
+                    };
                     const fileLandscape = f.w > f.h;
                     const needSwap = !!this.printLandscape !== fileLandscape;
                     // Footprint after any 90° turn, used for fitting to the paper.
@@ -1056,7 +1146,10 @@
                     // back to the raw paper dims only when no trim can be derived.
                     const trim = this.trimSizeFromCode(this.printPaperSize) ||
                         this.trimSizeFromCode(this.selectedSizeLabel ? this.selectedSizeLabel() : '');
-                    const d = trim ? { w: trim[0], h: trim[1] } : this.psDim();
+                    const d = trim ? {
+                        w: trim[0],
+                        h: trim[1]
+                    } : this.psDim();
                     const sz = d ? `${this.fmt(d.w)} × ${this.fmt(d.h)} in` : '';
                     const parts = [];
                     if (sz) parts.push(sz);
@@ -1250,7 +1343,7 @@
                         severity: 'ok',
                         title: this.file.type === 'pdf' ? 'PDF generated' : 'Image ready',
                         detail: (this.file.type === 'pdf' ?
-                            (this.pages + ' page' + (this.pages === 1 ? '' : 's')) : 'Image') +
+                                (this.pages + ' page' + (this.pages === 1 ? '' : 's')) : 'Image') +
                             ' ready to print.',
                     });
                     // Shared size / orientation / E2E checks against the SELECTED paper.
@@ -1370,7 +1463,11 @@
                         // explicitly, and the optional ~4% safety shrink.
                         const _cd = this.psDim();
                         if (_cd && _cd.w > 0 && _cd.h > 0) {
-                            cfg.pageSize = { width: Math.min(_cd.w, _cd.h), height: Math.max(_cd.w, _cd.h), units: 'in' };
+                            cfg.pageSize = {
+                                width: Math.min(_cd.w, _cd.h),
+                                height: Math.max(_cd.w, _cd.h),
+                                units: 'in'
+                            };
                         }
                         if (this.printSafetyShrink) cfg.paperSafetyShrink = true;
                     } else if (this.sizesSource === 'printer' &&
@@ -1393,7 +1490,11 @@
                     cfg.fastRaster = !!this.printFastRaster;
                     if (cfg.type === 'image') {
                         const _d = this.imagePageDims();
-                        if (!cfg.pageSize) cfg.pageSize = { width: _d.w, height: _d.h, units: 'in' };
+                        if (!cfg.pageSize) cfg.pageSize = {
+                            width: _d.w,
+                            height: _d.h,
+                            units: 'in'
+                        };
                         if (this.printClassicImageEngine) cfg.imageEngine = 'sumatra';
                     }
 
@@ -1436,7 +1537,8 @@
                             fast_raster: !!cfg.fastRaster,
                             image_engine: cfg.imageEngine || null,
                             paper_safety_shrink: !!cfg.paperSafetyShrink,
-                            printer_default_orientation: (this.psCurrentDefaults && this.psCurrentDefaults.orientation) || null,
+                            printer_default_orientation: (this.psCurrentDefaults && this.psCurrentDefaults.orientation) ||
+                                null,
                         },
                         request_payload: cfg,
                         design_settings: {
@@ -1462,9 +1564,9 @@
                         let b64;
                         let _usedSaved = false;
                         if (_native) {
-                            // Composed exactly like the PDF path (paper size, scale,
-                            // rotation), but sent as a JPEG with type:'image'.
-                            b64 = await this.imageToPdfBase64(this.file.url, true);
+                            // Same as the new demo: the WHOLE image is sent (never
+                            // cropped), edge-extended to the paper's aspect, type:'image'.
+                            b64 = await this.imageToNativeB64(this.file.url);
                         } else if (this.savedPdfB64) {
                             // "Apply" already regenerated the PDF at the selected paper
                             // size and kept it in memory — send that exact file as-is.
@@ -1495,7 +1597,10 @@
                                 const _h = +(_sz.height / 72).toFixed(2);
                                 console.log('[localprint] PRINT → sending PDF', {
                                     source: _usedSaved ? 'applied (saved)' : 'built on print',
-                                    pdfPage_in: { w: _w, h: _h },
+                                    pdfPage_in: {
+                                        w: _w,
+                                        h: _h
+                                    },
                                     paperCode: this.printPaperSize,
                                     scaleMode: cfg.scaleMode,
                                     paperSize: cfg.paperSize || '(driver default)',
@@ -1505,11 +1610,14 @@
                                 // Show it ON-SCREEN too (visible toast), so the operator can
                                 // confirm the PDF size + paper the job is going out at.
                                 this.printMsg = 'Printing PDF ' + _w + ' × ' + _h + ' in' +
-                                    ' · paper: ' + (this.selectedSizeLabel ? this.selectedSizeLabel() : this.printPaperSize) +
+                                    ' · paper: ' + (this.selectedSizeLabel ? this.selectedSizeLabel() : this
+                                        .printPaperSize) +
                                     ' · ' + (cfg.copies || 1) + ' ' + ((cfg.copies || 1) == 1 ? 'copy' : 'copies');
                                 this.printMsgKind = 'info';
                             }
-                        } catch (_e) { console.info('[localprint] print-time dim log skipped:', _e && _e.message); }
+                        } catch (_e) {
+                            console.info('[localprint] print-time dim log skipped:', _e && _e.message);
+                        }
 
                         // Create the audit log BEFORE sending to PrintTrays (non-fatal).
                         job = await LPLog.start(this.buildLogPayload(cfg));
@@ -1523,22 +1631,30 @@
                         // routes it to printPdfBase64 on the bridge.
                         this.ptLog('Sending "' + this.file.name + '" to "' + this.selectedPrinter + '" as ' + cfg.type +
                             ' (' + this.selectedSizeLabel() + (cfg.duplex ? ', duplex ' + cfg.duplex : '') +
-                            (cfg.color ? '' : ', grayscale') + ', ' + cfg.copies + ' cop' + (cfg.copies === 1 ? 'y' : 'ies') +
+                            (cfg.color ? '' : ', grayscale') + ', ' + cfg.copies + ' cop' + (cfg.copies === 1 ?
+                                'y' : 'ies') +
                             (cfg.pageOrder === 'backToFront' ? ', back to front' : '') +
-                            (cfg.fastRaster ? ', fast-raster mode' : '') + (cfg.imageEngine ? ', classic engine' : '') +
+                            (cfg.fastRaster ? ', fast-raster mode' : '') + (cfg.imageEngine ? ', classic engine' :
+                                '') +
                             (cfg.useDriverDefaultSize ? ', driver custom size' : '') +
                             (cfg.paperSafetyShrink ? ', safety shrink' : '') + ')...');
                         const _t0 = performance.now();
                         const resp = await pp.print(this.selectedPrinter, b64, cfg);
                         this.ptLog('Print job sent successfully (spooler accepted it after ' +
                             ((performance.now() - _t0) / 1000).toFixed(1) + 's).');
-                        await LPLog.finish(job, { ok: true, response: resp });
+                        await LPLog.finish(job, {
+                            ok: true,
+                            response: resp
+                        });
                         this.printMsg = 'Sent to ' + this.selectedPrinter + '!';
                         this.printMsgKind = 'success';
                     } catch (e) {
                         console.error('[localprint] PrintTrays print failed:', e);
                         this.ptLog('Print failed: ' + ((e && e.message) || e));
-                        await LPLog.finish(job, { ok: false, error: (e && e.message) || 'Print failed.' });
+                        await LPLog.finish(job, {
+                            ok: false,
+                            error: (e && e.message) || 'Print failed.'
+                        });
                         this.printMsg = (e && e.message) || 'Print failed.';
                         this.printMsgKind = 'error';
                     } finally {
@@ -1570,12 +1686,98 @@
                 imagePageDims() {
                     const live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
                     const stat = this.trayDims && this.trayDims[this.printPaperSize];
-                    let dim = (live && live.w > 0 ? live : (stat && stat.w > 0 ? stat : (this.psDim() || { w: 8.5, h: 11 })));
+                    let dim = (live && live.w > 0 ? live : (stat && stat.w > 0 ? stat : (this.psDim() || {
+                        w: 8.5,
+                        h: 11
+                    })));
                     if (this.printPaperSize === this.psCustomSizeValue) {
                         const _cd = this.psDim();
                         if (_cd && _cd.w > 0 && _cd.h > 0) dim = _cd;
                     }
-                    return { w: Math.min(dim.w, dim.h), h: Math.max(dim.w, dim.h) };
+                    return {
+                        w: Math.min(dim.w, dim.h),
+                        h: Math.max(dim.w, dim.h)
+                    };
+                },
+
+                // Native type:'image' job — mirrors the new PrintTrays demo. The image
+                // is NEVER cropped: it is kept at its own resolution, turned portrait
+                // (the page is always fed portrait, and we send landscape:false), then
+                // padded to exactly the paper's aspect by stretching its outermost
+                // row/column of pixels into the gap (a soft edge-extend, no white bars,
+                // no content removed). The bridge then fits it onto the page.
+                // PNG sources stay PNG; everything else goes out as JPEG 0.95.
+                imageToNativeB64(url) {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => {
+                            try {
+                                const iw = img.naturalWidth,
+                                    ih = img.naturalHeight;
+                                const needSwap = iw > ih;
+                                const sw = needSwap ? ih : iw;
+                                const sh = needSwap ? iw : ih;
+                                const src = document.createElement('canvas');
+                                src.width = sw;
+                                src.height = sh;
+                                const sctx = src.getContext('2d');
+                                if (needSwap) {
+                                    sctx.translate(sw / 2, sh / 2);
+                                    sctx.rotate(-Math.PI / 2); // -90°, same as imageToPdfBase64
+                                    sctx.drawImage(img, -iw / 2, -ih / 2);
+                                } else {
+                                    sctx.drawImage(img, 0, 0);
+                                }
+
+                                const page = this.imagePageDims();
+                                const target = page.w / page.h;
+                                const ratio = sw / sh;
+                                let W = sw,
+                                    H = sh;
+                                if (Math.abs(ratio - target) >= 0.001) {
+                                    if (ratio > target) H = Math.round(sw / target);
+                                    else W = Math.round(sh * target);
+                                }
+                                const dx = Math.round((W - sw) / 2);
+                                const dy = Math.round((H - sh) / 2);
+                                const c = document.createElement('canvas');
+                                c.width = W;
+                                c.height = H;
+                                const ctx = c.getContext('2d');
+                                if (dy > 0) {
+                                    ctx.drawImage(src, 0, 0, sw, 1, 0, 0, W, dy);
+                                    ctx.drawImage(src, 0, sh - 1, sw, 1, 0, dy + sh, W, H - dy - sh);
+                                }
+                                if (dx > 0) {
+                                    ctx.drawImage(src, 0, 0, 1, sh, 0, dy, dx, sh);
+                                    ctx.drawImage(src, sw - 1, 0, 1, sh, dx + sw, dy, W - dx - sw, sh);
+                                }
+                                ctx.drawImage(src, dx, dy);
+
+                                const isPng = /\.png($|\?)/i.test(this.file.name || url);
+                                console.log('[localprint] native image →', {
+                                    source_px: {
+                                        w: iw,
+                                        h: ih
+                                    },
+                                    rotated: needSwap,
+                                    padded_px: {
+                                        w: W,
+                                        h: H
+                                    },
+                                    page_in: page,
+                                    format: isPng ? 'png' : 'jpeg',
+                                });
+                                const out = isPng ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.95);
+                                resolve(out.split(',')[1]);
+                            } catch (e) {
+                                reject(e);
+                            }
+                        };
+                        img.onerror = () => reject(new Error('Failed to load image for printing'));
+                        img.src = url;
+                    });
                 },
 
                 // asJpeg = true returns the composed page as raw JPEG base64 (for a
@@ -1590,28 +1792,39 @@
                                 // inches, from trayDims), not the image's raw pixel size —
                                 // then crop-to-cover so the image fills it with zero gaps,
                                 // regardless of the source image's own aspect ratio.
-                                // Use the FULL paper/bleed dims (e.g. 5.57 × 7.49), so the
-                                // produced PDF page size matches the selected paper exactly
-                                // — NOT the trim size (5 × 7). Prefer live driver dims, then
-                                // the static table.
+                                // Prefer live driver dims, then the static table; E2E paper
+                                // is reduced to its trim size below.
                                 const live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
                                 const stat = this.trayDims && this.trayDims[this.printPaperSize];
                                 let dim = (live && live.w > 0 ? live :
                                     (stat && stat.w > 0 ? stat :
-                                        (this.psDim() || { w: 8.5, h: 11 })));
+                                        (this.psDim() || {
+                                            w: 8.5,
+                                            h: 11
+                                        })));
                                 // Driver CUSTOM page size: use the reported dims as-is
-                                // (no E2E bleed subtraction).
+                                // (the 0.57 / 0.49 in trim is applied below, as for E2E).
                                 if (this.printPaperSize === this.psCustomSizeValue) {
                                     const _cd = this.psDim();
                                     if (_cd && _cd.w > 0 && _cd.h > 0) {
-                                        const _mn = Math.min(_cd.w, _cd.h), _mx = Math.max(_cd.w, _cd.h);
-                                        dim = { w: _mn, h: _mx };
+                                        const _mn = Math.min(_cd.w, _cd.h),
+                                            _mx = Math.max(_cd.w, _cd.h);
+                                        dim = {
+                                            w: _mn,
+                                            h: _mx
+                                        };
                                     }
                                 }
+                                // E2E paper → build at the trim size (bleed − 0.57 / 0.49 in),
+                                // cover-filled from the centre, same as the PDF path.
+                                const _e2e = this.trimsBleed();
+                                if (_e2e) dim = this.e2eTrimDims(dim);
                                 console.log('[localprint] image→pdf size →', {
                                     code: this.printPaperSize,
                                     label: this.selectedSizeLabel(),
-                                    live, stat, dim,
+                                    live,
+                                    stat,
+                                    dim,
                                     landscape: this.printLandscape,
                                 });
                                 const dpi = 300;
@@ -1636,7 +1849,8 @@
                                 // orientation differs from the image's OWN orientation
                                 // — so a portrait image printed landscape has its
                                 // design turned with the page (not just the paper).
-                                const iw = img.naturalWidth, ih = img.naturalHeight;
+                                const iw = img.naturalWidth,
+                                    ih = img.naturalHeight;
                                 const imgLandscape = iw > ih;
                                 const needSwap = outLandscape !== imgLandscape;
                                 // Effective image box after any 90° rotation.
@@ -1653,7 +1867,7 @@
                                 //                bars on the shorter axis (no cropping).
                                 //   'actual'   → true size: native pixels at 300 dpi.
                                 //   'custom'   → 'actual' scaled by printScaleFactor %.
-                                const _m = this.printScaleMode || 'fit';
+                                const _m = _e2e ? 'fit' : (this.printScaleMode || 'fit');
                                 let scale;
                                 if (_m === 'actual') {
                                     scale = 1;
@@ -1672,7 +1886,10 @@
                                 ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
                                 ctx.restore();
                                 const jpegB64 = c.toDataURL('image/jpeg', 0.92).split(',')[1];
-                                if (asJpeg) { resolve(jpegB64); return; }
+                                if (asJpeg) {
+                                    resolve(jpegB64);
+                                    return;
+                                }
                                 const jpeg = this.base64ToBytes(jpegB64);
                                 resolve(this.buildImagePdf(jpeg, outW, outH, pageW * 72, pageH * 72));
                             } catch (e) {
@@ -1779,7 +1996,10 @@
                     // Bare "W x H" with no unit — assume inches.
                     const bare = raw.match(new RegExp(pair, 'i'));
                     if (bare) return [parseFloat(bare[1]), parseFloat(bare[2])];
-                    const named = { 'letter': [8.5, 11], 'legal': [8.5, 14] };
+                    const named = {
+                        'letter': [8.5, 11],
+                        'legal': [8.5, 14]
+                    };
                     const key = raw.replace(/[-\s]*e2e.*$/i, '').trim().toLowerCase();
                     if (named[key]) return named[key];
                     return null;
@@ -1800,6 +2020,23 @@
                 isE2ESelected() {
                     return /e2e/i.test(String(this.printPaperSize || '')) ||
                         /e2e/i.test(this.selectedSizeLabel());
+                },
+
+                // Papers whose PDF is built at the trim size (bleed − 0.57 / 0.49 in):
+                // any E2E size, and the driver's PostScript Custom Page Size.
+                trimsBleed() {
+                    return this.printPaperSize === this.psCustomSizeValue || this.isE2ESelected();
+                },
+
+                // E2E bleed paper dims → portrait TRIM dims the PDF is built at:
+                // width − 0.57 in, height − 0.49 in (7.57 × 10.49 → 7 × 10).
+                e2eTrimDims(dim) {
+                    const mn = Math.min(dim.w, dim.h),
+                        mx = Math.max(dim.w, dim.h);
+                    return {
+                        w: +Math.max(0.1, mn - 0.57).toFixed(2),
+                        h: +Math.max(0.1, mx - 0.49).toFixed(2)
+                    };
                 },
 
                 arrayBufToBase64(buf) {

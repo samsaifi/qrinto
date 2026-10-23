@@ -60,6 +60,8 @@
          bridge does NOT rotate PDF content for a `landscape` flag, but it DOES
          honour a page's own /Rotate, which pdf-lib sets). --}}
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    {{-- Print-PDF re-lay shared with /new-testing/print/pdf/check (printOrder). --}}
+    <script src="{{ asset('js/new-print-relay.js') }}?v={{ filemtime(public_path('js/new-print-relay.js')) }}"></script>
     {{-- Local-print audit log (same system as /print/pdf/check): records every
          print attempt AND saves the exact print-ready PDF to the log row. --}}
     <script src="{{ asset('js/local-print-log.js') }}?v={{ filemtime(public_path('js/local-print-log.js')) }}"></script>
@@ -272,9 +274,11 @@
                 if (window.__ptBridge) return window.__ptBridge;
                 const {
                     PrintTrays
-                } = await import('{{ asset('js/printtrays.js') }}');
+                } = await import(
+                    '{{ asset('js/new-testing-printtrays.js') }}?v={{ filemtime(public_path('js/new-testing-printtrays.js')) }}'
+                    );
                 const pp = new PrintTrays({
-                    downloadUrl: 'https://noritsucanada.com/print-trays/download/',
+                    downloadUrl: 'https://noritsucanada.com/new-print-trays/download/',
                     onNotInstalled: () => {},
                 });
                 await pp.connect();
@@ -324,108 +328,6 @@
                         keepalive: true,
                     }).catch(function() {});
                 } catch (e) {}
-            }
-
-            // Rebuild the order PDF so every page IS the tray's media size, in the
-            // chosen orientation, with the design cover-filled (scaled to cover,
-            // rotated 90° when its orientation differs). This does two things at
-            // once that the bridge/SumatraPDF can't:
-            //   1. Orientation — SumatraPDF won't rotate PDF content for a
-            //      `landscape` flag, so we bake it into the page here.
-            //   2. Edge-to-edge — the raw design PDF is the DESIGN size (e.g. 5×7);
-            //      on a larger sheet SumatraPDF would centre it small with margins.
-            //      Cover-filling onto the media size makes it print edge-to-edge.
-            // mediaWin/mediaHin are the tray's paper size in inches. Best-effort:
-            // returns the original bytes on any failure so a print is never blocked.
-            // ── ROTATION-ONLY (lightweight, default print path) ──
-            // Rotates each page 90° ONLY when its orientation doesn't match the
-            // desired print orientation. No re-embed, no scaling, no size change —
-            // pdf-lib's setRotation just flips the page's rotation flag, so a 7×10
-            // design PDF stays a 7×10 PDF (its printed footprint becomes 10×7). This
-            // fixes the fact that the bridge/SumatraPDF won't rotate PDF content for
-            // a `landscape` flag, WITHOUT rebuilding the server PDF or adding margins.
-            // Best-effort: returns the original bytes on failure or when no change.
-            async function rotatePdfToOrientation(bytes, wantLandscape) {
-                try {
-                    if (!window.PDFLib) return bytes;
-                    const {
-                        PDFDocument,
-                        degrees
-                    } = window.PDFLib;
-                    const src = await PDFDocument.load(bytes);
-                    const pages = src.getPages();
-                    let changed = false;
-                    for (const page of pages) {
-                        const {
-                            width,
-                            height
-                        } = page.getSize();
-                        const isLandscape = width > height;
-                        if (isLandscape === wantLandscape) continue; // already correct
-                        const cur = page.getRotation().angle || 0;
-                        page.setRotation(degrees((cur - 90 + 360) % 360)); // -90° (clockwise)
-                        changed = true;
-                    }
-                    if (!changed) return bytes; // nothing to do → original bytes
-                    return await src.save();
-                } catch (e) {
-                    console.warn('[store-print] PDF rotate skipped:', e && e.message || e);
-                    return bytes;
-                }
-            }
-
-            async function fitPdfToMedia(bytes, mediaWin, mediaHin, wantLandscape) {
-                try {
-                    if (!window.PDFLib || !(mediaWin > 0) || !(mediaHin > 0)) return bytes;
-                    const {
-                        PDFDocument,
-                        degrees
-                    } = window.PDFLib;
-                    const src = await PDFDocument.load(bytes);
-                    const out = await PDFDocument.create();
-                    const n = src.getPageCount();
-                    // `wantLandscape` is decided by the caller from the PRODUCT page
-                    // count (4-page → portrait, 2-page → landscape). Orient the media
-                    // to it; if the design page differs, the loop rotates it to fit.
-                    const mediaWpt = (wantLandscape ? Math.max(mediaWin, mediaHin) : Math.min(mediaWin, mediaHin)) * 72;
-                    const mediaHpt = (wantLandscape ? Math.min(mediaWin, mediaHin) : Math.max(mediaWin, mediaHin)) * 72;
-                    for (let i = 0; i < n; i++) {
-                        const emb = await out.embedPage(src.getPage(i));
-                        const pw = emb.width,
-                            ph = emb.height;
-                        const rotate = (pw > ph) !== (mediaWpt > mediaHpt);
-                        const page = out.addPage([mediaWpt, mediaHpt]);
-                        if (rotate) {
-                            // -90° (clockwise): the page's footprint swaps axes, so cover
-                            // the media using the swapped extents; for a clockwise turn the
-                            // pivot sits on the sheet's left/top side.
-                            const s = Math.max(mediaWpt / ph, mediaHpt / pw);
-                            const wW = ph * s,
-                                wH = pw * s;
-                            page.drawPage(emb, {
-                                x: (mediaWpt - wW) / 2,
-                                y: (mediaHpt + wH) / 2,
-                                xScale: s,
-                                yScale: s,
-                                rotate: degrees(-90),
-                            });
-                        } else {
-                            const s = Math.max(mediaWpt / pw, mediaHpt / ph);
-                            const dw = pw * s,
-                                dh = ph * s;
-                            page.drawPage(emb, {
-                                x: (mediaWpt - dw) / 2,
-                                y: (mediaHpt - dh) / 2,
-                                xScale: s,
-                                yScale: s,
-                            });
-                        }
-                    }
-                    return await out.save();
-                } catch (e) {
-                    console.warn('[store-print] PDF fit skipped:', e && e.message || e);
-                    return bytes;
-                }
             }
 
             // Derive the TRIM size (in inches) from the tray's saved size code.
@@ -485,9 +387,13 @@
             // Returns { name, w, h } with the media's REAL dimensions (inches,
             // portrait-normalised w≤h) so the PDF can be rebuilt at the exact
             // paper size that will actually be printed — or null if no match.
-            async function resolveLiveMedia(pp, printer, mediaWin, mediaHin) {
+            // preferName: the tray's saved media value (a live driver media name when
+            // it was picked from the printer's list) — an exact match wins, like the
+            // selected media on /print/pdf/check.
+            async function resolveLiveMedia(pp, printer, mediaWin, mediaHin, preferName) {
                 try {
-                    if (!pp || !printer || !(mediaWin > 0) || !(mediaHin > 0)) return null;
+                    if (!pp || !printer) return null;
+                    if (!preferName && (!(mediaWin > 0) || !(mediaHin > 0))) return null;
                     const res = await pp.getPrinterDetails(printer);
                     const raw = (res && (res.sizes || res.paperSizes || res.media)) || [];
                     if (!raw.length) return null;
@@ -511,6 +417,8 @@
                         else if (units === 'micron' || units === 'um') { w = w / 25400; h = h / 25400; }
                         const sw = Math.min(w, h);
                         const sh = Math.max(w, h);
+                        if (preferName && name === preferName) return { name: name, w: sw, h: sh };
+                        if (!(targetW > 0) || !(targetH > 0)) continue;
                         const delta = Math.abs(sw - targetW) + Math.abs(sh - targetH);
                         if (delta <= TOL * 2 && delta < bestDelta) {
                             bestDelta = delta;
@@ -522,6 +430,18 @@
                     console.info('[store-print] live media lookup skipped:', (e && e.message) || e);
                     return null;
                 }
+            }
+
+            // Tray saved on the printer driver's own custom page size (/store/trays);
+            // its W×H lives in size_width / size_height. Same value as CUSTOM_SIZE in
+            // js/new-test-print-settings.js.
+            const CUSTOM_SIZE = '__custom_size__';
+
+            // Papers whose PDF is built at the TRIM size (bleed − 0.57 / 0.49 in):
+            // any E2E size, and the driver custom size — same as /print/pdf/check.
+            function trimsBleed(chosen) {
+                return chosen.size === CUSTOM_SIZE || /e2e/i.test(String(chosen.size || '')) ||
+                    /e2e/i.test(String(chosen.size_pretty || ''));
             }
 
             async function printOrder(chosen, payload, csrf) {
@@ -583,49 +503,34 @@
                     }
                     if (!bytes) throw new Error('No PDF data available.');
 
-                    // DEFAULT PRINT PATH — do NOT rebuild the server PDF. The server
-                    // PDF is the source of truth (a 7×10 design stays a 7×10 PDF).
-                    // Since the bridge/SumatraPDF won't rotate PDF content for the
-                    // `landscape` flag, we ONLY rotate pages 90° when their orientation
-                    // doesn't match the desired one — no resize, no cover-fill, no
-                    // margins. Scaling / edge-to-edge is left to the driver via
-                    // paperSize + scaleMode. For 'actual' the operator wants the true
-                    // size AND orientation, so the PDF is left completely untouched.
-                    // Resolve the LIVE driver media that will actually be printed, so we
-                    // can rebuild the PDF at the EXACT paper size that goes to the
-                    // printer (its real dims) and pin the same media name below. Falls
-                    // back to the tray's configured size when no live match is found.
-                    const liveMedia = await resolveLiveMedia(
+                    // Resolve the LIVE driver media that will actually be printed (the
+                    // tray's saved media name, else a dims match), so the PDF is built
+                    // at that paper's REAL dims and the same media name is pinned below.
+                    // The driver custom size is not a media form, so there is nothing
+                    // to look up or pin — it is sent as an explicit pageSize below.
+                    const isCustom = chosen.size === CUSTOM_SIZE;
+                    const liveMedia = isCustom ? null : await resolveLiveMedia(
                         pp, printer,
                         parseFloat(chosen.size_width),
-                        parseFloat(chosen.size_height)
+                        parseFloat(chosen.size_height),
+                        chosen.size
                     );
 
+                    // Print-ready PDF: the SAME re-lay as /new-testing/print/pdf/check
+                    // (js/new-print-relay.js) — always portrait, at the paper size (trim
+                    // for E2E / custom, cover-filled), else per the tray's scale mode.
+                    // Paper dims: live media, else the tray's saved size_width/height.
                     const scaleMode = chosen.scale_mode || 'fit';
-                    if (scaleMode === 'fit') {
-                        // Output is ALWAYS portrait — same as the own-design preview &
-                        // /print/pdf/check pages. A landscape design is rotated -90°
-                        // (clockwise) to fit the portrait sheet. The tray's landscape
-                        // flag / page count no longer changes the saved orientation.
-                        const wantLandscape = false;
-                        // Regenerate the PDF at the TRIM size (e.g. 5x7-E2E → 5 × 7), NOT
-                        // the full bleed (5.57 × 7.49): the PDF is saved/printed at the
-                        // trim size and the driver's pinned E2E media form (paperSize,
-                        // below) expands trim to bleed at print time for a borderless
-                        // result. Falls back to live/tray dims when no trim is parseable.
-                        const _trim = trimSizeFromCode(chosen);
-                        const mw = _trim ? _trim[0] : (liveMedia ? liveMedia.w : parseFloat(chosen.size_width));
-                        const mh = _trim ? _trim[1] : (liveMedia ? liveMedia.h : parseFloat(chosen.size_height));
-                        if (mw > 0 && mh > 0) {
-                            bytes = await fitPdfToMedia(bytes, mw, mh, wantLandscape);
-                        } else {
-                            bytes = await rotatePdfToOrientation(bytes, wantLandscape);
-                        }
-                    } else {
-                        // actual / custom keep the design's true size, but still save in
-                        // PORTRAIT — a landscape design is rotated -90° to portrait.
-                        bytes = await rotatePdfToOrientation(bytes, false);
-                    }
+                    bytes = await window.qrintoRelayPdf(bytes, {
+                        paperW: liveMedia ? liveMedia.w : parseFloat(chosen.size_width),
+                        paperH: liveMedia ? liveMedia.h : parseFloat(chosen.size_height),
+                        e2e: trimsBleed(chosen),
+                        trim: isCustom ? null : trimSizeFromCode({
+                            size: chosen.size
+                        }),
+                        mode: scaleMode,
+                        scaleFactor: parseFloat(chosen.scale_factor) || 100,
+                    });
 
                     let binary = '';
                     for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
@@ -672,7 +577,24 @@
                     // 931BL is smaller than the borderless form → visible white
                     // borders. If no match / older bridge, omit paperSize so the
                     // driver default is used (previous behaviour).
-                    if (liveMedia && liveMedia.name) {
+                    if (isCustom) {
+                        // Driver custom page size — same as /print/pdf/check: use the
+                        // driver's own saved custom form (its bleed/E2E setting) and
+                        // send the size explicitly; no paperSize.
+                        printOpts.useDriverDefaultSize = true;
+                        printOpts.scaleMode = 'fit';
+                        delete printOpts.scaleFactor;
+                        const cw = parseFloat(chosen.size_width),
+                            ch = parseFloat(chosen.size_height);
+                        if (cw > 0 && ch > 0) {
+                            printOpts.pageSize = {
+                                width: Math.min(cw, ch),
+                                height: Math.max(cw, ch),
+                                units: 'in'
+                            };
+                        }
+                        console.log('[store-print] driver custom size →', printOpts.pageSize || '(driver default)');
+                    } else if (liveMedia && liveMedia.name) {
                         printOpts.paperSize = liveMedia.name;
                         console.log('[store-print] pinned paperSize →', liveMedia.name,
                             '(' + liveMedia.w + ' × ' + liveMedia.h + ' in)');
@@ -693,6 +615,10 @@
                     // ('frontToBack' / 'backToFront'). The bridge applies it as a
                     // reverse page-feed instruction; single-page jobs ignore it.
                     printOpts.pageOrder = chosen.page_order || 'frontToBack';
+
+                    // New bridge: normal PDF pipeline (fast-raster off), same as
+                    // /print/pdf/check.
+                    printOpts.fastRaster = false;
 
                     // Record the attempt AND save the exact print-ready PDF to the
                     // local-print log — same system as /print/pdf/check. Fail-soft:
@@ -758,7 +684,7 @@
                                 copies: printOpts.copies, printer: printer,
                             });
                             toast('Printing PDF ' + _w + ' × ' + _h + ' in · paper: ' +
-                                (chosen.size || '') + ' · ' + (printOpts.copies || 1) +
+                                (chosen.size_pretty || chosen.size || '') + ' · ' + (printOpts.copies || 1) +
                                 ' ' + ((printOpts.copies || 1) == 1 ? 'copy' : 'copies'), 'info');
                         }
                     } catch (_e) { console.info('[store-print] print-time dim log skipped:', _e && _e.message); }

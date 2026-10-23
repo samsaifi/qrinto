@@ -1,0 +1,240 @@
+@php
+    $code = $order->order_number;
+    $codeParts = explode('-', $code);
+
+    $name = ucwords(strtolower(trim($order->shipping_address['name'] ?? ($order->user->name ?? 'Guest'))));
+    $stage = $order->queue_stage;
+    $action = $order->forward_action;
+
+    $verb = match ($stage) {
+        \App\Models\Order::STAGE_READY => 'ready',
+        \App\Models\Order::STAGE_DONE => 'picked up',
+        default => 'placed',
+    };
+    $time = $order->updated_at && $stage !== \App\Models\Order::STAGE_NEW ? $order->updated_at : $order->created_at;
+    $isDone = $stage === \App\Models\Order::STAGE_DONE;
+
+    $flow = $order->flow_data ?? [];
+    $orderSize = $flow['size_dimensions'] ?? null;
+    if ($orderSize) {
+        $orderSize = str_replace([' ', '×'], ['', 'x'], strtolower($orderSize));
+    }
+    $trayHint = null;
+    if ($stage === \App\Models\Order::STAGE_NEW && $store) {
+        $mediaShort = [
+            'plain' => 'plain',
+            'cardstock' => 'cardstock',
+            'cardstock_scored' => 'cardstock',
+            'photo_glossy' => 'glossy',
+            'photo_lustre' => 'lustre',
+            'photo_matte' => 'matte',
+            'film' => 'film',
+            'envelopes' => 'envelopes',
+            'labels' => 'labels',
+            'magnets' => 'magnets',
+        ];
+        $match = $store->matchTrayForSize($orderSize);
+        if ($match) {
+            $trayHint = $match['label'] . ' · ' . ($mediaShort[$match['media']] ?? ($match['media'] ?? '-'));
+        }
+    }
+
+    // Design preview (eye button → book-style modal). First item with images.
+    $previewImages = [];
+    foreach ($order->items as $previewItem) {
+        $previewImages = $previewItem->designImageUrls();
+        if ($previewImages) {
+            break;
+        }
+    }
+    // Preview only: orientation comes from the page-1 image itself
+    // (width > height → landscape, otherwise portrait), decided in the browser.
+    $previewOrientation = 'auto';
+
+    $journeyStages = ['new' => 'New', 'printing' => 'Printing', 'ready' => 'Ready', 'done' => 'Delivered'];
+    $stageKeys = array_keys($journeyStages);
+    $currentIdx = array_search($stage, $stageKeys);
+    if ($currentIdx === false) {
+        $currentIdx = count($stageKeys) - 1;
+    }
+@endphp
+
+<div class="v2-card {{ $isDone ? 'is-done' : '' }} {{ $stage === 'printing' ? 'is-printing' : '' }}"
+    id="v2-card-{{ $order->id }}" data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}">
+    {{-- Mobile: order code + payment on same row --}}
+    <div class="v2-mobile-top">
+        <div class="v2-col-id">
+            @foreach ($codeParts as $part)
+                @if ($loop->last)
+                    <strong class="text-slate-900 font-extrabold text-[13px]">{{ $part }}</strong>
+                @else
+                    {{ $part }}<br>
+                @endif
+            @endforeach
+        </div>
+        <div class="v2-col-price v2-mobile-price">
+            @if ($order->payment_status === 'paid')
+                <span class="v2-pill-paid">Paid online</span>
+            @else
+                <span class="v2-pill">Collect
+                    {{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }} at
+                    pickup</span>
+            @endif
+        </div>
+    </div>
+
+    {{-- Desktop: order ID column (hidden on mobile since it's in the top row) --}}
+    <div class="v2-col-id v2-desktop-id">
+        @foreach ($codeParts as $part)
+            @if ($loop->last)
+                <strong class="text-slate-900 font-extrabold text-[13px]">{{ $part }}</strong>
+            @else
+                {{ $part }}<br>
+            @endif
+        @endforeach
+    </div>
+
+    {{-- Items + customer + journey --}}
+    <div class="v2-col-main">
+        @foreach ($order->items as $item)
+            <p class="v2-title">{{ $item->quantity }} × {{ $item->product_name ?? ($item->product->name ?? 'Item') }}
+            </p>
+        @endforeach
+        <p class="v2-sub">{{ $name }} · {{ $verb }} {{ $time->format('g:i A') }}</p>
+
+        {{-- Display selected flow data columns from here .. --}}
+        @if (!empty($flow) && is_array($flow))
+            @php
+                $sizeW = $flow['size_width'] ?? null;
+                $sizeH = $flow['size_height'] ?? null;
+                $sizeDim = trim(($sizeW ?? '') . ' × ' . ($sizeH ?? '') . ' ' . ($flow['size_unit'] ?? ''));
+
+                // Orientation: prefer the value chosen in the flow, otherwise
+                // derive it from the physical dimensions (taller = portrait).
+                $orientation = $flow['orientation'] ?? null;
+                if (!$orientation && $sizeW && $sizeH) {
+                    $orientation = (float) $sizeH >= (float) $sizeW ? 'portrait' : 'landscape';
+                }
+
+                $flowChips = [
+                    'Card Type' => $flow['type_name'] ?? null,
+                    'Size' => $sizeW && $sizeH ? $sizeDim : null,
+                    'Card Style' => $flow['size_title'] ?? null,
+                    'Orientation' => $orientation ? ucfirst($orientation) : null,
+                ];
+            @endphp
+            <div class="v2-flow" style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0;">
+                @foreach ($flowChips as $flowLabel => $flowVal)
+                    @if (!is_null($flowVal) && $flowVal !== '')
+                        <span class="v2-flow-chip"
+                            style="display:inline-flex;align-items:center;gap:3px;font-size:10px;line-height:1.4;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:6px;padding:1px 6px;">
+                            <span style="color:#94a3b8;">{{ $flowLabel }}:</span>
+                            <strong style="color:#334155;font-weight:600;">{{ $flowVal }}</strong>
+                        </span>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+
+
+
+        {{-- Journey stepper --}}
+        <div class="v2-journey">
+            @foreach ($journeyStages as $sKey => $sLabel)
+                @php
+                    $sIdx = array_search($sKey, $stageKeys);
+                    $state = $sIdx < $currentIdx ? 'done' : ($sIdx === $currentIdx ? 'current' : '');
+                    $lineDone = $sIdx <= $currentIdx ? 'done' : '';
+                @endphp
+                @if (!$loop->first)
+                    <div class="v2-j-line {{ $lineDone }}"></div>
+                @endif
+                <div class="v2-j-step {{ $state }}">
+                    <div class="v2-j-dot">
+                        @if ($sIdx < $currentIdx)
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 6L9 17l-5-5" />
+                            </svg>
+                        @endif
+                    </div>
+                    <span class="v2-j-label">{{ $sLabel }}</span>
+
+                </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Desktop: Payment pill (hidden on mobile since it's in the top row) --}}
+    <div class="v2-col-price v2-desktop-price">
+        @if ($order->payment_status === 'paid')
+            <span class="v2-pill-paid">Paid online</span>
+        @else
+            <span class="v2-pill">Collect
+                {{ \App\Services\CurrencyService::formatWithCurrency($order->total, $order->currency) }} at
+                pickup</span>
+        @endif
+    </div>
+
+    {{-- Action column --}}
+    <div class="v2-col-action">
+        @if ($action)
+            @if ($stage === \App\Models\Order::STAGE_NEW)
+                <div class="v2-btn-group">
+                    <button type="button" data-pt-print data-order-id="{{ $order->id }}"
+                        data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}" class="v2-btn-primary">
+                        <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
+                        {{ $action['label'] }}
+                    </button>
+                    @include('store.partials._design-preview-button')
+                </div>
+            @elseif ($stage === \App\Models\Order::STAGE_READY)
+                <form method="POST" action="{{ route($rPrefix . 'orders.advance', $order) }}">
+                    @csrf
+                    <button type="submit" class="v2-btn-neutral">
+                        <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
+                        {{ $action['label'] }}
+                    </button>
+                </form>
+            @else
+                <form method="POST" action="{{ route($rPrefix . 'orders.advance', $order) }}">
+                    @csrf
+                    <button type="submit" class="v2-btn-primary">
+                        <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
+                        {{ $action['label'] }}
+                    </button>
+                </form>
+                @if ($stage === \App\Models\Order::STAGE_PRINTING)
+                    <div class="v2-btn-group">
+                        <button type="button" data-pt-print data-order-id="{{ $order->id }}"
+                            data-prepare-url="{{ route('storepanel.orders.preparePrint', $order) }}"
+                            class="v2-btn-primary">
+                            <i data-lucide="{{ $action['icon'] }}" class="w-4 h-4"></i>
+                            Print Again
+                        </button>
+                        @include('store.partials._design-preview-button')
+                    </div>
+                @endif
+            @endif
+        @elseif ($isDone)
+            <span class="v2-btn-done">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M20 6L9 17l-5-5" />
+                </svg>
+                Delivered
+            </span>
+        @endif
+
+        <div class="v2-link-row">
+
+            @if ($stage !== \App\Models\Order::STAGE_NEW)
+                <form method="POST" action="{{ route($rPrefix . 'orders.undoStatus', $order) }}"
+                    style="display:inline;">
+                    @csrf
+                    <button type="submit" class="v2-undo">Undo</button>
+                </form>
+            @endif
+        </div>
+    </div>
+</div>

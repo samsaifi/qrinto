@@ -230,10 +230,17 @@
                                 <p class="text-[12px] text-amber-800 leading-snug">Printer not visible? Install PrintTrays to
                                     detect this PC's printers.</p>
                             </div>
-                            <a href="https://noritsucanada.com/print-trays/download/" target="_blank" rel="noopener"
-                                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#287d3c] hover:bg-emerald-800 text-white text-[12px] font-bold transition">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download PrintTrays
-                            </a>
+                            <div class="shrink-0 flex items-center gap-1.5">
+                                <button type="button" @click="trustCertificate()"
+                                    title="Click Advanced → Proceed in the window that opens, then close it — the scan retries automatically."
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-amber-800 text-[12px] font-bold hover:bg-amber-100 transition">
+                                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Trust certificate
+                                </button>
+                                <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank" rel="noopener"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#287d3c] hover:bg-emerald-800 text-white text-[12px] font-bold transition">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Download PrintTrays
+                                </a>
+                            </div>
                         </div>
                         <div class="flex items-center justify-end gap-2">
                             <button type="button" @click="close()"
@@ -255,7 +262,7 @@
         </div>
 
         {{-- Shared per-printer "Print Settings" modal (opened by the Change button). --}}
-        @include('partials.print-settings-modal')
+        @include('partials.new-test-print-settings-modal')
     </div>
 
     {{-- Design preview modal: opened by a row's eye button ([data-design-preview]).
@@ -866,7 +873,9 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
-    <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
+    <script
+        src="{{ asset('js/new-test-print-settings.js') }}?v={{ filemtime(public_path('js/new-test-print-settings.js')) }}">
+    </script>
     <script>
         if (window['pdfjsLib']) {
             pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -919,8 +928,14 @@
                 // Shared Print Settings modal (state + live-capability loading).
                 ...window.printSettingsMixin({
                     sizeOptions: V2_SIZE_OPTIONS,
-                    sizeDims: V2_SIZE_DIMS
+                    sizeDims: V2_SIZE_DIMS,
+                    // Offer the driver's custom page size (same as /store/trays).
+                    allowCustomSize: true
                 }),
+
+                // The new modal shows its image-only options when file.type is
+                // 'image'; orders always print the order PDF.
+                file: null,
 
                 visible: false,
                 loading: false,
@@ -990,6 +1005,24 @@
                     }
                 },
 
+                // The new bridge's cert must be trusted once (unless installed via its
+                // real installer). Open its cert page in a popup; when the operator
+                // closes it, rescan — same flow as /print/pdf/check.
+                trustCertificate() {
+                    const url = 'https://127.0.0.1:8191';
+                    const w = window.open(url, 'printtrays-trust', 'width=520,height=420');
+                    if (!w) {
+                        alert('Popup blocked — allow popups for this site, or open ' + url + ' manually in a new tab.');
+                        return;
+                    }
+                    const t = setInterval(() => {
+                        if (w.closed) {
+                            clearInterval(t);
+                            this.scanPc();
+                        }
+                    }, 400);
+                },
+
                 // Open the shared Print Settings modal for one tray row: seed the
                 // buffer from its saved values, then load the printer's live caps.
                 openConfig(t) {
@@ -997,6 +1030,12 @@
                     this.editingKey = t.key;
                     this.psResetCaps();
                     if (t.size) this.printPaperSize = t.size;
+                    // Re-seed a saved custom size (psLoad keeps it unless the driver
+                    // has its own saved custom size, which then wins).
+                    if (t.size === this.psCustomSizeValue && t.size_width && t.size_height) {
+                        this.printCustomW = +t.size_width;
+                        this.printCustomH = +t.size_height;
+                    }
                     this.printLandscape = t.landscape || false;
 
                     // The printed PDF is ALWAYS re-laid in portrait (a landscape design

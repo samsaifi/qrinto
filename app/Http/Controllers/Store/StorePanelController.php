@@ -440,7 +440,7 @@ class StorePanelController extends Controller
                 'key'         => $t['key'],
                 'label'       => $t['label'],
                 'size'        => $t['size'],
-                'size_pretty' => $sizePretty[$t['size']] ?? $t['size'],
+                'size_pretty' => \App\Models\Store::customTraySizeLabel($t) ?? $sizePretty[$t['size']] ?? $t['size'],
                 'size_width'  => $t['size_width'] ?? null,
                 'size_height' => $t['size_height'] ?? null,
                 'media'       => $t['media'],

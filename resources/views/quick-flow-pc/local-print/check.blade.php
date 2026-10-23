@@ -254,6 +254,15 @@
                                         <i data-lucide="download" class="w-4 h-4"></i>Download 931-BL Multi
                                         Driver
                                     </a>
+                                    <button type="button" @click="trustCertificate()"
+                                        class="w-full flex items-center justify-center gap-2 border border-amber-300 bg-amber-50 text-amber-800 font-semibold py-2.5 rounded-xl text-sm hover:bg-amber-100 transition">
+                                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Trust PrintTrays's
+                                        certificate
+                                    </button>
+                                    <p class="text-[11px] text-slate-400 text-center leading-snug">
+                                        Click <em>Advanced → Proceed</em> in the window that opens, then close it — the
+                                        connection retries automatically. Not needed when installed with the real installer.
+                                    </p>
                                     <button type="button"
                                         @click="showBridgeModal = false; bridgeChecking = true; initBridge();"
                                         class="w-full flex items-center justify-center gap-2 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
@@ -330,7 +339,7 @@
                         </button>
 
                         <p class="text-center mt-3">
-                            <a href="https://noritsucanada.com/print-trays/download/" target="_blank"
+                            <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank"
                                 class="text-[12px] text-slate-400 hover:text-[#287d3c] transition inline-flex items-center gap-1">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i> Download PrintTrays
                             </a>
@@ -341,7 +350,7 @@
 
             </div>
 
-            @include('partials.print-settings-modal')
+            @include('partials.new-test-print-settings-modal')
 
         </div>
     </div>
@@ -351,7 +360,9 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
+    <script
+        src="{{ asset('js/new-test-print-settings.js') }}?v={{ filemtime(public_path('js/new-test-print-settings.js')) }}">
+    </script>
     <script src="{{ asset('js/local-print-log.js') }}?v={{ filemtime(public_path('js/local-print-log.js')) }}"></script>
     <script>
         // Full route URLs so LPLog works under a sub-path (e.g. /qrinto).
@@ -426,6 +437,98 @@
                 printMsgKind: 'info',
 
                 showBridgeModal: false,
+
+                // Activity log (newest first) — same as the new demo's log.
+                ptLogLines: [],
+                showPtLog: false,
+                testPagePrinting: false,
+
+                ptLog(msg) {
+                    this.ptLogLines.unshift(new Date().toLocaleTimeString() + '  ' + msg);
+                    if (this.ptLogLines.length > 200) this.ptLogLines.length = 200;
+                },
+
+                // The new bridge's cert must be trusted once (unless installed via its
+                // real installer). Open its cert page in a popup; when the operator
+                // closes it, retry the connection — same flow as the new demo.
+                trustCertificate() {
+                    const url = 'https://127.0.0.1:8191';
+                    this.ptLog("Opening PrintTrays's certificate page in a small window...");
+                    const w = window.open(url, 'printtrays-trust', 'width=520,height=420');
+                    if (!w) {
+                        this.ptLog('Popup blocked — allow popups for this site, or open ' + url +
+                        ' manually in a new tab.');
+                        return;
+                    }
+                    const t = setInterval(() => {
+                        if (w.closed) {
+                            clearInterval(t);
+                            this.ptLog('Certificate window closed — retrying connection...');
+                            this.showBridgeModal = false;
+                            this.bridgeChecking = true;
+                            this.initBridge();
+                        }
+                    }, 400);
+                },
+
+                // One-page HTML test print (type:'html') with the current modal
+                // settings — mirrors the new demo's "Print test page".
+                async printTestPage() {
+                    const pp = __ptInstance;
+                    if (!pp || !this.selectedPrinter || this.testPagePrinting) return;
+                    this.testPagePrinting = true;
+                    const label = this.selectedSizeLabel();
+                    const cfg = {
+                        type: 'html',
+                        landscape: !!this.printLandscape,
+                        color: !!this.printColor,
+                        copies: 1,
+                        pageOrder: this.printPageOrder || 'frontToBack',
+                    };
+                    if (this.sizesSource === 'printer' && this.dynamicDims && this.dynamicDims[this.printPaperSize] &&
+                        this.printPaperSize !== this.psCustomSizeValue) cfg.paperSize = this.printPaperSize;
+                    if (this.printDuplex && this.printDuplex !== 'simplex') cfg.duplex = this.printDuplex;
+                    if (this.printScaleMode === 'custom') cfg.scaleFactor = this.printScaleFactor || 100;
+                    const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;'
+                    })[c]);
+                    const html = '<html><body style="font-family:sans-serif;padding:40px">' +
+                        '<h1>PrintTrays test page</h1>' +
+                        '<p>If you can read this on paper, the bridge is working.</p>' +
+                        '<p>Paper: ' + esc(label) + (cfg.landscape ? ' (landscape)' : '') + '</p>' +
+                        // Closing tags escaped as <\/…>: the host (GoDaddy) injects its
+                        // tracking script before the first literal closing body tag in
+                        // the page — even inside a JS string — which breaks this script.
+                        '<p>Printed at ' + esc(new Date().toString()) + '<\/p><\/body><\/html>';
+                    this.ptLog('Sending HTML test page to "' + this.selectedPrinter + '" (' + label +
+                        (cfg.landscape ? ', landscape' : '') + (cfg.duplex ? ', duplex ' + cfg.duplex : '') +
+                        (cfg.color ? '' : ', grayscale') + ')...');
+                    console.log('[localprint] HTML test print — request:', {
+                        printer: this.selectedPrinter,
+                        ...cfg
+                    });
+                    try {
+                        await pp.print(this.selectedPrinter, html, cfg);
+                        this.ptLog('Test page sent successfully.');
+                        this.printMsg = 'Test page sent to ' + this.selectedPrinter + '.';
+                        this.printMsgKind = 'success';
+                    } catch (e) {
+                        this.ptLog('Test page failed: ' + ((e && e.message) || e));
+                        this.printMsg = (e && e.message) || 'Test page failed.';
+                        this.printMsgKind = 'error';
+                    } finally {
+                        this.testPagePrinting = false;
+                    }
+                },
+
+                // Image files go out as type:'image' when the operator picks that
+                // path in the modal (new bridge's fast Chromium image path).
+                sendsImageNatively() {
+                    return this.file.type === 'image' && !!this.printImageAsImage;
+                },
                 // Print Settings modal state (showPaperModal, printPaperSize,
                 // dynamicSizes, caps, etc.) comes from window.printSettingsMixin.
 
@@ -453,7 +556,7 @@
                     // that affects its size/orientation/scaling changes, so Print always
                     // rebuilds at the CURRENT paper instead of sending a stale PDF.
                     ['printPaperSize', 'printLandscape', 'printScaleMode', 'printScaleFactor',
-                        'selectedPrinter'
+                        'selectedPrinter', 'printCustomW', 'printCustomH', 'printImageAsImage'
                     ].forEach((k) => {
                         this.$watch(k, () => {
                             this.savedPdfB64 = null;
@@ -468,35 +571,42 @@
                     try {
                         const {
                             PrintTrays
-                        } = await import('{{ asset('js/printtrays.js') }}');
+                        } = await import(
+                            '{{ asset('js/new-testing-printtrays.js') }}?v={{ filemtime(public_path('js/new-testing-printtrays.js')) }}'
+                            );
                         const pp = new PrintTrays({
-                            downloadUrl: 'https://noritsucanada.com/print-trays/download/',
+                            downloadUrl: 'https://noritsucanada.com/new-print-trays/download/',
                             onNotInstalled: () => {},
                         });
+                        this.ptLog('Connecting to the new PrintTrays bridge (wss://127.0.0.1:8191) ...');
                         await pp.connect();
                         __ptInstance = pp;
                         window.__ptInstance = pp;
                         this.bridgeReady = true;
                         this.bridgeVersion = pp.version || null;
 
+                        this.ptLog('Connected to PrintTrays v' + (pp.version || 'unknown') +
+                            '. Fetching printer list...');
                         const list = await pp.getPrinters();
                         const raw = Array.isArray(list) ? list : [list].filter(Boolean);
                         this.printers = this.orderPrinters(raw);
+                        this.ptLog('Found ' + this.printers.length + ' printer(s).');
                         if (this.printers.length > 0) {
                             this.selectedPrinter = this.printers[0].name;
                             this.psLoad(this.selectedPrinter);
                         }
                     } catch (e) {
                         console.warn('[localprint] PrintTrays connection failed:', e.message || e);
+                        this.ptLog("Couldn't connect: " + ((e && e.message) || e));
                         this.bridgeReady = false;
                     }
                     this.bridgeChecking = false;
                     if (!this.bridgeReady) this.showBridgeModal = true;
                 },
 
-                // Keep only Noritsu printers and order them by tray number,
-                // regardless of the exact printer-name string. The MP / multi tray
-                // (no tray number) comes first, then Tray 1, 2, 3, 4, 5…
+                // Order printers by tray number, regardless of the exact printer-name
+                // string. The MP / multi tray (no tray number) comes first, then Tray
+                // 1, 2, 3, 4, 5…
                 orderPrinters(list) {
                     const trayNum = (name) => {
                         const m = String(name).match(/tray\s*(\d+)/i);
@@ -509,9 +619,8 @@
                         return n === null ? -1 : n;
                     };
                     return (list || [])
-                        // .filter(p => p && typeof p.name === 'string')
-                        // Noritsu-only filter — DISABLED so ALL printer queues show.
-                        // Uncomment to restore Noritsu-only.
+                        .filter(p => p && typeof p.name === 'string')
+                        // Noritsu-only filter — show ONLY Noritsu printer queues.
                         .filter(p => p.name.toLowerCase().includes('noritsu'))
                         .sort((a, b) => {
                             const ra = rank(a.name),
@@ -595,45 +704,72 @@
                             // Output is ALWAYS portrait — the landscape toggle only
                             // drives the preview, never the printed/saved PDF.
                             const outLandscape = false;
-                            // Use the TRIM size (e.g. 5x7-E2E → 5 × 7), NOT the full bleed
-                            // (5.57 × 7.49): the PDF is saved/printed at the trim size and
-                            // the driver's pinned E2E media form expands trim to bleed at
-                            // print time for a borderless result. Matches the image path.
-                            // Fall back to live/static dims (w > 0 guard) when no trim can
-                            // be parsed from the size code/label.
-                            const _trim = this.trimSizeFromCode(this.printPaperSize) ||
-                                this.trimSizeFromCode(this.selectedSizeLabel());
+                            // Start from the paper dims (live driver dims, then the static
+                            // table, then psDim()); E2E paper is reduced to its trim below.
                             const _live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
                             const _stat = this.trayDims && this.trayDims[this.printPaperSize];
-                            let dim = _trim ? {
-                                    w: _trim[0],
-                                    h: _trim[1]
-                                } :
-                                ((_live && _live.w > 0) ? _live :
-                                    ((_stat && _stat.w > 0) ? _stat :
-                                        (this.psDim() || {
-                                            w: 8.5,
-                                            h: 11
-                                        })));
-                            // Driver CUSTOM page size reports the BLEED dims (e.g.
-                            // 5.57 × 7.49). The print PDF must be the TRIM size — bleed
-                            // minus the fixed E2E margins (0.57 in short edge, 0.49 in
-                            // long edge) — so 5.57 × 7.49 → 5 × 7 (matches the named E2E
-                            // sizes). ONLY for the custom size.
+                            let dim = ((_live && _live.w > 0) ? _live :
+                                ((_stat && _stat.w > 0) ? _stat :
+                                    (this.psDim() || {
+                                        w: 8.5,
+                                        h: 11
+                                    })));
+                            // Driver CUSTOM page size: use the reported dims as-is
+                            // (the 0.57 / 0.49 in trim is applied below, as for E2E).
                             if (this.printPaperSize === this.psCustomSizeValue) {
                                 const _cd = this.psDim();
                                 if (_cd && _cd.w > 0 && _cd.h > 0) {
                                     const _mn = Math.min(_cd.w, _cd.h),
                                         _mx = Math.max(_cd.w, _cd.h);
                                     dim = {
-                                        w: Math.max(0.1, +(_mn - 0.57).toFixed(2)),
-                                        h: Math.max(0.1, +(_mx - 0.49).toFixed(2))
+                                        w: _mn,
+                                        h: _mx
                                     };
+                                }
+                            }
+                            // E2E paper: the PDF is built at the TRIM size — bleed dims minus
+                            // 0.57 in (width) / 0.49 in (height), e.g. 7.57 × 10.49 → 7 × 10 —
+                            // not at the bleed size. The driver's E2E form adds the bleed.
+                            const _e2e = this.trimsBleed();
+                            if (_e2e) dim = this.e2eTrimDims(dim);
+                            // PDF already AT the selected paper's trim size (e.g. a 5 × 7
+                            // PDF on "5 x 7in E2E (5.57 × 7.49 in)"): do NOT rebuild it.
+                            // Portrait → send the original bytes untouched (same as the new
+                            // demo, which never rebuilds a PDF); landscape → only turn it
+                            // portrait, keeping the trim page size.
+                            if (_e2e || this.printPaperSize !== this.psCustomSizeValue) {
+                                const _trim = _e2e ? [dim.w, dim.h] : (this.trimSizeFromCode(this.printPaperSize) ||
+                                    this.trimSizeFromCode(this.selectedSizeLabel ? this.selectedSizeLabel() : ''));
+                                if (_trim) {
+                                    const tMin = Math.min(_trim[0], _trim[1]),
+                                        tMax = Math.max(_trim[0], _trim[1]);
+                                    const TOL = 0.03; // inches
+                                    let allPortrait = true;
+                                    const allMatch = srcPages.length > 0 && srcPages.every((sp) => {
+                                        const b = (sp.getCropBox && sp.getCropBox()) || sp.getMediaBox();
+                                        let w = b.width / 72,
+                                            h = b.height / 72;
+                                        const rot = ((sp.getRotation && sp.getRotation().angle) || 0) % 180;
+                                        if (rot)[w, h] = [h, w];
+                                        if (w > h) allPortrait = false;
+                                        return Math.abs(Math.min(w, h) - tMin) <= TOL && Math.abs(Math.max(w,
+                                            h) - tMax) <= TOL;
+                                    });
+                                    if (allMatch) {
+                                        console.log('[localprint] pdf→print: source already at trim ' + tMin + ' × ' +
+                                            tMax +
+                                            ' in — ' + (allPortrait ? 'sending ORIGINAL PDF (no rebuild).' :
+                                                'rotating only, keeping trim size.'));
+                                        if (allPortrait) return this.arrayBufToBase64(bytes.buffer || bytes);
+                                        dim = {
+                                            w: tMin,
+                                            h: tMax
+                                        };
+                                    }
                                 }
                             }
                             console.log('[localprint] pdf→print paper dim →', {
                                 code: this.printPaperSize,
-                                trim: _trim,
                                 live: _live,
                                 stat: _stat,
                                 dim,
@@ -644,7 +780,9 @@
                             const pageH = (outLandscape ? rawMin : rawMax) * PT;
 
                             const out = await PDFDocument.create();
-                            const mode = this.printScaleMode || 'fit';
+                            // E2E: always zoom from the centre until the page covers the
+                            // trim sheet edge to edge ('fit' = cover), whatever the shape.
+                            const mode = _e2e ? 'fit' : (this.printScaleMode || 'fit');
 
                             // Diagnostic: source page size vs target paper size. If the
                             // output still shows white, compare the source page dims here
@@ -1265,7 +1403,7 @@
                     // white space on the sides. Passing the driver's real media
                     // name in `paperSize` is what makes it print edge-to-edge.
                     const cfg = {
-                        type: 'pdf',
+                        type: type || 'pdf',
                         // Orientation is BAKED into the generated PDF page for BOTH
                         // images (imageToPdfBase64) and PDFs (buildPrintPdfBase64 now
                         // re-lays each page at the target size + orientation). The page
@@ -1317,10 +1455,21 @@
                         //     printer DRIVER's own saved custom page size (its dimensions +
                         //     orientation + E2E/bleed), exactly like the official demo does for
                         //     a custom size. The driver then expands our trim PDF to its bleed
-                        //     form for a borderless, corregictly-oriented print.
+                        //     form for a borderless, correctly-oriented print.
                         cfg.useDriverDefaultSize = true;
                         cfg.scaleMode = 'fit';
                         delete cfg.scaleFactor;
+                        // New bridge (same as the new demo): also send the custom size
+                        // explicitly, and the optional ~4% safety shrink.
+                        const _cd = this.psDim();
+                        if (_cd && _cd.w > 0 && _cd.h > 0) {
+                            cfg.pageSize = {
+                                width: Math.min(_cd.w, _cd.h),
+                                height: Math.max(_cd.w, _cd.h),
+                                units: 'in'
+                            };
+                        }
+                        if (this.printSafetyShrink) cfg.paperSafetyShrink = true;
                     } else if (this.sizesSource === 'printer' &&
                         this.dynamicDims && this.dynamicDims[this.printPaperSize]) {
                         cfg.paperSize = this.printPaperSize;
@@ -1328,11 +1477,26 @@
 
                     // Duplex values match the bridge's own select: '' (simplex),
                     // 'longEdge', 'shortEdge'. Only send when the user picked one.
-                    if (this.printDuplex) cfg.duplex = this.printDuplex;
+                    // 'simplex' is the modal's own value — the bridge expects no key.
+                    if (this.printDuplex && this.printDuplex !== 'simplex') cfg.duplex = this.printDuplex;
 
                     // Paper source → bridge `inputBin` (goes into SumatraPDF
                     // `bin=`). Only from live capabilities; empty = printer default.
                     if (this.printInputBin) cfg.inputBin = this.printInputBin;
+
+                    // New bridge options (new demo): fast-raster for PDFs; for a
+                    // native image job, the page size of the composed image and the
+                    // optional classic (Sumatra) engine.
+                    cfg.fastRaster = !!this.printFastRaster;
+                    if (cfg.type === 'image') {
+                        const _d = this.imagePageDims();
+                        if (!cfg.pageSize) cfg.pageSize = {
+                            width: _d.w,
+                            height: _d.h,
+                            units: 'in'
+                        };
+                        if (this.printClassicImageEngine) cfg.imageEngine = 'sumatra';
+                    }
 
                     console.log('[localprint] print config →', JSON.parse(JSON.stringify(cfg)));
                     return cfg;
@@ -1370,6 +1534,11 @@
                             scale_mode: cfg.scaleMode || null,
                             scale_percentage: cfg.scaleFactor || null,
                             copies: this.copies || 1,
+                            fast_raster: !!cfg.fastRaster,
+                            image_engine: cfg.imageEngine || null,
+                            paper_safety_shrink: !!cfg.paperSafetyShrink,
+                            printer_default_orientation: (this.psCurrentDefaults && this.psCurrentDefaults.orientation) ||
+                                null,
                         },
                         request_payload: cfg,
                         design_settings: {
@@ -1385,7 +1554,8 @@
                     this.printMsgKind = 'info';
 
                     let job = null;
-                    const cfg = this.buildPrintConfig('pdf');
+                    const _native = this.sendsImageNatively();
+                    const cfg = this.buildPrintConfig(_native ? 'image' : 'pdf');
                     try {
                         const pp = __ptInstance;
                         if (!pp) throw new Error('PrintTrays not connected');
@@ -1393,7 +1563,11 @@
                         // The bridge only accepts type 'pdf' ("Unsupported print type: image").
                         let b64;
                         let _usedSaved = false;
-                        if (this.savedPdfB64) {
+                        if (_native) {
+                            // Same as the new demo: the WHOLE image is sent (never
+                            // cropped), edge-extended to the paper's aspect, type:'image'.
+                            b64 = await this.imageToNativeB64(this.file.url);
+                        } else if (this.savedPdfB64) {
                             // "Apply" already regenerated the PDF at the selected paper
                             // size and kept it in memory — send that exact file as-is.
                             b64 = this.savedPdfB64;
@@ -1407,7 +1581,12 @@
                         // pre-built by Apply or built just now), showing the FINAL page size
                         // actually sent to the printer. Parses the first page via pdf-lib.
                         try {
-                            if (window.PDFLib) {
+                            if (_native) {
+                                const _d = this.imagePageDims();
+                                this.printMsg = 'Printing image ' + this.fmt(_d.w) + ' × ' + this.fmt(_d.h) + ' in' +
+                                    ' · ' + (cfg.copies || 1) + ' ' + ((cfg.copies || 1) == 1 ? 'copy' : 'copies');
+                                this.printMsgKind = 'info';
+                            } else if (window.PDFLib) {
                                 const _bin = atob(String(b64).replace(/^data:[^;]+;base64,/, ''));
                                 const _u8 = new Uint8Array(_bin.length);
                                 for (let _i = 0; _i < _bin.length; _i++) _u8[_i] = _bin.charCodeAt(_i);
@@ -1450,7 +1629,19 @@
                         // 'base64') and does NOT strip a data: URL prefix, so send the
                         // RAW base64 (no "data:…," prefix, no `flavor` key). type:'pdf'
                         // routes it to printPdfBase64 on the bridge.
+                        this.ptLog('Sending "' + this.file.name + '" to "' + this.selectedPrinter + '" as ' + cfg.type +
+                            ' (' + this.selectedSizeLabel() + (cfg.duplex ? ', duplex ' + cfg.duplex : '') +
+                            (cfg.color ? '' : ', grayscale') + ', ' + cfg.copies + ' cop' + (cfg.copies === 1 ?
+                                'y' : 'ies') +
+                            (cfg.pageOrder === 'backToFront' ? ', back to front' : '') +
+                            (cfg.fastRaster ? ', fast-raster mode' : '') + (cfg.imageEngine ? ', classic engine' :
+                                '') +
+                            (cfg.useDriverDefaultSize ? ', driver custom size' : '') +
+                            (cfg.paperSafetyShrink ? ', safety shrink' : '') + ')...');
+                        const _t0 = performance.now();
                         const resp = await pp.print(this.selectedPrinter, b64, cfg);
+                        this.ptLog('Print job sent successfully (spooler accepted it after ' +
+                            ((performance.now() - _t0) / 1000).toFixed(1) + 's).');
                         await LPLog.finish(job, {
                             ok: true,
                             response: resp
@@ -1459,6 +1650,7 @@
                         this.printMsgKind = 'success';
                     } catch (e) {
                         console.error('[localprint] PrintTrays print failed:', e);
+                        this.ptLog('Print failed: ' + ((e && e.message) || e));
                         await LPLog.finish(job, {
                             ok: false,
                             error: (e && e.message) || 'Print failed.'
@@ -1489,7 +1681,108 @@
                 // Wrap a raster image into a minimal single-page PDF (JPEG/DCTDecode),
                 // so it can be sent to the bridge as type 'pdf'. Handles webp/tiff/etc.
                 // too, since the canvas re-encodes whatever the browser can decode.
-                imageToPdfBase64(url) {
+                // Paper dims (inches, portrait) the image is composed onto — same
+                // resolution order as imageToPdfBase64.
+                imagePageDims() {
+                    const live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
+                    const stat = this.trayDims && this.trayDims[this.printPaperSize];
+                    let dim = (live && live.w > 0 ? live : (stat && stat.w > 0 ? stat : (this.psDim() || {
+                        w: 8.5,
+                        h: 11
+                    })));
+                    if (this.printPaperSize === this.psCustomSizeValue) {
+                        const _cd = this.psDim();
+                        if (_cd && _cd.w > 0 && _cd.h > 0) dim = _cd;
+                    }
+                    return {
+                        w: Math.min(dim.w, dim.h),
+                        h: Math.max(dim.w, dim.h)
+                    };
+                },
+
+                // Native type:'image' job — mirrors the new PrintTrays demo. The image
+                // is NEVER cropped: it is kept at its own resolution, turned portrait
+                // (the page is always fed portrait, and we send landscape:false), then
+                // padded to exactly the paper's aspect by stretching its outermost
+                // row/column of pixels into the gap (a soft edge-extend, no white bars,
+                // no content removed). The bridge then fits it onto the page.
+                // PNG sources stay PNG; everything else goes out as JPEG 0.95.
+                imageToNativeB64(url) {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => {
+                            try {
+                                const iw = img.naturalWidth,
+                                    ih = img.naturalHeight;
+                                const needSwap = iw > ih;
+                                const sw = needSwap ? ih : iw;
+                                const sh = needSwap ? iw : ih;
+                                const src = document.createElement('canvas');
+                                src.width = sw;
+                                src.height = sh;
+                                const sctx = src.getContext('2d');
+                                if (needSwap) {
+                                    sctx.translate(sw / 2, sh / 2);
+                                    sctx.rotate(-Math.PI / 2); // -90°, same as imageToPdfBase64
+                                    sctx.drawImage(img, -iw / 2, -ih / 2);
+                                } else {
+                                    sctx.drawImage(img, 0, 0);
+                                }
+
+                                const page = this.imagePageDims();
+                                const target = page.w / page.h;
+                                const ratio = sw / sh;
+                                let W = sw,
+                                    H = sh;
+                                if (Math.abs(ratio - target) >= 0.001) {
+                                    if (ratio > target) H = Math.round(sw / target);
+                                    else W = Math.round(sh * target);
+                                }
+                                const dx = Math.round((W - sw) / 2);
+                                const dy = Math.round((H - sh) / 2);
+                                const c = document.createElement('canvas');
+                                c.width = W;
+                                c.height = H;
+                                const ctx = c.getContext('2d');
+                                if (dy > 0) {
+                                    ctx.drawImage(src, 0, 0, sw, 1, 0, 0, W, dy);
+                                    ctx.drawImage(src, 0, sh - 1, sw, 1, 0, dy + sh, W, H - dy - sh);
+                                }
+                                if (dx > 0) {
+                                    ctx.drawImage(src, 0, 0, 1, sh, 0, dy, dx, sh);
+                                    ctx.drawImage(src, sw - 1, 0, 1, sh, dx + sw, dy, W - dx - sw, sh);
+                                }
+                                ctx.drawImage(src, dx, dy);
+
+                                const isPng = /\.png($|\?)/i.test(this.file.name || url);
+                                console.log('[localprint] native image →', {
+                                    source_px: {
+                                        w: iw,
+                                        h: ih
+                                    },
+                                    rotated: needSwap,
+                                    padded_px: {
+                                        w: W,
+                                        h: H
+                                    },
+                                    page_in: page,
+                                    format: isPng ? 'png' : 'jpeg',
+                                });
+                                const out = isPng ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.95);
+                                resolve(out.split(',')[1]);
+                            } catch (e) {
+                                reject(e);
+                            }
+                        };
+                        img.onerror = () => reject(new Error('Failed to load image for printing'));
+                        img.src = url;
+                    });
+                },
+
+                // asJpeg = true returns the composed page as raw JPEG base64 (for a
+                // type:'image' job on the new bridge) instead of wrapping it in a PDF.
+                imageToPdfBase64(url, asJpeg) {
                     return new Promise((resolve, reject) => {
                         const img = new Image();
                         img.crossOrigin = 'anonymous';
@@ -1499,48 +1792,36 @@
                                 // inches, from trayDims), not the image's raw pixel size —
                                 // then crop-to-cover so the image fills it with zero gaps,
                                 // regardless of the source image's own aspect ratio.
-                                // Prefer TRIM dims parsed from the size code (e.g.
-                                // '7x10-E2E' → 7×10) so the produced PDF page size
-                                // matches what the other flows write. Fall back to
-                                // the LIVE driver dims (dynamicDims), then the
-                                // static bleed table (trayDims). Letter is only a
-                                // last-resort default when nothing is known.
-                                // Use the TRIM size (e.g. 5x7-E2E → 5 × 7), NOT the full
-                                // bleed (5.57 × 7.49): the PDF is saved/printed at the trim
-                                // size and the driver's pinned E2E media form expands trim
-                                // to bleed at print time for a borderless result.
-                                const trim = this.trimSizeFromCode(this.printPaperSize) ||
-                                    this.trimSizeFromCode(this.selectedSizeLabel());
+                                // Prefer live driver dims, then the static table; E2E paper
+                                // is reduced to its trim size below.
                                 const live = this.dynamicDims && this.dynamicDims[this.printPaperSize];
                                 const stat = this.trayDims && this.trayDims[this.printPaperSize];
-                                let dim = trim ? {
-                                        w: trim[0],
-                                        h: trim[1]
-                                    } :
-                                    (live && live.w > 0 ? live :
-                                        (stat && stat.w > 0 ? stat : {
+                                let dim = (live && live.w > 0 ? live :
+                                    (stat && stat.w > 0 ? stat :
+                                        (this.psDim() || {
                                             w: 8.5,
                                             h: 11
-                                        }));
-                                // Driver CUSTOM page size reports the BLEED dims; the
-                                // print PDF must be the TRIM size (bleed − 0.57 short
-                                // edge / − 0.49 long edge), e.g. 5.57 × 7.49 → 5 × 7.
-                                // ONLY for the custom size.
+                                        })));
+                                // Driver CUSTOM page size: use the reported dims as-is
+                                // (the 0.57 / 0.49 in trim is applied below, as for E2E).
                                 if (this.printPaperSize === this.psCustomSizeValue) {
                                     const _cd = this.psDim();
                                     if (_cd && _cd.w > 0 && _cd.h > 0) {
                                         const _mn = Math.min(_cd.w, _cd.h),
                                             _mx = Math.max(_cd.w, _cd.h);
                                         dim = {
-                                            w: Math.max(0.1, +(_mn - 0.57).toFixed(2)),
-                                            h: Math.max(0.1, +(_mx - 0.49).toFixed(2))
+                                            w: _mn,
+                                            h: _mx
                                         };
                                     }
                                 }
+                                // E2E paper → build at the trim size (bleed − 0.57 / 0.49 in),
+                                // cover-filled from the centre, same as the PDF path.
+                                const _e2e = this.trimsBleed();
+                                if (_e2e) dim = this.e2eTrimDims(dim);
                                 console.log('[localprint] image→pdf size →', {
                                     code: this.printPaperSize,
                                     label: this.selectedSizeLabel(),
-                                    trim,
                                     live,
                                     stat,
                                     dim,
@@ -1586,7 +1867,7 @@
                                 //                bars on the shorter axis (no cropping).
                                 //   'actual'   → true size: native pixels at 300 dpi.
                                 //   'custom'   → 'actual' scaled by printScaleFactor %.
-                                const _m = this.printScaleMode || 'fit';
+                                const _m = _e2e ? 'fit' : (this.printScaleMode || 'fit');
                                 let scale;
                                 if (_m === 'actual') {
                                     scale = 1;
@@ -1605,6 +1886,10 @@
                                 ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
                                 ctx.restore();
                                 const jpegB64 = c.toDataURL('image/jpeg', 0.92).split(',')[1];
+                                if (asJpeg) {
+                                    resolve(jpegB64);
+                                    return;
+                                }
                                 const jpeg = this.base64ToBytes(jpegB64);
                                 resolve(this.buildImagePdf(jpeg, outW, outH, pageW * 72, pageH * 72));
                             } catch (e) {
@@ -1735,6 +2020,23 @@
                 isE2ESelected() {
                     return /e2e/i.test(String(this.printPaperSize || '')) ||
                         /e2e/i.test(this.selectedSizeLabel());
+                },
+
+                // Papers whose PDF is built at the trim size (bleed − 0.57 / 0.49 in):
+                // any E2E size, and the driver's PostScript Custom Page Size.
+                trimsBleed() {
+                    return this.printPaperSize === this.psCustomSizeValue || this.isE2ESelected();
+                },
+
+                // E2E bleed paper dims → portrait TRIM dims the PDF is built at:
+                // width − 0.57 in, height − 0.49 in (7.57 × 10.49 → 7 × 10).
+                e2eTrimDims(dim) {
+                    const mn = Math.min(dim.w, dim.h),
+                        mx = Math.max(dim.w, dim.h);
+                    return {
+                        w: +Math.max(0.1, mn - 0.57).toFixed(2),
+                        h: +Math.max(0.1, mx - 0.49).toFixed(2)
+                    };
                 },
 
                 arrayBufToBase64(buf) {

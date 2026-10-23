@@ -115,17 +115,15 @@
                         <div class="flex-1">
                             <label class="text-[11px] font-semibold text-slate-600 mb-1 block">Width (in)</label>
                             <input type="number" x-model.number="printCustomW" min="0.1" step="0.01"
-                                :disabled="customSizeLocked" :readonly="customSizeLocked"
-                                class="w-full rounded-lg border border-slate-200 text-sm py-2 px-2.5"
-                                :class="customSizeLocked ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none'">
+                                disabled readonly
+                                class="w-full rounded-lg border border-slate-200 text-sm py-2 px-2.5 bg-slate-100 text-slate-500 cursor-not-allowed">
                         </div>
                         <span class="pb-2.5 text-slate-400">×</span>
                         <div class="flex-1">
                             <label class="text-[11px] font-semibold text-slate-600 mb-1 block">Height (in)</label>
                             <input type="number" x-model.number="printCustomH" min="0.1" step="0.01"
-                                :disabled="customSizeLocked" :readonly="customSizeLocked"
-                                class="w-full rounded-lg border border-slate-200 text-sm py-2 px-2.5"
-                                :class="customSizeLocked ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none'">
+                                disabled readonly
+                                class="w-full rounded-lg border border-slate-200 text-sm py-2 px-2.5 bg-slate-100 text-slate-500 cursor-not-allowed">
                         </div>
                     </div>
                     <p class="text-[11px] text-amber-700 mt-1 leading-snug" x-show="customSizeLocked">
@@ -134,36 +132,6 @@
                         printer's preferences so its bleed/E2E setting carries over. To change it, edit
                         Properties → Preferences → Advanced, then reload.
                     </p>
-                    <p class="text-[11px] text-amber-700 mt-1 leading-snug" x-show="!customSizeLocked">
-                        Windows has no saved custom size for this printer yet — type one, or set it in
-                        Properties → Preferences → Advanced and reload.
-                    </p>
-                    {{-- Printer's CURRENT default orientation (new bridge:
-                         getPrinterCurrentDefaults). Custom-size prints go through
-                         Acrobat's silent print, which always uses it. --}}
-                    <div class="mt-2 text-[11px] leading-snug rounded-lg px-2.5 py-2 border"
-                        :class="psCurrentDefaults && psCurrentDefaults.orientation === 'landscape' ?
-                            'bg-amber-50 border-amber-300 text-amber-800' :
-                            'bg-slate-50 border-transparent text-slate-500'">
-                        <span x-show="!psCurrentDefaults">Checking the printer's current default orientation…</span>
-                        <span x-show="psCurrentDefaults && psCurrentDefaults.orientation === 'unknown'">
-                            Couldn't read the printer's current default orientation.</span>
-                        <span
-                            x-show="psCurrentDefaults && (psCurrentDefaults.orientation === 'portrait' || psCurrentDefaults.orientation === 'landscape')">
-                            Printer's current default orientation:
-                            <b x-text="psCurrentDefaults && psCurrentDefaults.orientation === 'landscape' ? 'Landscape' : 'Portrait'"></b>.
-                            Custom-size prints go through Acrobat's silent print, which always uses this.
-                            <span x-show="psCurrentDefaults && psCurrentDefaults.orientation === 'landscape'">
-                                For an upright (portrait) print, open this printer's Windows “Printing
-                                Preferences” once and set Orientation to Portrait.</span>
-                        </span>
-                    </div>
-                    <label class="flex items-start gap-2 mt-2 cursor-pointer select-none text-[11px] text-slate-600">
-                        <input type="checkbox" x-model="printSafetyShrink"
-                            class="w-3.5 h-3.5 mt-0.5 rounded border-slate-300 accent-[#287d3c] shrink-0">
-                        <span>Shrink ~4% for safety — only if the loaded paper might be smaller than this size
-                            (e.g. plain stock instead of bleed stock). Leave off when the paper matches.</span>
-                    </label>
                 </div>
             </div>
 
@@ -359,35 +327,6 @@
                 </select>
             </div>
         </div>
-
-        {{-- New PrintTrays (Adobe) bridge options — same as the new demo's
-             upload section. Guarded with typeof so a stale cached mixin can't
-             crash Alpine. --}}
-        <template x-if="typeof printFastRaster !== 'undefined'">
-            <div class="mt-5 border-t border-slate-100 pt-4 space-y-2.5">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Print engine</p>
-                <label class="flex items-start gap-2 cursor-pointer select-none text-[12px] text-slate-600">
-                    <input type="checkbox" x-model="printFastRaster"
-                        class="w-4 h-4 mt-0.5 rounded border-slate-300 accent-[#287d3c] shrink-0">
-                    <span><b class="text-slate-700">Fast-raster mode</b> (experimental) — rasterizes the PDF and
-                        sends a raw image feed instead of the normal PDF pipeline. Much faster on some drivers,
-                        but only works if the printer queue accepts a raw image feed.</span>
-                </label>
-                <label class="flex items-start gap-2 cursor-pointer select-none text-[12px] text-slate-600"
-                    x-show="file && file.type === 'image'">
-                    <input type="checkbox" x-model="printImageAsImage"
-                        class="w-4 h-4 mt-0.5 rounded border-slate-300 accent-[#287d3c] shrink-0">
-                    <span><b class="text-slate-700">Send image as image</b> — uses the bridge's fast image path
-                        (like Ctrl+P) instead of wrapping the photo in a PDF first.</span>
-                </label>
-                <label class="flex items-start gap-2 cursor-pointer select-none text-[12px] text-slate-600 pl-6"
-                    x-show="file && file.type === 'image' && printImageAsImage">
-                    <input type="checkbox" x-model="printClassicImageEngine"
-                        class="w-4 h-4 mt-0.5 rounded border-slate-300 accent-[#287d3c] shrink-0">
-                    <span>Use the classic print engine for images (slower — only for comparing speed)</span>
-                </label>
-            </div>
-        </template>
 
         {{-- Reference-only notice --}}
         <p x-show="printQuality || printMediaType" x-cloak class="text-[11px] text-slate-400 mt-3 leading-relaxed">

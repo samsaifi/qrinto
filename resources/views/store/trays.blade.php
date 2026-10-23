@@ -51,11 +51,17 @@
                 <p class="text-[13px] text-amber-800 leading-snug flex-1">
                     PrintTrays isn't running on this PC. Install it and reload to detect printers.
                 </p>
-                <a href="https://noritsucanada.com/print-trays/download/" target="_blank" rel="noopener"
+                <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank" rel="noopener"
                     class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#287d3c] hover:bg-emerald-800 text-white text-[12px] font-bold transition">
                     <i data-lucide="download" class="w-3.5 h-3.5"></i>
                     Download PrintTrays
                 </a>
+                <button type="button" @click="trustCertificate()"
+                    title="Click Advanced → Proceed in the window that opens, then close it — the scan retries automatically."
+                    class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-amber-800 text-[12px] font-bold hover:bg-amber-100 transition">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                    Trust certificate
+                </button>
             </div>
 
             {{-- Empty state --}}
@@ -171,7 +177,7 @@
             </div>
         </form>
 
-        @include('partials.print-settings-modal')
+        @include('partials.new-test-print-settings-modal')
     </div>
     </div>
 
@@ -196,7 +202,7 @@
                         </p>
 
                         <div class="mt-5 flex items-center gap-2 flex-wrap">
-                            <a href="https://noritsucanada.com/print-trays/download/" target="_blank" rel="noopener"
+                            <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank" rel="noopener"
                                 class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#287d3c] hover:bg-emerald-800 text-white text-sm font-bold transition">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                                 Download PrintTrays
@@ -218,7 +224,9 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('js/print-settings.js') }}?v={{ filemtime(public_path('js/print-settings.js')) }}"></script>
+    <script
+        src="{{ asset('js/new-test-print-settings.js') }}?v={{ filemtime(public_path('js/new-test-print-settings.js')) }}">
+    </script>
     <script>
         var __ptInstance = null;
 
@@ -305,7 +313,10 @@
                 // Shared Print Settings modal (state + capability loading).
                 ...window.printSettingsMixin({
                     sizeOptions: serverSizeOptions,
-                    sizeDims: STATIC_DIMS
+                    sizeDims: STATIC_DIMS,
+                    // Offer the driver's custom page size too; a tray saved on it
+                    // keeps its W×H in size_width / size_height.
+                    allowCustomSize: true
                 }),
 
                 rows: [],
@@ -313,6 +324,28 @@
                 defaultPrinter: null,
                 staticSizes: STATIC_SIZES,
                 editingIndex: null,
+
+                // The new modal shows its image-only options when file.type is
+                // 'image'; there is no file on this setup page.
+                file: null,
+
+                // The new bridge's cert must be trusted once (unless installed via its
+                // real installer). Open its cert page in a popup; when the operator
+                // closes it, rescan — same flow as /print/pdf/check.
+                trustCertificate() {
+                    const url = 'https://127.0.0.1:8191';
+                    const w = window.open(url, 'printtrays-trust', 'width=520,height=420');
+                    if (!w) {
+                        alert('Popup blocked — allow popups for this site, or open ' + url + ' manually in a new tab.');
+                        return;
+                    }
+                    const t = setInterval(() => {
+                        if (w.closed) {
+                            clearInterval(t);
+                            this.scan();
+                        }
+                    }, 400);
+                },
 
                 // Open the shared modal for one printer row: seed the buffer from
                 // the row's saved values, then load the printer's live caps.
@@ -322,6 +355,12 @@
                     this.editingIndex = i;
                     this.psResetCaps();
                     if (row.size) this.printPaperSize = row.size;
+                    // Re-seed a saved custom size (psLoad keeps it unless the driver
+                    // has its own saved custom size, which then wins).
+                    if (row.size === this.psCustomSizeValue && row.sizeWidth && row.sizeHeight) {
+                        this.printCustomW = +row.sizeWidth;
+                        this.printCustomH = +row.sizeHeight;
+                    }
                     this.printLandscape = row.landscape || false;
                     this.printDuplex = row.duplex || 'simplex';
                     this.printPageOrder = row.pageOrder || 'frontToBack';
@@ -361,6 +400,10 @@
                 },
 
                 sizeLabel(row) {
+                    if (row.size === this.psCustomSizeValue) {
+                        return 'Custom' + (row.sizeWidth && row.sizeHeight ?
+                            ' ' + row.sizeWidth + ' × ' + row.sizeHeight + ' in' : '');
+                    }
                     return this.psSizeOptionsMap[row.size] || row.size;
                 },
 
@@ -387,9 +430,11 @@
                     try {
                         const {
                             PrintTrays
-                        } = await import('{{ asset('js/printtrays.js') }}');
+                        } = await import(
+                            '{{ asset('js/new-testing-printtrays.js') }}?v={{ filemtime(public_path('js/new-testing-printtrays.js')) }}'
+                            );
                         const pp = new PrintTrays({
-                            downloadUrl: 'https://noritsucanada.com/print-trays/download/',
+                            downloadUrl: 'https://noritsucanada.com/new-print-trays/download/',
                             onNotInstalled: () => {},
                         });
                         await pp.connect();

@@ -246,6 +246,25 @@ class Store extends Model
     }
 
     /**
+     * Size value /store/trays saves for the printer driver's own custom page
+     * size (e.g. Noritsu "PostScript Custom Page Size"); its W×H is kept in
+     * size_width / size_height. Must match CUSTOM_SIZE in new-test-print-settings.js.
+     */
+    public const CUSTOM_TRAY_SIZE = '__custom_size__';
+
+    /**
+     * Human label for a tray row on the driver custom size ("Custom 5 × 7 in"),
+     * or null when the row is on a regular size.
+     */
+    public static function customTraySizeLabel(array $row): ?string
+    {
+        if (($row['size'] ?? null) !== self::CUSTOM_TRAY_SIZE) return null;
+        $w = $row['size_width'] ?? null;
+        $h = $row['size_height'] ?? null;
+        return 'Custom' . ($w && $h ? " {$w} × {$h} in" : '');
+    }
+
+    /**
      * Normalised tray rows for the panel - one entry per configured printer
      * (whatever the store saved on /store/trays). Each row carries the
      * derived User Type. Trays are dynamic: their identity is the PC printer
