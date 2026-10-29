@@ -100,6 +100,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/store/orders', [StorePanelController::class, 'ordersV2'])->name('storepanel.orders');
     Route::get('/store/orders-v2', [StorePanelController::class, 'orders'])->name('storepanel.orders-v2');
     Route::get('/store/qr', [StorePanelController::class, 'qr'])->name('storepanel.qr');
+    Route::get('/store/profile', [StorePanelController::class, 'profile'])->name('storepanel.profile');
+    Route::put('/store/profile', [StorePanelController::class, 'updateProfile'])->name('storepanel.profile.update');
     Route::get('/store/trays', [StorePanelController::class, 'trays'])->name('storepanel.trays');
     Route::post('/store/trays', [StorePanelController::class, 'saveTrays'])->name('storepanel.trays.save');
     // Save print settings for a single tray/printer (from the order print modal).

@@ -1,0 +1,124 @@
+/* Shared look for the local-print check & preview pages (Printo redesign).
+   Used by local-print/check.blade.php and local-print/preview.blade.php. */
+[x-cloak] { display: none !important }
+.ck { background: #F4F6F3; color: #17201A; font-family: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif; min-height: 100vh }
+.ck button { font-family: inherit }
+.ck a { color: #2F6E35 }
+.ck-offscreen { position: fixed; left: -100000px; top: 0; width: 10px; height: 10px; overflow: hidden }
+.ck-main { max-width: 1240px; margin: 0 auto; padding: 24px 24px 48px }
+.ck-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px }
+.ck-head-l { display: flex; align-items: center; gap: 14px; min-width: 0 }
+.ck-head h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.01em; overflow-wrap: anywhere }
+.ck-sub { margin: 4px 0 0; font-size: 14px; color: #4C5A4E }
+.ck-min0 { min-width: 0 }
+.ck-grow { flex: 1 }
+.ck-iconbtn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #D5DCD2; background: #fff; display: flex; align-items: center; justify-content: center; color: #17201A !important; flex-shrink: 0; cursor: pointer }
+.ck-iconbtn.sm { width: 40px; height: 40px; border-radius: 10px }
+.ck-link { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; text-decoration: none }
+.ck-grid { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start }
+.ck-card { background: #fff; border: 1px solid #E2E7E0; border-radius: 20px }
+.ck-preview { flex: 999 1 560px; min-width: 0; overflow: hidden }
+.ck-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #EDF0EB; flex-wrap: wrap }
+.ck-chips { display: flex; gap: 6px; flex-wrap: wrap }
+.ck-chip { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #D5DCD2; background: #fff; color: #17201A; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px }
+.ck-chip.on { background: #17201A; color: #fff }
+.ck-stage { position: relative; height: 480px; background-color: #EEF2EC; background-image: radial-gradient(#D6DDD3 1px, transparent 1px); background-size: 18px 18px; display: flex; align-items: center; justify-content: center; overflow: hidden; perspective: 1600px }
+.ck-stage-in { display: flex; align-items: center; justify-content: center }
+.ck-loading { display: flex; align-items: center; gap: 10px; color: #4C5A4E; font-size: 14px }
+.ck-error { color: #A3261C; font-weight: 600; font-size: 14px; padding: 0 24px; text-align: center }
+.ck-col { display: flex; flex-direction: column; align-items: center; gap: 22px }
+.ck-gap40 { gap: 40px }
+.ck-face-box { position: relative; transform-style: preserve-3d }
+.ck-face-box.p { width: 220px; height: 330px }
+.ck-face-box.l { width: 330px; height: 220px }
+.ck canvas[data-cp] { position: absolute; inset: 0; width: 100%; height: 100%; display: block }
+.ck-pill { display: inline-block; padding: 7px 14px; border-radius: 999px; background: #17201A; color: #fff; font-size: 13px; font-weight: 600 }
+.ck-caps { position: relative; width: 280px; height: 34px }
+.face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-sizing: border-box; background: #fff; overflow: hidden; box-shadow: 0 12px 32px rgba(23, 32, 26, .18) }
+.face-back { transform: rotateY(180deg) }
+.face-backx { transform: rotateX(180deg) }
+.ck-inner-l { box-shadow: inset -10px 0 18px -12px rgba(0, 0, 0, .5) }
+.ck-inner-t { box-shadow: inset 0 -10px 18px -12px rgba(0, 0, 0, .5) }
+.flip-card { animation: ckflip 6s ease-in-out infinite }
+@keyframes ckflip { 0%, 30% { transform: rotateY(0) } 45%, 80% { transform: rotateY(180deg) } 95%, 100% { transform: rotateY(360deg) } }
+.fold-wrap { position: relative; width: 320px; height: 240px; transform-style: preserve-3d; transform-origin: 75% 50%; animation: ckfoldwrap 9s ease-in-out infinite }
+@keyframes ckfoldwrap { 0%, 10% { transform: translateX(-80px) rotateY(0) } 25%, 55% { transform: translateX(0) rotateY(0) } 68%, 72% { transform: translateX(-80px) rotateY(0) } 82%, 92% { transform: translateX(-80px) rotateY(180deg) } 100% { transform: translateX(-80px) rotateY(360deg) } }
+.fold-base { position: absolute; left: 160px; top: 0; width: 160px; height: 240px; transform-style: preserve-3d }
+.fold-leaf { position: absolute; left: 160px; top: 0; width: 160px; height: 240px; transform-style: preserve-3d; transform-origin: 0 50%; animation: ckleaf 9s ease-in-out infinite }
+@keyframes ckleaf { 0%, 10% { transform: translateZ(1px) rotateY(0) } 25%, 55% { transform: translateZ(1px) rotateY(-179deg) } 68%, 100% { transform: translateZ(1px) rotateY(0) } }
+.foldl-wrap { position: relative; width: 240px; height: 320px; transform-style: preserve-3d; transform-origin: 50% 75%; animation: ckfoldwrapL 9s ease-in-out infinite }
+@keyframes ckfoldwrapL { 0%, 10% { transform: translateY(-80px) rotateY(0) } 25%, 55% { transform: translateY(0) rotateY(0) } 68%, 72% { transform: translateY(-80px) rotateY(0) } 82%, 92% { transform: translateY(-80px) rotateY(180deg) } 100% { transform: translateY(-80px) rotateY(360deg) } }
+.foldl-base { position: absolute; left: 0; top: 160px; width: 240px; height: 160px; transform-style: preserve-3d }
+.foldl-leaf { position: absolute; left: 0; top: 160px; width: 240px; height: 160px; transform-style: preserve-3d; transform-origin: 50% 0; animation: ckleafL 9s ease-in-out infinite }
+@keyframes ckleafL { 0%, 10% { transform: translateZ(1px) rotateX(0) } 25%, 55% { transform: translateZ(1px) rotateX(179deg) } 68%, 100% { transform: translateZ(1px) rotateX(0) } }
+.cap { position: absolute; left: 0; right: 0; text-align: center; opacity: 0 }
+.d-front { animation: ckdFront 6s ease-in-out infinite }
+.d-back { animation: ckdBack 6s ease-in-out infinite }
+@keyframes ckdFront { 0%, 32% { opacity: 1 } 38%, 92% { opacity: 0 } 98%, 100% { opacity: 1 } }
+@keyframes ckdBack { 0%, 38% { opacity: 0 } 44%, 82% { opacity: 1 } 88%, 100% { opacity: 0 } }
+.f-front { animation: ckfFront 9s ease-in-out infinite }
+.f-in { animation: ckfIn 9s ease-in-out infinite }
+.f-back { animation: ckfBack 9s ease-in-out infinite }
+@keyframes ckfFront { 0%, 12% { opacity: 1 } 16%, 64% { opacity: 0 } 68%, 74% { opacity: 1 } 78%, 96% { opacity: 0 } 100% { opacity: 1 } }
+@keyframes ckfIn { 0%, 15% { opacity: 0 } 21%, 57% { opacity: 1 } 62%, 100% { opacity: 0 } }
+@keyframes ckfBack { 0%, 77% { opacity: 0 } 82%, 93% { opacity: 1 } 97%, 100% { opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .flip-card, .fold-wrap, .fold-leaf, .foldl-wrap, .foldl-leaf, .cap, .ck-spin { animation-play-state: paused !important } }
+.ck-panels { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px }
+.ck-panels-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap }
+.ck h2 { margin: 0; font-size: 15px; font-weight: 700 }
+.ck-btn { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #D5DCD2; background: #fff; font-size: 13px; font-weight: 600; color: #17201A; cursor: pointer; display: flex; align-items: center; gap: 6px }
+.ck-panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px }
+.ck-panel { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: #F4F6F3 }
+.ck-thumb { position: relative; border-radius: 3px; overflow: hidden; flex-shrink: 0; box-shadow: 0 1px 3px rgba(23, 32, 26, .2); background: #fff }
+.ck-thumb.p { width: 32px; height: 48px }
+.ck-thumb.l { width: 48px; height: 32px }
+.ck-panel-n { display: block; font-size: 12px; color: #4C5A4E }
+.ck-panel-src { display: block; font-size: 13px; font-weight: 700; margin-top: 1px }
+.ck-note { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: #FFF6E5; color: #6B4A00; font-size: 14px; line-height: 1.45 }
+.ck-note svg { flex-shrink: 0; margin-top: 1px }
+.ck-side { flex: 1 1 360px; min-width: 0; padding: 22px; display: flex; flex-direction: column; gap: 22px }
+.ck-side-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px }
+.ck-textbtn { border: none; background: none; padding: 0; font-size: 13px; font-weight: 600; color: #2F6E35; text-decoration: underline; cursor: pointer }
+.ck-muted { font-size: 13px; color: #4C5A4E; line-height: 1.5 }
+.ck-row { display: flex; align-items: center; gap: 8px }
+.ck-alert { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #FDECEA; color: #A3261C; font-size: 13px; font-weight: 600 }
+.ck-alert .ck-textbtn { color: #A3261C }
+.ck-trays { display: flex; flex-direction: column; gap: 8px }
+.ck-tray { display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-height: 52px; border-radius: 12px; border: 1px solid #D5DCD2; background: #fff; text-align: left; cursor: pointer; color: #17201A }
+.ck-tray.wide { grid-column: 1 / -1 }
+.ck-tray.on { border: 2px solid #2F7A3B; background: #F0F7EF; padding: 9px 11px }
+.ck-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #A9B3A6; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
+.ck-radio span { width: 8px; height: 8px; border-radius: 50%; background: #2F7A3B; opacity: 0 }
+.ck-tray.on .ck-radio { border-color: #2F7A3B }
+.ck-tray.on .ck-radio span { opacity: 1 }
+.ck-tray-name { display: block; font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.ck-tray-paper { display: block; font-size: 12px; color: #4C5A4E; margin-top: 1px }
+.ck-copies { display: flex; align-items: center; justify-content: space-between; gap: 12px }
+.ck-copies label { font-size: 15px; font-weight: 700 }
+.ck-stepper { display: flex; align-items: center; border: 1px solid #D5DCD2; border-radius: 12px; overflow: hidden }
+.ck-stepper button { width: 44px; height: 44px; border: none; background: #fff; font-size: 20px; color: #17201A; cursor: pointer }
+.ck-stepper button:disabled { opacity: .4; cursor: not-allowed }
+.ck-stepper input { width: 56px; height: 44px; border: none; border-left: 1px solid #E2E7E0; border-right: 1px solid #E2E7E0; text-align: center; font-family: inherit; font-size: 16px; font-weight: 700; color: #17201A; -moz-appearance: textfield }
+.ck-stepper input::-webkit-outer-spin-button, .ck-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0 }
+.ck-foot { border-top: 1px solid #EDF0EB; padding-top: 18px; display: flex; flex-direction: column; gap: 12px }
+.ck-msg { padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 500; background: #EEF4FB; color: #1D4F8F }
+.ck-msg.success { background: #E3F0E1; color: #2F6E35 }
+.ck-msg.error { background: #FDECEA; color: #A3261C }
+.ck-print { height: 56px; border: none; border-radius: 14px; background: #1F6B2E; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 16px }
+.ck-print:disabled { background: #B5C0B1; cursor: not-allowed }
+.ck-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: #4C5A4E; flex-wrap: wrap }
+.ck-status a { font-weight: 600 }
+.ck-dot { width: 8px; height: 8px; border-radius: 50%; background: #A9B3A6 }
+.ck-dot.ok { background: #2F9E44 }
+.ck-dot.bad { background: #C0392B }
+.ck-spin { width: 20px; height: 20px; border-radius: 50%; border: 3px solid #D5DCD2; border-top-color: #2F7A3B; animation: ckspin 1s linear infinite; display: inline-block }
+.ck-spin.sm { width: 14px; height: 14px; border-width: 2px }
+@keyframes ckspin { to { transform: rotate(360deg) } }
+@media (max-width: 600px) {
+    .ck-main { padding: 16px 16px 40px }
+    .ck-stage { height: 400px }
+    .ck-face-box.p { width: 180px; height: 270px }
+    .ck-face-box.l { width: 270px; height: 180px }
+    .fold-wrap, .foldl-wrap { zoom: .8 }
+}
+    

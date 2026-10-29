@@ -119,16 +119,26 @@
                     @endif
 
                     {{-- Menu Dropdown Container --}}
-                    <div class="relative" x-data="{ menuOpen: false }" @click.outside="menuOpen = false">
-                        {{-- Menu Toggle Button --}}
+                    @php
+                        $onLocalPrint = request()->routeIs('localprint.*');
+                        $footerBtn = 'inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-[13px] font-semibold text-slate-900 hover:border-slate-400 hover:shadow-sm transition';
+                    @endphp
+                    <div class="relative" x-data="{ menuOpen: false }" @click.outside="menuOpen = false"
+                        @keydown.escape.window="menuOpen = false">
+                        {{-- Menu Toggle Button (becomes "Close" while open) --}}
                         <button type="button"
                             @click="menuOpen = !menuOpen; $nextTick(() => { if (window.lucide) lucide.createIcons(); })"
-                            class="h-11 flex items-center gap-2 px-4 rounded-xl hover:bg-slate-100 text-slate-800 hover:text-brand-600 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-95">
-                            <i data-lucide="menu" class="w-4 h-4 text-slate-600"></i>
-                            <span>Menu</span>
-                            <i data-lucide="chevron-down"
-                                class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
-                                :class="{ 'rotate-180': menuOpen }"></i>
+                            :aria-expanded="menuOpen.toString()"
+                            :class="menuOpen ? 'bg-white border-slate-300 shadow-sm' : 'border-transparent hover:bg-slate-100'"
+                            class="h-11 flex items-center gap-2 px-4 rounded-xl border text-slate-800 font-semibold text-sm transition-all cursor-pointer active:scale-95">
+                            <span x-show="!menuOpen" class="flex items-center gap-2">
+                                <i data-lucide="menu" class="w-4 h-4 text-slate-600"></i>
+                                <span>Menu</span>
+                            </span>
+                            <span x-show="menuOpen" x-cloak class="flex items-center gap-2">
+                                <i data-lucide="x" class="w-4 h-4 text-slate-700"></i>
+                                <span>Close</span>
+                            </span>
                         </button>
 
                         {{-- Dropdown Menu Panel --}}
@@ -138,80 +148,120 @@
                             x-transition:leave="transition ease-in duration-100"
                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                             x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-                            class="absolute right-0 mt-2 w-56 bg-white border border-slate-200/90 rounded-2xl shadow-xl py-2 z-50 overflow-hidden"
+                            class="absolute right-0 mt-3 w-[22rem] max-w-[calc(100vw-2rem)] bg-white border border-slate-200/90 rounded-3xl shadow-2xl z-50 overflow-hidden origin-top-right"
                             style="display: none;" x-cloak>
 
-                            <a href="{{ route('flow.find-store') }}" @click="menuOpen = false"
-                                class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
-                                <span>Print at a store near you</span>
-                            </a>
+                            <div class="p-4 pb-3">
+                                <p class="px-2 pt-1 pb-3 text-[11px] font-bold tracking-[0.08em] uppercase text-slate-600">
+                                    How do you want to print?</p>
 
-                            <a href="{{ route('localprint.index') }}" @click="menuOpen = false"
-                                class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
-                                <i data-lucide="printer" class="w-4 h-4 text-slate-400"></i>
-                                <span>Print on your own 931BL</span>
-                            </a>
+                                {{-- At a store near you --}}
+                                <a href="{{ route('flow.find-store') }}" @click="menuOpen = false"
+                                    class="group flex items-center gap-3.5 p-3 rounded-2xl border transition-colors {{ $onLocalPrint ? 'border-transparent hover:bg-slate-50' : 'border-[#287d3c]/25 bg-[#287d3c]/[0.07]' }}">
+                                    <span
+                                        class="relative w-11 h-11 shrink-0 rounded-xl flex items-center justify-center {{ $onLocalPrint ? 'bg-slate-100 text-[#287d3c]' : 'bg-[#287d3c] text-white' }}">
+                                        <i data-lucide="map-pin" class="w-5 h-5"></i>
+                                        @unless ($onLocalPrint)
+                                            <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#2fbf4f] ring-2 ring-white"></span>
+                                        @endunless
+                                    </span>
+                                    <span class="flex-1 min-w-0">
+                                        <span class="block text-[15px] font-bold text-slate-900 leading-tight">At a store near you</span>
+                                        <span class="block text-[13px] text-slate-500 leading-snug mt-0.5">Design online, pick up in store</span>
+                                    </span>
+                                    @if ($onLocalPrint)
+                                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500 shrink-0 group-hover:translate-x-0.5 transition-transform"></i>
+                                    @else
+                                        <span class="shrink-0 px-2.5 py-1 rounded-full bg-white text-[11px] font-bold text-slate-800 shadow-xs">You're here</span>
+                                    @endif
+                                </a>
 
-                            <a href="{{ route('flow.track.form') }}" @click="menuOpen = false"
-                                class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
-                                <i data-lucide="package" class="w-4 h-4 text-slate-400"></i>
-                                <span>Track an order</span>
-                            </a>
-                            <a href="https://www.noritsu.com/931bl-resource-center.html " @click="menuOpen = false"
-                                class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#287d3c] transition-colors">
-                                <i data-lucide="package" class="w-4 h-4 text-slate-400"></i>
-                                <span>Resource Center</span>
-                            </a>
+                                {{-- On your own 931BL --}}
+                                <a href="{{ route('localprint.index') }}" @click="menuOpen = false"
+                                    class="group mt-2 flex items-center gap-3.5 p-3 rounded-2xl border transition-colors {{ $onLocalPrint ? 'border-[#287d3c]/25 bg-[#287d3c]/[0.07]' : 'border-transparent hover:bg-slate-50' }}">
+                                    <span
+                                        class="relative w-11 h-11 shrink-0 rounded-xl flex items-center justify-center {{ $onLocalPrint ? 'bg-[#287d3c] text-white' : 'bg-slate-100 text-[#287d3c]' }}">
+                                        <i data-lucide="printer" class="w-5 h-5"></i>
+                                        @if ($onLocalPrint)
+                                            <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#2fbf4f] ring-2 ring-white"></span>
+                                        @endif
+                                    </span>
+                                    <span class="flex-1 min-w-0">
+                                        <span class="block text-[15px] font-bold text-slate-900 leading-tight">On your own 931BL</span>
+                                        <span class="block text-[13px] text-slate-500 leading-snug mt-0.5">Printer ready · prints next to you</span>
+                                    </span>
+                                    @if ($onLocalPrint)
+                                        <span class="shrink-0 px-2.5 py-1 rounded-full bg-white text-[11px] font-bold text-slate-800 shadow-xs">You're here</span>
+                                    @else
+                                        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500 shrink-0 group-hover:translate-x-0.5 transition-transform"></i>
+                                    @endif
+                                </a>
 
-                            <div class="my-1 border-t border-slate-100"></div>
+                                <div class="my-3 border-t border-slate-200/80"></div>
 
-                            <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
-                                @click="menuOpen = false"
-                                class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
-                                <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
-                                <span>Terms and privacy</span>
-                            </a>
-
-                            {{-- Auth-aware entry: login when signed out; store panel /
-                                 admin dashboard when signed in. --}}
-                            @auth
-                                @php
-                                    $u = auth()->user();
-                                    $isAdmin = method_exists($u, 'isAdmin')
-                                        ? $u->isAdmin()
-                                        : ($u->role ?? '') === 'admin';
-                                    $isStoreStaff = in_array($u->role ?? '', ['store_admin', 'storeadmin', 'staff']);
-                                    $storeLabel = $u->store->store_name ?? null;
-                                @endphp
-                                @if ($isAdmin)
-                                    <a href="{{ url('/admin/dashboard') }}" @click="menuOpen = false"
-                                        class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
-                                        <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-400"></i>
-                                        <span>Admin dashboard</span>
-                                    </a>
-                                @elseif ($isStoreStaff)
-                                    <a href="{{ route('storepanel.orders') }}" @click="menuOpen = false"
-                                        class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
-                                        <i data-lucide="briefcase" class="w-4 h-4 text-slate-400"></i>
-                                        <span class="truncate max-w-[160px]" title="{{ $storeLabel ?? 'Store panel' }}">
-                                            {{ $storeLabel ?? 'Store panel' }}
+                                <div class="grid grid-cols-2 gap-2">
+                                    <a href="{{ route('flow.track.form') }}" @click="menuOpen = false"
+                                        class="flex flex-col gap-2 p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <i data-lucide="truck" class="w-5 h-5 text-[#287d3c]"></i>
+                                        <span>
+                                            <span class="block text-sm font-bold text-slate-900">Track an order</span>
+                                            <span class="block text-xs text-slate-500 mt-0.5">Status and pickup</span>
                                         </span>
                                     </a>
-                                @else
-                                    <a href="{{ url('/store') }}" @click="menuOpen = false"
-                                        class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
-                                        <i data-lucide="briefcase" class="w-4 h-4 text-slate-400"></i>
-                                        <span>For stores</span>
+                                    <a href="https://www.noritsu.com/931bl-resource-center.html" target="_blank" rel="noopener"
+                                        @click="menuOpen = false"
+                                        class="flex flex-col gap-2 p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                                        <i data-lucide="book-open-text" class="w-5 h-5 text-[#287d3c]"></i>
+                                        <span>
+                                            <span class="block text-sm font-bold text-slate-900">Resource Center</span>
+                                            <span class="block text-xs text-slate-500 mt-0.5">Guides and templates</span>
+                                        </span>
                                     </a>
-                                @endif
-                            @else
-                                <a href="{{ route('login') }}" @click="menuOpen = false"
-                                    class="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
-                                    <i data-lucide="log-in" class="w-4 h-4 text-slate-400"></i>
-                                    <span>For stores · Log in</span>
-                                </a>
-                            @endauth
+                                </div>
+                            </div>
+
+                            {{-- Footer: terms + auth-aware entry (login when signed out;
+                                 store panel / admin dashboard when signed in). --}}
+                            <div class="flex items-center justify-between gap-3 px-5 py-3.5 bg-slate-50/80 border-t border-slate-200/80">
+                                <a href="{{ asset('Qrinto_Terms_and_Privacy_Notice.pdf') }}" target="_blank"
+                                    @click="menuOpen = false"
+                                    class="text-[13px] text-slate-600 underline underline-offset-2 hover:text-slate-900 transition-colors">
+                                    Terms and privacy</a>
+
+                                @auth
+                                    @php
+                                        $u = auth()->user();
+                                        $isAdmin = method_exists($u, 'isAdmin')
+                                            ? $u->isAdmin()
+                                            : ($u->role ?? '') === 'admin';
+                                        $isStoreStaff = in_array($u->role ?? '', ['store_admin', 'storeadmin', 'staff']);
+                                        $storeLabel = $u->store->store_name ?? null;
+                                    @endphp
+                                    @if ($isAdmin)
+                                        <a href="{{ url('/admin/dashboard') }}" @click="menuOpen = false" class="{{ $footerBtn }}">
+                                            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                                            <span>Admin dashboard</span>
+                                        </a>
+                                    @elseif ($isStoreStaff)
+                                        <a href="{{ route('storepanel.orders') }}" @click="menuOpen = false" class="{{ $footerBtn }}">
+                                            <i data-lucide="store" class="w-4 h-4"></i>
+                                            <span class="truncate max-w-[140px]" title="{{ $storeLabel ?? 'Store panel' }}">
+                                                {{ $storeLabel ?? 'Store panel' }}
+                                            </span>
+                                        </a>
+                                    @else
+                                        <a href="{{ url('/store') }}" @click="menuOpen = false" class="{{ $footerBtn }}">
+                                            <i data-lucide="store" class="w-4 h-4"></i>
+                                            <span>For stores</span>
+                                        </a>
+                                    @endif
+                                @else
+                                    <a href="{{ route('login') }}" @click="menuOpen = false" class="{{ $footerBtn }}">
+                                        <i data-lucide="store" class="w-4 h-4"></i>
+                                        <span>Store owner? Log in</span>
+                                    </a>
+                                @endauth
+                            </div>
                         </div>
                     </div>
                 </div>

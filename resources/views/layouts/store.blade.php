@@ -88,8 +88,16 @@
                     <a href="{{ url('store') }}" class="flex items-center gap-2.5 shrink-0">
                         <img src="{{ asset('logo/Qrinto-logo-small.png') }}" alt="Qrinto" class="h-7 md:h-8 w-auto">
                     </a>
-                    <span
-                        class="font-display font-bold text-sm text-slate-800 truncate hidden sm:block">{{ $storeLabel }}</span>
+                    <div class="hidden sm:flex items-center gap-1.5 min-w-0">
+                        <span class="font-display font-bold text-sm text-slate-800 truncate">{{ $storeLabel }}</span>
+                        @if ($store)
+                            <a href="{{ route('storepanel.profile') }}" title="Edit store details"
+                                aria-label="Edit store details"
+                                class="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition {{ request()->routeIs('storepanel.profile') ? 'text-[#16532a] bg-[#e7f2e8]' : 'text-slate-400 hover:text-[#287d3c] hover:bg-slate-100' }}">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </a>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Mobile hamburger --}}
@@ -186,6 +194,10 @@
                 <a href="{{ route('storepanel.trays') }}"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ request()->routeIs('storepanel.trays') ? 'text-[#16532a] bg-[#e7f2e8]' : 'text-slate-700 hover:bg-slate-50' }}">
                     <i data-lucide="inbox" class="w-4 h-4"></i> Trays
+                </a>
+                <a href="{{ route('storepanel.profile') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition {{ request()->routeIs('storepanel.profile') ? 'text-[#16532a] bg-[#e7f2e8]' : 'text-slate-700 hover:bg-slate-50' }}">
+                    <i data-lucide="pencil" class="w-4 h-4"></i> Store details
                 </a>
 
                 {{-- Catalog section (hidden for now)

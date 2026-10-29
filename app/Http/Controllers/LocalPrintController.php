@@ -85,7 +85,21 @@ class LocalPrintController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        return view($this->view('sizes'), compact('type', 'subTypes'));
+        // Printer paper sizes offered as Custom-size presets. Only sizes that fit
+        // the 2–12 in custom range; E2E (borderless sheet) variants are skipped.
+        $labels = \App\Models\Store::traySizeOptions();
+        $paperPresets = collect(\App\Models\Store::traySizeDimensions())
+            ->reject(fn($dims, $code) => str_contains(strtolower($code . ' ' . ($labels[$code] ?? '')), 'e2e'))
+            ->filter(fn($dims) => min($dims) >= 2 && max($dims) <= 12)
+            ->map(fn($dims, $code) => [
+                'label' => trim(preg_replace('/\s*\d+(\.\d+)?\s*x\s*\d+(\.\d+)?\s*(in|mm)$/i', '', $labels[$code] ?? $code)),
+                'w'     => $dims[0],
+                'h'     => $dims[1],
+            ])
+            ->values()
+            ->all();
+
+        return view($this->view('sizes'), compact('type', 'subTypes', 'paperPresets'));
     }
 
     /* ── Own-design: customizer (empty canvas) ──────── */
@@ -409,20 +423,48 @@ class LocalPrintController extends Controller
 
     public function upload(Request $request)
     {
+        // Kind caps how many images / PDF pages are used: single 1, duplex 2, fold 4.
+        $maxByKind = ['single' => 1, 'duplex' => 2, 'fold' => 4];
+        $kind  = array_key_exists($request->input('kind'), $maxByKind) ? $request->input('kind') : 'single';
+        $max   = $maxByKind[$kind];
+        $shape = $request->input('shape') === 'landscape' ? 'landscape' : 'portrait';
+
         $request->validate([
-            'file' => 'required|file|mimetypes:application/pdf,image/jpeg,image/png,image/webp,image/tiff|max:204800',
+            // Both the real content type (mimetypes, sniffed from the bytes) and the
+            // client file extension must be PDF / JPEG / PNG / WebP — so renamed
+            // executables or scripts (e.g. evil.php → evil.pdf) are rejected.
+            'file'     => 'required_without:images|file|mimetypes:application/pdf|extensions:pdf|max:204800',
+            'images'   => "required_without:file|array|max:{$max}",
+            'images.*' => 'file|mimetypes:image/jpeg,image/png,image/webp|extensions:jpg,jpeg,png,webp|max:204800',
+        ], [
+            'images.max'          => "This print type takes at most {$max} " . ($max === 1 ? 'image' : 'images') . '.',
+            'file.mimetypes'      => 'Only PDF files can be uploaded here.',
+            'file.extensions'     => 'Only PDF files can be uploaded here.',
+            'images.*.mimetypes'  => 'Only JPEG, PNG or WebP images can be uploaded.',
+            'images.*.extensions' => 'Only JPEG, PNG or WebP images can be uploaded.',
         ]);
 
-        $file = $request->file('file');
-        $path = $file->store('local-print', 'public');
-        $mime = $file->getMimeType();
+        $files = $request->hasFile('file') ? [$request->file('file')] : array_values($request->file('images', []));
+        // Random name + an extension picked from the validated content type —
+        // never the client's file name, so nothing executable lands in storage.
+        $extFor = ['application/pdf' => 'pdf', 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $paths = array_map(
+            fn($f) => $f->storeAs('local-print', \Illuminate\Support\Str::random(40) . '.' . ($extFor[$f->getMimeType()] ?? 'bin'), 'public'),
+            $files
+        );
+        $first = $files[0];
+        $mime  = $first->getMimeType();
 
         session([
             'local_print_file' => [
-                'path' => $path,
-                'name' => $file->getClientOriginalName(),
-                'size' => $file->getSize(),
-                'type' => str_starts_with($mime, 'image/') ? 'image' : 'pdf',
+                'path'       => $paths[0],
+                'paths'      => $paths,
+                'name'       => count($files) > 1 ? count($files) . ' images' : $first->getClientOriginalName(),
+                'size'       => array_sum(array_map(fn($f) => $f->getSize(), $files)),
+                'type'       => str_starts_with($mime, 'image/') ? 'image' : 'pdf',
+                'kind'       => $kind,
+                'shape'      => $shape,
+                'page_limit' => $max,
             ],
         ]);
 
@@ -441,6 +483,13 @@ class LocalPrintController extends Controller
         $absPath       = storage_path('app/public/' . $file['path']);
         $file['bytes'] = is_file($absPath) ? filesize($absPath) : ($file['size'] ?? 0);
         $file['type']  = $file['type'] ?? 'pdf';
+        // Choices from the upload screen (older sessions predate them).
+        $file['kind']       = $file['kind'] ?? 'single';
+        $file['shape']      = $file['shape'] ?? 'portrait';
+        $file['page_limit'] = $file['page_limit'] ?? 1;
+        $file['images']     = $file['type'] === 'image'
+            ? array_map(fn($p) => asset('storage/' . ltrim($p, '/')), $file['paths'] ?? [$file['path']])
+            : [];
 
         $trayDims = \App\Models\Store::traySizeDimensions();
         $trayDimsJs = [];

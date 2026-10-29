@@ -2,5 +2,5 @@
 @section('title', 'Upload a Media | Qrinto')
 
 @section('content')
-    @include('quick-flow-pc.local-print.refrence')
+    @include('quick-flow-pc.local-print.upload-screen')
 @endsection

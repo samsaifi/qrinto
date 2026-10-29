@@ -8,6 +8,11 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 /**
  * Standalone store panel (separate layout from the NAC admin panel).
@@ -373,6 +378,94 @@ class StorePanelController extends Controller
         $scanUrl = url('/store/' . $store->store_code);
 
         return view('store.qr', compact('store', 'scanUrl'));
+    }
+
+    /** Edit form for the store's own account / profile details. */
+    public function profile()
+    {
+        $store = $this->currentStore();
+        abort_if(!$store, 404, 'No store to edit.');
+
+        return view('store.profile', compact('store'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $store = $this->currentStore();
+        abort_if(!$store, 404, 'No store to edit.');
+        $user = $request->user();
+
+        $request->merge(['store_code' => strtoupper(trim((string) $request->store_code))]);
+
+        $validated = $request->validate([
+            'store_name' => 'required|string|max:255',
+            'store_code' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('stores', 'store_code')->ignore($store->id)],
+            'owner_name' => 'required|string|max:255',
+            'email'      => [
+                'required', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+                Rule::unique('stores', 'email')->ignore($store->id),
+            ],
+            'phone'      => 'required|string|max:20',
+            'password'   => 'nullable|string|min:8|confirmed',
+            'address'    => 'required|string|max:1000',
+            'city'       => 'required|string|max:100',
+            'state'      => 'required|string|max:100',
+            'zip_code'   => 'required|string|max:20',
+            'country'    => 'nullable|string|max:100',
+            'lat'        => 'nullable|numeric|between:-90,90',
+            'lon'        => 'nullable|numeric|between:-180,180',
+            'logo'       => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
+        ], [
+            'email.unique' => 'This email is already registered.',
+        ]);
+
+        $oldLogo = $store->logo;
+        $newLogo = $request->hasFile('logo')
+            ? $request->file('logo')->store('stores/logos', 'public')
+            : null;
+
+        try {
+            DB::transaction(function () use ($store, $user, $validated, $newLogo) {
+                $store->update([
+                    'store_name' => $validated['store_name'],
+                    'store_code' => $validated['store_code'],
+                    'owner_name' => $validated['owner_name'],
+                    'email'      => $validated['email'],
+                    'phone'      => $validated['phone'],
+                    'address'    => $validated['address'],
+                    'city'       => $validated['city'],
+                    'state'      => $validated['state'],
+                    'zip_code'   => $validated['zip_code'],
+                    // stores.country is NOT NULL (DB default 'India')
+                    'country'    => filled($validated['country'] ?? null) ? $validated['country'] : 'India',
+                    'lat'        => $validated['lat'] ?? null,
+                    'lon'        => $validated['lon'] ?? null,
+                ] + ($newLogo ? ['logo' => $newLogo] : []));
+
+                // The store email doubles as the signed-in user's login email.
+                $user->email = $validated['email'];
+                $user->phone = $validated['phone'];
+                if (filled($validated['password'] ?? null)) {
+                    $user->password = Hash::make($validated['password']);
+                }
+                $user->save();
+            });
+        } catch (\Throwable $e) {
+            if ($newLogo) {
+                Storage::disk('public')->delete($newLogo);
+            }
+            Log::error('Store profile update failed: ' . $e->getMessage());
+
+            return back()->withInput($request->except('password', 'password_confirmation', 'logo'))
+                ->withErrors(['form' => 'Your changes could not be saved. Please try again.']);
+        }
+
+        if ($newLogo && $oldLogo) {
+            Storage::disk('public')->delete($oldLogo);
+        }
+
+        return redirect()->route('storepanel.profile')->with('status', 'Store details updated.');
     }
 
     public function trays()

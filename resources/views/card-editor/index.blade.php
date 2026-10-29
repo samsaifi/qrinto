@@ -45,7 +45,8 @@ button{font:inherit;color:inherit}
 
 /* Header */
 .top{display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--surface);border-bottom:1px solid var(--line);min-width:0}
-.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:20px;letter-spacing:-.02em;flex:none}
+.brand{display:flex;align-items:center;flex:none}
+.brand img{height:40px;width:auto;display:block}
 .vsep{width:1px;height:26px;background:var(--line);margin:0 4px;flex:none}
 .title-field{display:flex;align-items:center;gap:6px;border:1px solid transparent;border-radius:8px;padding:5px 8px;color:var(--muted);min-width:0}
 .title-field:hover,.title-field:focus-within{border-color:var(--line)}
@@ -249,7 +250,7 @@ button{font:inherit;color:inherit}
   body{padding-bottom:64px}
   .hide-sm{display:none!important}
   .top{gap:4px;padding:0 8px}
-  .brand span{display:none}
+  .brand img{height:32px}
   .title-field input{width:110px}
   .btn{padding:0 14px}
   .main{grid-template-columns:minmax(0,1fr)}
@@ -271,10 +272,9 @@ button{font:inherit;color:inherit}
 <body>
 <div class="app">
   <header class="top">
-    <div class="brand" aria-label="qrinto">
-      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#11A463"/><rect x="7" y="7" width="7" height="7" rx="1.5" fill="#fff"/><rect x="18" y="7" width="7" height="7" rx="1.5" fill="#fff"/><rect x="7" y="18" width="7" height="7" rx="1.5" fill="#fff"/><circle cx="21.5" cy="21.5" r="3.5" fill="#fff"/></svg>
-      <span>qrinto</span>
-    </div>
+    <a class="brand" href="{{ url('/') }}" aria-label="Qrinto home">
+      <img src="{{ asset('images/svg-logo/Qrinto-logo-primary-lockup-no-tagline.svg') }}" alt="Qrinto">
+    </a>
     <div class="vsep hide-sm"></div>
     <label class="title-field" title="Rename card">
       <input id="title" aria-label="Card name" maxlength="60">

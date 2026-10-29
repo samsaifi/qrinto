@@ -16,16 +16,5 @@
             "source": "Git Bash",
             "icon": "terminal-git-bash"
         },
-        "🔊 FAAAH Shell": {
-            "path": "powershell.exe",
-            "args": [
-                "-NoExit",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "c:\\Users\\sadda\\.vscode\\extensions\\salmanfarsi-faaah.faaah-when-your-code-fails-to-run-0.0.2\\media\\faah-prompt.ps1"
-            ]
-        }
     },
-    "terminal.integrated.defaultProfile.windows": "🔊 FAAAH Shell"
 }

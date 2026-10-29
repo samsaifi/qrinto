@@ -2,360 +2,323 @@
 @section('title', 'Check & print | Qrinto')
 
 @section('content')
-    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans">
-        <div class="max-w-[1080px] mx-auto" x-data="checkFlow(
-            {{ Illuminate\Support\Js::from(['url' => $file['url'], 'name' => $file['name'], 'bytes' => $file['bytes'], 'type' => $file['type']]) }},
-            {{ Illuminate\Support\Js::from($trays) }},
-            {{ Illuminate\Support\Js::from($trayDims) }}
-        )" x-init="init()">
+    @php
+        $kindLabel = ['single' => 'Single-sided', 'duplex' => 'Double-sided card', 'fold' => 'Folded card'][$file['kind']] ?? 'Single-sided';
+    @endphp
+    <div class="ck" x-data="checkFlow(
+        {{ Illuminate\Support\Js::from([
+            'url' => $file['url'], 'name' => $file['name'], 'bytes' => $file['bytes'], 'type' => $file['type'],
+            'images' => $file['images'], 'kind' => $file['kind'], 'shape' => $file['shape'], 'page_limit' => $file['page_limit'],
+        ]) }},
+        {{ Illuminate\Support\Js::from($trays) }},
+        {{ Illuminate\Support\Js::from($trayDims) }}
+    )" x-init="init()">
 
-            <div class="flex items-center gap-2 mb-3 md:mb-4">
-                <a href="{{ route('localprint.pdf') }}"
-                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
-                    ← <span class="hidden md:inline">Back</span>
-                </a>
-                <h1 class="text-base md:hidden font-extrabold text-[#112419] tracking-tight">Check & print</h1>
-            </div>
+        {{-- Off-screen render targets: the existing tray/file canvases (still used
+             for the Print Settings modal preview) and the card-preview page stash. --}}
+        <div class="ck-offscreen" aria-hidden="true">
+            <canvas x-ref="pdfCanvas"></canvas>
+            <canvas x-ref="pdfCanvasTray"></canvas>
+            <div x-ref="cpStash"></div>
+        </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-start">
-
-                {{-- Left: file + specs --}}
-                <div class="bg-white border border-slate-200/80 rounded-xl md:rounded-2xl p-4 md:p-6">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <h2 class="font-bold text-slate-900 text-sm truncate" x-text="file.name" :title="file.name">
-                            </h2>
-                            <p class="mono text-[11px] text-slate-400 mt-0.5" x-text="prettySize(file.bytes)"></p>
-                        </div>
-                        <div x-show="file.type === 'pdf'" class="flex items-center gap-1.5 shrink-0">
-                            <button type="button" @click="prevPage()" :disabled="page <= 1 || pages <= 1"
-                                class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
-                                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
-                            </button>
-                            <span class="mono text-[11px] text-slate-500 tabular-nums w-14 text-center">
-                                <span x-text="page"></span> / <span x-text="pages || '-'"></span>
-                            </span>
-                            <button type="button" @click="nextPage()" :disabled="page >= pages || pages <= 1"
-                                class="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
-                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- View tabs: raw file vs. "as it prints on this tray" --}}
-                    <div class="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-lg p-0.5 mt-4"
-                        role="tablist">
-                        <button type="button" role="tab" @click="setViewMode('file')"
-                            :aria-selected="viewMode === 'file'"
-                            class="px-3 py-1.5 rounded-md text-[12px] font-bold transition"
-                            :class="viewMode === 'file' ? 'bg-white text-slate-900 shadow-sm' :
-                                'text-slate-500 hover:text-slate-700'">
-                            Your file
-                        </button>
-                        <button type="button" role="tab" @click="setViewMode('tray')"
-                            :aria-selected="viewMode === 'tray'"
-                            class="px-3 py-1.5 rounded-md text-[12px] font-bold transition"
-                            :class="viewMode === 'tray' ? 'bg-white text-slate-900 shadow-sm' :
-                                'text-slate-500 hover:text-slate-700'">
-                            How it prints on this tray
-                        </button>
-                    </div>
-
-                    <div class="bg-[#f2f7f2] rounded-xl mt-3 p-4 flex items-center justify-center relative overflow-hidden"
-                        :class="orientation === 'landscape' ? 'min-h-[160px] md:min-h-[260px]' :
-                            'min-h-[220px] md:min-h-[360px]'">
-                        <div x-show="!ready" x-cloak class="text-center">
-                            <div
-                                class="w-8 h-8 border-2 border-slate-300 border-t-[#287d3c] rounded-full animate-spin mx-auto">
-                            </div>
-                            <p class="mono text-[11px] text-slate-500 mt-3">Reading PDF…</p>
-                        </div>
-                        <div x-show="pdfError" x-cloak class="text-center">
-                            <i data-lucide="file-warning" class="w-6 h-6 text-red-500 mx-auto"></i>
-                            <p class="text-[12px] text-red-600 font-medium mt-2" x-text="pdfError"></p>
-                        </div>
-
-                        {{-- "Your file" view: the artwork at the SHARED preview scale,
-                             so it is the exact same display size as in the tray view. --}}
-                        <div x-show="viewMode === 'file' && ready && !pdfError" class="flex items-center justify-center">
-                            <div class="rounded-sm shadow-lg bg-white overflow-hidden" :style="fileBoxStyle()">
-                                <canvas x-show="file.type === 'pdf'" x-ref="pdfCanvas"
-                                    style="width:100%; height:100%; display:block;"></canvas>
-                                <img x-ref="imgPreview" x-show="file.type === 'image'" :src="file.url"
-                                    class="object-contain" style="width:100%; height:100%; display:block;" />
-                            </div>
-                        </div>
-
-                        {{-- "How it prints on this tray" view: the file placed on the
-                             selected paper. E2E fills the sheet (no border); non-E2E
-                             shows the ~0.2 in white margin that the printer leaves. --}}
-                        <div x-show="viewMode === 'tray' && ready && !pdfError"
-                            class="flex flex-col items-center gap-2 w-full">
-                            <p class="mono text-[10px] text-slate-500 text-center px-2 max-w-full truncate"
-                                x-text="trayPaperInfo()"></p>
-                            <div class="relative shadow-lg border border-slate-800 overflow-hidden"
-                                :style="trayPaperStyle()">
-                                {{-- Paper background: hatched red = white, unprinted
-                                     margin the printer leaves on non-E2E media. --}}
-                                <div class="absolute inset-0 pointer-events-none" x-show="!isE2ESelected()"
-                                    style="background: repeating-linear-gradient(45deg, #ffffff 0 4px, rgba(229,83,75,.3) 4px 8px);">
-                                </div>
-                                <div class="absolute inset-0 bg-white" x-show="isE2ESelected()"></div>
-                                {{-- Printable area: solid white, clips any artwork that
-                                     would fall into the unprintable margin. --}}
-                                <div class="absolute bg-white overflow-hidden" :style="trayContentStyle()">
-                                    {{-- Artwork, centered on the sheet at the SHARED
-                                         scale — same display size as the file tab. --}}
-                                    <div class="absolute left-1/2 top-1/2" :style="trayFileStyle()">
-                                        <canvas x-show="file.type === 'pdf'" x-ref="pdfCanvasTray"
-                                            style="width:100%; height:100%; display:block;"></canvas>
-                                        <img x-show="file.type === 'image'" :src="file.url" class="object-contain"
-                                            style="width:100%; height:100%; display:block;" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div x-show="!isE2ESelected()"
-                                class="flex items-center gap-1.5 text-[10px] text-slate-500 mt-1">
-                                <span class="inline-block w-2.5 h-2.5 shrink-0"
-                                    style="background: repeating-linear-gradient(45deg, #ffffff 0 2px, rgba(229,83,75,.3) 2px 4px); border: 1px solid #d1d5db;"></span>
-                                <span>White, unprinted paper (border on every side)</span>
-                            </div>
-                            <div x-show="isE2ESelected()"
-                                class="flex items-center gap-1.5 text-[10px] text-emerald-700 mt-1">
-                                <i data-lucide="check-circle" class="w-3 h-3 shrink-0"></i>
-                                <span>Borderless — prints to the edge</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mono text-[13px] text-slate-500 mt-5 space-y-1.5">
-                        <p x-show="file.type === 'pdf'"><span class="text-slate-900 font-bold" x-text="pages || '-'"></span>
-                            pages</p>
-                        <p><span class="text-slate-900 font-bold">
-                                <template x-if="dims"><span
-                                        x-text="`${fmt(dims.w)} × ${fmt(dims.h)} in`"></span></template>
-                                <template x-if="!dims"><span>-</span></template>
-                            </span> <span x-text="orientation ? `(${orientation})` : ''"></span></p>
-                        <p><span class="text-slate-900 font-bold" x-text="dpi ? `${dpi} dpi` : ''"></span> </p>
-                        <p><span class="text-slate-900 font-bold" x-text="colorMode || '-'"></span> color</p>
-                    </div>
-                </div>
-
-                {{-- Right: preflight + tray + print --}}
-                <div class="bg-white border border-slate-200/80 rounded-xl md:rounded-2xl p-4 md:p-6">
-                    <h2 class="font-bold text-slate-900 text-sm mb-4">Checks</h2>
-
-                    {{-- Dynamic check rows (size / orientation / E2E) with ack checkboxes --}}
-                    <div class="space-y-1">
-                        <template x-for="c in checks" :key="c.key">
-                            <div class="flex items-start gap-2.5 py-2.5 transition-colors"
-                                :class="c.ok ? 'border-b border-slate-100' : (c.severity === 'error' ?
-                                    'bg-red-50 border border-red-100 rounded-lg px-3 my-1' :
-                                    'bg-amber-50 border border-amber-100 rounded-lg px-3 my-1')">
-                                <template x-if="c.ok">
-                                    <i data-lucide="check" class="w-4 h-4 text-[#287d3c] mt-0.5 shrink-0"></i>
-                                </template>
-                                <template x-if="!c.ok && c.severity === 'warn'">
-                                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i>
-                                </template>
-                                <template x-if="!c.ok && c.severity === 'error'">
-                                    <i data-lucide="x" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
-                                </template>
-                                <div class="min-w-0">
-                                    <p class="text-[13px] font-bold text-slate-900" x-text="c.title"></p>
-                                    <p class="text-[12px] text-slate-500 mt-0.5" x-text="c.detail"></p>
-                                    <template x-if="!c.ok && c.ackLabel">
-                                        <label class="flex items-center gap-2 mt-2 cursor-pointer select-none">
-                                            <input type="checkbox" x-model="acks[c.key]"
-                                                class="w-4 h-4 rounded border-slate-300 shrink-0"
-                                                :class="c.severity === 'error' ? 'accent-red-600' : 'accent-amber-500'">
-                                            <span class="text-[12px] font-semibold"
-                                                :class="c.severity === 'error' ? 'text-red-700' : 'text-amber-700'"
-                                                x-text="c.ackLabel"></span>
-                                        </label>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-
-                    <div class="mt-5">
-                        @if ($storeName)
-                            <p class="text-[12px] text-slate-500 mb-3">
-                                <i data-lucide="store" class="w-3.5 h-3.5 inline -mt-0.5"></i>
-                                Printing as <span class="font-bold text-slate-700">{{ $storeName }}</span>
-                            </p>
-                        @endif
-
-                        {{-- PrintTrays bridge status --}}
-                        <div class="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg text-[12px]"
-                            :class="bridgeReady ? 'bg-emerald-50 text-emerald-700' : (bridgeChecking ?
-                                'bg-slate-50 text-slate-500' :
-                                'bg-red-50 text-red-600')">
-                            <template x-if="bridgeChecking">
-                                <span>
-                                    <div
-                                        class="w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin inline-block">
-                                    </div>
-                                    Connecting to PrintTrays…
-                                </span>
-                            </template>
-                            <template x-if="!bridgeChecking && bridgeReady">
-                                <span><i data-lucide="check-circle" class="w-3.5 h-3.5 inline -mt-0.5"></i> PrintTrays
-                                    connected <span class="text-slate-400" x-show="bridgeVersion"
-                                        x-text="'v' + bridgeVersion"></span></span>
-                            </template>
-                            <template x-if="!bridgeChecking && !bridgeReady">
-                                <span class="flex items-center gap-1.5 w-full">
-                                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
-                                    <span class="flex-1">PrintTrays is not installed or not running</span>
-                                    <button type="button" @click="showBridgeModal = true"
-                                        class="font-bold underline hover:no-underline shrink-0">Fix this</button>
-                                </span>
-                            </template>
-                        </div>
-
-                        {{-- PrintTrays download modal --}}
-                        <div x-show="showBridgeModal" x-cloak
-                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                            @keydown.escape.window="showBridgeModal = false">
-                            <div class="absolute inset-0 bg-black/40" @click="showBridgeModal = false"></div>
-                            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6" @click.stop>
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="font-bold text-slate-900 text-base">PrintTrays Required</h3>
-                                    <button type="button" @click="showBridgeModal = false"
-                                        class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
-                                        <i data-lucide="x" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-
-                                <div class="text-center py-4">
-                                    <div
-                                        class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
-                                        <i data-lucide="printer" class="w-7 h-7 text-red-500"></i>
-                                    </div>
-                                    <p class="text-sm text-slate-700 font-medium">PrintTrays is required to connect to your
-                                        local printer.</p>
-                                    <p class="text-[12px] text-slate-500 mt-2 leading-relaxed">
-                                        Download and install PrintTrays, then reload this page. It runs in the background
-                                        and
-                                        lets your browser communicate with printers on this PC.
-                                    </p>
-                                </div>
-
-                                <div class="space-y-2 mt-4">
-                                    <a href="https://noritsucanada.com/print-trays/download/" target="_blank"
-                                        class="w-full flex items-center justify-center gap-2 bg-[#287d3c] hover:bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
-                                        <i data-lucide="download" class="w-4 h-4"></i> Download PrintTrays
-                                    </a>
-                                    <a href="https://www.dropbox.com/scl/fi/d5f74l6ekg7r3hoxhvhwm/Noritsu_931BL_Driver_Setup-v2.2.exe?rlkey=m94hgu9eww95zj7mr7wtpli30&st=e658g2hc&e=1&dl=1"
-                                        target="_blank"
-                                        class="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
-                                        <i data-lucide="download" class="w-4 h-4"></i>Download 931-BL Multi
-                                        Driver
-                                    </a>
-                                    <button type="button" @click="trustCertificate()"
-                                        class="w-full flex items-center justify-center gap-2 border border-amber-300 bg-amber-50 text-amber-800 font-semibold py-2.5 rounded-xl text-sm hover:bg-amber-100 transition">
-                                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Trust PrintTrays's
-                                        certificate
-                                    </button>
-                                    <p class="text-[11px] text-slate-400 text-center leading-snug">
-                                        Click <em>Advanced → Proceed</em> in the window that opens, then close it — the
-                                        connection retries automatically. Not needed when installed with the real installer.
-                                    </p>
-                                    <button type="button"
-                                        @click="showBridgeModal = false; bridgeChecking = true; initBridge();"
-                                        class="w-full flex items-center justify-center gap-2 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
-                                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> I've installed it - retry
-                                        connection
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Printer list from PrintTrays --}}
-                        <div x-show="bridgeReady">
-                            <label class="text-sm font-semibold text-slate-700 mb-2 block">Select Printer</label>
-                            <div class="space-y-2" x-show="printers.length > 0">
-                                <template x-for="p in printers" :key="p.name">
-                                    <label
-                                        class="flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition"
-                                        :class="selectedPrinter === p.name ? 'border-[#287d3c] bg-[#f2f7f2]' :
-                                            'border-slate-200 hover:border-slate-300'"
-                                        @click="selectPrinter(p.name)">
-                                        <input type="radio" name="printer_radio" :checked="selectedPrinter === p.name"
-                                            :value="p.name" class="accent-[#287d3c] w-4 h-4">
-                                        <div class="min-w-0 flex-1">
-                                            <span class="font-bold text-[13px] text-slate-900" x-text="p.name"></span>
-                                            <p class="text-[11px] text-slate-400 mt-0.5" x-show="p.driver"
-                                                x-text="p.driver"></p>
-                                            <template x-if="selectedPrinter === p.name">
-                                                <p class="text-[11px] text-slate-500 mt-0.5" x-text="psSummary()"></p>
-                                            </template>
-                                        </div>
-                                        <template x-if="selectedPrinter === p.name">
-                                            <button type="button" @click.stop="openSettings()"
-                                                class="text-[11px] text-[#287d3c] font-bold hover:underline shrink-0">Settings</button>
-                                        </template>
-                                    </label>
-                                </template>
-                            </div>
-                            <p x-show="printers.length === 0" class="text-[12px] text-slate-400">No printers found on this
-                                PC.</p>
-                        </div>
-
-                        <div class="flex items-center justify-between mt-5">
-                            <label class="text-sm font-semibold text-slate-700">Copies</label>
-                            <div class="flex items-center gap-1.5">
-                                <button type="button" @click="copies = Math.max(1, copies - 1)"
-                                    class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition disabled:opacity-40"
-                                    :disabled="copies <= 1">−</button>
-                                <input type="number" name="copies" x-model.number="copies" min="1"
-                                    max="999"
-                                    class="w-16 text-center rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-bold focus:ring-2 focus:ring-[#287d3c] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                                <button type="button" @click="copies = Math.min(999, copies + 1)"
-                                    class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition disabled:opacity-40"
-                                    :disabled="copies >= 999">+</button>
-                            </div>
-                        </div>
-
-                        {{-- Print status toast --}}
-                        <div x-show="printMsg" x-cloak x-transition
-                            class="mt-3 px-3 py-2 rounded-lg text-[12px] font-medium"
-                            :class="printMsgKind === 'success' ? 'bg-emerald-50 text-emerald-700' : (
-                                printMsgKind === 'error' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'
-                            )"
-                            x-text="printMsg"></div>
-
-                        <button type="button" @click="doPrint()" :disabled="!canPrint || printing"
-                            class="w-full mt-4 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99] disabled:bg-slate-300 disabled:text-white disabled:cursor-not-allowed"
-                            :class="(!canPrint || printing) ? '' : (psChecksAllClear(checks) ?
-                                'bg-[#287d3c] hover:bg-emerald-800' : 'bg-red-600 hover:bg-red-700')">
-                            <template x-if="printing"><span>Sending to printer…</span></template>
-                            <template x-if="!printing && canPrint"><span>Print <span x-text="copies"></span> <span
-                                        x-text="copies == 1 ? 'copy' : 'copies'"></span></span></template>
-                            <template x-if="!printing && !canPrint"><span
-                                    x-text="blocker || 'Not ready to print'"></span></template>
-                        </button>
-
-                        <p class="text-center mt-3">
-                            <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank"
-                                class="text-[12px] text-slate-400 hover:text-[#287d3c] transition inline-flex items-center gap-1">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download PrintTrays
-                            </a>
+        <main class="ck-main">
+            {{-- header --}}
+            <div class="ck-head">
+                <div class="ck-head-l">
+                    <a href="{{ route('localprint.pdf') }}" class="ck-iconbtn" aria-label="Back to upload">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M15 6l-6 6 6 6" />
+                        </svg>
+                    </a>
+                    <div class="ck-min0">
+                        <h1 x-text="file.name" :title="file.name"></h1>
+                        <p class="ck-sub">
+                            {{ $kindLabel }} · <span x-text="cpPortrait ? 'Portrait' : 'Landscape'"></span>
+                            · <span x-text="(pages || '–') + (pages === 1 ? ' page' : ' pages')"></span>
+                            · <span x-text="prettySize(file.bytes)"></span>
                         </p>
                     </div>
-
                 </div>
-
+                <a href="{{ route('localprint.pdf') }}" class="ck-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
+                    </svg>Replace file</a>
             </div>
 
-            @include('partials.new-test-print-settings-modal')
+            <div class="ck-grid">
+                {{-- ── preview ───────────────────────────────────── --}}
+                <section class="ck-card ck-preview" aria-label="Animated preview">
+                    <div class="ck-bar">
+                        <div class="ck-chips" role="group" aria-label="Jump to side">
+                            <template x-for="ph in cpPhases()" :key="ph[0]">
+                                <button type="button" class="ck-chip" :class="cpPhaseOn(ph[1]) && 'on'"
+                                    @click="cpPickPhase(ph[1])" x-text="ph[0]"></button>
+                            </template>
+                        </div>
+                        <button type="button" class="ck-chip ck-play" x-show="cpKind !== 'single'"
+                            @click="cpTogglePlay()">
+                            <svg x-show="cpPlaying" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                                <path d="M8 5v14M16 5v14" />
+                            </svg>
+                            <svg x-show="!cpPlaying" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M7 5l12 7-12 7z" />
+                            </svg>
+                            <span x-text="cpPlaying ? 'Pause' : 'Play'"></span>
+                        </button>
+                    </div>
 
+                    <div class="ck-stage">
+                        <div x-show="!cpReady && !pdfError" class="ck-loading">
+                            <span class="ck-spin"></span>
+                            <span>Building preview…</span>
+                        </div>
+                        <p x-show="pdfError" x-cloak class="ck-error" x-text="pdfError"></p>
+
+                        <div x-show="cpReady && !pdfError" x-cloak class="ck-stage-in">
+                            {{-- single --}}
+                            <template x-if="cpKind === 'single'">
+                                <div class="ck-col">
+                                    <div class="ck-face-box" :class="cpPortrait ? 'p' : 'l'">
+                                        <div class="face"><canvas data-cp="front"></canvas></div>
+                                    </div>
+                                    <span class="ck-pill">Front · Page 1</span>
+                                </div>
+                            </template>
+
+                            {{-- double-sided: flips over --}}
+                            <template x-if="cpKind === 'duplex'">
+                                <div class="ck-col">
+                                    <div class="ck-face-box flip-card" :class="cpPortrait ? 'p' : 'l'"
+                                        :style="cpAnimStyle()" role="img" aria-label="Card flipping over: front, then back">
+                                        <div class="face"><canvas data-cp="front"></canvas></div>
+                                        <div class="face face-back"><canvas data-cp="back"></canvas></div>
+                                    </div>
+                                    <div class="ck-caps" aria-hidden="true">
+                                        <div class="cap d-front" :style="cpAnimStyle()"><span class="ck-pill">Front · Page 1</span></div>
+                                        <div class="cap d-back" :style="cpAnimStyle()"><span class="ck-pill">Back · Page 2</span></div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- folded portrait: opens like a book --}}
+                            <template x-if="cpKind === 'fold' && cpPortrait">
+                                <div class="ck-col ck-gap40">
+                                    <div class="fold-wrap" :style="cpAnimStyle()" role="img"
+                                        aria-label="Folded card opening like a book, then turning over to the back">
+                                        <div class="fold-base">
+                                            <div class="face"><canvas data-cp="inR"></canvas></div>
+                                            <div class="face face-back"><canvas data-cp="back"></canvas></div>
+                                        </div>
+                                        <div class="fold-leaf" :style="cpAnimStyle()">
+                                            <div class="face"><canvas data-cp="front"></canvas></div>
+                                            <div class="face face-back ck-inner-l"><canvas data-cp="inL"></canvas></div>
+                                        </div>
+                                    </div>
+                                    <div class="ck-caps" aria-hidden="true">
+                                        <div class="cap f-front" :style="cpAnimStyle()"><span class="ck-pill">Front cover</span></div>
+                                        <div class="cap f-in" :style="cpAnimStyle()"><span class="ck-pill">Inside spread</span></div>
+                                        <div class="cap f-back" :style="cpAnimStyle()"><span class="ck-pill">Back cover</span></div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- folded landscape: opens upward --}}
+                            <template x-if="cpKind === 'fold' && !cpPortrait">
+                                <div class="ck-col">
+                                    <div class="foldl-wrap" :style="cpAnimStyle()" role="img"
+                                        aria-label="Folded card opening upward, then turning over to the back">
+                                        <div class="foldl-base">
+                                            <div class="face"><canvas data-cp="inR"></canvas></div>
+                                            <div class="face face-back"><canvas data-cp="back"></canvas></div>
+                                        </div>
+                                        <div class="foldl-leaf" :style="cpAnimStyle()">
+                                            <div class="face"><canvas data-cp="front"></canvas></div>
+                                            <div class="face face-backx ck-inner-t"><canvas data-cp="inL"></canvas></div>
+                                        </div>
+                                    </div>
+                                    <div class="ck-caps" aria-hidden="true">
+                                        <div class="cap f-front" :style="cpAnimStyle()"><span class="ck-pill">Front cover</span></div>
+                                        <div class="cap f-in" :style="cpAnimStyle()"><span class="ck-pill">Inside spread</span></div>
+                                        <div class="cap f-back" :style="cpAnimStyle()"><span class="ck-pill">Back cover</span></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="ck-panels">
+                        <div class="ck-panels-head">
+                            <h2>Check each panel</h2>
+                            <button type="button" class="ck-btn" x-show="cpEditable && cpUsed >= 2" @click="cpToggleSwap()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" />
+                                </svg>Swap page 1 and 2</button>
+                        </div>
+                        <div class="ck-panel-grid">
+                            <template x-for="(pn, i) in cpPanels()" :key="pn.key">
+                                <div class="ck-panel">
+                                    <div class="ck-thumb" :class="cpPortrait ? 'p' : 'l'"><canvas :data-cp="pn.key"></canvas></div>
+                                    <span class="ck-min0 ck-grow">
+                                        <span class="ck-panel-n" x-text="(i + 1) + ' · ' + pn.label"></span>
+                                        <span class="ck-panel-src" x-text="cpSource(pn.key)"></span>
+                                    </span>
+                                    <button type="button" class="ck-iconbtn sm" x-show="cpCanFlip(pn.key)"
+                                        @click="cpToggleFlip(pn.key)" :aria-label="'Turn ' + pn.label.toLowerCase() + ' upside down'"
+                                        title="Turn upside down">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M20 11a8 8 0 1 0-2.3 5.7" />
+                                            <path d="M20 4v7h-7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="ck-note" x-show="cpNote()" x-cloak>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 8v5M12 16.5v.5" />
+                            </svg>
+                            <span x-text="cpNote()"></span>
+                        </div>
+                    </div>
+                </section>
+
+                {{-- ── print settings ────────────────────────────── --}}
+                <aside class="ck-card ck-side" aria-label="Print settings">
+                    <div>
+                        <div class="ck-side-head">
+                            <h2>Select Printer</h2>
+                            <button type="button" class="ck-textbtn" x-show="selectedPrinter" @click="openSettings()">Settings</button>
+                        </div>
+
+                        <div x-show="bridgeChecking" class="ck-muted ck-row"><span class="ck-spin sm"></span>Connecting to PrintTrays…</div>
+                        <div x-show="!bridgeChecking && !bridgeReady" x-cloak class="ck-alert">
+                            <span>PrintTrays is not installed or not running.</span>
+                            <button type="button" class="ck-textbtn" @click="showBridgeModal = true">Fix this</button>
+                        </div>
+                        <p x-show="bridgeReady && printers.length === 0" x-cloak class="ck-muted">No Noritsu printers found on this PC.</p>
+
+                        <div class="ck-trays" x-show="bridgeReady && printers.length">
+                            <template x-for="(p, i) in printers" :key="p.name">
+                                <button type="button" class="ck-tray" :class="selectedPrinter === p.name && 'on'"
+                                    :aria-pressed="String(selectedPrinter === p.name)" @click="selectPrinter(p.name)">
+                                    <span class="ck-radio"><span></span></span>
+                                    <span class="ck-min0">
+                                        <span class="ck-tray-name" x-text="p.name" :title="p.name"></span>
+                                        <span class="ck-tray-paper" x-show="trayPaper(p.name)" x-text="trayPaper(p.name)"></span>
+                                    </span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="ck-copies">
+                        <label for="ck-copies">Copies</label>
+                        <div class="ck-stepper">
+                            <button type="button" aria-label="Fewer copies" @click="copies = Math.max(1, copies - 1)" :disabled="copies <= 1">−</button>
+                            <input id="ck-copies" type="number" min="1" max="999" x-model.number="copies">
+                            <button type="button" aria-label="More copies" @click="copies = Math.min(999, copies + 1)" :disabled="copies >= 999">+</button>
+                        </div>
+                    </div>
+
+                    <div class="ck-foot">
+                        <div class="ck-muted">
+                            {{ $kindLabel }} · <span x-text="cpShape"></span>
+                            · <span x-text="selectedPrinter || 'no printer'"></span>
+                            · <span x-text="copies + (copies == 1 ? ' copy' : ' copies')"></span>
+                            @if ($storeName)
+                                · {{ $storeName }}
+                            @endif
+                        </div>
+
+                        <div x-show="printMsg" x-cloak class="ck-msg" :class="printMsgKind" x-text="printMsg"></div>
+
+                        <button type="button" class="ck-print" @click="doPrint()" :disabled="!canPrint || printing">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M7 9V3h10v6" />
+                                <rect x="3" y="9" width="18" height="8" rx="2" />
+                                <path d="M7 14h10v7H7z" />
+                            </svg>
+                            <span x-text="printing ? 'Sending to printer…' : (canPrint ? ('Print ' + copies + (copies == 1 ? ' copy' : ' copies')) : (blocker || 'Not ready to print'))"></span>
+                        </button>
+
+                        <div class="ck-status">
+                            <span class="ck-row">
+                                <span class="ck-dot" :class="bridgeReady ? 'ok' : (bridgeChecking ? '' : 'bad')"></span>
+                                <span x-text="bridgeReady ? ('PrintTrays connected' + (bridgeVersion ? ' · v' + bridgeVersion : '')) : (bridgeChecking ? 'Connecting…' : 'PrintTrays not connected')"></span>
+                            </span>
+                            <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank" rel="noopener">Download PrintTrays</a>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+
+        {{-- PrintTrays download modal --}}
+        <div x-show="showBridgeModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            @keydown.escape.window="showBridgeModal = false">
+            <div class="absolute inset-0 bg-black/40" @click="showBridgeModal = false"></div>
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6" @click.stop>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-900 text-base">PrintTrays Required</h3>
+                    <button type="button" @click="showBridgeModal = false"
+                        class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="text-center py-4">
+                    <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="printer" class="w-7 h-7 text-red-500"></i>
+                    </div>
+                    <p class="text-sm text-slate-700 font-medium">PrintTrays is required to connect to your local printer.</p>
+                    <p class="text-[12px] text-slate-500 mt-2 leading-relaxed">
+                        Download and install PrintTrays, then reload this page. It runs in the background and
+                        lets your browser communicate with printers on this PC.
+                    </p>
+                </div>
+                <div class="space-y-2 mt-4">
+                    <a href="https://noritsucanada.com/print-trays/download/" target="_blank"
+                        class="w-full flex items-center justify-center gap-2 bg-[#287d3c] hover:bg-emerald-800 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
+                        <i data-lucide="download" class="w-4 h-4"></i> Download PrintTrays
+                    </a>
+                    <a href="https://www.dropbox.com/scl/fi/d5f74l6ekg7r3hoxhvhwm/Noritsu_931BL_Driver_Setup-v2.2.exe?rlkey=m94hgu9eww95zj7mr7wtpli30&st=e658g2hc&e=1&dl=1"
+                        target="_blank"
+                        class="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-sm transition active:scale-[0.99]">
+                        <i data-lucide="download" class="w-4 h-4"></i>Download 931-BL Multi Driver
+                    </a>
+                    <button type="button" @click="trustCertificate()"
+                        class="w-full flex items-center justify-center gap-2 border border-amber-300 bg-amber-50 text-amber-800 font-semibold py-2.5 rounded-xl text-sm hover:bg-amber-100 transition">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Trust PrintTrays's certificate
+                    </button>
+                    <p class="text-[11px] text-slate-400 text-center leading-snug">
+                        Click <em>Advanced → Proceed</em> in the window that opens, then close it — the
+                        connection retries automatically. Not needed when installed with the real installer.
+                    </p>
+                    <button type="button" @click="showBridgeModal = false; bridgeChecking = true; initBridge();"
+                        class="w-full flex items-center justify-center gap-2 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-slate-50 transition">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> I've installed it - retry connection
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
+
+        @include('partials.new-test-print-settings-modal')
     </div>
 @endsection
+
+@push('styles')
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/local-print-check.css') }}?v={{ filemtime(public_path('css/local-print-check.css')) }}">
+@endpush
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
@@ -363,6 +326,7 @@
     <script
         src="{{ asset('js/new-test-print-settings.js') }}?v={{ filemtime(public_path('js/new-test-print-settings.js')) }}">
     </script>
+    <script src="{{ asset('js/card-preview.js') }}?v={{ filemtime(public_path('js/card-preview.js')) }}"></script>
     <script src="{{ asset('js/local-print-log.js') }}?v={{ filemtime(public_path('js/local-print-log.js')) }}"></script>
     <script>
         // Full route URLs so LPLog works under a sub-path (e.g. /qrinto).
@@ -385,6 +349,13 @@
 
             return {
                 // Shared Print Settings modal (state + capability loading).
+                // Animated card preview + panel mapping (public/js/card-preview.js).
+                ...window.cardPreviewMixin({
+                    kind: file.kind,
+                    shape: file.shape,
+                    limit: file.page_limit
+                }),
+
                 ...window.printSettingsMixin({
                     sizeOptions: @json($sizeOptions),
                     sizeDims: trayDims,
@@ -527,7 +498,16 @@
                 // Image files go out as type:'image' when the operator picks that
                 // path in the modal (new bridge's fast Chromium image path).
                 sendsImageNatively() {
-                    return this.file.type === 'image' && !!this.printImageAsImage;
+                    // Several images only go out as one merged PDF.
+                    return this.file.type === 'image' && !!this.printImageAsImage && this.cpImageUrls().length <= 1;
+                },
+
+                // Uploaded images in panel order (swap applied), capped to the kind.
+                cpImageUrls() {
+                    const all = (this.file.images || []).slice(0, this.cpLimit);
+                    if (!all.length) return [this.file.url];
+                    if (this.cpSwap && all.length >= 2) [all[0], all[1]] = [all[1], all[0]];
+                    return all;
                 },
                 // Print Settings modal state (showPaperModal, printPaperSize,
                 // dynamicSizes, caps, etc.) comes from window.printSettingsMixin.
@@ -630,6 +610,25 @@
                         });
                 },
 
+                // Short tray name for a printer queue ("… MP Tray" → "MP Tray").
+                // Paper loaded in a printer queue: the store's tray setup first,
+                // then the live driver settings for the selected queue.
+                storeTrayFor(name) {
+                    const n = String(name || '').trim().toLowerCase();
+                    return this.trays.find(t => String(t.printer || '').trim().toLowerCase() === n) || null;
+                },
+                trayPaper(name) {
+                    const t = this.storeTrayFor(name);
+                    if (t && (t.desc || t.gsm)) return [t.desc, t.gsm ? t.gsm + ' gsm' : ''].filter(Boolean).join(' · ');
+                    if (name === this.selectedPrinter) return this.psSummary();
+                    return '';
+                },
+
+                trayLabel(name) {
+                    const m = String(name || '').match(/(mp|multi[\s-]*purpose)\s*tray|tray\s*\d+/i);
+                    return m ? m[0].replace(/^mp/i, 'MP').replace(/^tray/i, 'Tray') : name;
+                },
+
                 get selectedPrinterInfo() {
                     return this.printers.find(p => p.name === this.selectedPrinter) || null;
                 },
@@ -679,13 +678,28 @@
                 // Apply (save) and Print (fallback when nothing was saved).
                 async buildPrintPdfBase64() {
                     if (this.file.type === 'image') {
-                        return await this.imageToPdfBase64(this.file.url);
+                        const urls = this.cpImageUrls();
+                        if (urls.length <= 1 || !window.PDFLib) return await this.imageToPdfBase64(urls[0] || this.file.url);
+                        // Several images (duplex / folded card): one page each, in
+                        // panel order, merged into a single print PDF.
+                        const merged = await window.PDFLib.PDFDocument.create();
+                        for (const u of urls) {
+                            const one = await window.PDFLib.PDFDocument.load(await this.imageToPdfBase64(u));
+                            (await merged.copyPages(one, one.getPageIndices())).forEach(p => merged.addPage(p));
+                        }
+                        return this.arrayBufToBase64((await merged.save()).buffer);
                     }
                     const res = await fetch(this.file.url, {
                         credentials: 'same-origin'
                     });
                     if (!res.ok) throw new Error('Failed to fetch file: HTTP ' + res.status);
                     let bytes = new Uint8Array(await res.arrayBuffer());
+                    // Only the pages this card kind uses, in panel order (swap / flips).
+                    try {
+                        bytes = await this.cpPrepareBytes(bytes);
+                    } catch (e) {
+                        console.warn('[localprint] page selection skipped:', e && e.message || e);
+                    }
                     if (window.PDFLib) {
                         try {
                             const {
@@ -905,6 +919,9 @@
                         // Artwork source for the modal's live preview.
                         this.psPreviewSrc = file.url;
                         this.ready = true;
+                        this.pages = (file.images || []).length || 1;
+                        this.cpLoadImages(file.images && file.images.length ? file.images : [file.url])
+                            .catch(e => console.warn('[localprint] card preview failed:', e));
                     } catch (e) {
                         this.pdfError = 'Could not load this image.';
                         this.ready = true;
@@ -951,7 +968,14 @@
                         this.psPreviewCount = this.pages || 1;
                         this.psPreviewIndex = 0;
 
-                        this.$nextTick(() => this.renderPage(1));
+                        // Sequential: pdf.js stalls when one page renders onto two
+                        // canvases at the same time.
+                        this.$nextTick(async () => {
+                            try {
+                                await this.renderPage(1);
+                            } catch (e) {}
+                            this.cpLoadPdf(_pdf).catch(e => console.warn('[localprint] card preview failed:', e));
+                        });
                     } catch (e) {
                         console.error('[localprint] PDF read failed:', e);
                         this.pdfError = (e && e.message) ? ('Could not read this PDF: ' + e.message) :
@@ -1360,8 +1384,10 @@
                 },
 
                 // Every failing check that offers an ack checkbox must be ticked.
+                // The size / E2E warning cards were removed from this page, so
+                // nothing is left to acknowledge — never block Print on them.
                 get checksPrintable() {
-                    return this.psChecksPrintable(this.checks);
+                    return true;
                 },
 
                 get canPrint() {
