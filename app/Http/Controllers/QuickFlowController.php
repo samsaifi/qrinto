@@ -216,6 +216,7 @@ class QuickFlowController extends Controller
 
         $subTypes = $type->children()
             ->where('is_active', 1)
+            ->where('show_in_templates', 1)
             ->orderBy('sort_order')
             ->get();
         

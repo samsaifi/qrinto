@@ -15,6 +15,11 @@
             $uploadList = $uploads->values();
         }
         $imageUrls = $uploadList->map(fn($u) => asset('storage/' . ltrim($u->file_path ?? $u->path, '/')))->all();
+        // Business card (BusinessCardController::preview): front + back renders.
+        $bizCard = $businessCard ?? null;
+        if ($bizCard) {
+            $imageUrls = array_values($bizCard['sides']);
+        }
         $totalPages = count($imageUrls);
         $cardKind = $totalPages >= 4 ? 'fold' : ($totalPages === 2 ? 'duplex' : 'single');
         $kindLabel = ['single' => 'Single-sided', 'duplex' => 'Double-sided card', 'fold' => 'Folded card'][$cardKind];
@@ -28,248 +33,282 @@
         </div>
 
         <main class="ck-main">
-            {{-- header --}}
-            <div class="ck-head">
-                <div class="ck-head-l">
-                    <a href="{{ route('localprint.sizes') }}" class="ck-iconbtn" aria-label="Back to sizes">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M15 6l-6 6 6 6" />
-                        </svg>
-                    </a>
-                    <div class="ck-min0">
-                        <h1>{{ $product->name ?? 'Your design' }}</h1>
-                        <p class="ck-sub">
-                            {{ $kindLabel }} · <span x-text="cpPortrait ? 'Portrait' : 'Landscape'"></span>
-                            · <span x-text="(pages || '–') + (pages === 1 ? ' page' : ' pages')"></span>
-                            @if (!empty($flowData['size_name']))
-                                · {{ $flowData['size_name'] }}
-                            @endif
-                        </p>
-                    </div>
-                </div>
-                @if (!empty($pdfUrl))
-                    <a href="{{ $pdfUrl }}" download class="ck-link">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M12 4v12M7 11l5 5 5-5M5 20h14" />
-                        </svg>Download PDF</a>
-                @endif
-            </div>
-
-            <div class="ck-grid">
-                {{-- ── preview ───────────────────────────────────── --}}
-                <section class="ck-card ck-preview" aria-label="Animated preview">
-                    <div class="ck-bar">
-                        <div class="ck-chips" role="group" aria-label="Jump to side">
-                            <template x-for="ph in cpPhases()" :key="ph[0]">
-                                <button type="button" class="ck-chip" :class="cpPhaseOn(ph[1]) && 'on'"
-                                    @click="cpPickPhase(ph[1])" x-text="ph[0]"></button>
-                            </template>
-                        </div>
-                        <button type="button" class="ck-chip ck-play" x-show="cpKind !== 'single'"
-                            @click="cpTogglePlay()">
-                            <svg x-show="cpPlaying" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
-                                <path d="M8 5v14M16 5v14" />
-                            </svg>
-                            <svg x-show="!cpPlaying" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M7 5l12 7-12 7z" />
-                            </svg>
-                            <span x-text="cpPlaying ? 'Pause' : 'Play'"></span>
-                        </button>
-                    </div>
-
-                    <div class="ck-stage">
-                        <div x-show="!cpReady && !pdfError" class="ck-loading">
-                            <span class="ck-spin"></span>
-                            <span>Building preview…</span>
-                        </div>
-                        <p x-show="pdfError" x-cloak class="ck-error" x-text="pdfError"></p>
-
-                        <div x-show="cpReady && !pdfError" x-cloak class="ck-stage-in">
-                            {{-- single --}}
-                            <template x-if="cpKind === 'single'">
-                                <div class="ck-col">
-                                    <div class="ck-face-box" :class="cpPortrait ? 'p' : 'l'">
-                                        <div class="face"><canvas data-cp="front"></canvas></div>
-                                    </div>
-                                    <span class="ck-pill">Front · Page 1</span>
-                                </div>
-                            </template>
-
-                            {{-- double-sided: flips over --}}
-                            <template x-if="cpKind === 'duplex'">
-                                <div class="ck-col">
-                                    <div class="ck-face-box flip-card" :class="cpPortrait ? 'p' : 'l'"
-                                        :style="cpAnimStyle()" role="img" aria-label="Card flipping over: front, then back">
-                                        <div class="face"><canvas data-cp="front"></canvas></div>
-                                        <div class="face face-back"><canvas data-cp="back"></canvas></div>
-                                    </div>
-                                    <div class="ck-caps" aria-hidden="true">
-                                        <div class="cap d-front" :style="cpAnimStyle()"><span class="ck-pill">Front · Page 1</span></div>
-                                        <div class="cap d-back" :style="cpAnimStyle()"><span class="ck-pill">Back · Page 2</span></div>
-                                    </div>
-                                </div>
-                            </template>
-
-                            {{-- folded portrait: opens like a book --}}
-                            <template x-if="cpKind === 'fold' && cpPortrait">
-                                <div class="ck-col ck-gap40">
-                                    <div class="fold-wrap" :style="cpAnimStyle()" role="img"
-                                        aria-label="Folded card opening like a book, then turning over to the back">
-                                        <div class="fold-base">
-                                            <div class="face"><canvas data-cp="inR"></canvas></div>
-                                            <div class="face face-back"><canvas data-cp="back"></canvas></div>
-                                        </div>
-                                        <div class="fold-leaf" :style="cpAnimStyle()">
-                                            <div class="face"><canvas data-cp="front"></canvas></div>
-                                            <div class="face face-back ck-inner-l"><canvas data-cp="inL"></canvas></div>
-                                        </div>
-                                    </div>
-                                    <div class="ck-caps" aria-hidden="true">
-                                        <div class="cap f-front" :style="cpAnimStyle()"><span class="ck-pill">Front cover</span></div>
-                                        <div class="cap f-in" :style="cpAnimStyle()"><span class="ck-pill">Inside spread</span></div>
-                                        <div class="cap f-back" :style="cpAnimStyle()"><span class="ck-pill">Back cover</span></div>
-                                    </div>
-                                </div>
-                            </template>
-
-                            {{-- folded landscape: opens upward --}}
-                            <template x-if="cpKind === 'fold' && !cpPortrait">
-                                <div class="ck-col">
-                                    <div class="foldl-wrap" :style="cpAnimStyle()" role="img"
-                                        aria-label="Folded card opening upward, then turning over to the back">
-                                        <div class="foldl-base">
-                                            <div class="face"><canvas data-cp="inR"></canvas></div>
-                                            <div class="face face-back"><canvas data-cp="back"></canvas></div>
-                                        </div>
-                                        <div class="foldl-leaf" :style="cpAnimStyle()">
-                                            <div class="face"><canvas data-cp="front"></canvas></div>
-                                            <div class="face face-backx ck-inner-t"><canvas data-cp="inL"></canvas></div>
-                                        </div>
-                                    </div>
-                                    <div class="ck-caps" aria-hidden="true">
-                                        <div class="cap f-front" :style="cpAnimStyle()"><span class="ck-pill">Front cover</span></div>
-                                        <div class="cap f-in" :style="cpAnimStyle()"><span class="ck-pill">Inside spread</span></div>
-                                        <div class="cap f-back" :style="cpAnimStyle()"><span class="ck-pill">Back cover</span></div>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
-                    <div class="ck-panels">
-                        <div class="ck-panels-head">
-                            <h2>Check each panel</h2>
-                            <button type="button" class="ck-btn" x-show="cpEditable && cpUsed >= 2" @click="cpToggleSwap()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" />
-                                </svg>Swap page 1 and 2</button>
-                        </div>
-                        <div class="ck-panel-grid">
-                            <template x-for="(pn, i) in cpPanels()" :key="pn.key">
-                                <div class="ck-panel">
-                                    <div class="ck-thumb" :class="cpPortrait ? 'p' : 'l'"><canvas :data-cp="pn.key"></canvas></div>
-                                    <span class="ck-min0 ck-grow">
-                                        <span class="ck-panel-n" x-text="(i + 1) + ' · ' + pn.label"></span>
-                                        <span class="ck-panel-src" x-text="cpSource(pn.key)"></span>
-                                    </span>
-                                    <button type="button" class="ck-iconbtn sm" x-show="cpCanFlip(pn.key)"
-                                        @click="cpToggleFlip(pn.key)" :aria-label="'Turn ' + pn.label.toLowerCase() + ' upside down'"
-                                        title="Turn upside down">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M20 11a8 8 0 1 0-2.3 5.7" />
-                                            <path d="M20 4v7h-7" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
-                        <div class="ck-note" x-show="cpNote()" x-cloak>
+            @if ($bizCard)
+                @include('quick-flow-pc.local-print.partials.business-card-sheet-layout')
+            @else
+                {{-- header --}}
+                <div class="ck-head">
+                    <div class="ck-head-l">
+                        <a href="{{ route('localprint.sizes') }}" class="ck-iconbtn" aria-label="Back to sizes">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 8v5M12 16.5v.5" />
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M15 6l-6 6 6 6" />
                             </svg>
-                            <span x-text="cpNote()"></span>
+                        </a>
+                        <div class="ck-min0">
+                            <h1>{{ $product->name ?? 'Your design' }}</h1>
+                            <p class="ck-sub">
+                                {{ $kindLabel }} · <span x-text="cpPortrait ? 'Portrait' : 'Landscape'"></span>
+                                · <span x-text="(pages || '–') + (pages === 1 ? ' page' : ' pages')"></span>
+                                @if (!empty($flowData['size_name']))
+                                    · {{ $flowData['size_name'] }}
+                                @endif
+                            </p>
                         </div>
                     </div>
-                </section>
+                    @if (!empty($pdfUrl))
+                        <a href="{{ $pdfUrl }}" download class="ck-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 4v12M7 11l5 5 5-5M5 20h14" />
+                            </svg>Download PDF</a>
+                    @endif
+                </div>
 
-                {{-- ── print settings ────────────────────────────── --}}
-                <aside class="ck-card ck-side" aria-label="Print settings">
-                    <div>
-                        <div class="ck-side-head">
-                            <h2>Select Printer</h2>
-                            <button type="button" class="ck-textbtn" x-show="selectedPrinter" @click="openSettings()">Settings</button>
+                <div class="ck-grid">
+                    {{-- ── preview ───────────────────────────────────── --}}
+                    <section class="ck-card ck-preview" aria-label="Animated preview">
+                        <div class="ck-bar">
+                            <div class="ck-chips" role="group" aria-label="Jump to side">
+                                <template x-for="ph in cpPhases()" :key="ph[0]">
+                                    <button type="button" class="ck-chip" :class="cpPhaseOn(ph[1]) && 'on'"
+                                        @click="cpPickPhase(ph[1])" x-text="ph[0]"></button>
+                                </template>
+                            </div>
+                            <button type="button" class="ck-chip ck-play" x-show="cpKind !== 'single'"
+                                @click="cpTogglePlay()">
+                                <svg x-show="cpPlaying" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                                    <path d="M8 5v14M16 5v14" />
+                                </svg>
+                                <svg x-show="!cpPlaying" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M7 5l12 7-12 7z" />
+                                </svg>
+                                <span x-text="cpPlaying ? 'Pause' : 'Play'"></span>
+                            </button>
                         </div>
 
-                        <div x-show="bridgeChecking" class="ck-muted ck-row"><span class="ck-spin sm"></span>Connecting to PrintTrays…</div>
-                        <div x-show="!bridgeChecking && !bridgeReady" x-cloak class="ck-alert">
-                            <span>PrintTrays is not installed or not running.</span>
-                            <button type="button" class="ck-textbtn" @click="showBridgeModal = true">Fix this</button>
+                        <div class="ck-stage">
+                            <div x-show="!cpReady && !pdfError" class="ck-loading">
+                                <span class="ck-spin"></span>
+                                <span>Building preview…</span>
+                            </div>
+                            <p x-show="pdfError" x-cloak class="ck-error" x-text="pdfError"></p>
+
+                            <div x-show="cpReady && !pdfError" x-cloak class="ck-stage-in">
+                                {{-- single --}}
+                                <template x-if="cpKind === 'single'">
+                                    <div class="ck-col">
+                                        <div class="ck-face-box" :class="cpPortrait ? 'p' : 'l'">
+                                            <div class="face"><canvas data-cp="front"></canvas></div>
+                                        </div>
+                                        <span class="ck-pill">Front · Page 1</span>
+                                    </div>
+                                </template>
+
+                                {{-- double-sided: flips over --}}
+                                <template x-if="cpKind === 'duplex'">
+                                    <div class="ck-col">
+                                        <div class="ck-face-box flip-card" :class="cpPortrait ? 'p' : 'l'"
+                                            :style="cpAnimStyle()" role="img"
+                                            aria-label="Card flipping over: front, then back">
+                                            <div class="face"><canvas data-cp="front"></canvas></div>
+                                            <div class="face face-back"><canvas data-cp="back"></canvas></div>
+                                        </div>
+                                        <div class="ck-caps" aria-hidden="true">
+                                            <div class="cap d-front" :style="cpAnimStyle()"><span class="ck-pill">Front ·
+                                                    Page 1</span></div>
+                                            <div class="cap d-back" :style="cpAnimStyle()"><span class="ck-pill">Back ·
+                                                    Page 2</span></div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                {{-- folded portrait: opens like a book --}}
+                                <template x-if="cpKind === 'fold' && cpPortrait">
+                                    <div class="ck-col ck-gap40">
+                                        <div class="fold-wrap" :style="cpAnimStyle()" role="img"
+                                            aria-label="Folded card opening like a book, then turning over to the back">
+                                            <div class="fold-base">
+                                                <div class="face"><canvas data-cp="inR"></canvas></div>
+                                                <div class="face face-back"><canvas data-cp="back"></canvas></div>
+                                            </div>
+                                            <div class="fold-leaf" :style="cpAnimStyle()">
+                                                <div class="face"><canvas data-cp="front"></canvas></div>
+                                                <div class="face face-back ck-inner-l"><canvas data-cp="inL"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ck-caps" aria-hidden="true">
+                                            <div class="cap f-front" :style="cpAnimStyle()"><span class="ck-pill">Front
+                                                    cover</span></div>
+                                            <div class="cap f-in" :style="cpAnimStyle()"><span class="ck-pill">Inside
+                                                    spread</span></div>
+                                            <div class="cap f-back" :style="cpAnimStyle()"><span class="ck-pill">Back
+                                                    cover</span></div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                {{-- folded landscape: opens upward --}}
+                                <template x-if="cpKind === 'fold' && !cpPortrait">
+                                    <div class="ck-col">
+                                        <div class="foldl-wrap" :style="cpAnimStyle()" role="img"
+                                            aria-label="Folded card opening upward, then turning over to the back">
+                                            <div class="foldl-base">
+                                                <div class="face"><canvas data-cp="inR"></canvas></div>
+                                                <div class="face face-back"><canvas data-cp="back"></canvas></div>
+                                            </div>
+                                            <div class="foldl-leaf" :style="cpAnimStyle()">
+                                                <div class="face"><canvas data-cp="front"></canvas></div>
+                                                <div class="face face-backx ck-inner-t"><canvas data-cp="inL"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ck-caps" aria-hidden="true">
+                                            <div class="cap f-front" :style="cpAnimStyle()"><span class="ck-pill">Front
+                                                    cover</span></div>
+                                            <div class="cap f-in" :style="cpAnimStyle()"><span class="ck-pill">Inside
+                                                    spread</span></div>
+                                            <div class="cap f-back" :style="cpAnimStyle()"><span class="ck-pill">Back
+                                                    cover</span></div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
-                        <p x-show="bridgeReady && printers.length === 0" x-cloak class="ck-muted">No Noritsu printers found on this PC.</p>
 
-                        <div class="ck-trays" x-show="bridgeReady && printers.length">
-                            <template x-for="(p, i) in printers" :key="p.name">
-                                <button type="button" class="ck-tray" :class="selectedPrinter === p.name && 'on'"
-                                    :aria-pressed="String(selectedPrinter === p.name)" @click="selectPrinter(p.name)">
-                                    <span class="ck-radio"><span></span></span>
-                                    <span class="ck-min0">
-                                        <span class="ck-tray-name" x-text="p.name" :title="p.name"></span>
-                                        <span class="ck-tray-paper" x-show="trayPaper(p.name)" x-text="trayPaper(p.name)"></span>
-                                    </span>
-                                </button>
-                            </template>
+                        <div class="ck-panels">
+                            <div class="ck-panels-head">
+                                <h2>Check each panel</h2>
+                                <button type="button" class="ck-btn" x-show="cpEditable && cpUsed >= 2"
+                                    @click="cpToggleSwap()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" />
+                                    </svg>Swap page 1 and 2</button>
+                            </div>
+                            <div class="ck-panel-grid">
+                                <template x-for="(pn, i) in cpPanels()" :key="pn.key">
+                                    <div class="ck-panel">
+                                        <div class="ck-thumb" :class="cpPortrait ? 'p' : 'l'"><canvas
+                                                :data-cp="pn.key"></canvas></div>
+                                        <span class="ck-min0 ck-grow">
+                                            <span class="ck-panel-n" x-text="(i + 1) + ' · ' + pn.label"></span>
+                                            <span class="ck-panel-src" x-text="cpSource(pn.key)"></span>
+                                        </span>
+                                        <button type="button" class="ck-iconbtn sm" x-show="cpCanFlip(pn.key)"
+                                            @click="cpToggleFlip(pn.key)"
+                                            :aria-label="'Turn ' + pn.label.toLowerCase() + ' upside down'"
+                                            title="Turn upside down">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M20 11a8 8 0 1 0-2.3 5.7" />
+                                                <path d="M20 4v7h-7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="ck-note" x-show="cpNote()" x-cloak>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 8v5M12 16.5v.5" />
+                                </svg>
+                                <span x-text="cpNote()"></span>
+                            </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="ck-copies">
-                        <label for="ck-copies">Copies</label>
-                        <div class="ck-stepper">
-                            <button type="button" aria-label="Fewer copies" @click="copies = Math.max(1, copies - 1)" :disabled="copies <= 1">−</button>
-                            <input id="ck-copies" type="number" min="1" max="999" x-model.number="copies">
-                            <button type="button" aria-label="More copies" @click="copies = Math.min(999, copies + 1)" :disabled="copies >= 999">+</button>
+                    {{-- ── print settings ────────────────────────────── --}}
+                    <aside class="ck-card ck-side" aria-label="Print settings">
+                        <div>
+                            <div class="ck-side-head">
+                                <h2>Select Printer</h2>
+                                <button type="button" class="ck-textbtn" x-show="selectedPrinter"
+                                    @click="openSettings()">Settings</button>
+                            </div>
+
+                            <div x-show="bridgeChecking" class="ck-muted ck-row"><span
+                                    class="ck-spin sm"></span>Connecting to PrintTrays…</div>
+                            <div x-show="!bridgeChecking && !bridgeReady" x-cloak class="ck-alert">
+                                <span>PrintTrays is not installed or not running.</span>
+                                <button type="button" class="ck-textbtn" @click="showBridgeModal = true">Fix
+                                    this</button>
+                            </div>
+                            <p x-show="bridgeReady && printers.length === 0" x-cloak class="ck-muted">No Noritsu printers
+                                found on this PC.</p>
+
+                            <div class="ck-trays" x-show="bridgeReady && printers.length">
+                                <template x-for="(p, i) in printers" :key="p.name">
+                                    <button type="button" class="ck-tray" :class="selectedPrinter === p.name && 'on'"
+                                        :aria-pressed="String(selectedPrinter === p.name)" @click="selectPrinter(p.name)">
+                                        <span class="ck-radio"><span></span></span>
+                                        <span class="ck-min0">
+                                            <span class="ck-tray-name" x-text="p.name" :title="p.name"></span>
+                                            <span class="ck-tray-paper" x-show="trayPaper(p.name)"
+                                                x-text="trayPaper(p.name)"></span>
+                                        </span>
+                                    </button>
+                                </template>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="ck-foot">
-                        <div class="ck-muted">
-                            {{ $kindLabel }} · <span x-text="cpShape"></span>
-                            · <span x-text="selectedPrinter || 'no printer'"></span>
-                            · <span x-text="copies + (copies == 1 ? ' copy' : ' copies')"></span>
-                            @if ($storeName)
-                                · {{ $storeName }}
-                            @endif
+                        <div class="ck-copies">
+                            <label for="ck-copies">Copies</label>
+                            <div class="ck-stepper">
+                                <button type="button" aria-label="Fewer copies"
+                                    @click="copies = Math.max(1, copies - 1)" :disabled="copies <= 1">−</button>
+                                <input id="ck-copies" type="number" min="1" max="999"
+                                    x-model.number="copies">
+                                <button type="button" aria-label="More copies"
+                                    @click="copies = Math.min(999, copies + 1)" :disabled="copies >= 999">+</button>
+                            </div>
                         </div>
 
-                        <div x-show="printMsg" x-cloak class="ck-msg" :class="printMsgKind" x-text="printMsg"></div>
+                        <div class="ck-foot">
+                            <div class="ck-muted">
+                                {{ $kindLabel }} · <span x-text="cpShape"></span>
+                                · <span x-text="selectedPrinter || 'no printer'"></span>
+                                · <span x-text="copies + (copies == 1 ? ' copy' : ' copies')"></span>
+                                @if ($storeName)
+                                    · {{ $storeName }}
+                                @endif
+                            </div>
 
-                        <button type="button" class="ck-print" @click="doPrint()" :disabled="!canPrint || printing">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M7 9V3h10v6" />
-                                <rect x="3" y="9" width="18" height="8" rx="2" />
-                                <path d="M7 14h10v7H7z" />
-                            </svg>
-                            <span x-text="printing ? 'Sending to printer…' : (canPrint ? ('Print ' + copies + (copies == 1 ? ' copy' : ' copies')) : (blocker || 'Not ready to print'))"></span>
-                        </button>
+                            <div x-show="printMsg" x-cloak class="ck-msg" :class="printMsgKind" x-text="printMsg">
+                            </div>
 
-                        <div class="ck-status">
-                            <span class="ck-row">
-                                <span class="ck-dot" :class="bridgeReady ? 'ok' : (bridgeChecking ? '' : 'bad')"></span>
-                                <span x-text="bridgeReady ? ('PrintTrays connected' + (bridgeVersion ? ' · v' + bridgeVersion : '')) : (bridgeChecking ? 'Connecting…' : 'PrintTrays not connected')"></span>
-                            </span>
-                            <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank" rel="noopener">Download PrintTrays</a>
+                            <button type="button" class="ck-print" @click="doPrint()"
+                                :disabled="!canPrint || printing">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M7 9V3h10v6" />
+                                    <rect x="3" y="9" width="18" height="8" rx="2" />
+                                    <path d="M7 14h10v7H7z" />
+                                </svg>
+                                <span
+                                    x-text="printing ? 'Sending to printer…' : (canPrint ? ('Print ' + copies + (copies == 1 ? ' copy' : ' copies')) : (blocker || 'Not ready to print'))"></span>
+                            </button>
+
+                            <div class="ck-status">
+                                <span class="ck-row">
+                                    <span class="ck-dot"
+                                        :class="bridgeReady ? 'ok' : (bridgeChecking ? '' : 'bad')"></span>
+                                    <span
+                                        x-text="bridgeReady ? ('PrintTrays connected' + (bridgeVersion ? ' · v' + bridgeVersion : '')) : (bridgeChecking ? 'Connecting…' : 'PrintTrays not connected')"></span>
+                                </span>
+                                <a href="https://noritsucanada.com/new-print-trays/download/" target="_blank"
+                                    rel="noopener">Download PrintTrays</a>
+                            </div>
                         </div>
-                    </div>
-                </aside>
-            </div>
+                    </aside>
+                </div>
+            @endif
         </main>
 
         {{-- PrintTrays download modal --}}
@@ -288,7 +327,8 @@
                     <div class="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
                         <i data-lucide="printer" class="w-7 h-7 text-red-500"></i>
                     </div>
-                    <p class="text-sm text-slate-700 font-medium">PrintTrays is required to connect to your local printer.</p>
+                    <p class="text-sm text-slate-700 font-medium">PrintTrays is required to connect to your local printer.
+                    </p>
                     <p class="text-[12px] text-slate-500 mt-2 leading-relaxed">
                         Download and install PrintTrays, then reload this page. It runs in the background and
                         lets your browser communicate with printers on this PC.
@@ -326,7 +366,8 @@
 
 @push('styles')
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/local-print-check.css') }}?v={{ filemtime(public_path('css/local-print-check.css')) }}">
+    <link rel="stylesheet"
+        href="{{ asset('css/local-print-check.css') }}?v={{ filemtime(public_path('css/local-print-check.css')) }}">
 @endpush
 
 @push('scripts')
@@ -351,7 +392,8 @@
         var __ptInstance = null;
 
         function previewFlow() {
-            const pdfUrl = @json($pdfUrl ?? null);
+            // `let`: the business card page swaps it to the selected sheet's PDF.
+            let pdfUrl = @json($pdfUrl ?? null);
             const trayDims = @json($trayDims);
             const imageUrls = @json($imageUrls ?? []);
             const totalPages = {{ $totalPages }};
@@ -380,6 +422,400 @@
 
                 slide: 0, // page shown in the book preview (synced via book-preview-page)
                 copies: 1,
+                @if ($bizCard)
+
+                    // ── Business card sheet layout (partials/business-card-sheet-layout) ──
+                    // The sheet, flip edge and back fine-tune pick the exact server PDF
+                    // variant that Print fetches; `copies` is the number of sheets.
+                    bcFormats: @json($bizCard['formats']),
+                    bcFormat: @json($bizCard['defaultFormat']),
+                    bcSides: @json($bizCard['sides']),
+                    bcNudgeMax: @json(\App\Services\BusinessCard\BusinessCard::NUDGE_MAX_MM),
+                    bcView: 'side', // side | flip | check
+                    bcStep: 'layout', // layout | print
+                    bcFlip: 'long',
+                    bcGap: 2, // sixteenths of an inch, for sheets with selectable gaps
+                    bcBleedSteps: @json($bizCard['bleedsMm']),
+                    bcBleedMm: @json($bizCard['defaultBleed']),
+                    bcArtBleedIn: @json($bizCard['artBleedIn']), // mirrored margin on the bcSides renders
+                    bcGuides: true, // cut line + safe area on every card
+                    bcDx: 0,
+                    bcDy: 0,
+                    bcCuts: true,
+                    bcNums: true,
+                    bcPlaying: true,
+                    bcTest: false,
+                    bcSheetsBeforeTest: 1,
+                    bcPapers: [
+                        ['7x10', '7 × 10 in', 'up to 10'],
+                        ['letter', 'Letter', '8.5 × 11 in · up to 12'],
+                        ['a4', 'A4', '210 × 297 mm · up to 12']
+                    ],
+                    bcGapSteps: [1, 2, 3],
+
+                    // Selected sheet; a sheet with selectable gaps takes the cells of the current gap.
+                    get bcF() {
+                        const f = this.bcFormats[this.bcFormat];
+                        if (!f.gaps) return f;
+                        const g = f.gaps[this.bcGap] ? this.bcGap : f.gap_default;
+                        return Object.assign({}, f, f.gaps[g], {
+                            gap: g
+                        });
+                    },
+
+                    get bcPaper() {
+                        return this.bcFormats[this.bcFormat].paper;
+                    },
+
+                    bcPaperFormats(paper) {
+                        return Object.values(this.bcFormats).filter(f => f.paper === paper);
+                    },
+
+                    // A sheet with selectable gaps is only offered when the current gap still fits all its cards.
+                    bcFits(f) {
+                        return !f.gaps || !!f.gaps[this.bcGap];
+                    },
+
+                    bcFrac(inches) {
+                        const n = Math.round(inches * 16);
+                        // Server inches are rounded to 0.001, so allow that much off a sixteenth.
+                        if (Math.abs(inches * 16 - n) > 0.02) return (+inches.toFixed(2)).toString();
+                        let d = 16,
+                            m = n;
+                        while (m && m % 2 === 0 && d > 1) {
+                            m /= 2;
+                            d /= 2;
+                        }
+                        return d === 1 ? String(m) : m + '/' + d;
+                    },
+
+                    // A distance on the sheet: millimetres on A4, inch fractions otherwise.
+                    bcDist(inches) {
+                        return this.bcPaper === 'a4' ? (inches * 25.4).toFixed(1) + ' mm' : this.bcFrac(inches) + ' in';
+                    },
+
+                    bcGapLabel(n) {
+                        return this.bcFrac(n / 16) + ' in' + (this.bcPaper === 'a4' ? ' · ' + (n / 16 * 25.4).toFixed(1) + ' mm' : '');
+                    },
+
+                    bcFormatDesc(f) {
+                        if (f.gaps && !this.bcFits(f)) {
+                            return 'Needs ' + this.bcFrac(Math.max(...Object.keys(f.gaps).map(Number)) / 16) +
+                                ' in or less between cards';
+                        }
+                        return f.summary;
+                    },
+
+                    bcSetPaper(paper) {
+                        if (paper === this.bcPaper) return;
+                        const list = this.bcPaperFormats(paper).filter(f => this.bcFits(f));
+                        const pick = list.find(f => f.recommended) || list[0];
+                        if (pick) this.bcSelect(pick.key);
+                    },
+
+                    // A gap the current sheet can't take moves to a same-paper sheet that can.
+                    bcSetGap(n) {
+                        if (!this.bcGapSteps.includes(n)) return;
+                        this.bcGap = n;
+                        const f = this.bcFormats[this.bcFormat];
+                        if (!this.bcFits(f)) {
+                            const alt = this.bcPaperFormats(f.paper).find(o => o.gaps && o.gaps[n]);
+                            if (alt) return this.bcSelect(alt.key);
+                        }
+                        this.bcSync();
+                    },
+
+                    get bcCutBody() {
+                        if (this.bcF.edge_to_edge) {
+                            return 'One down the middle, four across. Every cut goes through front and back at once.';
+                        }
+                        if (this.bcF.gaps) {
+                            return 'Trim the border on all four sides, then cut along both edges of every gap. Each cut goes through front and back at once; the thin strips between cards are thrown away.';
+                        }
+                        return 'Trim each gap on both sides. The gaps leave room for small slips.';
+                    },
+
+                    // Most bleed this sheet has room for (in): half the gap, no more than the margin.
+                    get bcMaxBleedIn() {
+                        const [gx, gy] = this.bcF.gutter_in,
+                            [mx, my] = this.bcF.margin_in;
+                        return Math.max(0, Math.min(gx > 0 ? gx / 2 : 0, gy > 0 ? gy / 2 : 0, mx, my));
+                    },
+
+                    // Bleed actually printed (in) - same rounding as BusinessCard::bleedPx.
+                    get bcBleedIn() {
+                        const want = Math.round(this.bcBleedMm / 25.4 * 300);
+                        const room = Math.floor(this.bcMaxBleedIn * 300 + 1e-6);
+                        return Math.max(0, Math.min(want, room)) / 300;
+                    },
+
+                    bcBleedFits(mm) {
+                        return mm / 25.4 <= this.bcMaxBleedIn + 1e-6;
+                    },
+
+                    bcBleedOn(mm) {
+                        return this.bcBleedFits(mm) && Math.abs(this.bcBleedIn * 25.4 - mm) < 0.05;
+                    },
+
+                    bcSetBleed(mm) {
+                        if (!this.bcBleedSteps.includes(mm) || !this.bcBleedFits(mm)) return;
+                        this.bcBleedMm = mm;
+                        this.bcSync();
+                    },
+
+                    get bcBleedHelp() {
+                        if (this.bcMaxBleedIn <= 0) {
+                            return 'Cards touch on this layout, so there’s no room for bleed. A cut that drifts shows a sliver of the next card, not white. Choose 6 per sheet, Letter or A4 to add bleed.';
+                        }
+                        const got = (this.bcBleedIn * 25.4).toFixed(1);
+                        const gap = Math.min(...this.bcF.gutter_in.filter(g => g > 0));
+                        return 'Artwork runs ' + got + ' mm past each cut line, so a cut or a front-to-back shift of up to ±' +
+                            got + ' mm shows no white edge. Keep text inside the blue safe line, 3.2 mm (1/8 in) in from the cut.' +
+                            (this.bcBleedIn * 25.4 < this.bcBleedMm - 0.06 ? ' Limited to ' + got + ' mm by the ' + this
+                                .bcDist(gap) + ' gap; widen the gap for more.' : '');
+                    },
+
+                    // Sheet drawn at 4 px per inch, centred in the 44 px icon, with its cut lines.
+                    get bcCutIcon() {
+                        const f = this.bcF,
+                            w = f.width_in * 4,
+                            h = f.height_in * 4,
+                            x0 = 22 - w / 2,
+                            y0 = 22 - h / 2;
+                        const line = (x1, y1, x2, y2) => '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' +
+                            y2 + '" stroke="#D64535" stroke-width="1.2" stroke-dasharray="2 2"></line>';
+                        return '<rect x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h +
+                            '" fill="#FFFFFF" stroke="#A9B3A6"></rect>' +
+                            f.cuts_x.map(p => line(x0 + p * w / 100, y0 - 2, x0 + p * w / 100, y0 + h + 2)).join('') +
+                            f.cuts_y.map(p => line(x0 - 4, y0 + p * h / 100, x0 + w + 4, y0 + p * h / 100)).join('');
+                    },
+
+                    get bcEdgeNote() {
+                        const f = this.bcF;
+                        if (f.edge_to_edge) {
+                            return 'Edge to edge needs borderless printing. If the printer leaves a white margin, the outer edge of the outside cards is trimmed slightly.';
+                        }
+                        if (!f.gaps) return '';
+                        const [mx, my] = f.margin_in;
+                        return 'Cards sit ' + this.bcDist(mx) + ' from the sides and ' + this.bcDist(my) +
+                            ' from the top and bottom, with ' + this.bcDist(f.gap / 16) + ' between. ' +
+                            (Math.min(mx, my) < 0.25 ? 'Load E2E paper so the printer can print that close to the edge.' :
+                                'This works on E2E or normal paper.') +
+                            ' If your design has a background color, extend it 1/16 in past the card edge so a slightly-off cut doesn’t show white.';
+                    },
+
+                    // Restore this design's last choices (validated), else A4 / long edge.
+                    bcInit() {
+                        let saved = {};
+                        try {
+                            const raw = localStorage.getItem(@json($bizCard['storageKey']));
+                            saved = raw && raw.charAt(0) === '{' ? JSON.parse(raw) : {
+                                format: raw
+                            };
+                        } catch (e) {}
+                        if (['long', 'short'].includes(saved.flip)) this.bcFlip = saved.flip;
+                        if (this.bcGapSteps.includes(saved.gap)) this.bcGap = saved.gap;
+                        if (this.bcBleedSteps.includes(saved.bleed)) this.bcBleedMm = saved.bleed;
+                        if (typeof saved.guides === 'boolean') this.bcGuides = saved.guides;
+                        this.bcDx = this.bcClampMm(saved.dx);
+                        this.bcDy = this.bcClampMm(saved.dy);
+                        this.bcSelect(this.bcFormats[saved.format] ? saved.format : @json($bizCard['defaultFormat']), false);
+                        // Sheets are portrait pages; the sheet preview replaces the modal's.
+                        this.printLandscape = false;
+                        this.psHasPreview = false;
+                    },
+
+                    bcSelect(key, remember = true) {
+                        const f = this.bcFormats[key];
+                        if (!f) return;
+                        if (!this.bcFits(f)) this.bcGap = f.gap_default;
+                        this.bcFormat = key;
+                        designSize.w = f.width_in;
+                        designSize.h = f.height_in;
+                        this.psDesign = {
+                            w: f.width_in,
+                            h: f.height_in
+                        };
+                        if (this.psSelectSizeForDims) this.psSelectSizeForDims(f.width_in, f.height_in);
+                        this.bcSync(remember);
+                    },
+
+                    bcSetFlip(edge) {
+                        if (!['long', 'short'].includes(edge)) return;
+                        this.bcFlip = edge;
+                        this.bcSync();
+                    },
+
+                    bcClampMm(v) {
+                        const n = Math.round((parseFloat(v) || 0) * 10) / 10;
+                        return Math.max(-this.bcNudgeMax, Math.min(this.bcNudgeMax, n)) || 0;
+                    },
+
+                    bcNudge(axis, delta) {
+                        if (axis === 'x') this.bcDx = this.bcClampMm(this.bcDx + delta);
+                        else this.bcDy = this.bcClampMm(this.bcDy + delta);
+                        this.bcSync();
+                    },
+
+                    bcResetNudge() {
+                        this.bcDx = 0;
+                        this.bcDy = 0;
+                        this.bcSync();
+                    },
+
+                    bcMm(v) {
+                        return (v > 0 ? '+' : '') + v.toFixed(1) + ' mm';
+                    },
+
+                    // Exact PDF variant for the current choices (validated again server-side).
+                    // forPrint: the PrintTrays job is always sent LONG-edge duplex - the
+                    // Noritsu driver turns a short-edge job into a landscape print. A
+                    // short-edge sheet is the long-edge sheet with its back turned 180°,
+                    // so print the long-edge variant with the nudge mirrored: the cards
+                    // land exactly where the short-edge sheet would put them.
+                    bcPdfUrl(forPrint = false) {
+                        const viaLong = forPrint && this.bcFlip === 'short';
+                        const dx = viaLong ? -this.bcDx : this.bcDx,
+                            dy = viaLong ? -this.bcDy : this.bcDy;
+                        const q = new URLSearchParams();
+                        if (this.bcF.gaps && this.bcF.gap !== this.bcF.gap_default) q.set('gap', this.bcF.gap);
+                        if (this.bcBleedMm !== @json($bizCard['defaultBleed'])) q.set('bleed', String(this.bcBleedMm));
+                        if (this.bcFlip !== 'long' && !viaLong) q.set('flip', this.bcFlip);
+                        if (dx) q.set('dx', dx.toFixed(1));
+                        if (dy) q.set('dy', dy.toFixed(1));
+                        if (this.bcTest) q.set('test', '1');
+                        const qs = q.toString();
+                        return this.bcF.url + (qs ? '?' + qs : '');
+                    },
+
+                    // Point Print / Download at the current variant and match the duplex edge.
+                    bcSync(remember = true) {
+                        pdfUrl = this.bcPdfUrl(true);
+                        this.savedPdfUrl = pdfUrl;
+                        this.savedPdfB64 = null;
+                        this.pdfError = null;
+                        this.printMsg = null;
+                        this.bcApplyDuplex();
+                        if (remember) {
+                            try {
+                                localStorage.setItem(@json($bizCard['storageKey']), JSON.stringify({
+                                    format: this.bcFormat,
+                                    gap: this.bcGap,
+                                    bleed: this.bcBleedMm,
+                                    guides: this.bcGuides,
+                                    flip: this.bcFlip,
+                                    dx: this.bcDx,
+                                    dy: this.bcDy
+                                }));
+                            } catch (e) {}
+                        }
+                    },
+
+                    // Page 1 = fronts, page 2 = backs. Always long edge - see bcPdfUrl(true).
+                    bcApplyDuplex() {
+                        this.printDuplex = 'longEdge';
+                        this.printPageOrder = 'frontToBack';
+                    },
+
+                    bcContinue() {
+                        this.bcStep = 'print';
+                    },
+
+                    // One outline-only sheet to check how the backs land on this printer.
+                    bcStartTest() {
+                        if (!this.bcTest) this.bcSheetsBeforeTest = this.copies;
+                        this.bcTest = true;
+                        this.copies = 1;
+                        this.bcView = 'check';
+                        this.bcStep = 'print';
+                        this.bcSync(false);
+                    },
+
+                    // Leave test-sheet mode: Print goes back to the real cards and the
+                    // sheet count the operator had set.
+                    bcExitTest() {
+                        if (!this.bcTest) return;
+                        this.bcTest = false;
+                        this.copies = this.bcSheetsBeforeTest;
+                        this.bcSync(false);
+                    },
+
+                    bcBackToLayout() {
+                        this.bcExitTest();
+                        this.bcStep = 'layout';
+                    },
+
+                    // Artwork inside a cell, turned exactly like the PDF does
+                    // (BusinessCardPdfService::sideTurns; CSS degrees are clockwise):
+                    // upright cards - back upside down for a short-edge flip;
+                    // turned cards  - front clockwise, back counter-clockwise (long
+                    // edge) or clockwise (short edge). A turned 3.5 × 2 card fills its
+                    // 2 × 3.5 cell: 175% of the cell width by 57.14% of its height.
+                    // The bcSides renders carry bcArtBleedIn of mirrored edge, so the
+                    // artwork (3.5 + 2T) × (2 + 2T) in is centred in the bleed box and
+                    // the box crops it to the current bleed - the card area stays put.
+                    bcImgStyle(side) {
+                        const back = side === 'back';
+                        const turn = !this.bcF.rotated ? (back && this.bcFlip === 'short' ? 180 : 0) :
+                            (!back ? 90 : (this.bcFlip === 'long' ? -90 : 90));
+                        const b = this.bcBleedIn,
+                            T = this.bcArtBleedIn;
+                        const [cw, ch] = this.bcF.rotated ? [2, 3.5] : [3.5, 2];
+                        const w = (3.5 + 2 * T) / (cw + 2 * b) * 100,
+                            h = (2 + 2 * T) / (ch + 2 * b) * 100;
+                        return 'inset:auto;left:50%;top:50%;width:' + w + '%;height:' + h + '%;' +
+                            'transform:translate(-50%,-50%) rotate(' + turn + 'deg)';
+                    },
+
+                    bcCellStyle(c) {
+                        return 'left:' + c.left + '%;top:' + c.top + '%;width:' + c.width + '%;height:' + c.height + '%';
+                    },
+
+                    // The card slot grown by the bleed on every side (what the PDF prints).
+                    bcBoxStyle(c) {
+                        const bx = this.bcBleedIn / this.bcF.width_in * 100,
+                            by = this.bcBleedIn / this.bcF.height_in * 100;
+                        return 'left:' + (c.left - bx) + '%;top:' + (c.top - by) + '%;width:' + (c.width + 2 * bx) +
+                            '%;height:' + (c.height + 2 * by) + '%';
+                    },
+
+                    // Cut line (card edge) and safe line (1/8 in inside it), inside a bleed box.
+                    bcGuideStyle(c, safe) {
+                        const [cw, ch] = this.bcF.rotated ? [2, 3.5] : [3.5, 2];
+                        const b = this.bcBleedIn,
+                            d = b + (safe ? 0.125 : 0);
+                        const ix = d / (cw + 2 * b) * 100,
+                            iy = d / (ch + 2 * b) * 100;
+                        return 'left:' + ix + '%;right:' + ix + '%;top:' + iy + '%;bottom:' + iy + '%';
+                    },
+
+                    bcBackCells() {
+                        return this.bcFlip === 'long' ? this.bcF.back : this.bcF.back_short;
+                    },
+
+                    // Back card seen through the paper from the front: the nudge is
+                    // mirrored on the axis the sheet turns over.
+                    bcGhostStyle(c) {
+                        const sx = this.bcFlip === 'long' ? -1 : 1;
+                        const sy = this.bcFlip === 'short' ? -1 : 1;
+                        const dx = sx * this.bcDx / 25.4 / this.bcF.width_in * 100;
+                        const dy = sy * this.bcDy / 25.4 / this.bcF.height_in * 100;
+                        return 'left:' + (c.left + dx) + '%;top:' + (c.top + dy) + '%;width:' + c.width + '%;height:' + c
+                            .height + '%';
+                    },
+
+                    get bcCutCount() {
+                        return this.bcF.cuts_x.length + this.bcF.cuts_y.length;
+                    },
+
+                    get bcCheckMsg() {
+                        if (!this.bcDx && !this.bcDy) return 'Every back sits exactly behind its front.';
+                        return 'Backs moved ' + Math.abs(this.bcDx).toFixed(1) + ' mm ' + (this.bcDx >= 0 ? 'right' :
+                                'left') +
+                            ' and ' + Math.abs(this.bcDy).toFixed(1) + ' mm ' + (this.bcDy >= 0 ? 'down' : 'up') +
+                            ' on the back side.';
+                    },
+                @endif
 
                 // The PDF that Print will actually send. savedPdfB64 holds the
                 // regenerated print-ready PDF IN MEMORY after "Apply" (base64) — no
@@ -451,7 +887,11 @@
                     // check rows come up CHECKED (and don't block printing) even after
                     // the operator changes the paper size — same as the /print/pdf/check
                     // page. They can still un-tick one explicitly if they want to.
-                    this.acks = Object.assign({ size: true, orient: true, e2e: true }, this.acks);
+                    this.acks = Object.assign({
+                        size: true,
+                        orient: true,
+                        e2e: true
+                    }, this.acks);
                     // The print PDF is ALWAYS re-laid in portrait (a landscape design is
                     // rotated -90° to fit), so the Orientation toggle only drives the
                     // on-screen preview — it never blocks or changes the printed output.
@@ -475,7 +915,10 @@
                     // size + the current slide's rendered page image, and keep the
                     // artwork in sync as the operator swipes between pages.
                     this.psHasPreview = true;
-                    if (designSize.w && designSize.h) this.psDesign = { w: designSize.w, h: designSize.h };
+                    if (designSize.w && designSize.h) this.psDesign = {
+                        w: designSize.w,
+                        h: designSize.h
+                    };
                     this.psPreviewSrc = imageUrls[this.slide] || imageUrls[0] || '';
                     this.psPreviewCount = imageUrls.length || totalPages || 1;
                     this.psPreviewIndex = this.slide;
@@ -489,8 +932,13 @@
                     ['printPaperSize', 'printLandscape', 'printScaleMode', 'printScaleFactor',
                         'selectedPrinter', 'printCustomW', 'printCustomH'
                     ].forEach((k) => {
-                        this.$watch(k, () => { this.savedPdfB64 = null; });
+                        this.$watch(k, () => {
+                            this.savedPdfB64 = null;
+                        });
                     });
+                    @if ($bizCard)
+                        this.bcInit();
+                    @endif
                     this.initBridge();
                     if (imageUrls.length) {
                         this.cpLoadImages(imageUrls).catch(e => console.warn('[localprint] card preview failed:', e));
@@ -562,8 +1010,10 @@
                             if (_pages === 2) _land = true;
                             else if (_pages === 4) _land = false;
                             else _land = String(designOrientation).toLowerCase() === 'landscape';
-                            const dW = _land ? Math.max(designSize.w, designSize.h) : Math.min(designSize.w, designSize.h);
-                            const dH = _land ? Math.min(designSize.w, designSize.h) : Math.max(designSize.w, designSize.h);
+                            const dW = _land ? Math.max(designSize.w, designSize.h) : Math.min(designSize.w, designSize
+                                .h);
+                            const dH = _land ? Math.min(designSize.w, designSize.h) : Math.max(designSize.w, designSize
+                                .h);
                             const pW = _land ? tw : th;
                             const pH = _land ? th : tw;
 
@@ -617,7 +1067,7 @@
                             PrintTrays
                         } = await import(
                             '{{ asset('js/new-testing-printtrays.js') }}?v={{ filemtime(public_path('js/new-testing-printtrays.js')) }}'
-                            );
+                        );
                         const pp = new PrintTrays({
                             downloadUrl: 'https://noritsucanada.com/new-print-trays/download/',
                             onNotInstalled: () => {},
@@ -716,7 +1166,9 @@
                     try {
                         // Always start from the ORIGINAL server design PDF so changing
                         // the size again never crops an already-cropped file.
-                        const res = await fetch(pdfUrl, { credentials: 'same-origin' });
+                        const res = await fetch(pdfUrl, {
+                            credentials: 'same-origin'
+                        });
                         if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
                         let bytes = new Uint8Array(await res.arrayBuffer());
 
@@ -892,10 +1344,16 @@
                 // Records only what is already being sent to PrintTrays (plus file
                 // / design context) — it never influences the print itself.
                 buildLogPayload(cfg) {
-                    const sizeLabel = (this.psSizeOptionsMap && this.psSizeOptionsMap[this.printPaperSize]) || this.printPaperSize || null;
+                    const sizeLabel = (this.psSizeOptionsMap && this.psSizeOptionsMap[this.printPaperSize]) || this
+                        .printPaperSize || null;
                     return {
-                        source: 'own_design_customizer_preview',
-                        source_url: '/print/own-design/sizes/customizer/preview',
+                        @if ($bizCard)
+                            source: 'business_card_preview',
+                            source_url: '/print/own-design/sizes/customizer/preview/business-card',
+                        @else
+                            source: 'own_design_customizer_preview',
+                            source_url: '/print/own-design/sizes/customizer/preview',
+                        @endif
                         print_type: 'pdf',
                         file: {
                             url: this.savedPdfUrl || pdfUrl || null,
@@ -903,7 +1361,8 @@
                             type: 'pdf',
                             size: null,
                             pages: totalPages || null,
-                            dimensions: (designSize.w && designSize.h) ? (designSize.w + ' x ' + designSize.h + ' in') : null,
+                            dimensions: (designSize.w && designSize.h) ? (designSize.w + ' x ' + designSize.h + ' in') :
+                                null,
                         },
                         printer_settings: {
                             printer_name: this.selectedPrinter || null,
@@ -931,12 +1390,28 @@
                             size_height: designSize.h || null,
                             orientation: designOrientation,
                             page_count: totalPages || null,
+                            @if ($bizCard)
+                                business_card_design_id: @json($bizCard['designId']),
+                                sheet_format: this.bcFormat,
+                                sheet_gap_in: this.bcF.gaps ? this.bcF.gap / 16 : null,
+                                bleed_mm: +(this.bcBleedIn * 25.4).toFixed(2),
+                                flip_edge: this.bcFlip,
+                                back_offset_mm: {
+                                    x: this.bcDx,
+                                    y: this.bcDy
+                                },
+                                alignment_test: this.bcTest,
+                            @endif
                         },
                     };
                 },
 
                 async doPrint() {
                     if (!this.canPrint || this.printing) return;
+                    @if ($bizCard)
+                        // The printer's live settings may have reset duplex - re-apply.
+                        this.bcApplyDuplex();
+                    @endif
                     this.printing = true;
                     this.printMsg = 'Sending to printer…';
                     this.printMsgKind = 'info';
@@ -960,8 +1435,16 @@
                             bytes = new Uint8Array(_bin.length);
                             for (let _i = 0; _i < _bin.length; _i++) bytes[_i] = _bin.charCodeAt(_i);
                         } else {
-                            const res = await fetch(pdfUrl, { credentials: 'same-origin' });
-                            if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
+                            const res = await fetch(pdfUrl, {
+                                credentials: 'same-origin'
+                            });
+                            @if ($bizCard)
+                                if (!res.ok) throw new Error('The ' + (this.bcTest ? 'alignment test' : this.bcF
+                                        .title) +
+                                    ' PDF could not be prepared (HTTP ' + res.status + '). Please try again.');
+                            @else
+                                if (!res.ok) throw new Error('Failed to fetch PDF: HTTP ' + res.status);
+                            @endif
                             bytes = new Uint8Array(await res.arrayBuffer());
                             // The driver doesn't reliably honour the `landscape` flag, so
                             // orientation + size are baked into the PDF itself — same
@@ -981,18 +1464,25 @@
                                 const _h = +(_sz.height / 72).toFixed(2);
                                 console.log('[localprint] PRINT → sending PDF', {
                                     source: alreadyPrepared ? 'applied (saved)' : 'built on print',
-                                    pdfPage_in: { w: _w, h: _h },
+                                    pdfPage_in: {
+                                        w: _w,
+                                        h: _h
+                                    },
                                     paperCode: this.printPaperSize,
                                     scaleMode: cfg.scaleMode,
                                     paperSize: cfg.paperSize || '(driver default)',
-                                    copies: cfg.copies, printer: this.selectedPrinter,
+                                    copies: cfg.copies,
+                                    printer: this.selectedPrinter,
                                 });
                                 this.printMsg = 'Printing PDF ' + _w + ' × ' + _h + ' in' +
-                                    ' · paper: ' + (this.selectedSizeLabel ? this.selectedSizeLabel() : this.printPaperSize) +
+                                    ' · paper: ' + (this.selectedSizeLabel ? this.selectedSizeLabel() : this
+                                        .printPaperSize) +
                                     ' · ' + (cfg.copies || 1) + ' ' + ((cfg.copies || 1) == 1 ? 'copy' : 'copies');
                                 this.printMsgKind = 'info';
                             }
-                        } catch (_e) { console.info('[localprint] print-time dim log skipped:', _e && _e.message); }
+                        } catch (_e) {
+                            console.info('[localprint] print-time dim log skipped:', _e && _e.message);
+                        }
 
                         // Create the audit log BEFORE sending to PrintTrays (non-fatal).
                         job = await LPLog.start(this.buildLogPayload(cfg));
@@ -1013,13 +1503,29 @@
                         const resp = await pp.print(this.selectedPrinter, b64, cfg);
                         this.ptLog('Print job sent successfully (spooler accepted it after ' +
                             ((performance.now() - _t0) / 1000).toFixed(1) + 's).');
-                        await LPLog.finish(job, { ok: true, response: resp });
+                        await LPLog.finish(job, {
+                            ok: true,
+                            response: resp
+                        });
                         this.printMsg = 'Sent to ' + this.selectedPrinter + '!';
                         this.printMsgKind = 'success';
+                        @if ($bizCard)
+                            // A test sheet is a one-off: switch Print back to the real cards
+                            // so the next print is never another outline-only sheet.
+                            if (this.bcTest) {
+                                this.bcExitTest();
+                                this.printMsg = 'Alignment test sheet sent to ' + this.selectedPrinter +
+                                    '. Check it against the light - Print now prints your cards.';
+                                this.printMsgKind = 'success';
+                            }
+                        @endif
                     } catch (e) {
                         console.error('[localprint] PrintTrays print failed:', e);
                         this.ptLog('Print failed: ' + ((e && e.message) || e));
-                        await LPLog.finish(job, { ok: false, error: (e && e.message) || 'Print failed.' });
+                        await LPLog.finish(job, {
+                            ok: false,
+                            error: (e && e.message) || 'Print failed.'
+                        });
                         this.printMsg = (e && e.message) || 'Print failed.';
                         this.printMsgKind = 'error';
                     } finally {
@@ -1084,9 +1590,14 @@
                     if (paren) return [parseFloat(paren[1]), parseFloat(paren[2])];
                     const bare = raw.match(new RegExp(pair, 'i'));
                     if (bare) return [parseFloat(bare[1]), parseFloat(bare[2])];
+                    // ISO sizes too: the driver reports A4 as e.g. 8.28 × 11.69 in, and
+                    // without a trim here an 8.27 × 11.69 sheet was rebuilt (scaled) onto it.
                     const named = {
                         'letter': [8.5, 11],
-                        'legal': [8.5, 14]
+                        'legal': [8.5, 14],
+                        'a4': [8.27, 11.69],
+                        'a5': [5.83, 8.27],
+                        'a3': [11.69, 16.54]
                     };
                     const key = raw.replace(/[-\s]*e2e.*$/i, '').trim().toLowerCase();
                     if (named[key]) return named[key];

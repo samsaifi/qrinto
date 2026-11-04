@@ -48,10 +48,14 @@ class ProductTypeController extends Controller
             'unit' => 'nullable|string|max:10',
             'sort_order' => 'nullable|integer',
             'is_active' => 'nullable|boolean',
+            'show_in_templates' => 'nullable|boolean',
+            'show_in_local_print' => 'nullable|boolean',
         ]);
 
         $data = $request->all();
         $data['is_active'] = $request->boolean('is_active');
+        $data['show_in_templates'] = $request->boolean('show_in_templates');
+        $data['show_in_local_print'] = $request->boolean('show_in_local_print');
 
         ProductType::create($data);
 
@@ -80,10 +84,14 @@ class ProductTypeController extends Controller
             'unit' => 'nullable|string|max:10',
             'sort_order' => 'nullable|integer',
             'is_active' => 'nullable|boolean',
+            'show_in_templates' => 'nullable|boolean',
+            'show_in_local_print' => 'nullable|boolean',
         ]);
 
         $data = $request->all();
         $data['is_active'] = $request->boolean('is_active');
+        $data['show_in_templates'] = $request->boolean('show_in_templates');
+        $data['show_in_local_print'] = $request->boolean('show_in_local_print');
 
         $productType->update($data);
 

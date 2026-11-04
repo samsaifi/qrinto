@@ -31,7 +31,7 @@ const ICONS={
 };
 const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 
-const FONTS=[['Onest',"'Onest',system-ui,sans-serif"],['Playfair Display',"'Playfair Display',Georgia,serif"],['Cormorant Garamond',"'Cormorant Garamond',Georgia,serif"],['DM Serif Display',"'DM Serif Display',Georgia,serif"],['Great Vibes',"'Great Vibes',cursive"],['Pinyon Script',"'Pinyon Script',cursive"],['Caveat',"'Caveat',cursive"],['Bebas Neue',"'Bebas Neue',Impact,sans-serif"],['Josefin Sans',"'Josefin Sans',system-ui,sans-serif"]];
+const FONTS=[['Onest',"'Onest',system-ui,sans-serif"],['Playfair Display',"'Playfair Display',Georgia,serif"],['Cormorant Garamond',"'Cormorant Garamond',Georgia,serif"],['DM Serif Display',"'DM Serif Display',Georgia,serif"],['Great Vibes',"'Great Vibes',cursive"],['Pinyon Script',"'Pinyon Script',cursive"],['Caveat',"'Caveat',cursive"],['Bebas Neue',"'Bebas Neue',Impact,sans-serif"],['Josefin Sans',"'Josefin Sans',system-ui,sans-serif"],['Montserrat',"'Montserrat',system-ui,sans-serif"],['Lora',"'Lora',Georgia,serif"],['Cinzel',"'Cinzel',Georgia,serif"],['Abril Fatface',"'Abril Fatface',Georgia,serif"],['Dancing Script',"'Dancing Script',cursive"],['Sacramento',"'Sacramento',cursive"],['Alex Brush',"'Alex Brush',cursive"],['Pacifico',"'Pacifico',cursive"],['Lobster',"'Lobster',cursive"],['Permanent Marker',"'Permanent Marker',cursive"],['Amatic SC',"'Amatic SC',cursive"],['Righteous',"'Righteous',system-ui,sans-serif"],['Fredoka',"'Fredoka',system-ui,sans-serif"]];
 const fontCss=n=>(FONTS.find(f=>f[0]===n)||FONTS[0])[1];
 const VIEWS={front:['front'],inside:['inL','inR'],back:['back']};
 const ORDER=['front','inside','back'];
@@ -67,41 +67,240 @@ const TEMPLATES=[
   back:{bg:'#e3efe8',els:[]}})}
 ];
 
-const LAYOUTS={
+/* Single-side designs: Front and Back replace one page, Inside replaces both inside pages */
+const pg=(bg,els)=>({bg,els});
+const MSG=o=>T({x:40,w:280,font:'Cormorant Garamond',size:20,color:'#3b3b3b',lh:1.55,...o});
+const PAGE_TEMPLATES={
  front:[
-  {name:'Photo and caption',make:()=>({front:[P({x:30,y:30,w:300,h:290}),T({y:340,text:'Add a heading',font:'Great Vibes',size:42}),T({x:40,y:412,w:280,text:'Add a short line',size:16})]})},
-  {name:'Full photo',make:()=>({front:[P({x:0,y:0,w:360,h:504,shape:'square'}),T({y:404,text:'Add a heading',font:'Playfair Display',size:42,color:'#ffffff'})]})},
-  {name:'Circle photo',make:()=>({front:[P({x:80,y:56,w:200,h:200,shape:'circle'}),T({y:286,text:'Add a heading',font:'Playfair Display',size:42}),T({x:40,y:372,w:280,text:'Add a short line',size:16})]})},
-  {name:'Words only',make:()=>({front:[T({y:166,text:'Add a heading',font:'Playfair Display',size:54,lh:1.15}),T({x:40,y:300,w:280,text:'Add a short line',size:18})]})}
+  {name:'Anniversary',make:()=>({front:TEMPLATES[0].make().front})},
+  {name:'Birthday',make:()=>({front:TEMPLATES[1].make().front})},
+  {name:'Wedding',make:()=>({front:TEMPLATES[2].make().front})},
+  {name:'Thank you',make:()=>({front:TEMPLATES[3].make().front})},
+  {name:'Congrats',make:()=>({front:pg('#1f2a44',[S({x:60,y:60,w:60,h:60,char:'🎉'}),S({x:240,y:90,w:56,h:56,char:'✨'}),T({y:170,text:'CONGRATS',font:'Bebas Neue',size:92,color:'#ffffff',ls:4,lh:1}),T({y:276,text:'you did it!',font:'Caveat',size:52,color:'#ffd166',bold:true,lh:1.1}),T({x:40,y:400,w:280,text:'SO PROUD OF YOU',font:'Josefin Sans',size:14,color:'#c9d3ec',ls:4})])})},
+  {name:'Christmas',make:()=>({front:pg('#14201a',[S({x:135,y:60,w:90,h:90,char:'🎄'}),T({y:180,text:'Merry Christmas',font:'Great Vibes',size:56,color:'#f6f1e7',lh:1.2}),T({y:262,text:'& A HAPPY NEW YEAR',font:'Cormorant Garamond',size:16,color:'#e8c547',ls:5}),T({x:40,y:400,w:280,text:'Warm wishes from our home to yours',font:'Cormorant Garamond',size:17,italic:true,color:'#cfdccf'})])})},
+  {name:'Get well soon',make:()=>({front:pg('#ddebf7',[S({x:140,y:70,w:80,h:80,char:'🌼'}),T({y:176,text:'Get well',font:'Caveat',size:76,color:'#1f3a93',bold:true,lh:1}),T({y:256,text:'soon',font:'Caveat',size:76,color:'#1f3a93',bold:true,lh:1}),T({x:40,y:372,w:280,text:'Sending sunshine and a big hug your way',font:'Onest',size:16,color:'#3d5a8c',lh:1.45})])})},
+  {name:'New baby',make:()=>({front:pg('#e9e3f5',[P({x:90,y:50,w:180,h:180,shape:'circle'}),T({y:256,text:'Welcome,',font:'Pinyon Script',size:46,color:'#5b3f8c',lh:1.2}),T({y:312,text:'little one',font:'Pinyon Script',size:46,color:'#5b3f8c',lh:1.2}),S({x:155,y:392,w:50,h:50,char:'🍼'})])})},
+  {name:'Mother\'s Day',make:()=>({front:pg('#fde2d2',[S({x:130,y:56,w:100,h:100,char:'💐'}),T({y:184,text:'Happy',font:'DM Serif Display',size:44,color:'#a23b2a',lh:1.1}),T({y:236,text:'Mother\'s Day',font:'DM Serif Display',size:44,color:'#a23b2a',lh:1.1}),T({x:40,y:330,w:280,text:'To the woman who taught me everything',font:'Cormorant Garamond',size:19,italic:true,color:'#6b3a2e',lh:1.4})])})},
+  {name:'Father\'s Day',make:()=>({front:pg('#e6edf5',[T({y:90,text:'BEST',font:'Bebas Neue',size:96,color:'#1f3a5f',ls:6,lh:1}),T({y:186,text:'DAD',font:'Bebas Neue',size:132,color:'#1f3a5f',ls:8,lh:1}),T({y:322,text:'ever',font:'Caveat',size:48,color:'#d9822b',bold:true,lh:1}),T({x:40,y:420,w:280,text:'HAPPY FATHER\'S DAY',font:'Josefin Sans',size:13,color:'#4a5d75',ls:4})])})},
+  {name:'Graduation',make:()=>({front:pg('#ffffff',[S({x:140,y:56,w:80,h:80,char:'🎓'}),T({y:160,text:'CLASS OF',font:'Josefin Sans',size:16,color:'#7a5c2e',ls:6}),T({y:186,text:'2026',font:'Bebas Neue',size:110,color:'#1f2a44',ls:4,lh:1}),T({y:310,text:'Congratulations, Graduate',font:'Playfair Display',size:24,italic:true,color:'#1f2a44'}),T({x:40,y:390,w:280,text:'The future is yours',font:'Cormorant Garamond',size:17,color:'#7a5c2e'})])})},
+  {name:'Sympathy',make:()=>({front:pg('#f6f1e7',[S({x:145,y:110,w:70,h:70,char:'🕊️'}),T({y:210,text:'With deepest',font:'Cormorant Garamond',size:34,italic:true,color:'#4f4a3e',lh:1.2}),T({y:254,text:'sympathy',font:'Cormorant Garamond',size:34,italic:true,color:'#4f4a3e',lh:1.2}),T({x:60,y:340,w:240,text:'Thinking of you and holding you close',font:'Cormorant Garamond',size:16,color:'#7a7466',lh:1.5})])})},
+  {name:'Valentine',make:()=>({front:pg('#fbe9ec',[S({x:50,y:50,w:50,h:50,char:'💕'}),S({x:260,y:70,w:44,h:44,char:'💖'}),S({x:130,y:120,w:100,h:100,char:'❤️'}),T({y:250,text:'Be mine',font:'Great Vibes',size:72,color:'#c2185b',lh:1.2}),T({x:40,y:356,w:280,text:'HAPPY VALENTINE\'S DAY',font:'Josefin Sans',size:13,color:'#9b2242',ls:4})])})},
+  {name:'Full photo',make:()=>({front:pg('#1f2a44',[P({x:0,y:0,w:360,h:504,shape:'square'}),T({y:388,text:'Hello there',font:'Playfair Display',size:46,color:'#ffffff',italic:true}),T({x:40,y:448,w:280,text:'A LITTLE NOTE FOR YOU',font:'Josefin Sans',size:12,color:'#ffffff',ls:4})])})},
+  {name:'Thinking of you',make:()=>({front:pg('#e3efe8',[S({x:145,y:80,w:70,h:70,char:'🌙'}),T({y:180,text:'Thinking',font:'Caveat',size:66,color:'#2e5d47',bold:true,lh:1}),T({y:250,text:'of you',font:'Caveat',size:66,color:'#2e5d47',bold:true,lh:1}),T({x:40,y:360,w:280,text:'Wherever you are, you are in my heart',font:'Onest',size:15,color:'#4a6b5a',lh:1.5})])})},
+  {name:'Love you',make:()=>({front:pg('#ffffff',[P({x:40,y:40,w:280,h:280,shape:'rounded'}),T({y:340,text:'I love you',font:'Pinyon Script',size:58,color:'#9b2242',lh:1.2}),T({x:40,y:420,w:280,text:'more than words can say',font:'Cormorant Garamond',size:17,italic:true,color:'#6b3a47'})])})},
+  {name:'New Year',make:()=>({front:pg('#1f2a44',[S({x:70,y:60,w:56,h:56,char:'✨'}),S({x:232,y:60,w:56,h:56,char:'🥂'}),T({y:150,text:'HAPPY',font:'Bebas Neue',size:72,color:'#e8c547',ls:6,lh:1}),T({y:220,text:'NEW YEAR',font:'Bebas Neue',size:72,color:'#e8c547',ls:6,lh:1}),T({y:310,text:'2027',font:'Playfair Display',size:52,italic:true,color:'#ffffff'}),T({x:40,y:410,w:280,text:'Cheers to new beginnings',font:'Cormorant Garamond',size:17,color:'#c9d3ec'})])})},
+  {name:'Engagement',make:()=>({front:pg('#f6f1e7',[S({x:150,y:40,w:60,h:60,char:'💍'}),P({x:70,y:116,w:220,h:220,shape:'circle'}),T({y:350,text:'She said yes!',font:'Great Vibes',size:52,color:'#7a5c2e',lh:1.2}),T({x:40,y:426,w:280,text:'CONGRATULATIONS ON YOUR ENGAGEMENT',font:'Josefin Sans',size:11,color:'#7a5c2e',ls:2})])})},
+  {name:'Housewarming',make:()=>({front:pg('#fff3d1',[S({x:130,y:70,w:100,h:100,char:'🏡'}),T({y:200,text:'Home',font:'DM Serif Display',size:64,color:'#7a4b12',lh:1}),T({y:268,text:'sweet home',font:'DM Serif Display',size:40,color:'#7a4b12',lh:1.1}),T({x:40,y:370,w:280,text:'Happy housewarming! May every room be full of laughter.',font:'Onest',size:15,color:'#7a5b12',lh:1.5})])})},
+  {name:'Retirement',make:()=>({front:pg('#fde2d2',[S({x:140,y:60,w:80,h:80,char:'☀️'}),T({y:166,text:'Happy',font:'Playfair Display',size:46,italic:true,color:'#a23b2a',lh:1.1}),T({y:222,text:'Retirement',font:'Playfair Display',size:52,color:'#a23b2a',lh:1.1}),T({x:40,y:330,w:280,text:'No alarms, no meetings. Just sunny days ahead.',font:'Cormorant Garamond',size:19,italic:true,color:'#6b3a2e',lh:1.45})])})},
+  {name:'Photo pair',make:()=>({front:pg('#ffffff',[P({x:24,y:24,w:150,h:220}),P({x:186,y:24,w:150,h:220}),T({y:276,text:'Best friends',font:'Caveat',size:58,color:'#2b59c3',bold:true,lh:1.1}),T({x:40,y:356,w:280,text:'Through every chapter, side by side',font:'Onest',size:15,color:'#555555',lh:1.5})])})}
  ],
  inside:[
-  {name:'Message on the right',make:()=>({inL:[],inR:[T({x:40,y:180,w:280,text:'Write your message here',font:'Cormorant Garamond',size:20,lh:1.55})]})},
-  {name:'Message on both sides',make:()=>({inL:[T({x:40,y:180,w:280,text:'Write your message here',font:'Cormorant Garamond',size:20,lh:1.55})],inR:[T({x:40,y:180,w:280,text:'And a little more here',font:'Cormorant Garamond',size:20,lh:1.55})]})},
-  {name:'Photo and message',make:()=>({inL:[P({x:30,y:30,w:300,h:444})],inR:[T({x:40,y:180,w:280,text:'Write your message here',font:'Cormorant Garamond',size:20,lh:1.55})]})},
-  {name:'Blank inside',make:()=>({inL:[],inR:[]})}
+  {name:'Anniversary',make:()=>{const p=TEMPLATES[0].make();return{inL:p.inL,inR:p.inR};}},
+  {name:'Birthday',make:()=>{const p=TEMPLATES[1].make();return{inL:p.inL,inR:p.inR};}},
+  {name:'Wedding',make:()=>{const p=TEMPLATES[2].make();return{inL:p.inL,inR:p.inR};}},
+  {name:'Thank you',make:()=>{const p=TEMPLATES[3].make();return{inL:p.inL,inR:p.inR};}},
+  {name:'Photo and message',make:()=>({inL:pg('#ffffff',[P({x:30,y:30,w:300,h:444})]),inR:pg('#ffffff',[MSG({y:170,text:'Write your message here. Tell them what this moment means to you.'}),T({x:40,y:330,w:280,text:'With love',font:'Great Vibes',size:32,color:'#9b2242'})])})},
+  {name:'Big quote',make:()=>({inL:pg('#fbe9ec',[T({y:120,text:'“',font:'Playfair Display',size:120,color:'#9b2242',lh:1}),T({x:40,y:230,w:280,text:'Love is composed of a single soul inhabiting two bodies.',font:'Playfair Display',size:22,italic:true,color:'#6b3a47',lh:1.4}),T({x:40,y:370,w:280,text:'ARISTOTLE',font:'Josefin Sans',size:12,color:'#9b2242',ls:4})]),inR:pg('#ffffff',[MSG({y:180,text:'Write your message here'})])})},
+  {name:'Two photos',make:()=>({inL:pg('#ffffff',[P({x:30,y:30,w:300,h:212}),P({x:30,y:262,w:300,h:212})]),inR:pg('#ffffff',[MSG({y:180,text:'A few of my favourite moments with you. Here is to making many more.'})])})},
+  {name:'Photo grid',make:()=>({inL:pg('#ffffff',[P({x:24,y:24,w:150,h:150}),P({x:186,y:24,w:150,h:150}),P({x:24,y:186,w:150,h:150}),P({x:186,y:186,w:150,h:150}),T({y:370,text:'Our favourite moments',font:'Caveat',size:30,color:'#2b2b2b',bold:true})]),inR:pg('#ffffff',[MSG({y:180,text:'Write your message here'})])})},
+  {name:'Colour block',make:()=>({inL:pg('#e3efe8',[S({x:140,y:200,w:80,h:80,char:'🌿'})]),inR:pg('#ffffff',[MSG({y:170,text:'Write your message here. Keep it short and from the heart.',color:'#1e3b2e'})])})},
+  {name:'Handwritten note',make:()=>({inL:pg('#fffdf5',[T({x:40,y:120,w:280,text:'Hey you,',font:'Caveat',size:36,color:'#2b2b2b',align:'left',bold:true}),T({x:40,y:180,w:280,text:'I just wanted to write you a little note to say how much you mean to me.',font:'Caveat',size:26,color:'#2b2b2b',align:'left',lh:1.35})]),inR:pg('#fffdf5',[T({x:40,y:120,w:280,text:'Thank you for every laugh, every late-night chat and every time you just got it.',font:'Caveat',size:26,color:'#2b2b2b',align:'left',lh:1.35}),T({x:40,y:330,w:280,text:'Always, me',font:'Caveat',size:32,color:'#e4572e',align:'right',bold:true})])})},
+  {name:'Letter',make:()=>({inL:pg('#ffffff',[]),inR:pg('#ffffff',[MSG({y:90,text:'Dear Alex,',align:'left',size:22,italic:true}),MSG({y:140,text:'Write your letter here. There is plenty of room to say everything you want to say.',align:'left'}),MSG({y:380,text:'With love,',align:'left',italic:true}),T({x:40,y:412,w:280,text:'Sam',font:'Great Vibes',size:34,color:'#3b3b3b',align:'left'})])})},
+  {name:'Congratulations',make:()=>({inL:pg('#1f2a44',[S({x:130,y:170,w:100,h:100,char:'🎉'}),T({y:290,text:'WELL DONE',font:'Bebas Neue',size:48,color:'#ffd166',ls:4,lh:1})]),inR:pg('#ffffff',[T({x:40,y:170,w:280,text:'You worked so hard for this, and it shows. Enjoy every bit of it. You earned it!',font:'Onest',size:17,color:'#1f2a44',lh:1.55})])})},
+  {name:'Holiday greeting',make:()=>({inL:pg('#14201a',[S({x:140,y:200,w:80,h:80,char:'❄️'})]),inR:pg('#ffffff',[MSG({y:160,text:'May your home be filled with warmth, your table with good food and your heart with joy this season.',color:'#14201a'}),T({x:40,y:340,w:280,text:'Season\'s greetings',font:'Great Vibes',size:32,color:'#8e1b1b'})])})},
+  {name:'Sympathy',make:()=>({inL:pg('#f6f1e7',[]),inR:pg('#f6f1e7',[MSG({y:170,text:'There are no words to ease the pain of losing someone so dear. Please know we are here for you, today and always.',color:'#4f4a3e',italic:true}),S({x:155,y:360,w:50,h:50,char:'🕊️'})])})},
+  {name:'Get well',make:()=>({inL:pg('#ddebf7',[S({x:130,y:190,w:100,h:100,char:'🌻'})]),inR:pg('#ffffff',[T({x:40,y:180,w:280,text:'Rest up, take it slow and know that lots of people are rooting for you. See you back on your feet soon!',font:'Caveat',size:26,color:'#1f3a93',lh:1.3})])})},
+  {name:'QR video message',make:()=>({inL:pg('#ffffff',[Q({x:110,y:150,w:140,h:140}),T({x:40,y:310,w:280,text:'Scan to watch my video message',font:'Onest',size:15,color:'#444444'})]),inR:pg('#ffffff',[MSG({y:180,text:'Write your message here'})])})},
+  {name:'Reasons I love you',make:()=>({inL:pg('#fbe9ec',[T({y:180,text:'Reasons',font:'Great Vibes',size:52,color:'#9b2242',lh:1.2}),T({y:246,text:'I love you',font:'Great Vibes',size:52,color:'#9b2242',lh:1.2})]),inR:pg('#ffffff',[MSG({y:110,text:'1. Your laugh\n2. The way you make coffee\n3. Your terrible jokes\n4. How you hold my hand\n5. Everything else',align:'left',lh:1.8,color:'#4a2a33'})])})},
+  {name:'From all of us',make:()=>({inL:pg('#ffffff',[T({y:200,text:'From all of us',font:'Playfair Display',size:36,italic:true,color:'#1f2a44',lh:1.2}),T({x:40,y:260,w:280,text:'SIGN BELOW',font:'Josefin Sans',size:12,color:'#7a7a7a',ls:4})]),inR:pg('#ffffff',[])})},
+  {name:'New baby',make:()=>({inL:pg('#e9e3f5',[P({x:60,y:80,w:240,h:240,shape:'circle'}),T({y:350,text:'Born June 3, 2026',font:'Josefin Sans',size:14,color:'#5b3f8c',ls:2})]),inR:pg('#ffffff',[MSG({y:180,text:'Welcome to the world, little one. You are already so loved.',color:'#5b3f8c'})])})},
+  {name:'Minimal',make:()=>({inL:pg('#ffffff',[]),inR:pg('#ffffff',[S({x:160,y:210,w:40,h:40,char:'✨'}),MSG({y:270,text:'Write a short line here',size:18,italic:true})])})}
  ],
  back:[
-  {name:'QR video message',make:()=>({back:[Q({x:120,y:150,w:120,h:120}),T({x:40,y:286,w:280,text:'Scan for a video message',size:14,color:'#444444'})]})},
+  {name:'Made with love',make:()=>({back:pg('#ffffff',[T({x:40,y:200,w:280,text:'Made with love',font:'Cormorant Garamond',size:18,italic:true})])})},
+  {name:'QR video message',make:()=>({back:pg('#ffffff',[Q({x:120,y:150,w:120,h:120}),T({x:40,y:286,w:280,text:'Scan for a video message',size:14,color:'#444444'})])})},
+  {name:'QR playlist',make:()=>({back:pg('#1f2a44',[S({x:155,y:90,w:50,h:50,char:'🎵'}),Q({x:120,y:160,w:120,h:120}),T({x:40,y:296,w:280,text:'Scan for our playlist',font:'Onest',size:14,color:'#ffffff'})])})},
+  {name:'QR photo album',make:()=>({back:pg('#f6f1e7',[Q({x:120,y:140,w:120,h:120}),T({x:40,y:276,w:280,text:'See all the photos',font:'Caveat',size:28,color:'#7a5c2e',bold:true})])})},
+  {name:'QR gift registry',make:()=>({back:pg('#ffffff',[S({x:155,y:80,w:50,h:50,char:'🎁'}),Q({x:120,y:150,w:120,h:120}),T({x:40,y:286,w:280,text:'OUR GIFT REGISTRY',font:'Josefin Sans',size:12,color:'#7a5c2e',ls:4})])})},
+  {name:'Little heart',make:()=>({back:pg('#fbe9ec',[S({x:150,y:200,w:60,h:60,char:'💖'})])})},
+  {name:'XOXO',make:()=>({back:pg('#ffffff',[T({y:210,text:'xoxo',font:'Great Vibes',size:56,color:'#9b2242',lh:1.2})])})},
+  {name:'Signature',make:()=>({back:pg('#ffffff',[T({x:40,y:190,w:280,text:'With love, from',font:'Cormorant Garamond',size:17,italic:true,color:'#5a4520'}),T({y:226,text:'Ana & Theo',font:'Pinyon Script',size:40,color:'#7a5c2e',lh:1.3})])})},
+  {name:'Est. date',make:()=>({back:pg('#f6f1e7',[T({y:190,text:'EST.',font:'Josefin Sans',size:14,color:'#7a5c2e',ls:6}),T({y:214,text:'2026',font:'Playfair Display',size:56,color:'#7a5c2e',lh:1.1})])})},
+  {name:'Small photo',make:()=>({back:pg('#ffffff',[P({x:105,y:130,w:150,h:150,shape:'circle'}),T({x:40,y:300,w:280,text:'Add a caption',font:'Cormorant Garamond',size:17,italic:true,color:'#555555'})])})},
+  {name:'Full photo',make:()=>({back:pg('#ffffff',[P({x:30,y:30,w:300,h:390,shape:'rounded'})])})},
+  {name:'Botanical',make:()=>({back:pg('#e3efe8',[S({x:100,y:210,w:48,h:48,char:'🌿'}),S({x:156,y:210,w:48,h:48,char:'🌸'}),S({x:212,y:210,w:48,h:48,char:'🌿'})])})},
+  {name:'Make a wish',make:()=>({back:pg('#1f2a44',[S({x:150,y:170,w:60,h:60,char:'✨'}),T({y:250,text:'Make a wish',font:'Caveat',size:40,color:'#ffd166',bold:true,lh:1.1})])})},
+  {name:'Handmade',make:()=>({back:pg('#fffdf5',[T({x:40,y:210,w:280,text:'handmade with love, just for you',font:'Caveat',size:28,color:'#e4572e',lh:1.3})])})},
+  {name:'Hashtag',make:()=>({back:pg('#ffffff',[T({x:40,y:200,w:280,text:'SHARE YOUR PHOTOS',font:'Josefin Sans',size:12,color:'#7a7a7a',ls:4}),T({y:228,text:'#AnaAndTheo',font:'Playfair Display',size:32,italic:true,color:'#1f2a44'})])})},
+  {name:'Short quote',make:()=>({back:pg('#ffffff',[T({x:50,y:190,w:260,text:'“The best things in life are the people we love.”',font:'Playfair Display',size:19,italic:true,color:'#3b3b3b',lh:1.5})])})},
+  {name:'From address',make:()=>({back:pg('#ffffff',[T({x:40,y:180,w:280,text:'FROM',font:'Josefin Sans',size:12,color:'#7a7a7a',ls:4,align:'left'}),T({x:40,y:204,w:280,text:'The Smith family\n12 Garden Lane\nLondon',font:'Onest',size:15,color:'#2a2a2a',align:'left',lh:1.6})])})},
+  {name:'Celebrate',make:()=>({back:pg('#fff3d1',[S({x:110,y:200,w:56,h:56,char:'🎈'}),S({x:194,y:200,w:56,h:56,char:'🎉'})])})},
+  {name:'Navy plain',make:()=>({back:pg('#1f2a44',[])})},
+  {name:'Blank',make:()=>({back:pg('#ffffff',[])})}
+ ]
+};
+
+/* Layout helpers: placeholder heading / short line / message / caption */
+const LH=o=>T({text:'Add a heading',font:'Playfair Display',size:42,...o});
+const LL=o=>T({x:40,w:280,text:'Add a short line',size:16,...o});
+const LM=o=>T({x:40,w:280,text:'Write your message here',font:'Cormorant Garamond',size:20,lh:1.55,...o});
+const LC=o=>T({x:40,w:280,text:'Add a caption',size:13,color:'#555555',...o});
+const LAYOUTS={
+ front:[
+  {name:'Photo and caption',make:()=>({front:[P({x:30,y:30,w:300,h:290}),T({y:340,text:'Add a heading',font:'Great Vibes',size:42}),LL({y:412})]})},
+  {name:'Full photo',make:()=>({front:[P({x:0,y:0,w:360,h:504,shape:'square'}),LH({y:404,color:'#ffffff'})]})},
+  {name:'Circle photo',make:()=>({front:[P({x:80,y:56,w:200,h:200,shape:'circle'}),LH({y:286}),LL({y:372})]})},
+  {name:'Words only',make:()=>({front:[LH({y:166,size:54,lh:1.15}),LL({y:300,size:18})]})},
+  {name:'Photo on top',make:()=>({front:[P({x:0,y:0,w:360,h:280,shape:'square'}),LH({y:304,size:38}),LL({y:378})]})},
+  {name:'Photo on bottom',make:()=>({front:[LH({y:56,size:38}),LL({y:126}),P({x:0,y:224,w:360,h:280,shape:'square'})]})},
+  {name:'Framed photo',make:()=>({front:[P({x:40,y:40,w:280,h:360,shape:'square'}),LH({y:420,size:34})]})},
+  {name:'Tall photo',make:()=>({front:[P({x:60,y:40,w:240,h:300}),LH({y:360,size:36}),LL({y:424})]})},
+  {name:'Two photos',make:()=>({front:[P({x:24,y:24,w:150,h:220}),P({x:186,y:24,w:150,h:220}),LH({y:270,size:38}),LL({y:346})]})},
+  {name:'Two photos stacked',make:()=>({front:[P({x:30,y:30,w:300,h:170}),P({x:30,y:212,w:300,h:170}),LH({y:402,size:34})]})},
+  {name:'Three photo strip',make:()=>({front:[P({x:24,y:24,w:100,h:300}),P({x:130,y:24,w:100,h:300}),P({x:236,y:24,w:100,h:300}),LH({y:346,size:36}),LL({y:418})]})},
+  {name:'Grid of four',make:()=>({front:[P({x:24,y:24,w:150,h:150}),P({x:186,y:24,w:150,h:150}),P({x:24,y:186,w:150,h:150}),P({x:186,y:186,w:150,h:150}),LH({y:356,size:34}),LL({y:420})]})},
+  {name:'One big, two small',make:()=>({front:[P({x:24,y:24,w:312,h:260}),P({x:24,y:296,w:150,h:110}),P({x:186,y:296,w:150,h:110}),LH({y:424,size:32})]})},
+  {name:'Small circle',make:()=>({front:[P({x:130,y:60,w:100,h:100,shape:'circle'}),LH({y:190,size:54,lh:1.15}),LL({y:306})]})},
+  {name:'Heading, photo, line',make:()=>({front:[LH({y:36,size:38}),P({x:40,y:108,w:280,h:280}),LL({y:416})]})},
+  {name:'Photo on the left',make:()=>({front:[P({x:0,y:0,w:180,h:504,shape:'square'}),LH({x:192,w:156,y:180,size:30,align:'left'}),LL({x:192,w:156,y:262,size:14,align:'left'})]})},
+  {name:'Photo on the right',make:()=>({front:[P({x:180,y:0,w:180,h:504,shape:'square'}),LH({x:12,w:156,y:180,size:30,align:'right'}),LL({x:12,w:156,y:262,size:14,align:'right'})]})},
+  {name:'Snapshot',make:()=>({front:[P({x:50,y:50,w:260,h:260,shape:'square'}),LH({y:330,font:'Caveat',size:40}),LL({y:400})]})},
+  {name:'Full photo, title on top',make:()=>({front:[P({x:0,y:0,w:360,h:504,shape:'square'}),LH({y:40,color:'#ffffff'}),LL({y:104,color:'#ffffff'})]})},
+  {name:'Small square photo',make:()=>({front:[P({x:105,y:120,w:150,h:150,shape:'square'}),LH({y:300,size:34}),LL({y:370})]})},
+  {name:'Big circle photo',make:()=>({front:[P({x:30,y:36,w:300,h:300,shape:'circle'}),LH({y:356,size:38}),LL({y:426})]})},
+  {name:'Bold title',make:()=>({front:[LH({y:150,font:'Bebas Neue',size:84,lh:1,ls:3}),LL({y:330,size:18})]})},
+  {name:'Photo with band',make:()=>({front:[P({x:0,y:0,w:360,h:384,shape:'square'}),LH({y:398,size:32}),LL({y:452,size:14})]})},
+  {name:'Corner title',make:()=>({front:[LH({x:30,w:300,y:380,size:36,align:'left'}),LL({x:30,w:300,y:440,align:'left'})]})},
+  {name:'Banner photo',make:()=>({front:[LH({y:56,size:38}),P({x:24,y:140,w:312,h:210}),LL({y:378})]})}
+ ],
+ inside:[
+  {name:'Message on the right',make:()=>({inL:[],inR:[LM({y:180})]})},
+  {name:'Message on both sides',make:()=>({inL:[LM({y:180})],inR:[LM({y:180,text:'And a little more here'})]})},
+  {name:'Photo and message',make:()=>({inL:[P({x:30,y:30,w:300,h:444})],inR:[LM({y:180})]})},
+  {name:'Blank inside',make:()=>({inL:[],inR:[]})},
+  {name:'Message on the left',make:()=>({inL:[LM({y:180})],inR:[]})},
+  {name:'Message and photo',make:()=>({inL:[LM({y:180})],inR:[P({x:30,y:30,w:300,h:444})]})},
+  {name:'Two photos and message',make:()=>({inL:[P({x:30,y:30,w:300,h:212}),P({x:30,y:262,w:300,h:212})],inR:[LM({y:180})]})},
+  {name:'Photo grid and message',make:()=>({inL:[P({x:24,y:24,w:150,h:150}),P({x:186,y:24,w:150,h:150}),P({x:24,y:186,w:150,h:150}),P({x:186,y:186,w:150,h:150}),LC({y:360})],inR:[LM({y:180})]})},
+  {name:'Full-bleed photo',make:()=>({inL:[P({x:0,y:0,w:360,h:504,shape:'square'})],inR:[LM({y:180})]})},
+  {name:'Circle photo and caption',make:()=>({inL:[P({x:60,y:90,w:240,h:240,shape:'circle'}),LC({y:356})],inR:[LM({y:180})]})},
+  {name:'Heading and message',make:()=>({inL:[],inR:[LH({y:120,size:34}),LM({y:200})]})},
+  {name:'Heading left, message right',make:()=>({inL:[LH({y:210,size:40})],inR:[LM({y:180})]})},
+  {name:'Photos on both sides',make:()=>({inL:[P({x:30,y:30,w:300,h:444})],inR:[P({x:30,y:30,w:300,h:444})]})},
+  {name:'Photo and words, twice',make:()=>({inL:[P({x:30,y:30,w:300,h:240}),LM({y:296})],inR:[P({x:30,y:30,w:300,h:240}),LM({y:296,text:'And a little more here'})]})},
+  {name:'QR and message',make:()=>({inL:[Q({x:110,y:160,w:140,h:140}),LC({y:318,text:'Scan to watch my video'})],inR:[LM({y:180})]})},
+  {name:'Message and QR',make:()=>({inL:[LM({y:180})],inR:[Q({x:110,y:160,w:140,h:140}),LC({y:318,text:'Scan to watch my video'})]})},
+  {name:'Message and signature',make:()=>({inL:[],inR:[LM({y:150}),T({x:40,y:350,w:280,text:'Your name',font:'Great Vibes',size:34})]})},
+  {name:'Letter',make:()=>({inL:[],inR:[LM({y:80,text:'Dear friend,',align:'left',italic:true}),LM({y:130,text:'Write your letter here',align:'left'}),LM({y:380,text:'With love,',align:'left',italic:true})]})},
+  {name:'Photo strip and message',make:()=>({inL:[P({x:30,y:24,w:300,h:144}),P({x:30,y:180,w:300,h:144}),P({x:30,y:336,w:300,h:144})],inR:[LM({y:180})]})},
+  {name:'Small photo above message',make:()=>({inL:[],inR:[P({x:105,y:60,w:150,h:150,shape:'circle'}),LM({y:240})]})},
+  {name:'Long letter',make:()=>({inL:[LM({y:80,align:'left'})],inR:[LM({y:80,text:'And a little more here',align:'left'})]})},
+  {name:'Message above photo',make:()=>({inL:[],inR:[LM({y:70}),P({x:30,y:250,w:300,h:224})]})},
+  {name:'Captioned photo',make:()=>({inL:[P({x:30,y:30,w:300,h:380}),LC({y:428})],inR:[LM({y:180})]})},
+  {name:'Two headings',make:()=>({inL:[LH({y:220,size:36})],inR:[LH({y:220,size:36,text:'And another'})]})},
+  {name:'Photo, QR and message',make:()=>({inL:[LM({y:180})],inR:[P({x:30,y:30,w:300,h:260}),Q({x:130,y:320,w:100,h:100}),LC({y:432,text:'Scan me'})]})}
+ ],
+ back:[
+  {name:'QR video message',make:()=>({back:[Q({x:120,y:150,w:120,h:120}),LC({y:286,text:'Scan for a video message',size:14,color:'#444444'})]})},
   {name:'Short note',make:()=>({back:[T({x:40,y:200,w:280,text:'Made with love',font:'Cormorant Garamond',size:18,italic:true})]})},
-  {name:'Blank back',make:()=>({back:[]})}
+  {name:'Blank back',make:()=>({back:[]})},
+  {name:'Small QR at bottom',make:()=>({back:[Q({x:140,y:330,w:80,h:80}),LC({y:420,text:'Scan me'})]})},
+  {name:'Large QR',make:()=>({back:[Q({x:90,y:110,w:180,h:180}),LC({y:310,text:'Scan for a surprise',size:14})]})},
+  {name:'Heading and QR',make:()=>({back:[LH({y:80,size:30}),Q({x:120,y:160,w:120,h:120}),LC({y:300,text:'Scan for a video message'})]})},
+  {name:'QR left, text right',make:()=>({back:[Q({x:40,y:190,w:120,h:120}),LC({x:176,w:150,y:226,text:'Scan for a video message',align:'left',size:14})]})},
+  {name:'Text left, QR right',make:()=>({back:[LC({x:34,w:150,y:226,text:'Scan for a video message',align:'right',size:14}),Q({x:200,y:190,w:120,h:120})]})},
+  {name:'Circle photo',make:()=>({back:[P({x:105,y:130,w:150,h:150,shape:'circle'}),LC({y:300})]})},
+  {name:'Full photo',make:()=>({back:[P({x:30,y:30,w:300,h:400})]})},
+  {name:'Photo and note',make:()=>({back:[P({x:30,y:30,w:300,h:240}),LL({y:300})]})},
+  {name:'Two small photos',make:()=>({back:[P({x:30,y:150,w:145,h:145}),P({x:185,y:150,w:145,h:145}),LC({y:316})]})},
+  {name:'Photo and QR',make:()=>({back:[P({x:30,y:40,w:300,h:220}),Q({x:130,y:280,w:100,h:100}),LC({y:394,text:'Scan me'})]})},
+  {name:'Heading only',make:()=>({back:[LH({y:210,size:36})]})},
+  {name:'Heading and note',make:()=>({back:[LH({y:170,size:34}),LL({y:240})]})},
+  {name:'Quote',make:()=>({back:[T({x:50,y:190,w:260,text:'Add a favourite quote',font:'Playfair Display',size:20,italic:true,lh:1.5})]})},
+  {name:'Signature',make:()=>({back:[T({y:200,text:'Your name',font:'Great Vibes',size:40,lh:1.3})]})},
+  {name:'Note at the top',make:()=>({back:[LL({y:60})]})},
+  {name:'Note at the bottom',make:()=>({back:[LL({y:410})]})},
+  {name:'Address block',make:()=>({back:[LC({y:180,text:'FROM',align:'left',ls:4,size:12}),T({x:40,y:204,w:280,text:'Your name\nStreet address\nTown',size:15,align:'left',lh:1.6})]})},
+  {name:'Two QR codes',make:()=>({back:[Q({x:50,y:170,w:110,h:110}),Q({x:200,y:170,w:110,h:110}),LC({x:30,w:150,y:294,text:'Video'}),LC({x:180,w:150,y:294,text:'Photos'})]})},
+  {name:'Three photo strip',make:()=>({back:[P({x:24,y:160,w:100,h:100}),P({x:130,y:160,w:100,h:100}),P({x:236,y:160,w:100,h:100}),LC({y:282})]})},
+  {name:'Small emblem',make:()=>({back:[P({x:150,y:180,w:60,h:60,shape:'circle'}),LC({y:256})]})},
+  {name:'Grid of four',make:()=>({back:[P({x:50,y:80,w:125,h:125}),P({x:185,y:80,w:125,h:125}),P({x:50,y:215,w:125,h:125}),P({x:185,y:215,w:125,h:125}),LC({y:366})]})},
+  {name:'Note and QR',make:()=>({back:[LM({y:110}),Q({x:130,y:270,w:100,h:100}),LC({y:384,text:'Scan me'})]})}
  ]
 };
 
 const STICKERS={Love:['💖','💕','💞','❤️','💌','🌹','💐','💍'],Celebrate:['🎉','🎈','🎂','🎁','🥂','✨','🎊','🍾'],Nature:['🌿','🌸','🌼','🌻','🍃','🌙','☀️','🌈'],Fun:['😊','🥳','😍','🤗','👏','🙌','⭐','🦋']};
 const BG_COLORS=['#ffffff','#f6f1e7','#fbe9ec','#fde2d2','#fff3d1','#e3efe8','#ddebf7','#e9e3f5','#1f2a44','#14201a'];
 const QR_COLORS=['#14201a','#0b7a49','#9b2242','#1f3a93','#7a5c2e'];
-const PAIRS=[
- [{text:'Happy anniversary',font:'Great Vibes',size:44,color:'#9b2242'},{text:'with all my love',font:'Cormorant Garamond',size:18,italic:true,color:'#6b3a47'}],
- [{text:'CONGRATS',font:'Bebas Neue',size:64,color:'#e4572e',ls:3,lh:1},{text:'you did it!',font:'Caveat',size:34,color:'#2b59c3',bold:true}],
- [{text:'Thank you',font:'Playfair Display',size:48,italic:true,color:'#0b5d3b'},{text:'FOR BEING YOU',font:'Josefin Sans',size:14,color:'#2e5d47',ls:3}],
- [{text:'Merry & bright',font:'DM Serif Display',size:44,color:'#8e1b1b'},{text:'Warm wishes from all of us',font:'Onest',size:14,color:'#3b3b3b'}]
-];
+/* Text styles: a heading + supporting line, grouped for the Text panel */
+const PAIRS={
+ Love:[
+  [{text:'Happy anniversary',font:'Great Vibes',size:44,color:'#9b2242'},{text:'with all my love',font:'Cormorant Garamond',size:18,italic:true,color:'#6b3a47'}],
+  [{text:'I love you',font:'Pinyon Script',size:50,color:'#c2185b'},{text:'MORE EVERY DAY',font:'Josefin Sans',size:13,color:'#9b2242',ls:3}],
+  [{text:'Be mine',font:'Lobster',size:52,color:'#d81b60'},{text:'Happy Valentine\'s Day',font:'Onest',size:14,color:'#7a2a44'}],
+  [{text:'Forever & always',font:'Sacramento',size:50,color:'#8e2442'},{text:'Ana + Theo',font:'Cormorant Garamond',size:20,italic:true,color:'#6b3a47'}],
+  [{text:'Just married',font:'Alex Brush',size:52,color:'#7a5c2e'},{text:'AUGUST 28, 2026',font:'Cinzel',size:14,color:'#5a4520',ls:3}],
+  [{text:'You & me',font:'Abril Fatface',size:48,color:'#b23a48'},{text:'since 2019',font:'Caveat',size:26,color:'#6b3a47'}],
+  [{text:'Mr & Mrs',font:'Cinzel',size:40,color:'#7a5c2e',ls:4},{text:'Happily ever after',font:'Great Vibes',size:30,color:'#7a5c2e'}],
+  [{text:'XOXO',font:'Bebas Neue',size:64,color:'#e91e63',ls:8,lh:1},{text:'hugs and kisses',font:'Dancing Script',size:26,color:'#ad1457'}],
+  [{text:'Love you lots',font:'Pacifico',size:40,color:'#e4572e'},{text:'like, a lot',font:'Amatic SC',size:28,color:'#333333',bold:true}],
+  [{text:'My favourite person',font:'Playfair Display',size:34,italic:true,color:'#6b3a47'},{text:'IN THE WHOLE WORLD',font:'Josefin Sans',size:13,color:'#9b2242',ls:3}]
+ ],
+ Birthday:[
+  [{text:'HAPPY',font:'Bebas Neue',size:64,color:'#e4572e',ls:4,lh:1},{text:'birthday!',font:'Caveat',size:40,color:'#2b59c3',bold:true}],
+  [{text:'Happy Birthday',font:'Pacifico',size:40,color:'#ff6f61'},{text:'Make a wish',font:'Fredoka',size:18,color:'#6a4c93'}],
+  [{text:'Party time!',font:'Righteous',size:42,color:'#7b2ff7'},{text:'LET\'S CELEBRATE',font:'Montserrat',size:13,color:'#333333',ls:2}],
+  [{text:'Another year of awesome',font:'Permanent Marker',size:32,color:'#1f3a93'},{text:'Cheers to you',font:'Caveat',size:26,color:'#e4572e'}],
+  [{text:'Hello 30',font:'Abril Fatface',size:56,color:'#c2185b'},{text:'and fabulous',font:'Dancing Script',size:28,color:'#333333'}],
+  [{text:'Birthday wishes',font:'Great Vibes',size:44,color:'#b8860b'},{text:'TO YOU',font:'Cinzel',size:16,color:'#8b6914',ls:6}],
+  [{text:'Hip hip hooray!',font:'Fredoka',size:40,color:'#ff9800',bold:true},{text:'It\'s your day',font:'Onest',size:15,color:'#555555'}],
+  [{text:'Cake time',font:'Lobster',size:48,color:'#8d5524'},{text:'Eat, laugh, repeat',font:'Amatic SC',size:28,color:'#333333',bold:true}],
+  [{text:'LEVEL UP!',font:'Bebas Neue',size:60,color:'#00a6a6',ls:3,lh:1},{text:'One more year of awesome',font:'Montserrat',size:13,color:'#333333'}],
+  [{text:'Sweet sixteen',font:'Sacramento',size:52,color:'#ec407a'},{text:'SIXTEEN',font:'Josefin Sans',size:14,color:'#ad1457',ls:6}]
+ ],
+ Celebrate:[
+  [{text:'CONGRATS',font:'Bebas Neue',size:64,color:'#e4572e',ls:3,lh:1},{text:'you did it!',font:'Caveat',size:34,color:'#2b59c3',bold:true}],
+  [{text:'Well done!',font:'Pacifico',size:42,color:'#2e7d32'},{text:'We knew you could',font:'Onest',size:14,color:'#3b3b3b'}],
+  [{text:'Class of 2026',font:'Cinzel',size:32,color:'#1f2a44',bold:true},{text:'Congratulations, Graduate',font:'Playfair Display',size:20,italic:true,color:'#7a5c2e'}],
+  [{text:'Cheers!',font:'Abril Fatface',size:56,color:'#b8860b'},{text:'to new beginnings',font:'Dancing Script',size:26,color:'#333333'}],
+  [{text:'You did it',font:'Permanent Marker',size:44,color:'#e4572e'},{text:'SO PROUD',font:'Bebas Neue',size:30,color:'#1f2a44',ls:4}],
+  [{text:'Welcome baby',font:'Dancing Script',size:46,color:'#5b3f8c',bold:true},{text:'LITTLE ONE',font:'Josefin Sans',size:14,color:'#7e57c2',ls:4}],
+  [{text:'Happy retirement',font:'Playfair Display',size:36,color:'#a23b2a'},{text:'Enjoy the sunny days',font:'Caveat',size:26,color:'#6b3a2e'}],
+  [{text:'New home',font:'Righteous',size:44,color:'#00796b'},{text:'sweet new home',font:'Lora',size:20,italic:true,color:'#4e342e'}],
+  [{text:'Bravo!',font:'Lobster',size:56,color:'#c62828'},{text:'Encore, encore',font:'Cormorant Garamond',size:20,italic:true,color:'#555555'}],
+  [{text:'Engaged!',font:'Alex Brush',size:54,color:'#7a5c2e'},{text:'SHE SAID YES',font:'Montserrat',size:13,color:'#5a4520',ls:4}]
+ ],
+ Holidays:[
+  [{text:'Merry & bright',font:'DM Serif Display',size:44,color:'#8e1b1b'},{text:'Warm wishes from all of us',font:'Onest',size:14,color:'#3b3b3b'}],
+  [{text:'Merry Christmas',font:'Great Vibes',size:46,color:'#8e1b1b'},{text:'AND A HAPPY NEW YEAR',font:'Cinzel',size:13,color:'#14532d',ls:3}],
+  [{text:'Happy New Year',font:'Abril Fatface',size:40,color:'#b8860b'},{text:'2027',font:'Bebas Neue',size:56,color:'#1f2a44',ls:6,lh:1}],
+  [{text:'Happy Diwali',font:'Cinzel',size:38,color:'#d35400',bold:true},{text:'Light, love and laughter',font:'Dancing Script',size:26,color:'#8e44ad'}],
+  [{text:'Eid Mubarak',font:'Alex Brush',size:50,color:'#0b6e4f'},{text:'peace and blessings',font:'Lora',size:18,italic:true,color:'#3e5c4a'}],
+  [{text:'Happy Holi',font:'Fredoka',size:48,color:'#e91e63',bold:true},{text:'Play with colours',font:'Caveat',size:28,color:'#ff9800',bold:true}],
+  [{text:'Season\'s greetings',font:'Playfair Display',size:36,italic:true,color:'#14532d'},{text:'WARM WISHES',font:'Josefin Sans',size:13,color:'#8e1b1b',ls:4}],
+  [{text:'Happy Easter',font:'Pacifico',size:40,color:'#7cb342'},{text:'Hop into spring',font:'Amatic SC',size:28,color:'#6a1b9a',bold:true}],
+  [{text:'Spooky season',font:'Permanent Marker',size:40,color:'#e65100'},{text:'HAPPY HALLOWEEN',font:'Bebas Neue',size:30,color:'#212121',ls:4}],
+  [{text:'Happy Mother\'s Day',font:'Sacramento',size:46,color:'#c2185b'},{text:'with love',font:'Lora',size:18,italic:true,color:'#6b3a47'}]
+ ],
+ 'Thanks & more':[
+  [{text:'Thank you',font:'Playfair Display',size:48,italic:true,color:'#0b5d3b'},{text:'FOR BEING YOU',font:'Josefin Sans',size:14,color:'#2e5d47',ls:3}],
+  [{text:'Thanks a bunch',font:'Pacifico',size:40,color:'#00897b'},{text:'You\'re the best',font:'Amatic SC',size:28,color:'#333333',bold:true}],
+  [{text:'With gratitude',font:'Cormorant Garamond',size:38,italic:true,color:'#4e342e'},{text:'THANK YOU',font:'Cinzel',size:14,color:'#8d6e63',ls:6}],
+  [{text:'Get well soon',font:'Caveat',size:48,color:'#1f3a93',bold:true},{text:'Sending hugs',font:'Onest',size:14,color:'#3d5a8c'}],
+  [{text:'Thinking of you',font:'Dancing Script',size:44,color:'#2e5d47'},{text:'ALWAYS',font:'Josefin Sans',size:14,color:'#4a6b5a',ls:6}],
+  [{text:'With sympathy',font:'Cormorant Garamond',size:36,italic:true,color:'#4f4a3e'},{text:'In loving memory',font:'Lora',size:16,color:'#7a7466'}],
+  [{text:'Miss you',font:'Lobster',size:50,color:'#3949ab'},{text:'come back soon',font:'Caveat',size:26,color:'#555555'}],
+  [{text:'Hello there',font:'Righteous',size:44,color:'#ff7043'},{text:'Just saying hi',font:'Montserrat',size:14,color:'#555555'}],
+  [{text:'Good luck!',font:'Fredoka',size:44,color:'#43a047',bold:true},{text:'You\'ve got this',font:'Permanent Marker',size:22,color:'#1f3a93'}],
+  [{text:'BEST FRIENDS',font:'Amatic SC',size:52,color:'#6a1b9a',bold:true,lh:1.1},{text:'forever and ever',font:'Sacramento',size:36,color:'#ec407a'}]
+ ]
+};
 
 /* ---------- State ---------- */
 let state={title:'Anniversary card',pages:TEMPLATES[0].make()};
 try{const raw=localStorage.getItem(KEY);if(raw){const d=JSON.parse(raw);if(d&&d.pages&&d.pages.front&&d.pages.inL&&d.pages.inR&&d.pages.back)state={title:d.title||'Untitled card',pages:d.pages};}}catch(e){}
 
-let view='front',sel=null,activePage='front',editingId=null,zoom=1,zoomMode='fit',panel='templates',showSafe=false,library=[],pendingPhoto=null,addCount=0,pvView='front';
+let view='front',tplTab='front',sel=null,activePage='front',editingId=null,zoom=1,zoomMode='fit',panel='templates',showSafe=false,library=[],pendingPhoto=null,addCount=0,pvView='front';
 let qrDraft={url:'',color:'#14201a'};
 let past=[],future=[],present=JSON.stringify(state.pages);
 
@@ -180,7 +379,7 @@ function renderStrip(){
 }
 function placeIndicator(){const ind=document.getElementById('stripInd');const a=strip.querySelector('.thumb.active');if(!ind||!a)return;ind.style.width=a.offsetWidth+'px';ind.style.transform=`translateX(${a.offsetLeft}px)`;if(!ind.classList.contains('ready'))requestAnimationFrame(()=>requestAnimationFrame(()=>ind.classList.add('ready')));}
 window.addEventListener('resize',placeIndicator);
-function setView(v){if(v===view)return;const from=view;view=v;sel=null;zoomMode='fit';renderStage();renderStrip();renderCtx();if(['layouts','background','text','qr'].includes(panel))renderPanel();animateFlip(from,v);}
+function setView(v){if(v===view)return;const from=view;view=v;sel=null;zoomMode='fit';if(tplTab!=='card')tplTab=v;renderStage();renderStrip();renderCtx();if(['templates','layouts','background','text','qr'].includes(panel))renderPanel();animateFlip(from,v);}
 /* Card open / close animation: a ghost of the outgoing page turns on the spine while the incoming page lands */
 function animateFlip(from,to){
   if(!sheet.animate||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -380,9 +579,13 @@ function renderPanel(){
   const inner=document.createElement('div');inner.className='panel-inner';
   const f=sel&&findEl(sel.id);
   if(panel==='templates'){
-    inner.innerHTML=head('Templates')+`<p class="hint">Start from a finished design. It replaces your whole card, and you can undo it.</p><div class="tiles"></div>`;
+    const tabs=[['card','Full card'],...ORDER.map(v=>[v,VIEW_LABEL[v]])];
+    const hint=tplTab==='card'?'Start from a finished design. It replaces your whole card, and you can undo it.':`Designs for the ${VIEW_LABEL[tplTab].toLowerCase()}. Only the ${tplTab==='inside'?'inside pages change':VIEW_LABEL[tplTab].toLowerCase()+' changes'}, and you can undo it.`;
+    inner.innerHTML=head('Templates')+`<div class="seg tpl-tabs" role="group" aria-label="Template type">${tabs.map(([id,l])=>`<button class="tb" data-tpl="${id}" aria-pressed="${id===tplTab}">${l}</button>`).join('')}</div><p class="hint">${hint}</p><div class="tiles ${tplTab==='inside'?'one':''}"></div>`;
+    inner.querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>{tplTab=b.dataset.tpl;renderPanel();});
     const g=inner.querySelector('.tiles');
-    TEMPLATES.forEach(t=>{const pages=t.make();const b=document.createElement('button');b.className='tile';b.appendChild(mini([[pages.front,'front']],.29));b.insertAdjacentHTML('beforeend',`<span>${t.name}</span>`);b.onclick=()=>applyTemplate(t);g.appendChild(b);});
+    if(tplTab==='card')TEMPLATES.forEach(t=>{const pages=t.make();const b=document.createElement('button');b.className='tile';b.appendChild(mini([[pages.front,'front']],.29));b.insertAdjacentHTML('beforeend',`<span>${t.name}</span>`);b.onclick=()=>applyTemplate(t);g.appendChild(b);});
+    else PAGE_TEMPLATES[tplTab].forEach(t=>{const made=t.make();const b=document.createElement('button');b.className='tile';b.appendChild(mini(VIEWS[tplTab].map(pid=>[made[pid],pid]),tplTab==='inside'?.33:.29));b.insertAdjacentHTML('beforeend',`<span>${esc(t.name)}</span>`);b.onclick=()=>applyPageTemplate(t,tplTab);g.appendChild(b);});
   }
   else if(panel==='layouts'){
     inner.innerHTML=head('Layouts')+`<p class="hint">Arrange the ${VIEW_LABEL[view].toLowerCase()} of your card. Your words and photos carry over.</p><div class="tiles ${view==='inside'?'one':''}"></div>`;
@@ -395,11 +598,11 @@ function renderPanel(){
       <button class="addtext" data-add="heading"><span style="font:700 26px 'Playfair Display',Georgia,serif">Add a heading</span></button>
       <button class="addtext" data-add="sub"><span style="font:italic 400 21px 'Cormorant Garamond',Georgia,serif">Add a subheading</span></button>
       <button class="addtext" data-add="body"><span style="font:400 15px 'Onest',system-ui,sans-serif">Add a short message</span></button>
-      <div class="sec">Font pairs</div><div class="tiles"></div>`;
-    const g=inner.querySelector('.tiles');
-    PAIRS.forEach(pair=>{const b=document.createElement('button');b.className='tile';
-      b.innerHTML=`<div class="pair">${pair.map(p=>`<span style="font-family:${fontCss(p.font)};font-size:${Math.round(p.size*.42)}px;color:${p.color};font-style:${p.italic?'italic':'normal'};font-weight:${p.bold?700:400};letter-spacing:${(p.ls||0)*.4}px;line-height:1.1">${esc(p.text)}</span>`).join('')}</div>`;
-      b.onclick=()=>addPair(pair);g.appendChild(b);});
+      ${Object.keys(PAIRS).map((cat,i)=>`<div class="sec">${esc(cat)}</div><div class="tiles" data-pairs="${i}"></div>`).join('')}`;
+    Object.values(PAIRS).forEach((list,i)=>{const g=inner.querySelector(`[data-pairs="${i}"]`);
+      list.forEach(pair=>{const b=document.createElement('button');b.className='tile';b.setAttribute('aria-label','Add text style: '+pair.map(p=>p.text).join(', '));
+        b.innerHTML=`<div class="pair">${pair.map(p=>`<span style="font-family:${fontCss(p.font)};font-size:${Math.round(p.size*.42)}px;color:${p.color};font-style:${p.italic?'italic':'normal'};font-weight:${p.bold?700:400};letter-spacing:${(p.ls||0)*.4}px;line-height:1.1">${esc(p.text)}</span>`).join('')}</div>`;
+        b.onclick=()=>addPair(pair);g.appendChild(b);});});
     inner.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addText(b.dataset.add));
   }
   else if(panel==='photos'){
@@ -463,6 +666,12 @@ function renderPanel(){
 }
 
 function applyTemplate(t){finishEditing();state.pages=t.make();sel=null;view='front';zoomMode='fit';renderStage();renderStrip();renderCtx();commit();toast(`${t.name} template applied`,'Undo',undo);}
+function applyPageTemplate(t,v){
+  finishEditing();const made=t.make();VIEWS[v].forEach(pid=>{state.pages[pid]=made[pid];});
+  const from=view;view=v;sel=null;zoomMode='fit';renderStage();renderStrip();renderCtx();commit();
+  if(from!==v)animateFlip(from,v);
+  toast(`${t.name} used on the ${VIEW_LABEL[v].toLowerCase()}`,'Undo',undo);
+}
 function applyLayout(ly){
   finishEditing();const pids=VIEWS[view];const texts=[],photos=[],qrs=[];
   pids.forEach(pid=>[...state.pages[pid].els].sort((a,b)=>a.y-b.y).forEach(el=>{if(el.type==='text'&&el.text.trim())texts.push(el);if(el.type==='photo'&&el.src)photos.push(el);if(el.type==='qr'&&el.src)qrs.push(el);}));

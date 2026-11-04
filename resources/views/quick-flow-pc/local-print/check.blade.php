@@ -2022,9 +2022,14 @@
                     // Bare "W x H" with no unit — assume inches.
                     const bare = raw.match(new RegExp(pair, 'i'));
                     if (bare) return [parseFloat(bare[1]), parseFloat(bare[2])];
+                    // ISO sizes too: the driver reports A4 as e.g. 8.28 × 11.69 in, and
+                    // without a trim here an 8.27 × 11.69 PDF was rebuilt (scaled) onto it.
                     const named = {
                         'letter': [8.5, 11],
-                        'legal': [8.5, 14]
+                        'legal': [8.5, 14],
+                        'a4': [8.27, 11.69],
+                        'a5': [5.83, 8.27],
+                        'a3': [11.69, 16.54]
                     };
                     const key = raw.replace(/[-\s]*e2e.*$/i, '').trim().toLowerCase();
                     if (named[key]) return named[key];

@@ -82,6 +82,7 @@ class LocalPrintController extends Controller
 
         $subTypes = $type->children()
             ->where('is_active', 1)
+            ->where('show_in_local_print', 1)
             ->orderBy('sort_order')
             ->get();
 
@@ -105,6 +106,11 @@ class LocalPrintController extends Controller
     /* ── Own-design: customizer (empty canvas) ──────── */
     public function customizer(Request $request)
     {
+        // Business cards have fixed 3.5 × 2 in landscape, double-sided rules.
+        if (\App\Services\BusinessCard\BusinessCard::isBusinessCardTitle($request->query('title'))) {
+            return app(BusinessCardController::class)->customizer($request);
+        }
+
         $orientation = $request->query('orientation', 'portrait');
         $sizeCode    = $request->query('size');
         $titleSlug   = $request->query('title');

@@ -33,9 +33,13 @@
 @section('content')
     @php
         $lpo = $localPrintOverrides ?? null;
+        // Business card (BusinessCardController): 2 pages labelled Front / Back.
+        $bizCard = $businessCard ?? null;
         $noOfPages = $lpo ? (int) $lpo['noOfPages'] : (int) ($product->no_of_pages ?? 1);
 
-        if ($noOfPages <= 1) {
+        if ($bizCard) {
+            $slots = $bizCard['sides'];
+        } elseif ($noOfPages <= 1) {
             $slots = [
                 'frame_image' => 'Page 1',
             ];
@@ -99,6 +103,34 @@
             }
         }
         $flowData = session('quick_flow_data', []);
+
+        // Local-print own-design editor (LocalPrintController / BusinessCardController):
+        // page-thumbnail dock, simplified toolbar, trim + safe-area guides.
+        $lpUi = null;
+        if ($lpo) {
+            $lpW = (float) ($flowData['size_width'] ?? ($lpo['isPortrait'] ? 3.5 : 5));
+            $lpH = (float) ($flowData['size_height'] ?? ($lpo['isPortrait'] ? 5 : 3.5));
+            $lpLabels = $bizCard
+                ? array_values($bizCard['sides'])
+                : [1 => ['Front'], 2 => ['Front', 'Back'], 4 => ['Front', 'Inside left', 'Inside right', 'Back']][count($imageTypes)]
+                    ?? array_map(fn($n) => 'Page ' . $n, range(1, count($imageTypes)));
+            $lpIn = fn($v) => rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.');
+            $lpAspect = $lpW / $lpH;
+            $lpUi = [
+                'pages'        => array_combine(array_keys($imageTypes), $lpLabels),
+                'sizeLabel'    => $lpIn($lpW) . ' × ' . $lpIn($lpH) . ' in',
+                // 1/8 in safe margin, as % of the page width / height.
+                'safe'         => ['x' => round(0.125 / $lpW * 100, 4), 'y' => round(0.125 / $lpH * 100, 4)],
+                // 4-page (folded) designs get half-size thumbnails so all pages fit the dock.
+                'thumb'        => (function () use ($lpAspect, $imageTypes) {
+                    $scale = count($imageTypes) === 4 ? 0.5 : 1;
+                    return $lpAspect >= 1
+                        ? ['w' => (int) round(84 * $scale), 'h' => (int) round(84 * $scale / $lpAspect)]
+                        : ['w' => (int) round(72 * $scale * $lpAspect), 'h' => (int) round(72 * $scale)];
+                })(),
+                'businessCard' => (bool) $bizCard,
+            ];
+        }
 
         $bcStoreName =
             session('active_store_name') ??
@@ -165,7 +197,7 @@
 
         {{-- ── 1. STUDIO EDITOR WORKSPACE (DOTTED BACKGROUND) ── --}}
         <section class="cust-workspace w-full relative py-3 px-3 sm:px-6 border-b border-slate-200/80"
-            style="background-color: #1c7a43; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
+            style="background-color: #e0e0e0; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 24px 24px;">
 
             <div class="max-w-7xl mx-auto">
 
@@ -173,6 +205,9 @@
                 <div class="cust-workspace-inner relative w-full min-h-[70vh] flex items-center justify-center">
 
                     {{-- ═══ LEFT: ABSOLUTE FLOATING VERTICAL TOOL DOCK ═══ --}}
+@if ($lpUi)
+                    @include('quick-flow-pc.partials.local-print-editor-dock')
+@else
                     <div
                         class="cust-left-dock absolute left-1 lg:left-4 top-1/2 -translate-y-1/2 grid grid-cols-2 gap-x-2 gap-y-3 justify-items-center items-start shrink-0 z-30 py-3 px-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm">
 
@@ -232,6 +267,7 @@
                         </button>
 
                     </div>
+@endif
 
                     {{-- Shared Drawers (Templates, Layers, Typography, Shapes, QR) --}}
                     @include('quick-flow-pc.partials.customizer-drawers')
@@ -241,6 +277,9 @@
                     <div class="w-full flex flex-col items-center justify-center min-w-0 space-y-2">
 
                         {{-- ── Studio Header Toolbar (Undo, Redo, Alignments, Zoom, Pre-flight) ── --}}
+@if ($lpUi)
+                        @include('quick-flow-pc.partials.local-print-editor-toolbar')
+@else
                         <div
                             class="cust-toolbar w-full max-w-6xl bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-2xl p-2.5 shadow-sm flex flex-nowrap items-center justify-between gap-2 overflow-x-auto z-20">
                             {{-- History & Edit --}}
@@ -394,6 +433,7 @@
                                 </div>
                             </div>
                         </div>
+@endif
 
                         {{-- Mobile Page Switcher (horizontal strip, hidden on desktop via CSS) --}}
                         @if (count($imageTypes) > 1)
@@ -406,15 +446,16 @@
                                     @endphp
                                     <button type="button" onclick="customizer.switchCanvas('{{ $key }}')"
                                         class="cust-mobile-page-btn thumb-nav-btn {{ $isFirst ? 'active' : '' }} {{ !$enabled ? 'disabled-tab' : '' }}"
-                                        data-key="{{ $key }}" data-short="P{{ $loop->iteration }}"
-                                        data-full="Page {{ $loop->iteration }}">
+                                        data-key="{{ $key }}"
+                                        data-short="{{ $bizCard ? $img['label'] : 'P' . $loop->iteration }}"
+                                        data-full="{{ $bizCard ? $img['label'] : 'Page ' . $loop->iteration }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
                                             <path d="M14 2v4a2 2 0 0 0 2 2h4" />
                                         </svg>
-                                        <span>{{ $isFirst ? 'Page ' . $loop->iteration : 'P' . $loop->iteration }}</span>
+                                        <span>{{ $bizCard ? $img['label'] : ($isFirst ? 'Page ' . $loop->iteration : 'P' . $loop->iteration) }}</span>
                                         @if (!$enabled)
                                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -521,6 +562,9 @@
                             </div>
 
                             {{-- Canvas Wrapper --}}
+@if ($lpUi)
+                            @include('quick-flow-pc.partials.local-print-editor-canvas-frame', ['part' => 'open'])
+@endif
                             <div class="canvas-wrapper bg-white shadow-2xl rounded-2xl overflow-hidden relative mx-auto flex items-center justify-center transition-all duration-200"
                                 id="canvas-container">
                                 <div id="canvas-loading-overlay"
@@ -549,6 +593,9 @@
                                     </div>
                                 @endforeach
                             </div>
+@if ($lpUi)
+                            @include('quick-flow-pc.partials.local-print-editor-canvas-frame', ['part' => 'close'])
+@endif
                         </div>
 
                         {{-- Hidden JS Utility Elements --}}
@@ -561,7 +608,11 @@
                     </div>
 
                     {{-- ═══ RIGHT: ABSOLUTE FLOATING VERTICAL STUDIO DOCK ═══ --}}
+@if ($lpUi)
+                    @include('quick-flow-pc.partials.local-print-editor-right-dock')
+@else
                     @include('quick-flow-pc.partials.customizer-right-dock', ['multiUpload' => false])
+@endif
 
                 </div>
             </div>
@@ -679,7 +730,7 @@
     <script src="{{ asset('js/customizer-base.js') }}?v={{ time() }}"></script>
     <script>
         const customizer = Object.assign(customizerBase({
-            storagePrefix: 'qrinto_design_v1',
+            storagePrefix: '{{ $bizCard['storagePrefix'] ?? 'qrinto_design_v1' }}',
             multiCanvas: true,
             hasMasks: {{ $lpo ? 'false' : 'true' }},
             imageTypes: @json($imageTypes),
@@ -1337,4 +1388,11 @@
             })();
         });
     </script>
+    @if ($lpUi)
+        @include('quick-flow-pc.partials.local-print-editor-ui')
+        @include('quick-flow-pc.partials.local-print-editor-colors')
+    @endif
+    @if ($bizCard)
+        @include('quick-flow-pc.partials.business-card-editor')
+    @endif
 @endpush

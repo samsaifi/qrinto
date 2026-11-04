@@ -4,7 +4,7 @@
 @section('header_title', 'Choose a Size')
 
 @section('content')
-    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans" x-data="{ orientMode: 'portrait' }">
+    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans" x-data="{ orientMode: 'portrait', selectedCard: null }">
         <div class="max-w-[1240px] mx-auto">
 
             {{-- Back + Title + Toggle (compact on mobile) --}}
@@ -104,7 +104,9 @@
                         dispH(s) { return orientMode === 'landscape' ? Math.min(s.w, s.h) : Math.max(s.w, s.h); },
                         get sizeCode() { return this.dispW(this.cur) + 'x' + this.dispH(this.cur); },
                     }"
-                        class="bg-white border border-slate-200/90 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+                        @click="selectedCard = titleSlug" @focusin="selectedCard = titleSlug"
+                        :class="selectedCard === titleSlug && 'lp-size-card-on'"
+                        class="lp-size-card bg-white border border-slate-200/90 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
 
                         {{-- Top Image Area --}}
                         <div
@@ -237,6 +239,13 @@
                         this.presets.filter((p, i) => i < this.visiblePresets || this.isPreset(p));
                 },
                 init() {
+                    // Business card picked above: preview it here as a 3.5 × 2 in double-sided card.
+                    this.$watch('selectedCard', v => {
+                        if (v !== 'business-card') return;
+                        this.cardType = 'double';
+                        this.w = 3.5;
+                        this.h = 2;
+                    });
                     // Append printer paper sizes, skipping any already listed.
                     const paper = {{ Illuminate\Support\Js::from($paperPresets ?? []) }};
                     const key = p => Math.min(p.w, p.h) + 'x' + Math.max(p.w, p.h);
@@ -392,9 +401,12 @@
                         </div>
                     </div>
 
-                    <p class="text-xs md:text-sm text-slate-600 text-center mt-4" x-html="note"></p>
+                    <p x-show="selectedCard !== 'business-card'" class="text-xs md:text-sm text-slate-600 text-center mt-4" x-html="note"></p>
 
-                    <div class="w-full flex items-center justify-between mt-4">
+                    {{-- Business card selected: upload a finished 2-page PDF, then design. --}}
+                    @include('quick-flow-pc.local-print.partials.business-card-upload')
+
+                    <div x-show="selectedCard !== 'business-card'" class="w-full flex items-center justify-between mt-4">
                         {{-- 1 inch scale --}}
                         <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
                             <span class="w-[15px] h-1.5 border-b border-x border-slate-400"></span>

@@ -216,6 +216,16 @@ Route::get('/print/design', [\App\Http\Controllers\LocalPrintController::class, 
 Route::get('/print/own-design/sizes', [\App\Http\Controllers\LocalPrintController::class, 'sizes'])->name('localprint.sizes');
 Route::get('/print/own-design/sizes/customizer', [\App\Http\Controllers\LocalPrintController::class, 'customizer'])->name('localprint.customizer');
 Route::post('/print/own-design/sizes/customizer/preview', [\App\Http\Controllers\LocalPrintController::class, 'preview'])->name('localprint.preview');
+// Double-sided business card: save both sides + generate the 7×10 and A4 sheets.
+Route::post('/print/own-design/business-card/save', [\App\Http\Controllers\BusinessCardController::class, 'save'])
+    ->middleware('throttle:30,1')->name('business-card.save');
+Route::get('/print/own-design/business-card/{design}/pdf/{format}', [\App\Http\Controllers\BusinessCardController::class, 'download'])
+    ->whereNumber('design')->whereIn('format', array_unique(array_merge(array_keys(\App\Services\BusinessCard\BusinessCard::FORMATS), ['edge_to_edge'])))
+    ->name('business-card.download');
+Route::get('/print/own-design/business-card/{design}/side/{side}', [\App\Http\Controllers\BusinessCardController::class, 'side'])
+    ->whereNumber('design')->whereIn('side', ['front', 'back'])->name('business-card.side');
+Route::get('/print/own-design/sizes/customizer/preview/business-card', [\App\Http\Controllers\BusinessCardController::class, 'preview'])
+    ->name('print.own-design.customizer.preview.business-card');
 Route::get('/print/pdf', [\App\Http\Controllers\LocalPrintController::class, 'pdf'])->name('localprint.pdf');
 Route::post('/print/pdf', [\App\Http\Controllers\LocalPrintController::class, 'upload'])->name('localprint.upload');
 Route::get('/print/pdf/check', [\App\Http\Controllers\LocalPrintController::class, 'check'])->name('localprint.check');

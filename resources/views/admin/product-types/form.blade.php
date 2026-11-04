@@ -117,6 +117,21 @@
                     </label>
                 </div>
             </div>
+
+            <div>
+                <label class="block text-sm font-medium text-surface-700 mb-2">Visibility</label>
+                <div class="flex flex-wrap gap-6">
+                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="checkbox" name="show_in_templates" value="1" {{ old('show_in_templates', $productType->show_in_templates ?? true) ? 'checked' : '' }}
+                               class="rounded text-brand-600 focus:ring-brand-500"> Template
+                    </label>
+                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="checkbox" name="show_in_local_print" value="1" {{ old('show_in_local_print', $productType->show_in_local_print ?? true) ? 'checked' : '' }}
+                               class="rounded text-brand-600 focus:ring-brand-500"> Local Print
+                    </label>
+                </div>
+                <p class="text-xs text-surface-400 mt-1">Template shows it on /cards; Local Print shows it on /print/own-design/sizes.</p>
+            </div>
         </div>
 
         <div class="flex gap-3 mt-8">

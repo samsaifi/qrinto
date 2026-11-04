@@ -28,12 +28,16 @@ class ProductType extends Model
         'unit',
         'sort_order',
         'is_active',
+        'show_in_templates',
+        'show_in_local_print',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'show_in_templates' => 'boolean',
+            'show_in_local_print' => 'boolean',
             'price' => 'decimal:2',
             'old_price' => 'decimal:2',
             'price_cad' => 'decimal:2',
