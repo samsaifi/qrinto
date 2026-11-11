@@ -1,6 +1,6 @@
 {{-- Size page, Business card selected (shown under the custom-size preview):
      upload finished artwork and/or go to
-     the editor. A 2-page PDF (front on page 1, back on page 2) or one or two
+     the editor. A PDF (page 1 front, page 2 back if any) or one or two
      PNG / JPG images (front, then back) are checked and rendered in the browser
      by public/js/business-card-pdf.js and handed to the editor, which places
      them on Front (and Back). Runs inside the size page's x-data (selectedCard). --}}
@@ -13,7 +13,7 @@
         note: '',
         init() {
             const s = window.BusinessCardPdf && BusinessCardPdf.stored();
-            if (s) this.show(s);
+            if (s) { this.show(s); uploadOpen = true; }
         },
         show(res) {
             this.using = BusinessCardPdf.describe(res, 'front');
@@ -52,13 +52,14 @@
         <span><strong>That’s a business card.</strong> After you design it, we’ll offer to print 10 on a 7 × 10 in sheet
             or 12 on Letter or A4, with the backs lined up for cutting.</span>
     </div>
-    <div class="bcu-box">
+    {{-- Upload box opens from the card's Upload button (uploadOpen on the size page). --}}
+    <div class="bcu-box" x-show="uploadOpen">
         <span class="bcu-text">
             <strong x-text="using ? using : 'Already have it designed?'"></strong>
             <span
                 x-text="using
                 ? (hasBack ? 'Front and back are loaded. Open the editor to check them or add more.' : 'The front is loaded. Add the back in the editor.')
-                : 'Upload a PDF (front on page 1, back on page 2) or one or two PNG/JPG images (front, then back).'"></span>
+                : 'Upload a PDF (page 1 is the front, page 2 the back) or one or two PNG/JPG images (front, then back).'"></span>
         </span>
         <span class="bcu-actions">
             <button type="button" class="bcu-link" :hidden="!using || busy" @click="remove()">Remove</button>
@@ -75,11 +76,11 @@
             </label>
         </span>
     </div>
-    <p class="bcu-error" role="alert" :hidden="!error" x-text="error"></p>
-    <p class="bcu-note" role="status" :hidden="!note || !using || !!error" x-text="note"></p>
+    <p class="bcu-error" role="alert" :hidden="!uploadOpen || !error" x-text="error"></p>
+    <p class="bcu-note" role="status" :hidden="!uploadOpen || !note || !using || !!error" x-text="note"></p>
     <div class="bcu-go">
         <a class="bcu-design"
-            href="{{ route('localprint.customizer', ['size' => '3.5x2', 'orientation' => 'landscape', 'title' => 'business-card']) }}">
+            href="{{ route('localprint.customizer', ['size' => '3.5x2', 'orientation' => 'landscape', 'title' => 'business-card', 'fresh' => 1]) }}">
             Design 3.5 in × 2 in
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

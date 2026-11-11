@@ -4,43 +4,36 @@
 @section('header_title', 'Choose a Size')
 
 @section('content')
-    <div class="w-full bg-[#fafcf9] min-h-screen py-4 px-3 md:py-10 md:px-6 lg:px-16 font-sans" x-data="{ orientMode: 'portrait', selectedCard: null }">
-        <div class="max-w-[1240px] mx-auto">
+    <div class="lp-sizes w-full min-h-screen font-sans"
+        x-data="{ orientMode: 'portrait', selectedCard: null, uploadOpen: false }">
+        <div class="lp-wrap">
 
-            {{-- Back + Title + Toggle (compact on mobile) --}}
-            <div class="flex items-center gap-2 mb-2 md:flex-col md:items-start md:gap-0 md:mb-0">
-                <a href="{{ route('localprint.start') }}"
-                    class="text-[11px] md:text-xs font-semibold text-slate-500 hover:text-emerald-700 transition-colors shrink-0">
-                    ← <span class="hidden md:inline">Back to Local Print</span>
-                </a>
-                <h1 class="text-base md:text-2xl font-extrabold text-[#112419] tracking-tight md:mt-4">Choose a size</h1>
-            </div>
+            {{-- Breadcrumb --}}
+            <nav class="lp-crumb" aria-label="Breadcrumb">
+                <a href="{{ url('/') }}">Home</a>
+                <span aria-hidden="true">›</span>
+                <a href="{{ route('localprint.start') }}">Local print</a>
+                <span aria-hidden="true">›</span>
+                <span class="cur" aria-current="page">Choose a size</span>
+            </nav>
 
-            {{-- Orientation Toggle --}}
-            <div class="mb-3 md:mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 md:gap-4">
-                <p class="hidden md:block text-sm text-slate-500 font-normal mt-1.5">
-                    Pick a card type and size, then design it in the editor.
-                </p>
+            {{-- Title + Portrait / Landscape --}}
+            <div class="lp-titlebar">
+                <h1 class="lp-h1">Choose a size</h1>
 
-                {{-- Portrait / Landscape switch --}}
-                <div
-                    class="flex items-center bg-gray-50 w-auto md:bg-white md:border border-slate-200 rounded-lg md:rounded-xl p-0.5 md:p-1 shadow-2xs shrink-0">
-                    <button type="button" @click="orientMode = 'portrait'"
-                        :class="orientMode === 'portrait' ? 'bg-[#287d3c] text-white shadow-sm' :
-                            'text-slate-500 hover:text-slate-700'"
-                        class="flex items-center gap-1 md:gap-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-md md:rounded-lg text-[11px] md:text-xs font-bold transition-all">
-                        <svg class="w-3 h-4 md:w-3.5 md:h-5" viewBox="0 0 14 20" fill="none" stroke="currentColor"
-                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <div class="lp-seg" role="radiogroup" aria-label="Orientation">
+                    <button type="button" role="radio" @click="orientMode = 'portrait'"
+                        :aria-checked="String(orientMode === 'portrait')" :class="orientMode === 'portrait' && 'on'">
+                        <svg width="12" height="16" viewBox="0 0 14 20" fill="none" stroke="currentColor"
+                            stroke-width="1.6" aria-hidden="true">
                             <rect x="1" y="1" width="12" height="18" rx="1.5" />
                         </svg>
                         Portrait
                     </button>
-                    <button type="button" @click="orientMode = 'landscape'"
-                        :class="orientMode === 'landscape' ? 'bg-[#287d3c] text-white shadow-sm' :
-                            'text-slate-500 hover:text-slate-700'"
-                        class="flex items-center gap-1 md:gap-1.5 px-2.5 py-1 md:px-3 md:py-1.5 rounded-md md:rounded-lg text-[11px] md:text-xs font-bold transition-all">
-                        <svg class="w-4 h-3 md:w-5 md:h-3.5" viewBox="0 0 20 14" fill="none" stroke="currentColor"
-                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="button" role="radio" @click="orientMode = 'landscape'"
+                        :aria-checked="String(orientMode === 'landscape')" :class="orientMode === 'landscape' && 'on'">
+                        <svg width="16" height="12" viewBox="0 0 20 14" fill="none" stroke="currentColor"
+                            stroke-width="1.6" aria-hidden="true">
                             <rect x="1" y="1" width="18" height="12" rx="1.5" />
                         </svg>
                         Landscape
@@ -49,168 +42,146 @@
             </div>
 
             @php
-                $groupedSubTypes = $subTypes->groupBy(fn($item) => trim($item->title ?? $item->name));
+                // Folded, Flat, Flat double-sided, Business card; anything else after them.
+                $rank = fn($t) => match (true) {
+                    Str::contains(strtolower($t), 'folded') => 0,
+                    Str::slug($t) === 'business-card' => 3,
+                    Str::contains(strtolower($t), ['double', 'both']) => 2,
+                    strtolower($t) === 'flat' => 1,
+                    default => 4,
+                };
+                $groupedSubTypes = $subTypes
+                    ->groupBy(fn($item) => trim($item->title ?? $item->name))
+                    ->sortBy(fn($items, $title) => $rank($title));
             @endphp
 
-            {{-- 3-Column Card Grid --}}
-            <div class="grid   grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+            {{-- Size cards --}}
+            <div class="lp-grid">
 
                 @forelse ($groupedSubTypes as $groupTitle => $items)
                     @php
                         $firstItem = $items->first();
+                        $slugTitle = Str::slug($groupTitle);
                         $displayTitle = Str::replace(' - double', ', double-sided', $groupTitle);
+                        $isBiz = $slugTitle === 'business-card';
+                        $isFolded = Str::contains(strtolower($groupTitle), 'folded');
+                        $isDouble = !$isBiz && Str::contains(strtolower($groupTitle), ['double', 'both']);
 
-                        $desc = match (strtolower($groupTitle)) {
-                            'folded' => 'Opens upward. Cover and inside are printed.',
-                            'flat' => 'One sheet, front printed.',
-                            'flat - double', 'flat, double-sided' => 'One sheet, both sides printed.',
-                            'standard size' => 'Flexible photo magnets printed with crisp colors.',
+                        $desc = match (true) {
+                            $isBiz => 'Both sides · 10–12 per sheet',
+                            $isFolded => 'Opens upward. Cover and inside are printed.',
+                            $isDouble => 'One sheet, both sides printed.',
+                            strtolower($groupTitle) === 'flat' => 'One sheet, front printed.',
                             default => $firstItem->description ?? '',
                         };
-
-                        if (
-                            $desc &&
-                            (strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], $desc)) ===
-                                strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], $displayTitle)) ||
-                                strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], $desc)) ===
-                                    strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], $firstItem->title ?? '')))
-                        ) {
+                        // Drop a description that only repeats the size / title.
+                        $norm = fn($v) => strtolower(str_replace([' ', 'in', '×'], ['', '', 'x'], (string) $v));
+                        if ($desc && in_array($norm($desc), [$norm($displayTitle), $norm($firstItem->title ?? '')], true)) {
                             $desc = null;
                         }
 
-                        $isFolded = Str::contains(strtolower($groupTitle), 'folded');
-                        $isDouble = Str::contains(strtolower($groupTitle), ['double', 'both']);
-                        $hasMultipleSizes = $items->count() > 1;
+                        // Upload: business card opens the upload box below; flat cards go to
+                        // the PDF upload page with the matching kind. Folded designs only.
+                        $uploadKind = $isBiz ? 'biz' : ($isFolded ? null : ($isDouble ? 'duplex' : 'single'));
 
-                        // Build JS-friendly sizes array for this group
                         $sizesJs = $items
-                            ->map(
-                                fn($item) => [
-                                    'id' => (string) $item->id,
-                                    'w' => $item->width + 0,
-                                    'h' => $item->height + 0,
-                                ],
-                            )
+                            ->map(fn($item) => ['id' => (string) $item->id, 'w' => $item->width + 0, 'h' => $item->height + 0])
                             ->values()
                             ->all();
                     @endphp
 
                     <div x-data="{
-                        titleSlug: '{{ Str::slug($groupTitle) }}',
+                        titleSlug: '{{ $slugTitle }}',
+                        isBiz: {{ $isBiz ? 'true' : 'false' }},
                         sizes: {{ Illuminate\Support\Js::from($sizesJs) }},
                         selectedIdx: 0,
                         get cur() { return this.sizes[this.selectedIdx] || this.sizes[0]; },
-                        dispW(s) { return orientMode === 'landscape' ? Math.max(s.w, s.h) : Math.min(s.w, s.h); },
-                        dispH(s) { return orientMode === 'landscape' ? Math.min(s.w, s.h) : Math.max(s.w, s.h); },
+                        {{-- Business cards are always 3.5 × 2 landscape. --}}
+                        dispW(s) { return (this.isBiz || orientMode === 'landscape') ? Math.max(s.w, s.h) : Math.min(s.w, s.h); },
+                        dispH(s) { return (this.isBiz || orientMode === 'landscape') ? Math.min(s.w, s.h) : Math.max(s.w, s.h); },
                         get sizeCode() { return this.dispW(this.cur) + 'x' + this.dispH(this.cur); },
                     }"
                         @click="selectedCard = titleSlug" @focusin="selectedCard = titleSlug"
                         :class="selectedCard === titleSlug && 'lp-size-card-on'"
-                        class="lp-size-card bg-white border border-slate-200/90 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group">
+                        class="lp-size-card">
 
-                        {{-- Top Image Area --}}
-                        <div
-                            class="bg-[#f2f7f2] h-24 sm:h-32 md:h-48 flex items-center justify-center p-3 md:p-6 border-b border-slate-100 relative">
-                            @if ($firstItem->icon_svg)
-                                <div
-                                    class="w-14 h-14 md:w-24 md:h-24 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                    {!! $firstItem->icon_svg !!}
-                                </div>
-                            @elseif ($isFolded)
-                                <svg class="w-16 h-16 md:w-28 md:h-28 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
-                                    viewBox="0 0 90 90">
-                                    <path d="M 21 22 L 45 16 L 45 74 L 21 80 A 3 3 0 0 1 18 77 L 18 25 A 3 3 0 0 1 21 22 Z"
-                                        stroke="currentColor" fill="none" />
-                                    <path d="M 45 16 L 69 22 A 3 3 0 0 1 72 25 L 72 77 A 3 3 0 0 1 69 80 L 45 74 Z"
-                                        stroke="currentColor" fill="none" />
-                                    <line x1="45" y1="16" x2="45" y2="74" stroke="currentColor"
-                                        stroke-dasharray="2 2" />
-                                    <line x1="25" y1="36" x2="38" y2="33"
-                                        stroke="currentColor" />
-                                    <line x1="25" y1="44" x2="38" y2="41"
-                                        stroke="currentColor" />
-                                    <line x1="25" y1="52" x2="34" y2="50"
-                                        stroke="currentColor" />
-                                    <path
-                                        d="M 58.5 37.5 C 56.5 35 52.5 36.5 54.5 40.5 L 58.5 44.5 L 62.5 40.5 C 64.5 36.5 60.5 35 58.5 37.5 Z"
-                                        stroke="currentColor" fill="none" />
-                                    <line x1="52" y1="54" x2="65" y2="57.25"
-                                        stroke="currentColor" />
-                                </svg>
-                            @elseif ($isDouble)
-                                <svg class="w-14 h-14 md:w-24 md:h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
-                                    viewBox="0 0 90 90">
-                                    <rect x="15" y="15" width="35" height="50" rx="3" stroke="currentColor"
-                                        fill="none" />
-                                    <rect x="42" y="10" width="35" height="50" rx="3" stroke="currentColor"
-                                        fill="none" />
-                                    <line x1="49" y1="20" x2="68" y2="20"
-                                        stroke="currentColor" />
-                                    <line x1="49" y1="26" x2="65" y2="26"
-                                        stroke="currentColor" />
-                                    <path d="M60 62 C50 72 30 72 25 65" stroke="currentColor" stroke-dasharray="2 2" />
-                                    <path d="M22 68 L25 65 L28 71" stroke="currentColor" />
-                                </svg>
-                            @else
-                                <svg class="w-14 h-14 md:w-24 md:h-24 stroke-emerald-700 stroke-[1.25] fill-none group-hover:scale-105 transition-transform"
-                                    viewBox="0 0 80 90">
-                                    <rect x="20" y="12" width="40" height="60" rx="4"
-                                        stroke="currentColor" fill="none" />
-                                    <rect x="27" y="20" width="26" height="30" rx="2"
-                                        stroke="currentColor" fill="none" />
-                                    <line x1="27" y1="58" x2="47" y2="58"
-                                        stroke="currentColor" />
-                                </svg>
-                            @endif
-                        </div>
+                        @if ($isBiz)
+                            <span class="lp-new">New</span>
+                        @endif
 
-                        {{-- Bottom Info & Action --}}
-                        <div class="px-3 py-2.5 md:p-6 flex-1 flex flex-col justify-between">
-                            <div>
-                                <h3
-                                    class="font-extrabold text-slate-900 text-sm md:text-lg sm:text-xl group-hover:text-emerald-700 transition-colors">
-                                    {{ $displayTitle }}
-                                </h3>
-                                @if ($desc)
-                                    <p class="hidden md:block text-xs text-slate-500 font-normal mt-1.5 leading-relaxed">
-                                        {{ $desc }}</p>
+                        {{-- Illustration --}}
+                        <div class="lp-ill-box" aria-hidden="true">
+                            <svg class="lp-ill" viewBox="0 0 120 70" fill="none">
+                                @if ($isFolded)
+                                    <path d="M37 8h46l-3 7H40z" fill="#fff" stroke="#3B463D" stroke-width="1.1" />
+                                    <rect x="37" y="15" width="46" height="46" rx="1.5" fill="#fff" stroke="#3B463D" stroke-width="1.1" />
+                                    <line x1="46" y1="29" x2="74" y2="29" stroke="#2F7A3B" stroke-width="1.6" />
+                                    <line x1="46" y1="35" x2="66" y2="35" stroke="#2F7A3B" stroke-width="1.2" />
+                                @elseif ($isBiz)
+                                    <rect x="39" y="15" width="48" height="28" rx="2" fill="#fff" stroke="#3B463D" stroke-width="1.1" />
+                                    <rect x="33" y="21" width="48" height="28" rx="2" fill="#fff" stroke="#3B463D" stroke-width="1.1" />
+                                    <line x1="39" y1="31" x2="65" y2="31" stroke="#2F7A3B" stroke-width="1.6" />
+                                    <line x1="39" y1="37" x2="59" y2="37" stroke="#2F7A3B" stroke-width="1.2" />
+                                @elseif ($isDouble)
+                                    <rect x="40" y="10" width="50" height="38" rx="1.5" fill="#fff" stroke="#3B463D" stroke-width="1.1" />
+                                    <rect x="32" y="17" width="50" height="38" rx="1.5" fill="#fff" stroke="#3B463D" stroke-width="1.1" />
+                                    <line x1="40" y1="30" x2="68" y2="30" stroke="#2F7A3B" stroke-width="1.6" />
+                                    <line x1="40" y1="36" x2="62" y2="36" stroke="#2F7A3B" stroke-width="1.2" />
+                                @else
+                                    <rect x="34" y="14" width="52" height="40" rx="1.5" fill="#fff" stroke="#3B463D" stroke-width="1.1" />
+                                    <line x1="44" y1="28" x2="74" y2="28" stroke="#2F7A3B" stroke-width="1.6" />
+                                    <line x1="44" y1="34" x2="68" y2="34" stroke="#2F7A3B" stroke-width="1.2" />
                                 @endif
-
-                                {{-- Dimension Pills --}}
-                                <div class="mt-2 md:mt-4">
-                                    @if ($hasMultipleSizes)
-                                        <div class="flex items-center gap-1.5 flex-wrap">
-                                            <template x-for="(s, idx) in sizes" :key="s.id">
-                                                <button type="button" @click="selectedIdx = idx"
-                                                    :class="selectedIdx === idx ?
-                                                        'border-emerald-600 bg-emerald-50/80 text-emerald-900 font-bold' :
-                                                        'border-slate-200 bg-white text-slate-600 hover:border-slate-300 font-normal'"
-                                                    class="px-2 py-0.5 md:px-2.5 md:py-1 rounded-lg md:rounded-xl border text-[10px] md:text-[11px] transition-all cursor-pointer"
-                                                    x-text="dispW(s) + ' × ' + dispH(s)">
-                                                </button>
-                                            </template>
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-slate-400 font-mono"
-                                            x-text="dispW(sizes[0]) + ' × ' + dispH(sizes[0]) + ' in'"></span>
-                                    @endif
-                                </div>
-                            </div>
-
-                            {{-- Design Button --}}
-                            <?php $slug = '&title='; ?>
-                            <div class="mt-3 md:mt-6 pt-3 md:pt-4 border-t border-slate-100 flex items-center justify-end">
-                                <a :href="'{{ route('localprint.customizer') }}?size=' + sizeCode +
-                                    '&orientation=' + orientMode + '{{ $slug }} ' + titleSlug"
-                                    class="bg-[#287d3c] hover:bg-emerald-800 text-white font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-[11px] md:text-xs transition-all shadow-2xs inline-flex items-center gap-1 active:scale-95">
-                                    <span>Design →</span>
-                                </a>
-                            </div>
+                            </svg>
                         </div>
 
+                        {{-- Info + actions --}}
+                        <div class="lp-card-body">
+                            <h3 class="lp-card-title">{{ $displayTitle }}</h3>
+                            @if ($desc)
+                                <p class="lp-card-desc">{{ $desc }}</p>
+                            @endif
+
+                            {{-- Size pills --}}
+                            <div class="lp-pills">
+                                <template x-for="(s, idx) in sizes" :key="s.id">
+                                    <button type="button" @click="selectedIdx = idx"
+                                        :aria-pressed="String(selectedIdx === idx)"
+                                        :class="selectedIdx === idx ? 'on' : ''" class="lp-pill"
+                                        x-text="dispW(s) + ' × ' + dispH(s)"></button>
+                                </template>
+                            </div>
+
+                            {{-- Design (always an empty canvas: fresh=1) + Upload --}}
+                            <div class="lp-card-actions">
+                                <a @click="window.BusinessCardPdf && BusinessCardPdf.clear()"
+                                    :href="'{{ route('localprint.customizer') }}?size=' + sizeCode +
+                                        '&orientation=' + (isBiz ? 'landscape' : orientMode) + '&title=' + titleSlug + '&fresh=1'"
+                                    class="lp-btn lp-btn-solid">
+                                    Design
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M5 12h14M13 6l6 6-6 6" />
+                                    </svg>
+                                </a>
+                                @if ($uploadKind === 'biz')
+                                    <button type="button" class="lp-btn lp-btn-line"
+                                        @click.stop="selectedCard = titleSlug; uploadOpen = true; $nextTick(() => document.querySelector('.bcu-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))">
+                                        @include('quick-flow-pc.local-print.partials.upload-icon')
+                                        Upload
+                                    </button>
+                                @elseif ($uploadKind)
+                                    <a :href="'{{ route('localprint.pdf') }}?kind={{ $uploadKind }}&shape=' + orientMode"
+                                        class="lp-btn lp-btn-line">
+                                        @include('quick-flow-pc.local-print.partials.upload-icon')
+                                        Upload
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 @empty
-                    <div class="col-span-3 text-center py-12 bg-white rounded-3xl border border-slate-200">
+                    <div class="lp-grid-empty">
                         <p class="text-slate-500 text-sm font-medium">No sizes available.</p>
                     </div>
                 @endforelse
@@ -225,6 +196,7 @@
                 min: 2,
                 max: 12,
                 presets: [
+                    { label: 'Business card 3.5 × 2 in', w: 3.5, h: 2, type: 'double' },
                     { label: 'Square 5 × 5 in', w: 5, h: 5 },
                     { label: 'Square 6 × 6 in', w: 6, h: 6 },
                     { label: 'Photo 4 × 6 in', w: 4, h: 6 },
@@ -233,7 +205,7 @@
                     { label: 'Slim 4 × 9 in', w: 4, h: 9 },
                 ],
                 showAllPresets: false,
-                visiblePresets: 6,
+                visiblePresets: 7,
                 get shownPresets() {
                     return this.showAllPresets ? this.presets :
                         this.presets.filter((p, i) => i < this.visiblePresets || this.isPreset(p));
@@ -269,45 +241,37 @@
                     [this.w, this.h] = [this.h, this.w];
                 },
                 isPreset(p) { return Number(this.w) === p.w && Number(this.h) === p.h; },
-                get pw() { return (this.isValid(this.w) ? Number(this.w) : this.min) * 15; },
-                get ph() { return (this.isValid(this.h) ? Number(this.h) : this.min) * 15; },
+                get pw() { return (this.isValid(this.w) ? Number(this.w) : this.min) * 17; },
+                get ph() { return (this.isValid(this.h) ? Number(this.h) : this.min) * 17; },
                 get note() {
                     const w = this.fmt(this.w),
                         h = this.fmt(this.h);
-                    if (this.cardType === 'folded') return 'Folds to <b>' + w + ' × ' + h + ' in</b> from a <b>' + w + ' × ' + this.fmt(h * 2) + ' in</b> sheet.';
-                    if (this.cardType === 'double') return 'Printed on both sides of a <b>' + w + ' × ' + h + ' in</b> sheet.';
-                    return 'Printed on one side of a <b>' + w + ' × ' + h + ' in</b> sheet.';
+                    if (this.cardType === 'folded') return 'A ' + w + ' × ' + h + ' in folded card, from a ' + w + ' × ' + this.fmt(h * 2) + ' in sheet.';
+                    if (this.cardType === 'double') return 'A ' + w + ' × ' + h + ' in double-sided card.';
+                    return 'A ' + w + ' × ' + h + ' in flat card, front printed.';
                 },
                 get titleSlug() { return { folded: 'custom-folded', flat: 'custom-flat', double: 'custom-flat-double' } [this.cardType]; },
                 get href() {
                     const orientation = Number(this.h) > Number(this.w) ? 'portrait' : 'landscape';
                     return '{{ route('localprint.customizer') }}?size=' + this.fmt(this.w) + 'x' + this.fmt(this.h) +
-                        '&orientation=' + orientation + '&title=' + this.titleSlug;
+                        '&orientation=' + orientation + '&title=' + this.titleSlug + '&fresh=1';
                 },
             }"
-                class="mt-4 md:mt-8 bg-white border border-slate-200/90 rounded-2xl md:rounded-3xl overflow-hidden shadow-2xs grid grid-cols-1 md:grid-cols-[1.15fr_1fr]">
+                class="lp-custom">
 
                 {{-- Left: form --}}
                 <div class="p-4 md:p-7">
-                    <div class="flex items-center gap-2">
-                        <h3 class="font-extrabold text-slate-900 text-base md:text-xl">Custom size</h3>
-                        <span
-                            class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] md:text-[11px] font-bold">New</span>
-                    </div>
-                    <p class="text-xs md:text-sm text-slate-500 mt-1 leading-relaxed">
-                        Any size from 2 to 12 inches per side. Good for square cards, place cards and slim invitations.
-                    </p>
+                    <h3 class="font-extrabold text-slate-900 text-base md:text-lg">Custom size</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">2 to 12 in per side.</p>
 
                     {{-- Card type --}}
                     <p class="text-xs md:text-sm font-semibold text-slate-800 mt-4 md:mt-5 mb-1.5">Card type</p>
-                    <div class="inline-flex items-center bg-slate-100 rounded-xl p-1">
+                    <div class="lp-seg" role="radiogroup" aria-label="Card type">
                         <template
                             x-for="opt in [{ k: 'folded', l: 'Folded' }, { k: 'flat', l: 'Flat' }, { k: 'double', l: 'Double-sided' }]"
                             :key="opt.k">
-                            <button type="button" @click="cardType = opt.k"
-                                :class="cardType === opt.k ? 'bg-white text-slate-900 shadow-sm' :
-                                    'text-slate-500 hover:text-slate-700'"
-                                class="px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all"
+                            <button type="button" role="radio" @click="cardType = opt.k"
+                                :aria-checked="String(cardType === opt.k)" :class="cardType === opt.k && 'on'"
                                 x-text="opt.l"></button>
                         </template>
                     </div>
@@ -351,7 +315,7 @@
                     <p class="text-xs md:text-sm font-semibold text-slate-800 mt-4 md:mt-6 mb-2">Popular sizes</p>
                     <div class="flex flex-wrap gap-2">
                         <template x-for="p in shownPresets" :key="p.label">
-                            <button type="button" @click="w = p.w; h = p.h"
+                            <button type="button" @click="w = p.w; h = p.h; if (p.type) cardType = p.type"
                                 :class="isPreset(p) ? 'border-emerald-600 bg-emerald-50/80 text-emerald-900' :
                                     'border-slate-200 bg-white text-slate-700 hover:border-slate-300'"
                                 class="px-3 md:px-4 py-1.5 rounded-full border text-xs md:text-sm font-semibold transition-all"
@@ -366,7 +330,7 @@
 
                 {{-- Right: live preview --}}
                 <div
-                    class="relative bg-[#f2f5f3] border-t md:border-t-0 md:border-l border-slate-100 flex flex-col items-center justify-between p-4 md:p-6 min-h-[260px] md:min-h-[340px]">
+                    class="lp-dots">
                     <div class="flex-1 flex items-center justify-center w-full">
                         <div class="flex items-center gap-2">
                             {{-- Height label --}}
@@ -401,22 +365,19 @@
                         </div>
                     </div>
 
-                    <p x-show="selectedCard !== 'business-card'" class="text-xs md:text-sm text-slate-600 text-center mt-4" x-html="note"></p>
+                    <p x-show="selectedCard !== 'business-card'" class="text-xs text-slate-500 text-center mt-4" x-text="note"></p>
 
-                    {{-- Business card selected: upload a finished 2-page PDF, then design. --}}
+                    {{-- Business card selected: upload a finished PDF or images, then design. --}}
                     @include('quick-flow-pc.local-print.partials.business-card-upload')
 
-                    <div x-show="selectedCard !== 'business-card'" class="w-full flex items-center justify-between mt-4">
-                        {{-- 1 inch scale --}}
-                        <div class="flex items-center gap-1.5 text-[10px] text-slate-400">
-                            <span class="w-[15px] h-1.5 border-b border-x border-slate-400"></span>
-                            1 in
-                        </div>
+                    <div x-show="selectedCard !== 'business-card'" class="w-full flex justify-end mt-4">
                         <a :href="valid ? href : null" :aria-disabled="!valid"
-                            :class="valid ? 'bg-[#287d3c] hover:bg-emerald-800 active:scale-95' :
-                                'bg-slate-300 pointer-events-none'"
-                            class="text-white font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-[11px] md:text-xs transition-all shadow-2xs inline-flex items-center gap-1">
-                            <span>Design →</span>
+                            :class="valid ? '' : 'is-off'" class="lp-btn lp-btn-solid px-5">
+                            <span x-text="'Design ' + fmt(w) + ' in × ' + fmt(h) + ' in'"></span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
                         </a>
                     </div>
                 </div>
@@ -425,3 +386,58 @@
         </div>
     </div>
 @endsection
+
+@push('styles')
+    <style>
+        .lp-sizes { background: #EEF1EC }
+        .lp-sizes { background: #EEF1EC; padding: 16px 12px 40px }
+        .lp-wrap { max-width: 1240px; margin: 0 auto }
+        .lp-crumb { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; color: #6B776D; margin-bottom: 14px }
+        .lp-crumb a { color: #1F6B2E; text-decoration: none }
+        .lp-crumb a:hover { text-decoration: underline }
+        .lp-crumb .cur { color: #17201A; font-weight: 600 }
+        .lp-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px }
+        .lp-h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.01em; color: #112419 }
+        .lp-size-card { position: relative; display: flex; flex-direction: column; overflow: hidden; background: #FFFFFF; border: 1px solid #E2E7E0; border-radius: 16px }
+        .lp-new { position: absolute; top: 10px; right: 10px; z-index: 1; padding: 2px 8px; border-radius: 999px; background: #1F6B2E; color: #FFFFFF; font-size: 10px; font-weight: 700 }
+        .lp-ill-box { height: 80px; display: flex; align-items: center; justify-content: center; background: #EEF2EC }
+        .lp-card-body { flex: 1; display: flex; flex-direction: column; padding: 12px }
+        .lp-card-title { margin: 0; font-size: 14px; font-weight: 800; color: #17201A }
+        .lp-card-desc { margin: 4px 0 0; font-size: 11px; line-height: 1.5; color: #6B776D }
+        .lp-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px }
+        .lp-card-actions { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px }
+        .lp-grid-empty { padding: 48px 16px; text-align: center; background: #FFFFFF; border: 1px solid #E2E7E0; border-radius: 16px; color: #6B776D }
+        .lp-custom { margin-top: 16px; display: grid; grid-template-columns: 1fr; overflow: hidden; background: #FFFFFF; border: 1px solid #E2E7E0; border-radius: 16px }
+        .lp-dots { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 260px; padding: 16px; border-top: 1px solid #E2E7E0 }
+        @media (min-width: 768px) {
+            .lp-sizes { padding: 28px 24px 56px }
+            .lp-h1 { font-size: 28px }
+            .lp-titlebar { margin-bottom: 22px }
+            .lp-ill-box { height: 88px }
+            .lp-card-body { padding: 16px }
+            .lp-card-title { font-size: 15px }
+            .lp-card-desc { font-size: 12px }
+            .lp-custom { grid-template-columns: 1fr 1fr; margin-top: 20px }
+            .lp-dots { min-height: 320px; padding: 24px; border-top: none; border-left: 1px solid #E2E7E0 }
+        }
+        @media (min-width: 1024px) { .lp-sizes { padding-left: 48px; padding-right: 48px } }
+        .lp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px }
+        .lp-grid-empty { grid-column: 1 / -1 }
+        @media (min-width: 1024px) { .lp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px } }
+        .lp-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: #E3E8E1 }
+        .lp-seg button { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: none; border-radius: 8px; background: transparent; font-size: 12px; font-weight: 600; color: #4C5A4E; cursor: pointer; white-space: nowrap }
+        .lp-seg button:hover { color: #17201A }
+        .lp-seg button.on { background: #FFFFFF; color: #17201A; box-shadow: 0 1px 3px rgba(23, 32, 26, .14) }
+        .lp-ill { width: 120px; height: 70px }
+        .lp-pill { padding: 3px 10px; border-radius: 999px; border: 1px solid #D5DCD2; background: #FFFFFF; font-size: 11px; font-weight: 600; color: #4C5A4E; cursor: pointer }
+        .lp-pill:hover { border-color: #A9B3A6 }
+        .lp-pill.on { border-color: #2F7A3B; background: #EAF4E8; color: #1D4D22; box-shadow: 0 0 0 1px #2F7A3B }
+        .lp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; transition: background .15s, border-color .15s }
+        .lp-btn-solid { background: #1F6B2E; color: #FFFFFF !important; border: none }
+        .lp-btn-solid:hover { background: #18572A }
+        .lp-btn-solid.is-off { background: #B9C2B6; pointer-events: none }
+        .lp-btn-line { background: #FFFFFF; color: #17201A; border: 1px solid #D5DCD2 }
+        .lp-btn-line:hover { border-color: #1F6B2E; color: #1F6B2E }
+        .lp-dots { background-color: #F6F8F5; background-image: radial-gradient(#D3DAD0 1px, transparent 1px); background-size: 14px 14px }
+    </style>
+@endpush

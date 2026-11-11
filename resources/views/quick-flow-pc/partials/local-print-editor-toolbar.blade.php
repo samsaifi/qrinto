@@ -44,11 +44,17 @@
         <option value="2">200%</option>
     </select>
 
-    {{-- Only business cards are exported at a guaranteed 300 DPI (1050 × 600 px). --}}
+    {{-- Business cards: pick the resolution each side is saved at (300 / 600 / 1200 DPI).
+         business-card-editor exports and saves at the selected value. --}}
     @if ($lpUi['businessCard'])
-        <span id="preflight-badge" class="lp-tb-badge" title="Each side is saved at 300 DPI for print">
-            <span class="dot" aria-hidden="true"></span><span id="preflight-text">300 DPI · print ready</span>
-        </span>
+        <label id="preflight-badge" class="lp-tb-badge lp-tb-dpi" title="Each side is saved at this resolution for print">
+            <span class="dot" aria-hidden="true"></span>
+            <select id="bc-dpi" aria-label="Save resolution">
+                @foreach ($businessCard['dpis'] ?? [300, 600, 1200] as $dpi)
+                    <option value="{{ $dpi }}" @selected($dpi === ($businessCard['dpi'] ?? 300))>{{ $dpi }} DPI · print ready</option>
+                @endforeach
+            </select>
+        </label>
     @endif
 </div>
 
@@ -68,5 +74,9 @@
     .lp-tb-zoom:hover { background: #F0F3EE }
     .lp-tb-badge { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 999px; background: #E3F0E1; color: #1D4D22; font-size: 12px; font-weight: 700; white-space: nowrap }
     .lp-tb-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: #2F9E44 }
+    .lp-tb-dpi { cursor: pointer; padding-right: 6px }
+    .lp-tb-dpi:hover { background: #D5E8D2 }
+    .lp-tb-dpi:focus-within { outline: 3px solid #9FCB98; outline-offset: 1px }
+    .lp-tb-dpi select { appearance: none; -webkit-appearance: none; border: none; background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%231D4D22' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 2px center; padding: 0 16px 0 0; font: inherit; color: inherit; cursor: pointer; outline: none }
     .lp-toolbar button:focus-visible, .lp-toolbar select:focus-visible { outline: 2px solid #2F7A3B; outline-offset: 2px }
 </style>

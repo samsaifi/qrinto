@@ -495,8 +495,17 @@ Route::get('/staff/dashboard', [AdminDashboardController::class, 'index'])->midd
 // New standalone card editor (v2). Fully isolated from the existing customizer.
 // Registered BEFORE the flow routes so the '/{type}' wildcard cannot shadow it.
 // -----------------------------------------------------------------------------
-Route::get('/card-editor/{product?}', [\App\Http\Controllers\CardEditorController::class, 'index'])
+// /editor/single = front only, /editor/double = front + back, /editor/folded (default) = front, inside, back.
+// Add /landscape (or /portrait, the default) after the type to choose the orientation, e.g. /editor/single/landscape.
+Route::get('/editor/{type}/{orientation}/{product?}', [\App\Http\Controllers\CardEditorController::class, 'index'])
+    ->where(['type' => 'single|double|folded', 'orientation' => 'portrait|landscape'])
+    ->name('card-editor.orientation');
+Route::get('/editor/{type?}/{product?}', [\App\Http\Controllers\CardEditorController::class, 'index'])
+    ->where('type', 'single|double|folded')
     ->name('card-editor');
+// Old URLs: keep links working by sending them to /editor.
+Route::get('/editor/folder/{product?}', fn ($product = null) => redirect()->route('card-editor', array_filter(['type' => 'folded', 'product' => $product]), 301));
+Route::get('/card-editor/{product?}', fn ($product = null) => redirect()->route('card-editor', array_filter(['type' => $product ? 'folded' : null, 'product' => $product]), 301));
 
 // Single device-aware consumer flow. QuickFlowController now picks the view
 // folder (quick-flow vs quick-flow-pc) from the request device, so one route

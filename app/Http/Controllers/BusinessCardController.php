@@ -23,7 +23,8 @@ use Illuminate\Validation\ValidationException;
 class BusinessCardController extends Controller
 {
     /** Longest base64 data URI accepted per side (~12 MB decoded). */
-    protected const MAX_IMAGE_CHARS = 17 * 1024 * 1024;
+    // A 1200 DPI side (4200 × 2400 JPEG) can be several MB; base64 adds a third.
+    protected const MAX_IMAGE_CHARS = 54 * 1024 * 1024;
 
     /** Session key holding the last business card saved in this session. */
     public const SESSION_DESIGN = 'business_card_design_id';
@@ -88,6 +89,8 @@ class BusinessCardController extends Controller
             'orientation'   => BusinessCard::ORIENTATION,
             'imageWidth'    => BusinessCard::imageWidthPx(),
             'imageHeight'   => BusinessCard::imageHeightPx(),
+            'dpi'           => BusinessCard::DPI,
+            'dpis'          => BusinessCard::DPIS,
         ];
 
         return view('quick-flow-pc.customize', compact(
@@ -106,6 +109,7 @@ class BusinessCardController extends Controller
             'width_in'            => ['required', 'numeric', $this->exactly(BusinessCard::WIDTH_IN, 'Business cards must be 3.5 inches wide.')],
             'height_in'           => ['required', 'numeric', $this->exactly(BusinessCard::HEIGHT_IN, 'Business cards must be 2 inches high.')],
             'orientation'         => ['required', 'string', Rule::in([BusinessCard::ORIENTATION])],
+            'dpi'                 => ['nullable', 'integer', Rule::in(BusinessCard::DPIS)],
             'sides'               => ['required', 'array:front,back'],
             'sides.front'         => ['required', 'array:image,design'],
             'sides.back'          => ['required', 'array:image,design'],
@@ -133,7 +137,8 @@ class BusinessCardController extends Controller
                 (int) $validated['product_id'],
                 auth()->id(),
                 session()->getId(),
-                $existing
+                $existing,
+                (int) ($validated['dpi'] ?? BusinessCard::DPI)
             );
         } catch (ValidationException $e) {
             throw $e;
@@ -240,7 +245,7 @@ class BusinessCardController extends Controller
         ]);
     }
 
-    /* ── One side's 300 DPI render (owner only, for the preview page) ── */
+    /* ── One side's render at its saved DPI (owner only, for the preview page) ── */
     public function side(Request $request, UserDesign $design, string $side, BusinessCardPdfService $pdfs)
     {
         if (!BusinessCardDesignService::isBusinessCardDesign($design)) {
@@ -255,7 +260,9 @@ class BusinessCardController extends Controller
 
         // ?bleed=1: the render with its edges mirrored out by PREVIEW_BLEED_PX.
         if ($request->boolean('bleed')) {
-            $path = $pdfs->bled($disk, $path, BusinessCard::PREVIEW_BLEED_PX);
+            // Same 1/8 in at any render DPI.
+            $dpi = BusinessCard::dpi($data['dpi'] ?? BusinessCard::DPI);
+            $path = $pdfs->bled($disk, $path, (int) round(BusinessCard::PREVIEW_BLEED_PX * $dpi / BusinessCard::DPI));
         }
 
         return $disk->response($path, $side . '.jpg', [

@@ -3,7 +3,7 @@
  *
  * Reads finished business card artwork in the browser and turns it into the
  * Front / Back artwork:
- *   - a PDF (PDF.js): exactly 2 pages, page 1 = front, page 2 = back; ≤ 50 MB
+ *   - a PDF (PDF.js): any page count, page 1 = front, page 2 (if any) = back; ≤ 50 MB
  *   - 1 or 2 images (PNG / JPG / JPEG, checked by their bytes); ≤ 25 MB each.
  *     Two images: names containing "front" / "back" decide the side, otherwise
  *     the order they were chosen in. One image goes on one side only.
@@ -103,15 +103,12 @@ window.BusinessCardPdf = (function () {
         }
 
         try {
-            if (doc.numPages !== 2) {
-                throw new UploadError('This PDF has ' + doc.numPages + (doc.numPages === 1 ? ' page' : ' pages') +
-                    '. Upload a PDF with exactly two pages: the front on page 1 and the back on page 2.');
-            }
-
+            // Any page count: page 1 = front, page 2 (if any) = back, the rest are ignored.
+            var count = Math.min(doc.numPages, 2);
             var out = [];
             var resized = [];
             var sizes = [];
-            for (var i = 1; i <= 2; i++) {
+            for (var i = 1; i <= count; i++) {
                 var page = await doc.getPage(i);
                 var vp = page.getViewport({ scale: 1 }); // honours the page's /Rotate
                 sizes.push(inches(vp.width) + ' × ' + inches(vp.height) + ' in');
@@ -137,10 +134,13 @@ window.BusinessCardPdf = (function () {
                 kind: 'pdf',
                 names: [file.name || 'business-card.pdf'],
                 pages: out,
-                note: !resized.length ? '' : 'Heads up: ' + (resized.length === 2 && sizes[0] === sizes[1]
-                    ? 'the pages are ' + sizes[0]
-                    : resized.map(function (n) { return 'page ' + n + ' is ' + sizes[n - 1]; }).join(' and ')) +
-                    ', not 3.5 × 2 in, so the design was scaled to fill the card and its edges were trimmed.',
+                note: [
+                    !resized.length ? '' : 'Heads up: ' + (resized.length === 2 && sizes[0] === sizes[1]
+                        ? 'the pages are ' + sizes[0]
+                        : resized.map(function (n) { return 'page ' + n + ' is ' + sizes[n - 1]; }).join(' and ')) +
+                        ', not 3.5 × 2 in, so the design was scaled to fill the card and its edges were trimmed.',
+                    doc.numPages > 2 ? 'This PDF has ' + doc.numPages + ' pages; only pages 1 and 2 are used.' : '',
+                ].filter(Boolean).join(' '),
             };
         } finally {
             doc.destroy();
@@ -228,7 +228,8 @@ window.BusinessCardPdf = (function () {
 
     /** "Using …" line for a result; `side` names where a single image went. */
     function describe(result, side) {
-        if (result.kind === 'pdf') return 'Using ' + result.names[0] + ': page 1 is on the front and page 2 on the back.';
+        if (result.kind === 'pdf') return 'Using ' + result.names[0] + (result.pages.length === 2
+            ? ': page 1 is on the front and page 2 on the back.' : ' on the front.');
         if (result.pages.length === 2) return 'Using ' + result.names[0] + ' on the front and ' + result.names[1] + ' on the back.';
         return 'Using ' + result.names[0] + ' on the ' + (side || 'front') + '.';
     }

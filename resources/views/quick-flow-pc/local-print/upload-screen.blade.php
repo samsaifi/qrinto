@@ -226,6 +226,10 @@
                         if (saved && KINDS[saved.kind]) this.kind = saved.kind;
                         if (saved && ['portrait', 'landscape'].includes(saved.shape)) this.shape = saved.shape;
                     } catch (e) {}
+                    // ?kind= / ?shape= from the size page's Upload buttons win over the saved choice.
+                    const q = new URLSearchParams(location.search);
+                    if (KINDS[q.get('kind')]) this.kind = q.get('kind');
+                    if (['portrait', 'landscape'].includes(q.get('shape'))) this.shape = q.get('shape');
                     this.$watch('kind', () => this.remember());
                     this.$watch('shape', () => this.remember());
                     if (window.pdfjsLib) {

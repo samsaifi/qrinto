@@ -623,8 +623,8 @@
 
         .page {
             position: relative;
-            width: 360px;
-            height: 504px;
+            width: var(--pw, 360px);
+            height: var(--ph, 504px);
             flex: none
         }
 
@@ -777,22 +777,6 @@
 
         .el-qr.empty {
             padding: 0
-        }
-
-        .backmark {
-            position: absolute;
-            bottom: 18px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font: 500 10px 'Onest', system-ui, sans-serif;
-            color: rgba(0, 0, 0, .45);
-            pointer-events: none
-        }
-
-        .backmark b {
-            color: #11A463;
-            font-weight: 700
         }
 
         .safe {
@@ -1158,7 +1142,7 @@
 
         .strip-ind {
             position: absolute;
-            left: 39%;
+            left: 0;
             top: -1px;
             height: calc(100% - 9px);
             background: var(--stage);
@@ -1348,6 +1332,174 @@
         }
 
         /* Modal */
+        /* Decorative template art + rotation */
+        .el-art img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            pointer-events: none
+        }
+
+        .h-rot {
+            left: 50%;
+            top: calc(-28px * var(--inv));
+            cursor: grab;
+            background: var(--brand) !important
+        }
+
+        .h-rot::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            height: calc(16px * var(--inv));
+            border-left: calc(1.5px * var(--inv)) solid var(--brand)
+        }
+
+        .opac {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12.5px;
+            color: var(--muted, #6b746f)
+        }
+
+        .opac input {
+            width: 84px;
+            accent-color: var(--brand)
+        }
+
+        /* Template library */
+        .lib-bar {
+            position: sticky;
+            top: -16px;
+            z-index: 2;
+            background: var(--surface);
+            padding: 8px 0 6px;
+            margin: 0 0 4px
+        }
+
+        .lib-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 0 10px;
+            background: var(--surface-2);
+            color: var(--muted, #6b746f)
+        }
+
+        .lib-search:focus-within {
+            border-color: var(--brand)
+        }
+
+        .lib-search input {
+            flex: 1;
+            border: 0;
+            background: transparent;
+            padding: 9px 0;
+            font: inherit;
+            font-size: 14px;
+            color: var(--ink);
+            outline: none;
+            min-width: 0
+        }
+
+        .lib-chips {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 10px 0 2px;
+            scrollbar-width: thin
+        }
+
+        .chip {
+            flex: none;
+            border: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--ink);
+            border-radius: 999px;
+            padding: 5px 11px;
+            font: inherit;
+            font-size: 12.5px;
+            cursor: pointer;
+            white-space: nowrap
+        }
+
+        .chip:hover {
+            border-color: var(--brand)
+        }
+
+        .chip[aria-pressed="true"] {
+            background: var(--brand);
+            border-color: var(--brand);
+            color: #fff
+        }
+
+        .tpl-tile {
+            position: relative;
+            gap: 4px
+        }
+
+        .tpl-tile .mini {
+            margin-bottom: 4px;
+            transition: transform .15s ease, box-shadow .15s ease
+        }
+
+        .tpl-tile:hover .mini {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, .18)
+        }
+
+        .tpl-name {
+            font-weight: 600;
+            line-height: 1.2
+        }
+
+        .tpl-meta {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--muted, #6b746f);
+            line-height: 1.25
+        }
+
+        .tpl-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            font-style: normal;
+            font-size: 10px;
+            font-weight: 600;
+            background: #fff;
+            color: #8a5a00;
+            border-radius: 999px;
+            padding: 2px 7px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .2)
+        }
+
+        .lib-loading {
+            padding: 30px 0;
+            text-align: center;
+            color: var(--muted, #6b746f);
+            font-size: 13px
+        }
+
+        .dialog.sm {
+            width: min(420px, 100%)
+        }
+
+        .dialog.sm .dlg-body {
+            padding: 4px 20px 8px;
+            display: block
+        }
+
+        @media (max-width: 760px) {
+            .lib-bar {
+                top: -12px
+            }
+        }
+
         .modal {
             position: fixed;
             inset: 0;
@@ -1471,7 +1623,7 @@
             left: -9999px;
             top: 0;
             visibility: hidden;
-            width: 360px
+            width: var(--pw, 360px)
         }
 
         @media (max-width:760px) {
@@ -1663,6 +1815,20 @@
         </div>
     </div>
 
+    <div class="modal" id="confirmModal" hidden>
+        <div class="dialog sm" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle" aria-describedby="cfMsg">
+            <div class="dlg-head">
+                <h2 id="cfTitle">Replace your design?</h2>
+            </div>
+            <div class="dlg-body">
+                <p id="cfMsg" class="hint"></p>
+            </div>
+            <div class="dlg-foot"><button class="btn" data-cfcancel>Keep my design</button><button class="btn primary"
+                    id="cfOk">Use template</button></div>
+        </div>
+    </div>
+
+    <script>window.CARD_TYPE = @json($type ?? 'folded'); window.CARD_ORIENTATION = @json($orientation ?? 'portrait'); window.QE_TEMPLATES_URL = @json(asset('assets/templates/templates.json') . '?v=' . @filemtime(public_path('assets/templates/templates.json')));</script>
     <script src="{{ asset('js/card-editor.js') }}?v={{ time() }}"></script>
 </body>
 

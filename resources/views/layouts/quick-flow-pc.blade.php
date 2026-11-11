@@ -112,7 +112,7 @@
                 {{-- Right Side: Pickup store + Menu --}}
                 <div class="flex items-center gap-3 shrink-0">
                     {{-- Active Store Selector (hidden on local print pages, hidden on mobile — mobile bar below) --}}
-                    @if (!request()->routeIs('localprint.*'))
+                    @if (!request()->routeIs('localprint.*', 'print.own-design.customizer.preview.business-card'))
                         <div class="hidden md:flex items-center">
                             @include('layouts.pc.store')
                         </div>
@@ -270,7 +270,7 @@
     </header>
 
     {{-- Mobile store bar (below header, visible only on mobile) --}}
-    @if (!request()->routeIs('localprint.*'))
+    @if (!request()->routeIs('localprint.*', 'print.own-design.customizer.preview.business-card'))
         <div class="md:hidden sticky top-[56px] z-40 bg-white border-b border-slate-200/80 px-4 py-2">
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 min-w-0">

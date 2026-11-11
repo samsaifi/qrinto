@@ -9,132 +9,128 @@
      On a back sheet, cell n is the back of front card n.
      ═══════════════════════════════════════════════════════════════════════ --}}
 <div class="bcl">
-    {{-- ── Title row ─────────────────────────────────────────── --}}
-    <div class="bcl-top">
-        <div class="ck-min0">
-            <nav class="bcl-progress" aria-label="Progress">
-                <span class="done"><span class="dot" aria-hidden="true">✓</span>Size</span>
-                <span class="done"><span class="dot" aria-hidden="true">✓</span>Design</span>
-                <span :class="bcStep === 'layout' ? 'now' : 'done'"
-                    :aria-current="bcStep === 'layout' ? 'step' : null">
-                    <span class="dot" aria-hidden="true" x-text="bcStep === 'layout' ? '3' : '✓'"></span>Sheet
-                    layout</span>
-                <span :class="bcStep === 'print' ? 'now' : ''" :aria-current="bcStep === 'print' ? 'step' : null">
-                    <span class="dot" aria-hidden="true">4</span>Print</span>
-            </nav>
-            <a href="{{ $bizCard['editUrl'] }}" class="bcl-back">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M15 6l-6 6 6 6" />
-                </svg>Back to design</a>
-            <h1 class="bcl-h1">Sheet layout</h1>
-            <p class="bcl-sub"
-                x-text="bcF.cards + ' business cards on one ' + bcF.sheet_name + ' sheet, printed on both sides and lined up for cutting.'">
-            </p>
-        </div>
-        <div class="bcl-seg" role="tablist" aria-label="Preview">
-            <template
-                x-for="v in [['side', 'Front and back'], ['flip', 'Turn the sheet'], ['check', 'Check alignment']]"
-                :key="v[0]">
-                <button type="button" role="tab" :id="'bcl-view-' + v[0]" :aria-selected="String(bcView === v[0])"
-                    :class="bcView === v[0] && 'on'" @click="bcView = v[0]; bcPlaying = true" x-text="v[1]"></button>
-            </template>
-        </div>
-    </div>
-
+    {{-- Left column (title + sheet preview) and the settings panel side by side,
+       so the panel starts at the top of the page. --}}
     <div class="bcl-grid">
-        {{-- ── Sheet preview ──────────────────────────────────── --}}
-        <section class="bcl-stage" aria-label="Sheet preview" :style="'--w:' + bcF.width_in + ';--h:' + bcF.height_in">
+        <div class="bcl-main">
+            {{-- ── Title row ─────────────────────────────────────────── --}}
+            <div class="bcl-top">
+                <div class="ck-min0">
 
-            {{-- Front and back --}}
-            <div class="bcl-pair" x-show="bcView === 'side'">
-                <template x-for="sd in ['front', 'back']" :key="sd">
-                    <figure class="bcl-fig">
-                        <div class="bcl-sheet" role="img"
-                            :aria-label="(sd === 'front' ? 'Front' : 'Back') + ' sheet, ' + bcF.cards + ' cards'">
-                            <template x-for="c in (sd === 'front' ? bcF.front : bcBackCells())"
-                                :key="sd + bcFormat + bcFlip + c.n">
-                                <div class="bcl-cell" :style="bcBoxStyle(c)">
-                                    <img :src="bcSides[sd]" alt="" :style="bcImgStyle(sd)">
-                                    <span class="bcl-guide cut" x-show="bcGuides"
-                                        :style="bcGuideStyle(c, false)"></span>
-                                    <span class="bcl-guide safe" x-show="bcGuides"
-                                        :style="bcGuideStyle(c, true)"></span>
-                                    <span class="bcl-num" x-show="bcNums" x-text="c.n"></span>
-                                </div>
-                            </template>
-                            <template x-if="bcCuts">
-                                <div>
-                                    <template x-for="x in bcF.cuts_x" :key="'x' + x"><span class="bcl-cut v"
-                                            :style="'left:' + x + '%'"></span></template>
-                                    <template x-for="y in bcF.cuts_y" :key="'y' + y"><span class="bcl-cut h"
-                                            :style="'top:' + y + '%'"></span></template>
-                                </div>
-                            </template>
-                        </div>
-                        <figcaption>
-                            <span x-text="sd === 'front' ? 'Front' : 'Back'"></span>
-                            <span class="muted"
-                                x-text="sd === 'front' ? '· logo side' : ('· details side, ' + (bcFlip === 'long' ? 'columns swapped' : 'rows swapped'))"></span>
-                        </figcaption>
-                    </figure>
-                </template>
+                    <a href="{{ $bizCard['editUrl'] }}" class="bcl-back">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M15 6l-6 6 6 6" />
+                        </svg>Back to design</a>
+                    <h1 class="bcl-h1">Sheet layout</h1>
+                    <p class="bcl-sub"
+                        x-text="bcF.cards + ' business cards on one ' + bcF.sheet_name + ' sheet, printed on both sides and lined up for cutting.'">
+                    </p>
+                </div>
             </div>
 
-            {{-- Turn the sheet --}}
-            <div class="bcl-turn" x-show="bcView === 'flip'" x-cloak>
-                <div class="bcl-3d">
-                    <div class="bcl-sheet bcl-flipper" :class="bcFlip === 'long' ? 'flipY' : 'flipX'"
-                        :style="'animation-play-state:' + (bcPlaying ? 'running' : 'paused')" role="img"
-                        :aria-label="'Sheet turning over on its ' + bcFlip + ' edge; each card number lines up front and back'">
-                        <template x-for="sd in ['front', 'back']" :key="'face' + sd">
-                            <div class="bcl-face"
-                                :class="sd === 'back' && (bcFlip === 'long' ? 'backY' : 'backX')">
+            {{-- ── Sheet preview ──────────────────────────────────── --}}
+            <section class="bcl-stage" aria-label="Sheet preview"
+                :style="'--w:' + bcF.width_in + ';--h:' + bcF.height_in">
+
+                {{-- Front and back --}}
+                <div class="bcl-pair" x-show="bcView === 'side'">
+                    <template x-for="sd in ['front', 'back']" :key="sd">
+                        <figure class="bcl-fig">
+                            <div class="bcl-sheet" role="img"
+                                :aria-label="(sd === 'front' ? 'Front' : 'Back') + ' sheet, ' + bcF.cards + ' cards'">
                                 <template x-for="c in (sd === 'front' ? bcF.front : bcBackCells())"
-                                    :key="'t' + sd + bcFormat + bcFlip + c.n">
+                                    :key="sd + bcFormat + bcFlip + c.n">
                                     <div class="bcl-cell" :style="bcBoxStyle(c)">
                                         <img :src="bcSides[sd]" alt="" :style="bcImgStyle(sd)">
                                         <span class="bcl-guide cut" x-show="bcGuides"
                                             :style="bcGuideStyle(c, false)"></span>
-                                        <span class="bcl-num" x-text="c.n"></span>
+                                        <span class="bcl-guide safe" x-show="bcGuides"
+                                            :style="bcGuideStyle(c, true)"></span>
+                                        <span class="bcl-num" x-show="bcNums" x-text="c.n"></span>
+                                    </div>
+                                </template>
+                                <template x-if="bcCuts">
+                                    <div>
+                                        <template x-for="x in bcF.cuts_x" :key="'x' + x"><span class="bcl-cut v"
+                                                :style="'left:' + x + '%'"></span></template>
+                                        <template x-for="y in bcF.cuts_y" :key="'y' + y"><span
+                                                class="bcl-cut h" :style="'top:' + y + '%'"></span></template>
                                     </div>
                                 </template>
                             </div>
-                        </template>
+                            <figcaption>
+                                <span x-text="sd === 'front' ? 'Front' : 'Back'"></span>
+                                <span class="muted"
+                                    x-text="sd === 'front' ? '· logo side' : ('· details side, ' + (bcFlip === 'long' ? 'columns swapped' : 'rows swapped'))"></span>
+                            </figcaption>
+                        </figure>
+                    </template>
+                </div>
+
+                {{-- Turn the sheet --}}
+                <div class="bcl-turn" x-show="bcView === 'flip'" x-cloak>
+                    <div class="bcl-3d">
+                        <div class="bcl-sheet bcl-flipper" :class="bcFlip === 'long' ? 'flipY' : 'flipX'"
+                            :style="'animation-play-state:' + (bcPlaying ? 'running' : 'paused')" role="img"
+                            :aria-label="'Sheet turning over on its ' + bcFlip + ' edge; each card number lines up front and back'">
+                            <template x-for="sd in ['front', 'back']" :key="'face' + sd">
+                                <div class="bcl-face"
+                                    :class="sd === 'back' && (bcFlip === 'long' ? 'backY' : 'backX')">
+                                    <template x-for="c in (sd === 'front' ? bcF.front : bcBackCells())"
+                                        :key="'t' + sd + bcFormat + bcFlip + c.n">
+                                        <div class="bcl-cell" :style="bcBoxStyle(c)">
+                                            <img :src="bcSides[sd]" alt="" :style="bcImgStyle(sd)">
+                                            <span class="bcl-guide cut" x-show="bcGuides"
+                                                :style="bcGuideStyle(c, false)"></span>
+                                            <span class="bcl-num" x-text="c.n"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="bcl-row">
+                        <button type="button" class="bcl-pill" @click="bcPlaying = !bcPlaying"
+                            x-text="bcPlaying ? 'Pause' : 'Play'"></button>
+                        <span class="muted">Card 1 stays card 1 when the sheet turns over.</span>
                     </div>
                 </div>
-                <div class="bcl-row">
-                    <button type="button" class="bcl-pill" @click="bcPlaying = !bcPlaying"
-                        x-text="bcPlaying ? 'Pause' : 'Play'"></button>
-                    <span class="muted">Card 1 stays card 1 when the sheet turns over.</span>
-                </div>
-            </div>
 
-            {{-- Check alignment --}}
-            <div class="bcl-check" x-show="bcView === 'check'" x-cloak>
-                <div class="bcl-sheet">
-                    <template x-for="c in bcF.front" :key="'cf' + bcFormat + c.n">
-                        <div>
-                            <div class="bcl-cell faded" :style="bcBoxStyle(c)"><img :src="bcSides.front"
-                                    alt="" :style="bcImgStyle('front')"></div>
-                            <span class="bcl-outline" :style="bcCellStyle(c)" aria-hidden="true"></span>
-                        </div>
-                    </template>
-                    <template x-for="c in bcF.front" :key="'cg' + bcFormat + c.n">
-                        <span class="bcl-ghost" :style="bcGhostStyle(c)" aria-hidden="true"></span>
-                    </template>
+                {{-- Check alignment --}}
+                <div class="bcl-check" x-show="bcView === 'check'" x-cloak>
+                    <div class="bcl-sheet">
+                        <template x-for="c in bcF.front" :key="'cf' + bcFormat + c.n">
+                            <div>
+                                <div class="bcl-cell faded" :style="bcBoxStyle(c)"><img :src="bcSides.front"
+                                        alt="" :style="bcImgStyle('front')"></div>
+                                <span class="bcl-outline" :style="bcCellStyle(c)" aria-hidden="true"></span>
+                            </div>
+                        </template>
+                        <template x-for="c in bcF.front" :key="'cg' + bcFormat + c.n">
+                            <span class="bcl-ghost" :style="bcGhostStyle(c)" aria-hidden="true"></span>
+                        </template>
+                    </div>
+                    <div class="bcl-legend">
+                        <span><span class="ln solid"></span>Front cards</span>
+                        <span><span class="ln dashed"></span>Back cards, seen through the paper</span>
+                    </div>
+                    <div role="status" class="bcl-status" :class="(bcDx || bcDy) ? 'warn' : 'ok'" x-text="bcCheckMsg">
+                    </div>
                 </div>
-                <div class="bcl-legend">
-                    <span><span class="ln solid"></span>Front cards</span>
-                    <span><span class="ln dashed"></span>Back cards, seen through the paper</span>
-                </div>
-                <div role="status" class="bcl-status" :class="(bcDx || bcDy) ? 'warn' : 'ok'" x-text="bcCheckMsg">
-                </div>
-            </div>
-        </section>
+            </section>
+        </div>
 
         {{-- ── Settings / print ───────────────────────────────── --}}
         <aside class="bcl-aside" aria-label="Sheet settings">
+            {{-- Paper setup / Print tabs (bcStep: layout | print). --}}
+            <div class="bcl-seg two bcl-tabs" role="tablist" aria-label="Sheet steps">
+                <button type="button" role="tab" :aria-selected="String(bcStep === 'layout')"
+                    :class="bcStep === 'layout' && 'on'" @click="bcStep !== 'layout' && bcBackToLayout()">Paper
+                    setup</button>
+                <button type="button" role="tab" :aria-selected="String(bcStep === 'print')"
+                    :class="bcStep === 'print' && 'on'" @click="bcStep !== 'print' && bcContinue()">Print</button>
+            </div>
 
             <template x-if="bcStep === 'layout'">
                 <div class="bcl-aside-in">
@@ -153,65 +149,48 @@
                             </div>
                         </div>
 
-                        <div x-show="bcF.gaps">
-                            <h2 id="bcl-gap">Space between cards</h2>
-                            <p class="bcl-help">A small gap gives the blade room, so a cut that drifts a little doesn’t
-                                clip the next card.</p>
-                            <div class="bcl-seg three" role="radiogroup" aria-labelledby="bcl-gap">
-                                <template x-for="n in bcGapSteps" :key="'g' + n">
-                                    <button type="button" role="radio" :aria-checked="String(bcGap === n)"
-                                        :class="bcGap === n && 'on'" @click="bcSetGap(n)"
-                                        x-text="bcGapLabel(n)"></button>
-                                </template>
+                        {{-- Space between cards (left) and bleed (right) as dropdowns on one row. --}}
+                        <div class="bcl-two">
+                            <div x-show="bcF.gaps">
+                                <label class="bcl-lbl" for="bcl-gap">Space between cards</label>
+                                <select id="bcl-gap" class="bcl-select"
+                                    @change="bcSetGap(Number($event.target.value))">
+                                    <template x-for="n in bcGapSteps" :key="'g' + n">
+                                        <option :value="n" :selected="bcGap === n"
+                                            x-text="bcGapLabel(n)"></option>
+                                    </template>
+                                </select>
                             </div>
-                        </div>
-
-                        <div>
-                            <h2 id="bcl-bleed">Bleed</h2>
-                            <p class="bcl-help" x-text="bcBleedHelp"></p>
-                            <div class="bcl-seg three" role="radiogroup" aria-labelledby="bcl-bleed">
-                                <template x-for="mm in bcBleedSteps" :key="'b' + mm">
-                                    <button type="button" role="radio" :aria-checked="String(bcBleedOn(mm))"
-                                        :class="bcBleedOn(mm) && 'on'" :disabled="!bcBleedFits(mm)"
-                                        @click="bcSetBleed(mm)" x-text="mm + ' mm'"></button>
-                                </template>
+                            <div>
+                                <label class="bcl-lbl" for="bcl-bleed">Bleed</label>
+                                <select id="bcl-bleed" class="bcl-select"
+                                    @change="bcSetBleed(Number($event.target.value))">
+                                    <template x-for="mm in bcBleedSteps" :key="'b' + mm">
+                                        <option :value="mm" :selected="bcBleedOn(mm)"
+                                            :disabled="!bcBleedFits(mm)" x-text="mm + ' mm'"></option>
+                                    </template>
+                                </select>
                             </div>
-                            <label class="bcl-check-row">
-                                <input type="checkbox" :checked="bcGuides"
-                                    @change="bcGuides = $event.target.checked; bcSync()">
-                                Show cut line <span class="ln cut" aria-hidden="true"></span> and safe area <span
-                                    class="ln safe" aria-hidden="true"></span>
-                            </label>
                         </div>
 
                         <div>
                             <h2 id="bcl-per-sheet">Cards per sheet</h2>
-                            <div class="bcl-options" role="radiogroup" aria-labelledby="bcl-per-sheet">
+                            {{-- Both formats in one row; the description shows as a tooltip on hover / focus.
+                                 The tooltip sits on a wrapper so it still shows when the button is disabled. --}}
+                            <div class="bcl-seg two" role="radiogroup" aria-labelledby="bcl-per-sheet">
                                 <template x-for="f in bcPaperFormats(bcPaper)" :key="f.key">
-                                    <button type="button" role="radio" class="bcl-option"
-                                        :aria-checked="String(bcFormat === f.key)" :class="bcFormat === f.key && 'on'"
-                                        :disabled="!bcFits(f)" @click="bcSelect(f.key)">
-                                        <span class="ring" aria-hidden="true"><span></span></span>
-                                        <span class="ck-grow">
-                                            <span class="t" x-text="f.title"></span>
-                                            <span class="d" x-text="bcFormatDesc(f)"></span>
-                                        </span>
-                                        <span class="bcl-badge" x-show="f.recommended">Recommended</span>
-                                    </button>
+                                    <span class="bcl-tip"
+                                        :data-tip="bcFormatDesc(f) + (f.recommended ? ' · Recommended' : '')">
+                                        <button type="button" role="radio" class="bcl-fmt"
+                                            :aria-checked="String(bcFormat === f.key)"
+                                            :class="bcFormat === f.key && 'on'" :aria-description="bcFormatDesc(f)"
+                                            :disabled="!bcFits(f)" @click="bcSelect(f.key)">
+                                            <span x-text="f.title"></span>
+                                            <span class="bcl-star" x-show="f.recommended"
+                                                aria-label="Recommended">★</span>
+                                        </button>
+                                    </span>
                                 </template>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h2>How the printer turns the sheet</h2>
-                            <p class="bcl-help">Match your printer’s duplex setting. We place the backs to suit.</p>
-                            <div class="bcl-seg two" role="radiogroup" aria-label="Duplex flip edge">
-                                <button type="button" role="radio" :aria-checked="String(bcFlip === 'long')"
-                                    :class="bcFlip === 'long' && 'on'" @click="bcSetFlip('long')">Long edge (like
-                                    a book)</button>
-                                <button type="button" role="radio" :aria-checked="String(bcFlip === 'short')"
-                                    :class="bcFlip === 'short' && 'on'" @click="bcSetFlip('short')">Short edge
-                                    (like a notepad)</button>
                             </div>
                         </div>
 
@@ -220,8 +199,6 @@
                                 <h2>Fine-tune back position</h2>
                                 <button type="button" class="bcl-link" @click="bcResetNudge()">Reset</button>
                             </div>
-                            <p class="bcl-help">Only if a test sheet shows the backs a little off. Moves every back
-                                together.</p>
                             <div class="bcl-nudges">
                                 <div>
                                     <span class="lbl" id="bcl-dx">Left / right</span>
@@ -253,12 +230,6 @@
                                 </svg>Print an alignment test sheet</button>
                         </div>
 
-                        <div class="bcl-row wrap">
-                            <button type="button" class="bcl-toggle" :class="bcCuts && 'on'"
-                                :aria-pressed="String(bcCuts)" @click="bcCuts = !bcCuts">Cut lines</button>
-                            <button type="button" class="bcl-toggle" :class="bcNums && 'on'"
-                                :aria-pressed="String(bcNums)" @click="bcNums = !bcNums">Card numbers</button>
-                        </div>
                     </div>
 
                     <div class="bcl-box tight">
@@ -272,21 +243,6 @@
                                 <button type="button" aria-label="More sheets"
                                     @click="copies = Math.min(999, copies + 1)" :disabled="copies >= 999">+</button>
                             </div>
-                        </div>
-                        <div class="bcl-cutbox">
-                            {{-- x-html: <template x-for> doesn't work inside <svg>. --}}
-                            <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"
-                                x-html="bcCutIcon"></svg>
-                            <span><strong x-text="bcCutCount + ' straight cuts'"></strong><br>
-                                <span class="muted" x-text="bcCutBody"></span></span>
-                        </div>
-                        <div class="bcl-note" x-show="bcEdgeNote">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 8v5M12 16.5v.5" />
-                            </svg>
-                            <span x-text="bcEdgeNote"></span>
                         </div>
                         <button type="button" class="bcl-primary" @click="bcContinue()">Continue to print
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -304,42 +260,12 @@
             <template x-if="bcStep === 'print'">
                 <div class="bcl-aside-in">
                     <div class="bcl-box">
-                        <div>
-                            <button type="button" class="bcl-back" @click="bcBackToLayout()">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M15 6l-6 6 6 6" />
-                                </svg>Back to sheet layout</button>
-                            <h2 class="bcl-print-h">Print</h2>
-                        </div>
-
                         <div class="bcl-test" x-show="bcTest">
                             <strong>Alignment test sheet — no artwork.</strong> 1 sheet with numbered outlines on
                             both sides. Hold it up to the light: each back outline should sit behind its front.
                             <button type="button" class="bcl-test-exit" @click="bcExitTest()">Print my cards
                                 instead</button>
                         </div>
-
-                        <dl class="bcl-summary">
-                            <div>
-                                <dt>Sheet</dt>
-                                <dd x-text="bcF.title"></dd>
-                            </div>
-                            <div>
-                                <dt>Sides</dt>
-                                <dd x-text="'Both, flip on ' + bcFlip + ' edge'"></dd>
-                            </div>
-                            <div x-show="bcDx || bcDy">
-                                <dt>Backs moved</dt>
-                                <dd x-text="bcMm(bcDx) + ', ' + bcMm(bcDy)"></dd>
-                            </div>
-                            <div>
-                                <dt>Sheets</dt>
-                                <dd x-text="copies + (bcTest ? ' (test)' : ' · ' + (copies * bcF.cards) + ' cards')">
-                                </dd>
-                            </div>
-                        </dl>
 
                         <div>
                             <div class="ck-side-head">
@@ -423,56 +349,6 @@
         gap: 16px;
         flex-wrap: wrap;
         margin-bottom: 16px
-    }
-
-    .bcl-progress {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        font-size: 13px;
-        font-weight: 600;
-        color: #5B6659;
-        margin-bottom: 10px
-    }
-
-    .bcl-progress>span {
-        display: flex;
-        align-items: center;
-        gap: 6px
-    }
-
-    .bcl-progress .dot {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        border: 1px solid #A9B3A6;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        background: #fff;
-        color: #2F6E35
-    }
-
-    .bcl-progress .done {
-        color: #2F6E35
-    }
-
-    .bcl-progress .done .dot {
-        background: #E3F0E1;
-        border: none
-    }
-
-    .bcl-progress .now {
-        color: var(--ink);
-        font-weight: 700
-    }
-
-    .bcl-progress .now .dot {
-        background: var(--ink);
-        color: #fff;
-        border: none
     }
 
     .bcl-back {
@@ -635,8 +511,12 @@
         align-items: flex-start
     }
 
-    .bcl-stage {
+    .bcl-main {
         flex: 999 1 600px;
+        min-width: 0
+    }
+
+    .bcl-stage {
         min-width: 0;
         min-height: 600px;
         border-radius: 20px;
@@ -1213,6 +1093,107 @@
         color: #1F6B2E;
         cursor: pointer;
         font-family: inherit
+    }
+
+    .bcl-tip {
+        position: relative;
+        display: block
+    }
+
+    .bcl-tip .bcl-fmt {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-weight: 700
+    }
+
+    .bcl-fmt:disabled {
+        opacity: .45;
+        cursor: not-allowed
+    }
+
+    .bcl-star {
+        color: #1F6B2E;
+        font-size: 12px
+    }
+
+    .bcl-tip::after {
+        content: attr(data-tip);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        transform: translateX(-50%) translateY(4px);
+        width: max-content;
+        max-width: 220px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: #17201A;
+        color: #FFFFFF;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.4;
+        text-align: center;
+        white-space: normal;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity .15s, transform .15s;
+        z-index: 20
+    }
+
+    .bcl-tip:hover::after,
+    .bcl-tip:focus-within::after {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0)
+    }
+
+    .bcl-tabs {
+        margin-bottom: 12px
+    }
+
+    .bcl-tabs button {
+        font-size: 14px !important;
+        font-weight: 700
+    }
+
+    .bcl-two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px
+    }
+
+    .bcl-lbl {
+        display: block;
+        margin: 0 0 6px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #17201A
+    }
+
+    .bcl-select {
+        width: 100%;
+        height: 44px;
+        padding: 0 34px 0 12px;
+        border: 1px solid #C7CFC4;
+        border-radius: 12px;
+        background: #FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234C5A4E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+        appearance: none;
+        -webkit-appearance: none;
+        font-size: 14px;
+        font-weight: 600;
+        color: #17201A;
+        cursor: pointer
+    }
+
+    .bcl-select:hover {
+        border-color: #1F6B2E
+    }
+
+    .bcl-select:focus {
+        outline: 3px solid #9FCB98;
+        outline-offset: 1px;
+        border-color: #1F6B2E
     }
 
     .bcl-summary {

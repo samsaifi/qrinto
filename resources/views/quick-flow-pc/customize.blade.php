@@ -7,7 +7,12 @@
      ═══════════════════════════════════════════════════════════════════════ --}}
 
 @extends('layouts.quick-flow-pc')
-@section('title', 'Customize Your ' . $product->name . ' | Qrinto Online Print Studio')
+@php
+    // Local print opens the editor on a placeholder product, so name the page after
+    // the chosen card (e.g. "Business Card") instead of that product.
+    $editorName = isset($localPrintOverrides) && !empty($flowData['size_title']) ? $flowData['size_title'] : $product->name;
+@endphp
+@section('title', 'Customize Your ' . $editorName . ' | Qrinto Online Print Studio')
 @section('meta_description',
     'Customize ' .
     $product->name .
@@ -17,7 +22,7 @@
     strtolower($product->name) . ' design, Qrinto studio')
 @section('canonical_url', url()->current())
 @section('og_type', 'product')
-@section('og_title', 'Customize Your ' . $product->name . ' | Qrinto Online Print Studio')
+@section('og_title', 'Customize Your ' . $editorName . ' | Qrinto Online Print Studio')
 @section('og_description',
     'Customize ' .
     $product->name .
@@ -157,7 +162,7 @@
                                     : $product->no_of_pages . ' Pages'))
                             : 'Standard Size'))));
 
-        $bcTemplateName = $product->name ?? 'Custom Template';
+        $bcTemplateName = $editorName ?? ($product->name ?? 'Custom Template');
     @endphp
 
     <div id="customizer-app">
@@ -727,6 +732,26 @@
 
 @push('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    @if ($lpo)
+        <script>
+            // Opened from the size page's Design button (?fresh=1): start from an empty
+            // canvas - drop this card's saved sides and saved design id, then remove the
+            // flag from the URL so a reload keeps the work done since.
+            (function() {
+                const url = new URL(location.href);
+                if (!url.searchParams.has('fresh')) return;
+                const prefix = @json($bizCard['storagePrefix'] ?? 'qrinto_design_v1');
+                const sides = prefix + '_{{ $product->id }}_';
+                try {
+                    Object.keys(localStorage)
+                        .filter(k => k.startsWith(sides) || k === prefix + '_design_id')
+                        .forEach(k => localStorage.removeItem(k));
+                } catch (e) {}
+                url.searchParams.delete('fresh');
+                history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+            })();
+        </script>
+    @endif
     <script src="{{ asset('js/customizer-base.js') }}?v={{ time() }}"></script>
     <script>
         const customizer = Object.assign(customizerBase({

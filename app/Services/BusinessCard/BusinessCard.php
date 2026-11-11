@@ -19,8 +19,11 @@ final class BusinessCard
     public const HEIGHT_IN = 2.0;
     public const ORIENTATION = 'landscape';
 
-    /** Rendered side image resolution (300 DPI at trim size). */
+    /** Default rendered side image resolution (300 DPI at trim size). */
     public const DPI = 300;
+
+    /** Resolutions the editor can save a card at (picked in the editor toolbar). */
+    public const DPIS = [300, 600];
 
     /** Title slugs (from /print/own-design/sizes) that open the business card editor. */
     public const TITLE_SLUGS = ['business-card', 'business-cards'];
@@ -295,15 +298,21 @@ final class BusinessCard
         return self::HEIGHT_IN * self::POINTS_PER_INCH;
     }
 
-    /** Side image pixel size at DPI: 1050 × 600. */
-    public static function imageWidthPx(): int
+    /** A supported save resolution, falling back to the default 300 DPI. */
+    public static function dpi(mixed $dpi): int
     {
-        return (int) round(self::WIDTH_IN * self::DPI);
+        return in_array((int) $dpi, self::DPIS, true) ? (int) $dpi : self::DPI;
     }
 
-    public static function imageHeightPx(): int
+    /** Side image pixel size at a DPI: 1050 × 600 at 300, 2100 × 1200 at 600, 4200 × 2400 at 1200. */
+    public static function imageWidthPx(int $dpi = self::DPI): int
     {
-        return (int) round(self::HEIGHT_IN * self::DPI);
+        return (int) round(self::WIDTH_IN * $dpi);
+    }
+
+    public static function imageHeightPx(int $dpi = self::DPI): int
+    {
+        return (int) round(self::HEIGHT_IN * $dpi);
     }
 
     public static function format(string $key): array

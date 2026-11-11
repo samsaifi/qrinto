@@ -32,6 +32,24 @@
 
         // ── Uploaded PDF artwork (_bcUpload): a fixed bottom layer per side ──
         const PDF = window.BusinessCardPdf;
+
+        // Save resolution from the toolbar dropdown (#bc-dpi), remembered in this browser.
+        const DPI_KEY = BC.storagePrefix + '_dpi';
+        const dpi = {
+            get() {
+                const v = parseInt(document.getElementById('bc-dpi')?.value, 10);
+                return (BC.dpis || [300]).includes(v) ? v : BC.dpi || 300;
+            },
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            const sel = document.getElementById('bc-dpi');
+            if (!sel) return;
+            try {
+                const saved = localStorage.getItem(DPI_KEY);
+                if (saved && [...sel.options].some(o => o.value === saved)) sel.value = saved;
+            } catch (e) {}
+            sel.addEventListener('change', () => { try { localStorage.setItem(DPI_KEY, sel.value); } catch (e) {} });
+        });
         const SIDE_ORDER = [SIDE_KEYS.front, SIDE_KEYS.back];
         // Objects the editor saves (same filter as customizer-base _saveCanvasState).
         const SAVED = o => o._isUserImage || o._isUserText || o._isTemplateText || o._isTemplateImage || o._isTemplateSvg || o._isShape;
@@ -236,7 +254,7 @@
             });
         }
 
-        // Render one side at 300 DPI and serialise its editable objects. Each side
+        // Render one side at the chosen DPI (toolbar dropdown) and serialise its editable objects. Each side
         // has its own Fabric canvas, so exporting never touches the other side.
         customizer.exportBusinessCardSide = function(key) {
             const cv = this.canvases[key];
@@ -253,7 +271,8 @@
 
             let image = null;
             try {
-                image = fc.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: BC.imageWidth / fc.width });
+                // 3.5 in × the DPI picked in the toolbar (1050 px at 300, 4200 px at 1200).
+                image = fc.toDataURL({ format: 'jpeg', quality: 0.95, multiplier: Math.round(BC.widthIn * dpi.get()) / fc.width });
             } finally {
                 if (cv.maskGuides) cv.maskGuides.forEach(g => g.set('visible', true));
                 fc.renderAll();
@@ -317,6 +336,7 @@
                 width_in: BC.widthIn,
                 height_in: BC.heightIn,
                 orientation: BC.orientation,
+                dpi: dpi.get(),
                 sides: {
                     front: { image: sides.front.image, design: sides.front.design },
                     back: { image: sides.back.image, design: sides.back.design },

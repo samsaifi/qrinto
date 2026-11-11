@@ -25,8 +25,14 @@ class CardEditorController extends Controller
      * Optionally accepts a product slug/id purely to pre-fill the canvas
      * size; falls back to a sensible default 5x7 card when none is given.
      */
-    public function index(Request $request, $product = null)
+    public function index(Request $request)
     {
+        // Which sides the card has: single (front), double (front + back), folded (front, inside, back).
+        $type = $request->route('type') ?: 'folded';
+        // portrait = tall card; landscape = width and height swapped (wide card).
+        $orientation = $request->route('orientation') === 'landscape' ? 'landscape' : 'portrait';
+        $product = $request->route('product');
+
         $found = null;
         if ($product) {
             $found = Product::where('slug', $product)
@@ -40,10 +46,15 @@ class CardEditorController extends Controller
             'height' => 7.0,
             'unit'   => 'in',
         ];
+        if ($orientation === 'landscape') {
+            [$size['width'], $size['height']] = [$size['height'], $size['width']];
+        }
 
         return view('card-editor.index', [
             'product' => $found,
             'size'    => $size,
+            'type'    => $type,
+            'orientation' => $orientation,
         ]);
     }
 }

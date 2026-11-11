@@ -737,6 +737,7 @@
                         if (!this.bcTest) return;
                         this.bcTest = false;
                         this.copies = this.bcSheetsBeforeTest;
+                        this.bcView = 'side'; // the view tabs are gone, so leave the test view here
                         this.bcSync(false);
                     },
 

@@ -16,7 +16,7 @@ use Intervention\Image\ImageManager;
  * Files live on the PRIVATE disk under business-cards/{token}/ so they are only
  * reachable through the access-checked download route:
  *   front.json / back.json  - editor (Fabric.js) serialisation per side
- *   front.jpg  / back.jpg   - server re-encoded 300 DPI render per side
+ *   front.jpg  / back.jpg   - server re-encoded render per side, at the chosen DPI (300 / 600 / 1200)
  *   *.pdf                   - generated print sheets
  */
 class BusinessCardDesignService
@@ -25,7 +25,7 @@ class BusinessCardDesignService
     public const TYPE = 'business-card';
 
     /** Max decoded size of one side image. */
-    public const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
+    public const MAX_IMAGE_BYTES = 40 * 1024 * 1024;
 
     /** Max encoded size of one side's editor JSON. */
     public const MAX_DESIGN_BYTES = 8 * 1024 * 1024;
@@ -47,14 +47,15 @@ class BusinessCardDesignService
      *
      * @param  array{front: array{image: string, design: array}, back: array{image: string, design: array}}  $sides
      */
-    public function save(array $sides, int $productId, ?int $userId, string $sessionId, ?UserDesign $existing = null): UserDesign
+    public function save(array $sides, int $productId, ?int $userId, string $sessionId, ?UserDesign $existing = null, int $dpi = BusinessCard::DPI): UserDesign
     {
+        $dpi = BusinessCard::dpi($dpi);
         // Validate + normalise everything before touching storage, so a bad
         // back side never leaves a half-written design behind.
         $prepared = [];
         foreach (array_keys(BusinessCard::SIDES) as $side) {
             $prepared[$side] = [
-                'image'  => $this->normaliseImage($sides[$side]['image'] ?? null, $side),
+                'image'  => $this->normaliseImage($sides[$side]['image'] ?? null, $side, $dpi),
                 'design' => $this->encodeDesign($sides[$side]['design'] ?? null, $side),
             ];
         }
@@ -71,8 +72,8 @@ class BusinessCardDesignService
             $sideData[$side] = [
                 'image_path'  => "{$dir}/{$side}.jpg",
                 'design_path' => "{$dir}/{$side}.json",
-                'width_px'    => BusinessCard::imageWidthPx(),
-                'height_px'   => BusinessCard::imageHeightPx(),
+                'width_px'    => BusinessCard::imageWidthPx($dpi),
+                'height_px'   => BusinessCard::imageHeightPx($dpi),
             ];
         }
 
@@ -92,7 +93,7 @@ class BusinessCardDesignService
             'width_in'    => BusinessCard::WIDTH_IN,
             'height_in'   => BusinessCard::HEIGHT_IN,
             'orientation' => BusinessCard::ORIENTATION,
-            'dpi'         => BusinessCard::DPI,
+            'dpi'         => $dpi,
             'sides'       => $sideData,
             'pdfs'        => [],
             'pdf_errors'  => [],
@@ -113,10 +114,10 @@ class BusinessCardDesignService
 
     /**
      * Decode a data-URI render, verify it is a real JPEG/PNG with the card's
-     * aspect ratio, then re-encode to exactly 1050×600 JPEG (strips metadata and
+     * aspect ratio, then re-encode to exactly the DPI's size, e.g. 1050×600 at 300 (strips metadata and
      * anything appended to the image bytes).
      */
-    protected function normaliseImage(mixed $dataUri, string $side): string
+    protected function normaliseImage(mixed $dataUri, string $side, int $dpi = BusinessCard::DPI): string
     {
         if (!is_string($dataUri) || !preg_match('#^data:image/(png|jpe?g);base64,#i', $dataUri, $m)) {
             $this->fail("sides.{$side}.image", 'The ' . $side . ' side image must be a PNG or JPEG data URI.');
@@ -146,7 +147,7 @@ class BusinessCardDesignService
         }
 
         $image = (new ImageManager(new Driver()))->read($bin);
-        $image->resize(BusinessCard::imageWidthPx(), BusinessCard::imageHeightPx());
+        $image->resize(BusinessCard::imageWidthPx($dpi), BusinessCard::imageHeightPx($dpi));
 
         return (string) $image->toJpeg(95);
     }

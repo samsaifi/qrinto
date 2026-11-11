@@ -83,7 +83,10 @@ class BusinessCardPdfService
         $turns  = self::sideTurns($layout['rotated'], $short);
         // Bleed: artwork with its edges mirrored out by $bleedPx, printed in a
         // box that much larger than the card on every side.
-        $bleedPx = BusinessCard::bleedPx($format, $opts);
+        // bleedPx() is in 300 DPI pixels; scale it to this design's render DPI
+        // (rounded down, so the grid's room for bleed is never exceeded).
+        $dpi = BusinessCard::dpi($data['dpi'] ?? BusinessCard::DPI);
+        $bleedPx = (int) floor(BusinessCard::bleedPx($format, $opts) * $dpi / BusinessCard::DPI + 1e-6);
         $images = [];
         foreach (['front', 'back'] as $side) {
             $sideImage = $data['sides'][$side]['image_path'];
@@ -95,7 +98,7 @@ class BusinessCardPdfService
 
         // Fine-tune: move every back together, in back-page coordinates.
         $mm = 72 / 25.4;
-        $b  = $bleedPx / BusinessCard::DPI * BusinessCard::POINTS_PER_INCH;
+        $b  = $bleedPx / $dpi * BusinessCard::POINTS_PER_INCH;
         $box = fn(array $s, float $dx = 0, float $dy = 0) => array_merge($s, [
             'x'      => round($s['x'] + $dx - $b, 3),
             'y'      => round($s['y'] + $dy - $b, 3),

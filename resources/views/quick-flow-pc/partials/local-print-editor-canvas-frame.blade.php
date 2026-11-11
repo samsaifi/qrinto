@@ -21,7 +21,7 @@
             <label id="bc-dropzone" class="bc-dropzone" hidden>
                 <span class="bc-dz-ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" /></svg></span>
                 <span class="bc-dz-title">Drop your business card here</span>
-                <span class="bc-dz-sub">A 2-page PDF (front, then back), or a PNG/JPG for this side - two images fill the front and back. 3.5 × 2 in fits exactly.</span>
+                <span class="bc-dz-sub">A PDF (page 1 front, page 2 back), or a PNG/JPG for this side - two images fill the front and back. 3.5 × 2 in fits exactly.</span>
                 <span class="bc-dz-btn">Choose a file</span>
                 <span class="bc-dz-sub">or start from scratch with Text, Photo and Shapes on the right</span>
                 <input type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" multiple class="bc-file-input" data-bc-pdf-input>
