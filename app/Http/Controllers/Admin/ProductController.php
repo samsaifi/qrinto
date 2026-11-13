@@ -59,7 +59,9 @@ class ProductController extends Controller
         $paperTypes = $this->scopedPaperTypes();
         $events = $this->scopedEvents();
         $allTags = Product::pluck('tags')->flatten()->filter()->unique()->values()->all();
-        return view('admin.products.form', compact('categories', 'productTypes', 'paperTypes', 'events', 'allTags','no_of_pages_array'));
+        // Opened from the card editor's "Save as product template": page images + basics pre-filled.
+        $editorDraft = request()->boolean('from_editor') ? session('card_editor_product_draft') : null;
+        return view('admin.products.form', compact('categories', 'productTypes', 'paperTypes', 'events', 'allTags','no_of_pages_array', 'editorDraft'));
     }
 
     public function store(Request $request)
@@ -121,6 +123,16 @@ class ProductController extends Controller
                 ->store('products/overlays', 'public');
         }else{
             $validated['overlay_image'] =  "products/overlays/RhiG0tY76CYU50upFbP9sBi6TGmhuRZEPNv2dsws.jpg";
+        }
+
+        // Card editor draft images (saved under products/drafts/ by CardEditorController::productDraft)
+        // fill any image slot the admin did not upload a file for.
+        foreach (['frame_image', 'sample_image', 'background_image', 'overlay_image'] as $slot) {
+            $draft = (string) $request->input('editor_' . $slot);
+            if (!$request->hasFile($slot) && str_starts_with($draft, 'products/drafts/') && !str_contains($draft, '..')
+                && \Illuminate\Support\Facades\Storage::disk('public')->exists($draft)) {
+                $validated[$slot] = $draft;
+            }
         }
 
         $validated['product_store'] = $request->store_id;

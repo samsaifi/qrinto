@@ -3,13 +3,22 @@
 const CARD_TYPE=['single','double','folded'].includes(window.CARD_TYPE)?window.CARD_TYPE:'folded';
 const LANDSCAPE=window.CARD_ORIENTATION==='landscape';
 /* Page size in editor px. Designs below are drawn for portrait (360x504) and fitted to landscape at load */
-const W=LANDSCAPE?504:360,H=LANDSCAPE?360:504,KEY='qrinto-card-editor-v1'+(CARD_TYPE==='folded'?'':'-'+CARD_TYPE)+(LANDSCAPE?'-landscape':'');
+/* ?size=WxH (inches) sets the page ratio: long side stays 504px, the other follows the ratio (4x4 = square) */
+const CARD_SIZE=(()=>{const z=window.CARD_SIZE;return z&&z.w>0&&z.h>0?z:null;})();
+const W=CARD_SIZE?Math.round(CARD_SIZE.w>=CARD_SIZE.h?504:504*CARD_SIZE.w/CARD_SIZE.h):(LANDSCAPE?504:360),
+      H=CARD_SIZE?Math.round(CARD_SIZE.h>=CARD_SIZE.w?504:504*CARD_SIZE.h/CARD_SIZE.w):(LANDSCAPE?360:504),
+      KEY='qrinto-card-editor-v1'+(CARD_TYPE==='folded'?'':'-'+CARD_TYPE)+(LANDSCAPE?'-landscape':'')+(CARD_SIZE?'-'+CARD_SIZE.w+'x'+CARD_SIZE.h:'');
 document.documentElement.style.setProperty('--pw',W+'px');document.documentElement.style.setProperty('--ph',H+'px');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 
 const ICONS={
+  pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  printer:'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>',
+  store:'<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0Z"/><path d="M5 13v8h14v-8"/><path d="M10 21v-5h4v5"/>',
+  download:'<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
+  tag:'<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
   undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
   redo:'<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
   grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
@@ -42,7 +51,10 @@ const VIEWS={front:['front'],inside:['inL','inR'],back:['back']};
 const ORDER={single:['front'],double:['front','back'],folded:['front','inside','back']}[CARD_TYPE];
 const LAST=ORDER[ORDER.length-1];
 const VIEW_LABEL={front:'Front',inside:'Inside',back:'Back'};
-const PAGE_LABEL={front:'Front',inL:'Inside left',inR:'Inside right',back:'Back'};
+/* Landscape folded cards fold on the long (horizontal) edge: inside pages stack top/bottom and pages turn vertically */
+const STACK=LANDSCAPE&&CARD_TYPE==='folded';
+const PAGE_LABEL=STACK?{front:'Front',inL:'Inside top',inR:'Inside bottom',back:'Back'}:{front:'Front',inL:'Inside left',inR:'Inside right',back:'Back'};
+if(STACK)document.documentElement.classList.add('qe-stack');
 
 let uidN=0;const uid=()=>'e'+Date.now().toString(36)+(uidN++).toString(36);
 const T=o=>({id:uid(),type:'text',x:20,y:200,w:320,text:'Your text',font:'Onest',size:20,color:'#2a2a2a',align:'center',bold:false,italic:false,lh:1.35,ls:0,...o});
@@ -329,8 +341,9 @@ const PAIRS={
    round photos, stickers and QR codes stay square around their new centre. */
 const tplRaw=i=>(TEMPLATES[i].raw||TEMPLATES[i].make)();
 const PX=360,PY=504;
+const FIT=W!==PX||H!==PY;
 function fitEl(el){
-  if(!LANDSCAPE)return el;
+  if(!FIT)return el;
   const sx=W/PX,sy=H/PY,o={...el,x:Math.round(el.x*sx),y:Math.round(el.y*sy),w:Math.round(el.w*sx)};
   if(el.type==='text'){o.size=Math.max(8,Math.round(el.size*sy));return o;}
   o.h=Math.round(el.h*sy);
@@ -345,16 +358,29 @@ function fitEl(el){
   return o;
 }
 const fitPages=out=>{const r={};for(const k in out){const v=out[k];r[k]=Array.isArray(v)?v.map(fitEl):{...v,els:v.els.map(fitEl)};}return r;};
-if(LANDSCAPE)[TEMPLATES,...Object.values(PAGE_TEMPLATES),...Object.values(LAYOUTS)].forEach(list=>list.forEach(t=>{const m=t.make;t.raw=m;t.make=()=>fitPages(m());}));
+/* Text styles, stickers and background colours managed in admin replace the built-in lists */
+if(window.QE_LIBRARY)[[PAIRS,'pairs'],[STICKERS,'stickers'],[BG_COLORS,'bgColors']].forEach(([obj,key])=>{const d=window.QE_LIBRARY[key];
+  if(!d||Array.isArray(d)||!Object.keys(d).length)return;Object.keys(obj).forEach(k=>delete obj[k]);Object.assign(obj,d);});
+/* SVG artwork managed in admin (kind=svg_art), shown under the emojis in the Stickers panel: {group: [{name, src, x, y, w, h}]} */
+const ART=(window.QE_LIBRARY&&window.QE_LIBRARY.art&&!Array.isArray(window.QE_LIBRARY.art))?window.QE_LIBRARY.art:{};
+/* Layouts managed in admin (templates table, kind=layout) replace the built-in list above */
+if(window.QE_LAYOUTS)Object.keys(LAYOUTS).forEach(v=>{const list=window.QE_LAYOUTS[v];if(!Array.isArray(list)||!list.length)return;
+  LAYOUTS[v]=list.map(l=>({name:l.name,bg:l.bg||null,make:()=>{const o={};for(const pid in l.pages)o[pid]=(l.pages[pid]||[]).map(e=>({...JSON.parse(JSON.stringify(e)),id:uid()}));return o;}}));});
+if(FIT)[TEMPLATES,...Object.values(PAGE_TEMPLATES),...Object.values(LAYOUTS)].forEach(list=>list.forEach(t=>{const m=t.make;t.raw=m;t.make=()=>fitPages(m());}));
 /* New elements are placed with portrait coordinates; centre them on a wide page */
-const centreX=el=>{if(LANDSCAPE)el.x+=Math.round((W-PX)/2);return el;};
+const centreX=el=>{if(W!==PX)el.x+=Math.round((W-PX)/2);return el;};
 
 /* ---------- State ---------- */
-let state={title:'Anniversary card',pages:TEMPLATES[0].make()};
+/* First open (nothing saved yet) starts with a blank card */
+const blankPage=()=>({bg:'#ffffff',els:[]});
+let state={title:'Untitled card',pages:{front:blankPage(),inL:blankPage(),inR:blankPage(),back:blankPage()}};
 try{const raw=localStorage.getItem(KEY);if(raw){const d=JSON.parse(raw);if(d&&d.pages&&d.pages.front&&d.pages.inL&&d.pages.inR&&d.pages.back)state={title:d.title||'Untitled card',pages:d.pages};}}catch(e){}
 
-let view='front',tplTab='card',sel=null,activePage='front',editingId=null,zoom=1,zoomMode='fit',panel='templates',showSafe=false,library=[],pendingPhoto=null,addCount=0,pvView='front';
+let view='front',tplTab='card',stTab='emoji',sel=null,activePage='front',editingId=null,zoom=1,zoomMode='fit',panel='templates',showSafe=false,library=[],pendingPhoto=null,addCount=0,pvView='front';
 let qrDraft={url:'',color:'#14201a'};
+/* Admin mode (/admin/templates/{id}/design): edit a library template and save it back */
+const ADMIN_TPL=window.QE_ADMIN_TEMPLATE||null;
+if(ADMIN_TPL)state={title:ADMIN_TPL.name,pages:JSON.parse(JSON.stringify(ADMIN_TPL.pages))};
 let past=[],future=[],present=JSON.stringify(state.pages);
 let titleTouched=false;
 
@@ -406,7 +432,7 @@ function buildPage(pg,pid,mode){
   return p;
 }
 function mini(arr,s,mode='thumb'){
-  const m=document.createElement('div');m.className='mini';m.style.width=W*arr.length*s+'px';m.style.height=H*s+'px';
+  const m=document.createElement('div');m.className='mini';m.style.width=W*(STACK?1:arr.length)*s+'px';m.style.height=H*(STACK?arr.length:1)*s+'px';
   const inner=document.createElement('div');inner.className='mini-inner'+(arr.length>1?' spread':'');inner.style.transform=`scale(${s})`;
   arr.forEach(([pg,pid])=>inner.appendChild(buildPage(pg,pid,mode)));m.appendChild(inner);return m;
 }
@@ -415,7 +441,7 @@ function renderStage(){
   const pids=VIEWS[view];sheet.innerHTML='';
   sheet.classList.toggle('spread',pids.length>1);sheet.classList.toggle('show-safe',showSafe);
   pids.forEach(pid=>sheet.appendChild(buildPage(state.pages[pid],pid,'edit')));
-  caps.innerHTML=pids.map(p=>`<span>${PAGE_LABEL[p]}</span>`).join('');
+  caps.innerHTML=STACK?`<span>${pids.map(p=>PAGE_LABEL[p]).join(' / ')}</span>`:pids.map(p=>`<span>${PAGE_LABEL[p]}</span>`).join('');
   $('#prevBtn').hidden=view===ORDER[0];$('#nextPageBtn').hidden=view===LAST;
   applyZoom();drawSelection();
 }
@@ -443,10 +469,15 @@ function animateFlip(from,to){
   const dur=760,easing='cubic-bezier(.45,.05,.25,1)',PS='perspective(2200px) ';
   const pg=pid=>sheet.querySelector(`.page[data-page="${pid}"]`);
   const anims=[];let g=null;
-  const ghost=(pid,left)=>{g=buildPage(state.pages[pid],pid,'thumb');g.classList.add('ghost');g.style.left=left+'px';sheet.appendChild(g);return g;};
+  const ghost=(pid,left,top=0)=>{g=buildPage(state.pages[pid],pid,'thumb');g.classList.add('ghost');g.style.left=left+'px';g.style.top=top+'px';sheet.appendChild(g);return g;};
   const turn=(node,origin,a,b)=>{if(!node)return;node.style.transformOrigin=origin;node.style.backfaceVisibility='hidden';anims.push(node.animate([{transform:PS+`rotateY(${a}deg)`},{transform:PS+`rotateY(${b}deg)`}],{duration:dur,easing}));};
   const pair=from+'>'+to;
-  if(pair==='front>inside'){turn(ghost('front',W),'left center',0,-180);turn(pg('inL'),'right center',180,0);}
+  const tilt=(node,origin,a,b)=>{if(!node)return;node.style.transformOrigin=origin;node.style.backfaceVisibility='hidden';anims.push(node.animate([{transform:PS+`rotateX(${a}deg)`},{transform:PS+`rotateX(${b}deg)`}],{duration:dur,easing}));};
+  if(STACK&&pair==='front>inside'){tilt(ghost('front',0,0),'center bottom',0,-180);tilt(pg('inL'),'center bottom',180,0);}
+  else if(STACK&&pair==='inside>front'){tilt(ghost('inL',0,0),'center bottom',0,180);tilt(pg('front'),'center bottom',-180,0);}
+  else if(STACK&&pair==='inside>back'){tilt(ghost('inR',0,H),'center top',0,180);tilt(pg('back'),'center bottom',-180,0);}
+  else if(STACK&&pair==='back>inside'){tilt(ghost('back',0,0),'center bottom',0,-180);tilt(pg('inR'),'center top',180,0);}
+  else if(pair==='front>inside'){turn(ghost('front',W),'left center',0,-180);turn(pg('inL'),'right center',180,0);}
   else if(pair==='inside>front'){turn(ghost('inL',-W),'right center',0,180);turn(pg('front'),'left center',-180,0);}
   else if(pair==='inside>back'){turn(ghost('inR',W),'left center',0,-180);turn(pg('back'),'right center',180,0);}
   else if(pair==='back>inside'){turn(ghost('back',0),'right center',0,180);turn(pg('inR'),'left center',-180,0);}
@@ -456,9 +487,10 @@ function animateFlip(from,to){
 }
 
 /* ---------- Zoom ---------- */
-function contentW(){return W*VIEWS[view].length;}
+function contentW(){return W*(STACK?1:VIEWS[view].length);}
+function contentH(){return H*(STACK?VIEWS[view].length:1);}
 function fitZoom(){const cs=getComputedStyle(stage);const pw=stage.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);const ph=stage.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-30;return clamp(Math.min(pw/contentW(),ph/H),.2,1.6);}
-function applyZoom(){if(zoomMode==='fit')zoom=fitZoom();wrap.style.width=contentW()*zoom+'px';wrap.style.height=H*zoom+'px';sheet.style.transform=`scale(${zoom})`;sheet.style.setProperty('--inv',(1/zoom).toFixed(4));caps.style.width=contentW()*zoom+'px';$('#zoomPct').textContent=Math.round(zoom*100)+'%';}
+function applyZoom(){if(zoomMode==='fit')zoom=fitZoom();wrap.style.width=contentW()*zoom+'px';wrap.style.height=contentH()*zoom+'px';sheet.style.transform=`scale(${zoom})`;sheet.style.setProperty('--inv',(1/zoom).toFixed(4));caps.style.width=contentW()*zoom+'px';$('#zoomPct').textContent=Math.round(zoom*100)+'%';}
 function zoomBy(f){zoomMode='manual';zoom=clamp(zoom*f,.25,3);applyZoom();}
 
 /* ---------- Selection ---------- */
@@ -699,9 +731,16 @@ function renderPanel(){
     inner.querySelector('[data-add="frame"]').onclick=()=>{const o=stagger();addElement(centreX(P({x:70+o,y:120+o,w:220,h:220})));};
   }
   else if(panel==='stickers'){
-    const swap=f&&f.el.type==='sticker';
-    inner.innerHTML=head('Stickers')+`<p class="hint">${swap?'Pick a sticker to swap the selected one.':'Click a sticker to add it. Drag a corner to resize.'}</p>`+
-      Object.entries(STICKERS).map(([cat,list])=>`<div class="sec">${cat}</div><div class="stickers">${list.map(c=>`<button data-st="${c}" aria-label="Sticker ${c}">${c}</button>`).join('')}</div>`).join('');
+    const swap=f&&f.el.type==='sticker';const hasArt=Object.keys(ART).length>0;if(!hasArt||swap)stTab='emoji';
+    /* Two tabs: Emojis (admin "Emojis") and SVGs (admin "SVGs") */
+    const tabs=hasArt?`<div class="seg tpl-tabs" role="group" aria-label="Sticker type">${[['emoji','Emojis'],['svg','SVGs']].map(([id,l])=>`<button class="tb" data-sttab="${id}" aria-pressed="${id===stTab}">${l}</button>`).join('')}</div>`:'';
+    const hint=stTab==='svg'?'Click an illustration to add it. Drag a corner to resize.':(swap?'Pick a sticker to swap the selected one.':'Click a sticker to add it. Drag a corner to resize.');
+    inner.innerHTML=head('Stickers')+tabs+`<p class="hint">${hint}</p>`+(stTab==='svg'
+      ?Object.entries(ART).map(([g,list])=>`<div class="sec">${esc(g)}</div><div class="arts">${list.map((a,i)=>`<button data-art="${esc(g)}" data-ai="${i}" aria-label="${esc(a.name)}" title="${esc(a.name)}"><img src="${esc(a.src)}" alt="" loading="lazy"></button>`).join('')}</div>`).join('')
+      :Object.entries(STICKERS).map(([cat,list])=>`<div class="sec">${cat}</div><div class="stickers">${list.map(c=>`<button data-st="${c}" aria-label="Sticker ${c}">${c}</button>`).join('')}</div>`).join(''));
+    inner.querySelectorAll('[data-sttab]').forEach(b=>b.onclick=()=>{stTab=b.dataset.sttab;renderPanel();});
+    inner.querySelectorAll('[data-art]').forEach(b=>b.onclick=()=>{const a=ART[b.dataset.art][b.dataset.ai];const o=stagger();
+      addElement(fitEl({id:uid(),type:'art',src:a.src,fit:'contain',x:a.x+o,y:a.y+o,w:a.w,h:a.h}));});
     inner.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{const c=b.dataset.st;const cur=sel&&findEl(sel.id);
       if(cur&&cur.el.type==='sticker'){patch(cur.el.id,{char:c});}else{const o=stagger();addElement(centreX(S({char:c,x:140+o,y:212+o})));}});
   }
@@ -760,7 +799,7 @@ function loadLibrary(){
     LIB=d;libState='ready';if(panel==='templates')renderPanel();
   }).catch(()=>{libState='error';if(panel==='templates')renderPanel();});
 }
-const libPages=t=>{const c=JSON.parse(JSON.stringify(t.pages));Object.values(c).forEach(p=>p.els.forEach(e=>e.id=uid()));return LANDSCAPE?fitPages(c):c;};
+const libPages=t=>{const c=JSON.parse(JSON.stringify(t.pages));Object.values(c).forEach(p=>p.els.forEach(e=>e.id=uid()));return FIT?fitPages(c):c;};
 const libPreview=t=>t._pv||(t._pv=libPages(t).front);
 function getRecent(){try{return JSON.parse(localStorage.getItem(RECENT_KEY))||[];}catch(e){return[];}}
 function pushRecent(id){try{const r=[id,...getRecent().filter(x=>x!==id)].slice(0,8);localStorage.setItem(RECENT_KEY,JSON.stringify(r));}catch(e){}}
@@ -828,15 +867,17 @@ function applyPageTemplate(t,v){
   if(from!==v)animateFlip(from,v);
   toast(`${t.name} used on the ${VIEW_LABEL[v].toLowerCase()}`,'Undo',undo);
 }
+/* Generic placeholder texts take the customer's font and colour; text an admin styled keeps its own style */
+const LAYOUT_PLACEHOLDERS=new Set(['Add a heading','Add a short line','Write your message here','Add a caption','And a little more here','And another','Your name','Scan me']);
 function applyLayout(ly){
   finishEditing();const pids=VIEWS[view];const texts=[],photos=[],qrs=[];
   pids.forEach(pid=>[...state.pages[pid].els].sort((a,b)=>a.y-b.y).forEach(el=>{if(el.type==='text'&&el.text.trim())texts.push(el);if(el.type==='photo'&&el.src)photos.push(el);if(el.type==='qr'&&el.src)qrs.push(el);}));
   const made=ly.make();
   pids.forEach(pid=>{const els=made[pid]||[];els.forEach(el=>{
-    if(el.type==='text'&&texts.length){const o=texts.shift();Object.assign(el,{text:o.text,font:o.font,color:o.color,bold:o.bold,italic:o.italic,ls:o.ls});}
+    if(el.type==='text'&&texts.length){const o=texts.shift();if(!LAYOUT_PLACEHOLDERS.has(el.text))el.text=o.text;else Object.assign(el,{text:o.text,font:o.font,color:o.color,bold:o.bold,italic:o.italic,ls:o.ls});}
     if(el.type==='photo'&&photos.length){const o=photos.shift();el.src=o.src;el.fit=o.fit;}
     if(el.type==='qr'&&qrs.length){const o=qrs.shift();Object.assign(el,{src:o.src,url:o.url,color:o.color});}
-  });state.pages[pid].els=els;});
+  });state.pages[pid].els=els;if(ly.bg&&ly.bg[pid])state.pages[pid].bg=ly.bg[pid];});
   sel=null;renderStage();renderCtx();commit();toast('Layout applied','Undo',undo);
 }
 function addText(kind){
@@ -848,7 +889,8 @@ function addText(kind){
 }
 function addPair(pair){
   const pid=targetPage();let y=170+stagger();const ids=[];
-  pair.forEach(p=>{const el=centreX(T({...p,y}));state.pages[pid].els.push(el);ids.push(el.id);y+=Math.round(p.size*(p.lh||1.35))+14;});
+  const base=y,placed=pair.every(p=>typeof p.y==='number');
+  pair.forEach(p=>{const el=centreX(T({...p,y:placed?base+p.y:y}));state.pages[pid].els.push(el);ids.push(el.id);y+=Math.round(p.size*(p.lh||1.35))+14;});
   renderStage();select(pid,ids[0]);commit();
 }
 
@@ -898,13 +940,13 @@ function runChecks(){
   })));
   return out;
 }
-function openReview(){finishEditing();modal.hidden=false;pvView=view;renderReview();$('#dlgClose').focus();}
+function openReview(){finishEditing();modal.hidden=false;rvStatus('');pvView=view;renderReview();$('#dlgClose').focus();}
 function closeReview(){modal.hidden=true;}
 function renderReview(){
   $('#pvTabs').hidden=ORDER.length<2;$('#pvTabs').querySelectorAll('[data-pv]').forEach(b=>{b.hidden=!ORDER.includes(b.dataset.pv);b.setAttribute('aria-pressed',b.dataset.pv===pvView);});
   const area=$('#pvStage');area.innerHTML='';const pids=VIEWS[pvView];
   const aw=Math.max(220,area.clientWidth||520)-8,ah=Math.min(440,window.innerHeight*.5);
-  const s=Math.min(ah/H,aw/(W*pids.length),1);
+  const s=Math.min(ah/(H*(STACK?pids.length:1)),aw/(W*(STACK?1:pids.length)),1);
   area.appendChild(mini(pids.map(pid=>[state.pages[pid],pid]),s,'preview'));
   const issues=runChecks();const list=$('#checkList');
   list.innerHTML=issues.length?issues.map((it,i)=>`<div class="check"><span class="ic warn">${ic('alert',18)}</span><div><p>${esc(it.msg)}</p><button class="link" data-fix="${i}">Show me</button></div></div>`).join('')
@@ -913,8 +955,70 @@ function renderReview(){
 }
 $('#pvTabs').addEventListener('click',e=>{const b=e.target.closest('[data-pv]');if(b){pvView=b.dataset.pv;renderReview();}});
 modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('[data-close]'))closeReview();});
-$('#confirmBtn').onclick=()=>{closeReview();toast('Design saved. Next up: paper and delivery options.');};
-$('#nextBtn').onclick=openReview;
+/* ---------- Review actions: Print on 931BL / Pickup from store / Export as PDF / Save as product template ---------- */
+document.querySelectorAll('#rvActions [data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic,18));
+document.querySelectorAll('#rvActions [data-act]').forEach(b=>b.onclick=()=>reviewAction(b.dataset.act));
+const CHECKOUT=window.QE_CHECKOUT||{};
+/* Card size in inches and the page ids in print order */
+const cardInches=()=>CARD_SIZE?{w:CARD_SIZE.w,h:CARD_SIZE.h}:(LANDSCAPE?{w:7,h:5}:{w:5,h:7});
+const printPids=()=>({single:['front'],double:['front','back'],folded:['front','inL','inR','back']}[CARD_TYPE]);
+function rvStatus(msg,err){const el=$('#rvStatus');el.textContent=msg||'';el.classList.toggle('err',!!err);}
+/* Render one page to a JPEG data URL at ~300 dpi (html2canvas on an off-screen copy of the page) */
+async function renderPageImage(pid){
+  const host=document.createElement('div');host.style.cssText='position:fixed;left:-20000px;top:0;pointer-events:none';
+  const pg=buildPage(state.pages[pid],pid,'preview');pg.style.width=W+'px';pg.style.height=H+'px';host.appendChild(pg);document.body.appendChild(host);
+  try{
+    await Promise.all([...host.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;})));
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const scale=Math.min(5,Math.max(2,cardInches().w*300/W));
+    const c=await html2canvas(pg,{scale,useCORS:true,backgroundColor:state.pages[pid].bg||'#ffffff',logging:false});
+    return c.toDataURL('image/jpeg',0.92);
+  }finally{host.remove();}
+}
+async function postJson(url,body){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json','X-CSRF-TOKEN':window.QE_CSRF},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.message||('Request failed ('+r.status+')'));e.status=r.status;throw e;}return d;
+}
+function submitForm(url,fields){
+  const f=document.createElement('form');f.method='POST';f.action=url;f.hidden=true;
+  Object.entries({_token:window.QE_CSRF,...fields}).forEach(([k,v])=>{const i=document.createElement('input');i.type='hidden';i.name=k;i.value=v;f.appendChild(i);});
+  document.body.appendChild(f);f.submit();
+}
+let rvBusy=false;
+async function reviewAction(act){
+  if(rvBusy)return;finishEditing();
+  if(typeof html2canvas!=='function'){rvStatus('The page renderer did not load. Check your connection and try again.',true);return;}
+  rvBusy=true;const btns=[...document.querySelectorAll('#rvActions button')];btns.forEach(b=>b.disabled=true);
+  const size=cardInches(),orientation=size.w>size.h?'landscape':'portrait',pids=printPids();
+  try{
+    rvStatus('Preparing your card pages…');
+    const images={};for(const pid of pids)images[pid]=await renderPageImage(pid);
+    if(act==='product'){
+      /* Admin only: images become the product images on admin/products/create */
+      const slots={single:{front:'frame_image'},double:{front:'frame_image',back:'sample_image'},folded:{front:'frame_image',inL:'sample_image',inR:'background_image',back:'overlay_image'}}[CARD_TYPE];
+      const bySlot={};Object.entries(slots).forEach(([pid,slot])=>bySlot[slot]=images[pid]);
+      rvStatus('Saving the design as a product…');
+      try{const d=await postJson(CHECKOUT.productDraft,{type:CARD_TYPE,orientation,name:state.title,images:bySlot});location.href=d.redirect;}
+      catch(e){if(e.status===401||e.status===403||e.status===419){rvStatus('Please sign in with an admin account to save products.',true);setTimeout(()=>{location.href=CHECKOUT.login;},1400);return;}throw e;}
+      return;
+    }
+    /* Print / PDF / Pickup: same hand-off as the local-print customizer (composite uploads + product form) */
+    const prep=await postJson(CHECKOUT.prepare,{type:CARD_TYPE,width:size.w,height:size.h,orientation});
+    rvStatus('Uploading pages…');const ids={};
+    for(const [pid,slot] of Object.entries(prep.slots)){const d=await postJson(CHECKOUT.upload,{image_data:images[pid],canvas_key:slot});if(!d.success)throw new Error(d.error||'Upload failed');ids[slot]=d.upload_id;}
+    const common={product_id:prep.product_id,upload_ids:JSON.stringify(ids),size_width:size.w,size_height:size.h,size_unit:'in',orientation};
+    rvStatus(act==='pickup'?'Opening checkout…':'Building the print PDF…');
+    if(act==='pickup')submitForm(CHECKOUT.cart,{...common,quantity:1});
+    else submitForm(CHECKOUT.preview,act==='pdf'?{...common,auto_download:1}:common);
+  }catch(e){rvStatus(e.message||'Something went wrong. Please try again.',true);rvBusy=false;btns.forEach(b=>b.disabled=false);}
+}
+$('#nextBtn').onclick=ADMIN_TPL?saveAdminTemplate:openReview;
+function saveAdminTemplate(){finishEditing();const btn=$('#nextBtn');btn.disabled=true;setStatus('saving');
+  fetch(ADMIN_TPL.saveUrl,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':window.QE_CSRF},body:JSON.stringify({name:state.title,pages:state.pages})})
+    .then(r=>{if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(()=>{setStatus('saved');toast('Template saved');})
+    .catch(e=>{setStatus('error');toast('Could not save template ('+e.message+')');})
+    .finally(()=>{btn.disabled=false;});}
 
 /* ---------- Toast ---------- */
 let toastT;

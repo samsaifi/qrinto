@@ -486,6 +486,33 @@
             background: var(--brand-soft)
         }
 
+        /* SVG artwork (admin "SVGs") under the emojis in the Stickers panel */
+        .arts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px
+        }
+
+        .arts button {
+            aspect-ratio: 1;
+            border: 0;
+            border-radius: 10px;
+            background: var(--surface-2);
+            padding: 8px;
+            cursor: pointer
+        }
+
+        .arts button:hover {
+            background: var(--brand-soft)
+        }
+
+        .arts img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none
+        }
+
         .swatches {
             display: flex;
             flex-wrap: wrap;
@@ -641,6 +668,36 @@
 
         .spread>.page:first-child .content {
             box-shadow: inset -10px 0 14px -14px rgba(0, 0, 0, .25)
+        }
+
+        .qe-stack .sheet.spread,
+        .qe-stack .mini-inner.spread {
+            display: flex;
+            flex-direction: column
+        }
+
+        .qe-stack .spread>.page+.page .content {
+            box-shadow: inset 0 14px 18px -16px rgba(0, 0, 0, .35)
+        }
+
+        .qe-stack .spread>.page:first-child .content {
+            box-shadow: inset 0 -10px 14px -14px rgba(0, 0, 0, .25)
+        }
+
+        .qe-stack .fold-inside .page:first-child {
+            transform-origin: center bottom
+        }
+
+        .qe-stack .fold-inside .page+.page {
+            transform-origin: center top
+        }
+
+        .qe-stack .thumb:hover .fold-inside .page:first-child {
+            transform: rotateX(-20deg)
+        }
+
+        .qe-stack .thumb:hover .fold-inside .page+.page {
+            transform: rotateX(20deg)
         }
 
         .caps {
@@ -1610,6 +1667,89 @@
             font-size: 13px
         }
 
+        /* Review dialog actions */
+        .rv-actions {
+            display: grid;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--line, #e5e7eb)
+        }
+
+        .rv-act {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--line, #e5e7eb);
+            border-radius: 12px;
+            background: var(--surface);
+            text-align: left;
+            cursor: pointer;
+            font: inherit;
+            color: inherit
+        }
+
+        .rv-act:hover {
+            border-color: var(--brand, #0b7a49);
+            background: var(--brand-soft, #e8f5ee)
+        }
+
+        .rv-act b {
+            display: block;
+            font-size: 14px
+        }
+
+        .rv-act small {
+            display: block;
+            font-size: 12px;
+            color: var(--muted, #6b7280);
+            margin-top: 1px
+        }
+
+        .rv-act.primary {
+            background: var(--brand, #0b7a49);
+            border-color: var(--brand, #0b7a49);
+            color: #fff
+        }
+
+        .rv-act.primary small {
+            color: rgba(255, 255, 255, .8)
+        }
+
+        .rv-act[disabled] {
+            opacity: .55;
+            cursor: progress
+        }
+
+        .rv-ic {
+            flex: none;
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--surface-2, #f3f4f6);
+            color: var(--brand, #0b7a49)
+        }
+
+        .rv-act.primary .rv-ic {
+            background: rgba(255, 255, 255, .18);
+            color: #fff
+        }
+
+        .rv-status {
+            min-height: 18px;
+            margin-top: 10px;
+            font-size: 12.5px;
+            color: var(--muted, #6b7280)
+        }
+
+        .rv-status.err {
+            color: #b42318
+        }
+
         .dlg-foot {
             display: flex;
             justify-content: flex-end;
@@ -1751,11 +1891,21 @@
                 <span id="pencil"></span>
             </label>
             <div class="spacer"></div>
+            <a class="iconbtn" id="sizesBtn" href="{{ route('localprint.sizes-canvas') }}" title="Change card size" aria-label="Change card size">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 13V3h10" /><path d="M6.5 16.5v-10h10" /><rect x="10" y="10" width="11" height="11" rx="1" />
+                </svg>
+            </a>
             <button class="iconbtn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo"></button>
             <button class="iconbtn" id="redoBtn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"></button>
             <div class="vsep hide-sm"></div>
             <span class="status" id="status" role="status"></span>
-            <button class="btn primary" id="nextBtn">Review<span class="hide-sm">&nbsp;and print</span></button>
+            @if (!empty($adminTemplate))
+                <a class="btn" href="{{ $adminTemplate['backUrl'] }}">Back to admin</a>
+                <button class="btn primary" id="nextBtn">Save template</button>
+            @else
+                <button class="btn primary" id="nextBtn">Review<span class="hide-sm">&nbsp;and print</span></button>
+            @endif
         </header>
 
         <div class="main">
@@ -1808,10 +1958,17 @@
                     <h3>Before printing</h3>
                     <p class="hint">5 × 7 in folded card. Anything outside the dashed margin may be trimmed.</p>
                     <div id="checkList"></div>
+                    {{-- What to do with the card (wired in card-editor.js: reviewAction) --}}
+                    <div class="rv-actions" id="rvActions">
+                        <button class="rv-act" data-close><span class="rv-ic" data-ic="pen"></span><span><b>Keep editing</b><small>Go back to the editor</small></span></button>
+                        <button class="rv-act primary" data-act="print"><span class="rv-ic" data-ic="printer"></span><span><b>Print on 931BL</b><small>Preview and print on your Noritsu 931BL</small></span></button>
+                        <button class="rv-act" data-act="pickup"><span class="rv-ic" data-ic="store"></span><span><b>Pickup from store</b><small>Order it and collect it from the store</small></span></button>
+                        <button class="rv-act" data-act="pdf"><span class="rv-ic" data-ic="download"></span><span><b>Export as PDF</b><small>Download a print-ready PDF</small></span></button>
+                        <button class="rv-act" data-act="product"><span class="rv-ic" data-ic="tag"></span><span><b>Save as product template</b><small>Create a product from this design (admin login)</small></span></button>
+                    </div>
+                    <p class="rv-status" id="rvStatus" role="status" aria-live="polite"></p>
                 </aside>
             </div>
-            <div class="dlg-foot"><button class="btn" data-close>Keep editing</button><button class="btn primary"
-                    id="confirmBtn">Looks good, continue</button></div>
         </div>
     </div>
 
@@ -1828,7 +1985,23 @@
         </div>
     </div>
 
-    <script>window.CARD_TYPE = @json($type ?? 'folded'); window.CARD_ORIENTATION = @json($orientation ?? 'portrait'); window.QE_TEMPLATES_URL = @json(asset('assets/templates/templates.json') . '?v=' . @filemtime(public_path('assets/templates/templates.json')));</script>
+    @php
+        // Review dialog actions (card-editor.js reviewAction)
+        $qeCheckout = [
+            'prepare' => route('card-editor.prepare'),
+            'upload' => route('flow.upload_composite'),
+            'preview' => route('localprint.preview'),
+            'cart' => route('flow.cart.add'),
+            'productDraft' => route('card-editor.product-draft'),
+            'login' => route('login'),
+        ];
+    @endphp
+    <script>window.CARD_TYPE = @json($type ?? 'folded'); window.CARD_ORIENTATION = @json($orientation ?? 'portrait'); window.CARD_SIZE = @json($cardSize ?? null); window.QE_TEMPLATES_URL = @json(route('card-editor.templates'));
+        window.QE_CSRF = @json(csrf_token());
+        window.QE_CHECKOUT = {!! json_encode($qeCheckout) !!}; window.QE_LAYOUTS = @json($layouts ?? \App\Http\Controllers\CardEditorController::layoutsForEditor()); window.QE_LIBRARY = @json($library ?? \App\Http\Controllers\CardEditorController::libraryForEditor());
+        @if (!empty($adminTemplate)) window.QE_ADMIN_TEMPLATE = @json($adminTemplate); window.QE_CSRF = @json(csrf_token()); @endif</script>
+    {{-- Renders the card pages to images for print / PDF / pickup / product --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="{{ asset('js/card-editor.js') }}?v={{ time() }}"></script>
 </body>
 

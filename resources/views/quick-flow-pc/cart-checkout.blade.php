@@ -89,11 +89,9 @@
             {{-- Two Column Grid --}}
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                {{-- Left Main Card --}}
-                <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5">
-
-                    {{-- Items Summary List --}}
-                    <div class="space-y-4 pb-5 border-b border-slate-100">
+                {{-- Left: preview, item details, totals --}}
+                <div class="lg:col-span-6 space-y-5">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-6">
                         @foreach ($cart->items as $item)
                             @php
                                 $customization = $item->customization_data ?? [];
@@ -144,36 +142,23 @@
                                 $itemSubtotal = $unitPrice * (int) $item->quantity;
                             @endphp
 
-                            <div class="flex items-center justify-between gap-4">
-                                <div class="flex items-center gap-3.5">
-                                    {{-- Thumbnails --}}
-                                    <div
-                                        class="flex gap-1.5 shrink-0 {{ count($itemImages) > 2 ? 'flex-wrap max-w-[120px]' : '' }}">
-                                        @forelse ($itemImages as $imgIdx => $img)
-                                            <div class="w-14 h-18 bg-[#f2f7f2] rounded-xl flex items-center justify-center overflow-hidden border border-slate-100 cursor-pointer hover:ring-2 hover:ring-emerald-400 transition"
-                                                @click="openPreview('cart-preview-{{ $item->id }}')">
-                                                <img src="{{ $img }}" alt="{{ $item->product->name }}"
-                                                    class="w-full h-full object-cover">
-                                            </div>
-                                        @empty
-                                            <div
-                                                class="w-14 h-18 bg-slate-100 rounded-xl border border-slate-200/80 flex items-center justify-center text-slate-400 font-bold text-[10px]">
-                                                Card
-                                            </div>
-                                        @endforelse
+                            <div class="space-y-4">
+                                {{-- Animated card flip preview --}}
+                                @if (!empty($itemImages))
+                                    <div class="rounded-xl bg-[#f2f7f2] p-2 pb-3">
+                                        @include('quick-flow-pc.local-print.partials.book-preview', [
+                                            'images' => $itemImages,
+                                            'orientation' => 'auto',
+                                        ])
                                     </div>
+                                @else
+                                    <div class="h-48 bg-slate-100 rounded-xl border border-slate-200/80 flex items-center justify-center text-slate-400 font-bold text-xs">
+                                        Card
+                                    </div>
+                                @endif
 
-                                    {{-- Card flip preview for this item (cloned into the preview modal on click). --}}
-                                    @if (!empty($itemImages))
-                                        <template id="cart-preview-{{ $item->id }}">
-                                            @include('quick-flow-pc.local-print.partials.book-preview', [
-                                                'images' => $itemImages,
-                                                'orientation' => 'auto',
-                                            ])
-                                        </template>
-                                    @endif
-
-                                    {{-- Title & Specs --}}
+                                {{-- Name, specs, quantity, price --}}
+                                <div class="flex items-center justify-between gap-4">
                                     <div>
                                         <h3 class="font-extrabold text-slate-900 text-sm">
                                             {{ $item->product->name }}
@@ -187,7 +172,6 @@
                                                 Standard Specification
                                             @endif
                                         </p>
-
                                         {{-- Quantity stepper --}}
                                         <div class="flex items-center gap-2.5 mt-2">
                                             <button type="button" @click="updateQty(-1)"
@@ -202,15 +186,49 @@
                                                 aria-label="Increase quantity">+</button>
                                         </div>
                                     </div>
+                                    <span class="text-sm font-extrabold text-slate-900" x-text="__price(unitPrice * quantity)">
+                                        {{ \App\Services\CurrencyService::format($itemSubtotal) }}
+                                    </span>
                                 </div>
-
-                                <span class="text-sm font-extrabold text-slate-900" x-text="__price(unitPrice * quantity)">
-                                    {{ \App\Services\CurrencyService::format($itemSubtotal) }}
-                                </span>
                             </div>
                         @endforeach
                     </div>
 
+                    {{-- Totals --}}
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5">
+                    <h2 class="font-extrabold text-[#112419] text-sm">
+                        Total
+                    </h2>
+
+                    {{-- Lines --}}
+                    <div class="space-y-2.5 text-[11px] text-slate-600 font-medium">
+                        <div class="flex justify-between items-center">
+                            <span>Subtotal</span>
+                            <span class="font-bold text-slate-900" x-text="__price(subtotal)"></span>
+                        </div>
+
+                        <template x-if="discountAmount > 0">
+                            <div class="flex justify-between items-center text-emerald-700 font-semibold">
+                                <span>Discount</span>
+                                <span>-<span x-text="__price(discountAmount)"></span></span>
+                            </div>
+                        </template>
+
+                        <div class="flex justify-between items-center">
+                            <span>Pickup</span>
+                            <span class="font-bold text-slate-900">Free</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3 flex justify-between items-baseline">
+                        <span class="text-sm font-extrabold text-[#112419]">Due at pickup</span>
+                        <span class="text-lg font-extrabold text-[#112419]" x-text="__price(calculateTotal())"></span>
+                    </div>
+                    </div>
+                </div>
+
+                {{-- Right: pickup form + payment --}}
+                <div class="lg:col-span-6 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5">
                     {{-- Store Pickup Banner (Light Green Box) --}}
                     <div class="bg-[#f2f7f2] rounded-2xl p-3.5 border border-emerald-100/80 flex items-start gap-2.5">
                         <div class="w-4 h-4 text-emerald-800 mt-0.5 shrink-0">
@@ -301,39 +319,6 @@
                         </div>
                     </div>
 
-                </div>
-
-                {{-- Right Column: Summary Card --}}
-                <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-5">
-                    <h2 class="font-extrabold text-[#112419] text-sm">
-                        Total
-                    </h2>
-
-                    {{-- Lines --}}
-                    <div class="space-y-2.5 text-[11px] text-slate-600 font-medium">
-                        <div class="flex justify-between items-center">
-                            <span>Subtotal</span>
-                            <span class="font-bold text-slate-900" x-text="__price(subtotal)"></span>
-                        </div>
-
-                        <template x-if="discountAmount > 0">
-                            <div class="flex justify-between items-center text-emerald-700 font-semibold">
-                                <span>Discount</span>
-                                <span>-<span x-text="__price(discountAmount)"></span></span>
-                            </div>
-                        </template>
-
-                        <div class="flex justify-between items-center">
-                            <span>Pickup</span>
-                            <span class="font-bold text-slate-900">Free</span>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-slate-100 pt-3 flex justify-between items-baseline">
-                        <span class="text-sm font-extrabold text-[#112419]">Due at pickup</span>
-                        <span class="text-lg font-extrabold text-[#112419]" x-text="__price(calculateTotal())"></span>
-                    </div>
-
                     {{-- Action Buttons --}}
                     <div class="space-y-2.5 pt-1">
                         {{-- Place order, pay at counter --}}
@@ -374,20 +359,6 @@
             </div>
 
         </div>
-
-        {{-- Design Preview Modal: card flip preview of the clicked item.
-             The item's <template> is cloned in on open and removed on close. --}}
-        <template x-teleport="body">
-            <div x-cloak x-show="previewOpen"
-                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
-                @click.self="closePreview()" @keydown.escape.window="previewOpen && closePreview()">
-                <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl p-4 sm:p-5" @click.stop>
-                    <button @click="closePreview()"
-                        class="absolute -top-3 -right-3 z-10 w-9 h-9 rounded-full bg-white shadow-lg text-slate-600 hover:text-slate-900 flex items-center justify-center font-bold text-lg cursor-pointer">✕</button>
-                    <div id="cart-preview-body" class="rounded-xl bg-[#f2f7f2] p-2 pb-3"></div>
-                </div>
-            </div>
-        </template>
 
         {{-- PayPal Modal --}}
         <template x-teleport="body">
@@ -472,7 +443,6 @@
                 isProcessing: false,
                 paymentSuccess: false,
                 paypalRendered: false,
-                previewOpen: false,
 
                 couponInput: '{{ $cart->coupon->code ?? '' }}',
                 appliedCoupon: {!! $cart->coupon ? "'" . $cart->coupon->code . "'" : 'null' !!},
@@ -500,21 +470,6 @@
                     const symbol = (window.__currency && window.__currency.symbol) ? window.__currency.symbol : '$';
                     const rate = (window.__currency && window.__currency.rate) ? window.__currency.rate : 1;
                     return symbol + (val * rate).toFixed(2);
-                },
-
-                // Card flip preview modal (book-preview partial).
-                openPreview(templateId) {
-                    const tpl = document.getElementById(templateId);
-                    if (!tpl) return;
-                    this.previewOpen = true;
-                    // Insert once visible so the preview can measure its stage.
-                    this.$nextTick(() => {
-                        document.getElementById('cart-preview-body').replaceChildren(tpl.content.cloneNode(true));
-                    });
-                },
-                closePreview() {
-                    this.previewOpen = false;
-                    document.getElementById('cart-preview-body').replaceChildren();
                 },
 
                 calculateTotal() {

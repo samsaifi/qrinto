@@ -311,12 +311,12 @@
                 </select>
             </div>
 
-            {{-- Media Type (reference only) --}}
+            {{-- Media Type → bridge `mediaType` (driver "User Type", e.g. Noritsu) --}}
             <div x-show="mediaTypes.length > 0">
                 <label class="text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
                     Media Type
-                    <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded"
-                        title="Reported by the printer, but not yet applied to the print job">NOT WIRED</span>
+                    <span class="text-[10px] font-bold text-[#287d3c] bg-[#f2f7f2] px-1.5 py-0.5 rounded"
+                        title="Fetched live from the selected printer and sent with the print job">LIVE</span>
                 </label>
                 <select x-model="printMediaType"
                     class="w-full rounded-xl border border-slate-200 text-sm py-2.5 px-3 bg-white focus:ring-2 focus:ring-[#287d3c] focus:outline-none">
@@ -329,9 +329,9 @@
         </div>
 
         {{-- Reference-only notice --}}
-        <p x-show="printQuality || printMediaType" x-cloak class="text-[11px] text-slate-400 mt-3 leading-relaxed">
-            Quality / Media Type are shown for reference only — the print pipeline can't yet set a driver's DPI
-            or media-type option, so these won't change the actual printout.
+        <p x-show="printQuality" x-cloak class="text-[11px] text-slate-400 mt-3 leading-relaxed">
+            Quality is shown for reference only — the print pipeline can't yet set a driver's DPI,
+            so it won't change the actual printout.
         </p>
 
         {{-- Preflight checks (only when the host enables them via psShowChecks) --}}

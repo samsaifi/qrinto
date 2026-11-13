@@ -73,7 +73,7 @@ class LocalPrintController extends Controller
     }
 
     /* ── Own-design: size selection (like /cards) ────── */
-    public function sizes()
+    public function sizes(string $viewName = 'sizes')
     {
         $type = \App\Models\ProductType::whereIn('slug', ['cards', 'greeting-cards', 'custom-cards'])
             ->orWhere('name', 'like', '%card%')
@@ -100,7 +100,13 @@ class LocalPrintController extends Controller
             ->values()
             ->all();
 
-        return view($this->view('sizes'), compact('type', 'subTypes', 'paperPresets'));
+        return view($this->view($viewName), compact('type', 'subTypes', 'paperPresets'));
+    }
+
+    /* ── Own-design: size picker whose Design buttons open /editor/{folded|single|double} ── */
+    public function sizesCanvas()
+    {
+        return $this->sizes('sizes-canvas');
     }
 
     /* ── Own-design: customizer (empty canvas) ──────── */

@@ -617,6 +617,10 @@
                     // Paper source → bridge `inputBin` (goes into SumatraPDF `bin=`).
                     if (chosen.input_bin) printOpts.inputBin = chosen.input_bin;
 
+                    // Media type saved on the tray (live from getPrinterDetails)
+                    // → bridge `mediaType`, same as the PrintTrays demo.
+                    if (chosen.media_type_live) printOpts.mediaType = chosen.media_type_live;
+
                     // Duplex values match the bridge's own schema: 'longEdge' /
                     // 'shortEdge'. Anything else (simplex) is left unset.
                     if (chosen.duplex === 'longEdge' || chosen.duplex === 'shortEdge') {
@@ -658,6 +662,7 @@
                                 media: chosen.media || null,
                                 gsm: chosen.gsm || null,
                                 paper_source: printOpts.inputBin || null,
+                                media_type: printOpts.mediaType || null,
                                 orientation: 'portrait',
                                 color_mode: printOpts.color ? 'color' : 'grayscale',
                                 duplex: printOpts.duplex || 'simplex',

@@ -155,9 +155,11 @@
                                             <template x-if="t.input_bin">
                                                 <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.input_bin"></span>
                                             </template>
-                                            {{-- Media Type / Quality are intentionally NOT shown here: the
-                                                 print pipeline can't set a driver's media-type or DPI, so they
-                                                 never reach the printer. Only wired settings are displayed. --}}
+                                            <template x-if="t.media_type_live">
+                                                <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-600 border border-slate-200" x-text="t.media_type_live"></span>
+                                            </template>
+                                            {{-- Quality is intentionally NOT shown: the print pipeline can't set a
+                                                 driver's DPI, so it never reaches the printer. --}}
                                         </div>
                                     </div>
                                     <template x-if="t.enabled">

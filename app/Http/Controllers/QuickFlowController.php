@@ -384,8 +384,8 @@ class QuickFlowController extends Controller
                     $flowData['template_name'] = $tplProduct->name;
                     session(['quick_flow_data' => $flowData]);
                 } else {
-                    $tplModel = Template::where('slug', $template)
-                        ->orWhere('name', 'like', "%{$template}%")
+                    $tplModel = Template::photo()
+                        ->where(fn($q) => $q->where('slug', $template)->orWhere('name', 'like', "%{$template}%"))
                         ->first();
                     if ($tplModel) {
                         $flowData['template_id']   = $tplModel->id;
@@ -429,7 +429,7 @@ class QuickFlowController extends Controller
      */
     private function buildTemplatesForJs(): array
     {
-        return Template::active()
+        return Template::active()->photo()
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
@@ -450,7 +450,7 @@ class QuickFlowController extends Controller
      */
     private function buildTemplateCategoriesForJs(): array
     {
-        return Template::active()
+        return Template::active()->photo()
             ->whereNotNull('category_id')
             ->with('category')
             ->get()

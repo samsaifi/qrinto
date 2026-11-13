@@ -57,7 +57,7 @@
                         </div>
                     </div>
                     @if (!empty($pdfUrl))
-                        <a href="{{ $pdfUrl }}" download class="ck-link">
+                        <a href="{{ $pdfUrl }}" download class="ck-link" id="ckDownloadPdf">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M12 4v12M7 11l5 5 5-5M5 20h14" />
@@ -362,6 +362,10 @@
 
         @include('partials.new-test-print-settings-modal')
     </div>
+@if (request()->boolean('auto_download') && !empty($pdfUrl))
+    {{-- Card editor "Export as PDF": download the generated PDF straight away --}}
+    <script>window.addEventListener('load', () => document.getElementById('ckDownloadPdf')?.click());</script>
+@endif
 @endsection
 
 @push('styles')
@@ -1334,6 +1338,11 @@
                     // Only from live capabilities; empty = printer default.
                     if (this.printInputBin) cfg.inputBin = this.printInputBin;
 
+                    // Media type (driver "User Type", e.g. Noritsu) → bridge
+                    // `mediaType`, same as the PrintTrays demo. Loaded live via
+                    // getPrinterDetails; empty = printer default (key omitted).
+                    if (this.printMediaType) cfg.mediaType = this.printMediaType;
+
                     // New bridge option (new demo): fast-raster for PDFs.
                     cfg.fastRaster = !!this.printFastRaster;
 
@@ -1369,6 +1378,7 @@
                             printer_name: this.selectedPrinter || null,
                             printer_model: this.selectedPrinterInfo?.driver || null,
                             paper_source: cfg.inputBin || null,
+                            media_type: cfg.mediaType || null,
                             paper_size: this.printPaperSize || null,
                             media_size: sizeLabel,
                             orientation: this.printLandscape ? 'landscape' : 'portrait',

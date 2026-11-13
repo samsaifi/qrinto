@@ -16,7 +16,18 @@
             {{-- ── Title row ─────────────────────────────────────────── --}}
             <div class="bcl-top">
                 <div class="ck-min0">
-
+                    <nav class="bcl-progress" aria-label="Progress">
+                        <span class="done"><span class="dot" aria-hidden="true">✓</span>Size</span>
+                        <span class="done"><span class="dot" aria-hidden="true">✓</span>Design</span>
+                        <span :class="bcStep === 'layout' ? 'now' : 'done'"
+                            :aria-current="bcStep === 'layout' ? 'step' : null">
+                            <span class="dot" aria-hidden="true"
+                                x-text="bcStep === 'layout' ? '3' : '✓'"></span>Sheet
+                            layout</span>
+                        <span :class="bcStep === 'print' ? 'now' : ''"
+                            :aria-current="bcStep === 'print' ? 'step' : null">
+                            <span class="dot" aria-hidden="true">4</span>Print</span>
+                    </nav>
                     <a href="{{ $bizCard['editUrl'] }}" class="bcl-back">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -52,8 +63,8 @@
                                 </template>
                                 <template x-if="bcCuts">
                                     <div>
-                                        <template x-for="x in bcF.cuts_x" :key="'x' + x"><span class="bcl-cut v"
-                                                :style="'left:' + x + '%'"></span></template>
+                                        <template x-for="x in bcF.cuts_x" :key="'x' + x"><span
+                                                class="bcl-cut v" :style="'left:' + x + '%'"></span></template>
                                         <template x-for="y in bcF.cuts_y" :key="'y' + y"><span
                                                 class="bcl-cut h" :style="'top:' + y + '%'"></span></template>
                                     </div>
@@ -115,7 +126,8 @@
                         <span><span class="ln solid"></span>Front cards</span>
                         <span><span class="ln dashed"></span>Back cards, seen through the paper</span>
                     </div>
-                    <div role="status" class="bcl-status" :class="(bcDx || bcDy) ? 'warn' : 'ok'" x-text="bcCheckMsg">
+                    <div role="status" class="bcl-status" :class="(bcDx || bcDy) ? 'warn' : 'ok'"
+                        x-text="bcCheckMsg">
                     </div>
                 </div>
             </section>
@@ -349,6 +361,91 @@
         gap: 16px;
         flex-wrap: wrap;
         margin-bottom: 16px
+    }
+
+    /* Title block on the left, progress steps top-right on the same row */
+    .bcl-top>.ck-min0 {
+        flex: 1;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        column-gap: 24px;
+        align-items: start
+    }
+
+    .bcl-top>.ck-min0>* {
+        grid-column: 1
+    }
+
+    .bcl-top>.ck-min0>.bcl-progress {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+        margin-bottom: 0
+    }
+
+    @media (max-width: 760px) {
+        .bcl-top>.ck-min0 {
+            grid-template-columns: minmax(0, 1fr)
+        }
+
+        .bcl-top>.ck-min0>.bcl-progress {
+            grid-column: 1;
+            grid-row: auto;
+            order: -1;
+            margin-bottom: 10px;
+            justify-content: flex-start
+        }
+    }
+
+    .bcl-progress {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        font-weight: 600;
+        color: #5B6659;
+        margin-bottom: 10px
+    }
+
+    .bcl-progress>span {
+        display: flex;
+        align-items: center;
+        gap: 6px
+    }
+
+    .bcl-progress .dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 1px solid #A9B3A6;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        background: #fff;
+        color: #2F6E35
+    }
+
+    .bcl-progress .done {
+        color: #2F6E35
+    }
+
+    .bcl-progress .done .dot {
+        background: #E3F0E1;
+        border: none
+    }
+
+    .bcl-progress .now {
+        color: var(--ink);
+        font-weight: 700
+    }
+
+    .bcl-progress .now .dot {
+        background: var(--ink);
+        color: #fff;
+        border: none
     }
 
     .bcl-back {

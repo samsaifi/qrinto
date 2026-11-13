@@ -1,0 +1,1154 @@
+{
+ "pairs": {
+  "Love": [
+   [
+    {
+     "text": "Happy anniversary",
+     "font": "Great Vibes",
+     "size": 44,
+     "color": "#9b2242"
+    },
+    {
+     "text": "with all my love",
+     "font": "Cormorant Garamond",
+     "size": 18,
+     "italic": true,
+     "color": "#6b3a47"
+    }
+   ],
+   [
+    {
+     "text": "I love you",
+     "font": "Pinyon Script",
+     "size": 50,
+     "color": "#c2185b"
+    },
+    {
+     "text": "MORE EVERY DAY",
+     "font": "Josefin Sans",
+     "size": 13,
+     "color": "#9b2242",
+     "ls": 3
+    }
+   ],
+   [
+    {
+     "text": "Be mine",
+     "font": "Lobster",
+     "size": 52,
+     "color": "#d81b60"
+    },
+    {
+     "text": "Happy Valentine's Day",
+     "font": "Onest",
+     "size": 14,
+     "color": "#7a2a44"
+    }
+   ],
+   [
+    {
+     "text": "Forever & always",
+     "font": "Sacramento",
+     "size": 50,
+     "color": "#8e2442"
+    },
+    {
+     "text": "Ana + Theo",
+     "font": "Cormorant Garamond",
+     "size": 20,
+     "italic": true,
+     "color": "#6b3a47"
+    }
+   ],
+   [
+    {
+     "text": "Just married",
+     "font": "Alex Brush",
+     "size": 52,
+     "color": "#7a5c2e"
+    },
+    {
+     "text": "AUGUST 28, 2026",
+     "font": "Cinzel",
+     "size": 14,
+     "color": "#5a4520",
+     "ls": 3
+    }
+   ],
+   [
+    {
+     "text": "You & me",
+     "font": "Abril Fatface",
+     "size": 48,
+     "color": "#b23a48"
+    },
+    {
+     "text": "since 2019",
+     "font": "Caveat",
+     "size": 26,
+     "color": "#6b3a47"
+    }
+   ],
+   [
+    {
+     "text": "Mr & Mrs",
+     "font": "Cinzel",
+     "size": 40,
+     "color": "#7a5c2e",
+     "ls": 4
+    },
+    {
+     "text": "Happily ever after",
+     "font": "Great Vibes",
+     "size": 30,
+     "color": "#7a5c2e"
+    }
+   ],
+   [
+    {
+     "text": "XOXO",
+     "font": "Bebas Neue",
+     "size": 64,
+     "color": "#e91e63",
+     "ls": 8,
+     "lh": 1
+    },
+    {
+     "text": "hugs and kisses",
+     "font": "Dancing Script",
+     "size": 26,
+     "color": "#ad1457"
+    }
+   ],
+   [
+    {
+     "text": "Love you lots",
+     "font": "Pacifico",
+     "size": 40,
+     "color": "#e4572e"
+    },
+    {
+     "text": "like, a lot",
+     "font": "Amatic SC",
+     "size": 28,
+     "color": "#333333",
+     "bold": true
+    }
+   ],
+   [
+    {
+     "text": "My favourite person",
+     "font": "Playfair Display",
+     "size": 34,
+     "italic": true,
+     "color": "#6b3a47"
+    },
+    {
+     "text": "IN THE WHOLE WORLD",
+     "font": "Josefin Sans",
+     "size": 13,
+     "color": "#9b2242",
+     "ls": 3
+    }
+   ]
+  ],
+  "Birthday": [
+   [
+    {
+     "text": "HAPPY",
+     "font": "Bebas Neue",
+     "size": 64,
+     "color": "#e4572e",
+     "ls": 4,
+     "lh": 1
+    },
+    {
+     "text": "birthday!",
+     "font": "Caveat",
+     "size": 40,
+     "color": "#2b59c3",
+     "bold": true
+    }
+   ],
+   [
+    {
+     "text": "Happy Birthday",
+     "font": "Pacifico",
+     "size": 40,
+     "color": "#ff6f61"
+    },
+    {
+     "text": "Make a wish",
+     "font": "Fredoka",
+     "size": 18,
+     "color": "#6a4c93"
+    }
+   ],
+   [
+    {
+     "text": "Party time!",
+     "font": "Righteous",
+     "size": 42,
+     "color": "#7b2ff7"
+    },
+    {
+     "text": "LET'S CELEBRATE",
+     "font": "Montserrat",
+     "size": 13,
+     "color": "#333333",
+     "ls": 2
+    }
+   ],
+   [
+    {
+     "text": "Another year of awesome",
+     "font": "Permanent Marker",
+     "size": 32,
+     "color": "#1f3a93"
+    },
+    {
+     "text": "Cheers to you",
+     "font": "Caveat",
+     "size": 26,
+     "color": "#e4572e"
+    }
+   ],
+   [
+    {
+     "text": "Hello 30",
+     "font": "Abril Fatface",
+     "size": 56,
+     "color": "#c2185b"
+    },
+    {
+     "text": "and fabulous",
+     "font": "Dancing Script",
+     "size": 28,
+     "color": "#333333"
+    }
+   ],
+   [
+    {
+     "text": "Birthday wishes",
+     "font": "Great Vibes",
+     "size": 44,
+     "color": "#b8860b"
+    },
+    {
+     "text": "TO YOU",
+     "font": "Cinzel",
+     "size": 16,
+     "color": "#8b6914",
+     "ls": 6
+    }
+   ],
+   [
+    {
+     "text": "Hip hip hooray!",
+     "font": "Fredoka",
+     "size": 40,
+     "color": "#ff9800",
+     "bold": true
+    },
+    {
+     "text": "It's your day",
+     "font": "Onest",
+     "size": 15,
+     "color": "#555555"
+    }
+   ],
+   [
+    {
+     "text": "Cake time",
+     "font": "Lobster",
+     "size": 48,
+     "color": "#8d5524"
+    },
+    {
+     "text": "Eat, laugh, repeat",
+     "font": "Amatic SC",
+     "size": 28,
+     "color": "#333333",
+     "bold": true
+    }
+   ],
+   [
+    {
+     "text": "LEVEL UP!",
+     "font": "Bebas Neue",
+     "size": 60,
+     "color": "#00a6a6",
+     "ls": 3,
+     "lh": 1
+    },
+    {
+     "text": "One more year of awesome",
+     "font": "Montserrat",
+     "size": 13,
+     "color": "#333333"
+    }
+   ],
+   [
+    {
+     "text": "Sweet sixteen",
+     "font": "Sacramento",
+     "size": 52,
+     "color": "#ec407a"
+    },
+    {
+     "text": "SIXTEEN",
+     "font": "Josefin Sans",
+     "size": 14,
+     "color": "#ad1457",
+     "ls": 6
+    }
+   ]
+  ],
+  "Celebrate": [
+   [
+    {
+     "text": "CONGRATS",
+     "font": "Bebas Neue",
+     "size": 64,
+     "color": "#e4572e",
+     "ls": 3,
+     "lh": 1
+    },
+    {
+     "text": "you did it!",
+     "font": "Caveat",
+     "size": 34,
+     "color": "#2b59c3",
+     "bold": true
+    }
+   ],
+   [
+    {
+     "text": "Well done!",
+     "font": "Pacifico",
+     "size": 42,
+     "color": "#2e7d32"
+    },
+    {
+     "text": "We knew you could",
+     "font": "Onest",
+     "size": 14,
+     "color": "#3b3b3b"
+    }
+   ],
+   [
+    {
+     "text": "Class of 2026",
+     "font": "Cinzel",
+     "size": 32,
+     "color": "#1f2a44",
+     "bold": true
+    },
+    {
+     "text": "Congratulations, Graduate",
+     "font": "Playfair Display",
+     "size": 20,
+     "italic": true,
+     "color": "#7a5c2e"
+    }
+   ],
+   [
+    {
+     "text": "Cheers!",
+     "font": "Abril Fatface",
+     "size": 56,
+     "color": "#b8860b"
+    },
+    {
+     "text": "to new beginnings",
+     "font": "Dancing Script",
+     "size": 26,
+     "color": "#333333"
+    }
+   ],
+   [
+    {
+     "text": "You did it",
+     "font": "Permanent Marker",
+     "size": 44,
+     "color": "#e4572e"
+    },
+    {
+     "text": "SO PROUD",
+     "font": "Bebas Neue",
+     "size": 30,
+     "color": "#1f2a44",
+     "ls": 4
+    }
+   ],
+   [
+    {
+     "text": "Welcome baby",
+     "font": "Dancing Script",
+     "size": 46,
+     "color": "#5b3f8c",
+     "bold": true
+    },
+    {
+     "text": "LITTLE ONE",
+     "font": "Josefin Sans",
+     "size": 14,
+     "color": "#7e57c2",
+     "ls": 4
+    }
+   ],
+   [
+    {
+     "text": "Happy retirement",
+     "font": "Playfair Display",
+     "size": 36,
+     "color": "#a23b2a"
+    },
+    {
+     "text": "Enjoy the sunny days",
+     "font": "Caveat",
+     "size": 26,
+     "color": "#6b3a2e"
+    }
+   ],
+   [
+    {
+     "text": "New home",
+     "font": "Righteous",
+     "size": 44,
+     "color": "#00796b"
+    },
+    {
+     "text": "sweet new home",
+     "font": "Lora",
+     "size": 20,
+     "italic": true,
+     "color": "#4e342e"
+    }
+   ],
+   [
+    {
+     "text": "Bravo!",
+     "font": "Lobster",
+     "size": 56,
+     "color": "#c62828"
+    },
+    {
+     "text": "Encore, encore",
+     "font": "Cormorant Garamond",
+     "size": 20,
+     "italic": true,
+     "color": "#555555"
+    }
+   ],
+   [
+    {
+     "text": "Engaged!",
+     "font": "Alex Brush",
+     "size": 54,
+     "color": "#7a5c2e"
+    },
+    {
+     "text": "SHE SAID YES",
+     "font": "Montserrat",
+     "size": 13,
+     "color": "#5a4520",
+     "ls": 4
+    }
+   ]
+  ],
+  "Holidays": [
+   [
+    {
+     "text": "Merry & bright",
+     "font": "DM Serif Display",
+     "size": 44,
+     "color": "#8e1b1b"
+    },
+    {
+     "text": "Warm wishes from all of us",
+     "font": "Onest",
+     "size": 14,
+     "color": "#3b3b3b"
+    }
+   ],
+   [
+    {
+     "text": "Merry Christmas",
+     "font": "Great Vibes",
+     "size": 46,
+     "color": "#8e1b1b"
+    },
+    {
+     "text": "AND A HAPPY NEW YEAR",
+     "font": "Cinzel",
+     "size": 13,
+     "color": "#14532d",
+     "ls": 3
+    }
+   ],
+   [
+    {
+     "text": "Happy New Year",
+     "font": "Abril Fatface",
+     "size": 40,
+     "color": "#b8860b"
+    },
+    {
+     "text": "2027",
+     "font": "Bebas Neue",
+     "size": 56,
+     "color": "#1f2a44",
+     "ls": 6,
+     "lh": 1
+    }
+   ],
+   [
+    {
+     "text": "Happy Diwali",
+     "font": "Cinzel",
+     "size": 38,
+     "color": "#d35400",
+     "bold": true
+    },
+    {
+     "text": "Light, love and laughter",
+     "font": "Dancing Script",
+     "size": 26,
+     "color": "#8e44ad"
+    }
+   ],
+   [
+    {
+     "text": "Eid Mubarak",
+     "font": "Alex Brush",
+     "size": 50,
+     "color": "#0b6e4f"
+    },
+    {
+     "text": "peace and blessings",
+     "font": "Lora",
+     "size": 18,
+     "italic": true,
+     "color": "#3e5c4a"
+    }
+   ],
+   [
+    {
+     "text": "Happy Holi",
+     "font": "Fredoka",
+     "size": 48,
+     "color": "#e91e63",
+     "bold": true
+    },
+    {
+     "text": "Play with colours",
+     "font": "Caveat",
+     "size": 28,
+     "color": "#ff9800",
+     "bold": true
+    }
+   ],
+   [
+    {
+     "text": "Season's greetings",
+     "font": "Playfair Display",
+     "size": 36,
+     "italic": true,
+     "color": "#14532d"
+    },
+    {
+     "text": "WARM WISHES",
+     "font": "Josefin Sans",
+     "size": 13,
+     "color": "#8e1b1b",
+     "ls": 4
+    }
+   ],
+   [
+    {
+     "text": "Happy Easter",
+     "font": "Pacifico",
+     "size": 40,
+     "color": "#7cb342"
+    },
+    {
+     "text": "Hop into spring",
+     "font": "Amatic SC",
+     "size": 28,
+     "color": "#6a1b9a",
+     "bold": true
+    }
+   ],
+   [
+    {
+     "text": "Spooky season",
+     "font": "Permanent Marker",
+     "size": 40,
+     "color": "#e65100"
+    },
+    {
+     "text": "HAPPY HALLOWEEN",
+     "font": "Bebas Neue",
+     "size": 30,
+     "color": "#212121",
+     "ls": 4
+    }
+   ],
+   [
+    {
+     "text": "Happy Mother's Day",
+     "font": "Sacramento",
+     "size": 46,
+     "color": "#c2185b"
+    },
+    {
+     "text": "with love",
+     "font": "Lora",
+     "size": 18,
+     "italic": true,
+     "color": "#6b3a47"
+    }
+   ]
+  ],
+  "Thanks & more": [
+   [
+    {
+     "text": "Thank you",
+     "font": "Playfair Display",
+     "size": 48,
+     "italic": true,
+     "color": "#0b5d3b"
+    },
+    {
+     "text": "FOR BEING YOU",
+     "font": "Josefin Sans",
+     "size": 14,
+     "color": "#2e5d47",
+     "ls": 3
+    }
+   ],
+   [
+    {
+     "text": "Thanks a bunch",
+     "font": "Pacifico",
+     "size": 40,
+     "color": "#00897b"
+    },
+    {
+     "text": "You're the best",
+     "font": "Amatic SC",
+     "size": 28,
+     "color": "#333333",
+     "bold": true
+    }
+   ],
+   [
+    {
+     "text": "With gratitude",
+     "font": "Cormorant Garamond",
+     "size": 38,
+     "italic": true,
+     "color": "#4e342e"
+    },
+    {
+     "text": "THANK YOU",
+     "font": "Cinzel",
+     "size": 14,
+     "color": "#8d6e63",
+     "ls": 6
+    }
+   ],
+   [
+    {
+     "text": "Get well soon",
+     "font": "Caveat",
+     "size": 48,
+     "color": "#1f3a93",
+     "bold": true
+    },
+    {
+     "text": "Sending hugs",
+     "font": "Onest",
+     "size": 14,
+     "color": "#3d5a8c"
+    }
+   ],
+   [
+    {
+     "text": "Thinking of you",
+     "font": "Dancing Script",
+     "size": 44,
+     "color": "#2e5d47"
+    },
+    {
+     "text": "ALWAYS",
+     "font": "Josefin Sans",
+     "size": 14,
+     "color": "#4a6b5a",
+     "ls": 6
+    }
+   ],
+   [
+    {
+     "text": "With sympathy",
+     "font": "Cormorant Garamond",
+     "size": 36,
+     "italic": true,
+     "color": "#4f4a3e"
+    },
+    {
+     "text": "In loving memory",
+     "font": "Lora",
+     "size": 16,
+     "color": "#7a7466"
+    }
+   ],
+   [
+    {
+     "text": "Miss you",
+     "font": "Lobster",
+     "size": 50,
+     "color": "#3949ab"
+    },
+    {
+     "text": "come back soon",
+     "font": "Caveat",
+     "size": 26,
+     "color": "#555555"
+    }
+   ],
+   [
+    {
+     "text": "Hello there",
+     "font": "Righteous",
+     "size": 44,
+     "color": "#ff7043"
+    },
+    {
+     "text": "Just saying hi",
+     "font": "Montserrat",
+     "size": 14,
+     "color": "#555555"
+    }
+   ],
+   [
+    {
+     "text": "Good luck!",
+     "font": "Fredoka",
+     "size": 44,
+     "color": "#43a047",
+     "bold": true
+    },
+    {
+     "text": "You've got this",
+     "font": "Permanent Marker",
+     "size": 22,
+     "color": "#1f3a93"
+    }
+   ],
+   [
+    {
+     "text": "BEST FRIENDS",
+     "font": "Amatic SC",
+     "size": 52,
+     "color": "#6a1b9a",
+     "bold": true,
+     "lh": 1.1
+    },
+    {
+     "text": "forever and ever",
+     "font": "Sacramento",
+     "size": 36,
+     "color": "#ec407a"
+    }
+   ]
+  ]
+ },
+ "stickers": {
+  "Love": [
+   "💖",
+   "💕",
+   "💞",
+   "❤️",
+   "💌",
+   "🌹",
+   "💐",
+   "💍"
+  ],
+  "Celebrate": [
+   "🎉",
+   "🎈",
+   "🎂",
+   "🎁",
+   "🥂",
+   "✨",
+   "🎊",
+   "🍾"
+  ],
+  "Nature": [
+   "🌿",
+   "🌸",
+   "🌼",
+   "🌻",
+   "🍃",
+   "🌙",
+   "☀️",
+   "🌈"
+  ],
+  "Fun": [
+   "😊",
+   "🥳",
+   "😍",
+   "🤗",
+   "👏",
+   "🙌",
+   "⭐",
+   "🦋"
+  ],
+  "Hearts": [
+   "🧡",
+   "💛",
+   "💚",
+   "💙",
+   "💜",
+   "🤍",
+   "🖤",
+   "💘",
+   "💝",
+   "💗"
+  ],
+  "Faces": [
+   "😂",
+   "🥰",
+   "😘",
+   "😎",
+   "🤩",
+   "😇",
+   "🤓",
+   "😜",
+   "🤭",
+   "😴"
+  ],
+  "Animals": [
+   "🐶",
+   "🐱",
+   "🐼",
+   "🦊",
+   "🐻",
+   "🐰",
+   "🦄",
+   "🐝",
+   "🐢",
+   "🐧"
+  ],
+  "Food": [
+   "🍕",
+   "🍩",
+   "🍪",
+   "🧁",
+   "🍓",
+   "🍉",
+   "🍦",
+   "☕",
+   "🍫",
+   "🍔"
+  ],
+  "Party": [
+   "🎀",
+   "🎆",
+   "🎇",
+   "🎏",
+   "🎶",
+   "🎵",
+   "🎤",
+   "🕺",
+   "💃",
+   "🎺"
+  ],
+  "Holidays": [
+   "🎄",
+   "🎅",
+   "⛄",
+   "❄️",
+   "🎃",
+   "👻",
+   "🪔",
+   "🐣",
+   "🕎",
+   "🧧"
+  ],
+  "Garden": [
+   "🌷",
+   "🌺",
+   "🌵",
+   "🌴",
+   "🍀",
+   "🍁",
+   "🌊",
+   "🌳",
+   "🪴",
+   "🌾"
+  ],
+  "Travel": [
+   "✈️",
+   "🚗",
+   "🏖️",
+   "🗺️",
+   "🧳",
+   "🏝️",
+   "🚀",
+   "🗽",
+   "🎡",
+   "⛺"
+  ],
+  "Hobbies": [
+   "⚽",
+   "🏀",
+   "🎾",
+   "🏆",
+   "🥇",
+   "🎨",
+   "📚",
+   "🎮",
+   "🎸",
+   "📷"
+  ],
+  "Symbols": [
+   "💯",
+   "🔥",
+   "🌟",
+   "💫",
+   "👑",
+   "💎",
+   "🎯",
+   "☮️",
+   "♾️",
+   "✅"
+  ]
+ },
+ "bgColors": {
+  "Classic": [
+   "#ffffff",
+   "#f6f1e7",
+   "#fbe9ec",
+   "#fde2d2",
+   "#fff3d1",
+   "#e3efe8",
+   "#ddebf7",
+   "#e9e3f5",
+   "#1f2a44",
+   "#14201a"
+  ],
+  "Light & neutral": [
+   "#fffdf8",
+   "#fbf8f1",
+   "#f3ede0",
+   "#efe8dc",
+   "#f5f5f4",
+   "#eeeeec",
+   "#fdf6ec",
+   "#f5ede3",
+   "#efe6da",
+   "#e8e2d6"
+  ],
+  "Pastel": [
+   "#f9d2d2",
+   "#f9ded2",
+   "#f9e9d2",
+   "#f9f5d2",
+   "#f1f9d2",
+   "#e6f9d2",
+   "#daf9d2",
+   "#d2f9d6",
+   "#d2f9e2",
+   "#d2f9ed",
+   "#d2f9f9",
+   "#d2edf9",
+   "#d2e2f9",
+   "#d2d6f9",
+   "#dad2f9",
+   "#e6d2f9",
+   "#f1d2f9",
+   "#f9d2f5",
+   "#f9d2e9",
+   "#f9d2de"
+  ],
+  "Soft": [
+   "#e3bfbf",
+   "#e3cabf",
+   "#e3d5bf",
+   "#e3e0bf",
+   "#dce3bf",
+   "#d1e3bf",
+   "#c6e3bf",
+   "#bfe3c2",
+   "#bfe3cd",
+   "#bfe3d8",
+   "#bfe3e3",
+   "#bfd8e3",
+   "#bfcde3",
+   "#bfc2e3",
+   "#c6bfe3",
+   "#d1bfe3",
+   "#dcbfe3",
+   "#e3bfe0",
+   "#e3bfd5",
+   "#e3bfca"
+  ],
+  "Warm": [
+   "#f0a8a8",
+   "#f0afa8",
+   "#f0b7a8",
+   "#f0bea8",
+   "#f0c5a8",
+   "#f0cca8",
+   "#f0d3a8",
+   "#f0daa8",
+   "#f0e1a8",
+   "#de837c",
+   "#de8d7c",
+   "#de977c",
+   "#dea07c",
+   "#deaa7c",
+   "#deb47c",
+   "#debe7c",
+   "#c9625e",
+   "#c9775e",
+   "#c98d5e",
+   "#c9a25e"
+  ],
+  "Cool": [
+   "#bae8d9",
+   "#bae8dd",
+   "#bae8e0",
+   "#bae8e4",
+   "#bae8e8",
+   "#bae4e8",
+   "#bae0e8",
+   "#badde8",
+   "#bad9e8",
+   "#bad5e8",
+   "#86a8cb",
+   "#86a3cb",
+   "#869dcb",
+   "#8697cb",
+   "#8691cb",
+   "#868bcb",
+   "#8686cb",
+   "#8b86cb",
+   "#9186cb",
+   "#9786cb"
+  ],
+  "Earthy": [
+   "#bb9081",
+   "#bb9881",
+   "#bba181",
+   "#bbaa81",
+   "#bbb281",
+   "#bbbb81",
+   "#b2bb81",
+   "#aabb81",
+   "#a1bb81",
+   "#98bb81",
+   "#896458",
+   "#896b58",
+   "#897358",
+   "#897a58",
+   "#898158",
+   "#898958",
+   "#818958",
+   "#7a8958",
+   "#738958",
+   "#6b8958"
+  ],
+  "Bright": [
+   "#ef3939",
+   "#ef6f39",
+   "#efa639",
+   "#efdd39",
+   "#cbef39",
+   "#94ef39",
+   "#5def39",
+   "#39ef4b",
+   "#39ef82",
+   "#39efb8",
+   "#39efef",
+   "#39b8ef",
+   "#3982ef",
+   "#394bef",
+   "#5d39ef",
+   "#9439ef",
+   "#cb39ef",
+   "#ef39dd",
+   "#ef39a6",
+   "#ef396f"
+  ],
+  "Jewel": [
+   "#832121",
+   "#833e21",
+   "#835b21",
+   "#837921",
+   "#6f8321",
+   "#528321",
+   "#348321",
+   "#21832a",
+   "#218348",
+   "#218365",
+   "#218383",
+   "#216583",
+   "#214883",
+   "#212a83",
+   "#342183",
+   "#522183",
+   "#6f2183",
+   "#832179",
+   "#83215b",
+   "#83213e"
+  ],
+  "Dark": [
+   "#2f1818",
+   "#2f1f18",
+   "#2f2618",
+   "#2f2d18",
+   "#2b2f18",
+   "#242f18",
+   "#1d2f18",
+   "#182f1b",
+   "#182f21",
+   "#182f28",
+   "#182f2f",
+   "#18282f",
+   "#18212f",
+   "#181b2f",
+   "#1d182f",
+   "#24182f",
+   "#2b182f",
+   "#2f182d",
+   "#2f1826",
+   "#2f181f"
+  ],
+  "Greys": [
+   "#f7f7f8",
+   "#e9eaec",
+   "#dcdde0",
+   "#ced0d4",
+   "#c1c3c8",
+   "#b6b9be",
+   "#a9acb2",
+   "#9b9fa6",
+   "#8d929a",
+   "#80858e",
+   "#737882",
+   "#676b74",
+   "#5b5f67",
+   "#4f5259",
+   "#43464c",
+   "#3a3c41",
+   "#2e2f33",
+   "#222326",
+   "#161618",
+   "#0a0a0b"
+  ]
+ }
+}

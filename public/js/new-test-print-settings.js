@@ -614,7 +614,8 @@
                 if (Array.isArray(media) && media.length) {
                     this.mediaTypes = media.map(function (m) {
                         var label = (typeof m === 'string') ? m : (m.name || m.label || m.displayName || String(m));
-                        var value = (typeof m === 'string') ? m : (m.id || m.key || label);
+                        // Bridge expects the media type NAME (demo sends m.name).
+                        var value = (typeof m === 'string') ? m : (m.name || m.id || m.key || label);
                         return { value: value, label: label };
                     }).filter(function (o) { return o.label; });
                     if (!this.mediaTypes.some(function (o) { return o.value === this.printMediaType; }, this)) this.printMediaType = '';

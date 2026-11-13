@@ -188,14 +188,17 @@ Route::get('/find-store', fn(Request $request) => $flowController()->findStore($
 
 // Products & Categories
 Route::get('/products', fn() => $flowController()->index())->name('canonical.products');
-Route::get('/cards', fn(Request $request) => $flowController()->cards($request))->name('canonical.cards');
-Route::get('/cards/{title}/{size}/templates', fn($title, $size) => $flowController()->category('cards', $title, $size))->name('canonical.cards.templates');
-Route::get('/cards/{title}/{size}/design/{template?}', fn($title, $size, $template = null) => $flowController()->customize('cards', $title, $size, $template))->name('canonical.cards.design');
-Route::get('/magnets/{size}/design/{template?}', fn($size, $template = null) => $flowController()->customize('magnets', null, $size, $template))->name('canonical.magnets.design');
+// Store must be selected (session 'active_store_id') for these
+Route::middleware(['checkStore'])->group(function () use ($flowController) {
+    Route::get('/cards', fn(Request $request) => $flowController()->cards($request))->name('canonical.cards');
+    Route::get('/cards/{title}/{size}/templates', fn($title, $size) => $flowController()->category('cards', $title, $size))->name('canonical.cards.templates');
+    Route::get('/cards/{title}/{size}/design/{template?}', fn($title, $size, $template = null) => $flowController()->customize('cards', $title, $size, $template))->name('canonical.cards.design');
+    Route::get('/magnets/{size}/design/{template?}', fn($size, $template = null) => $flowController()->customize('magnets', null, $size, $template))->name('canonical.magnets.design');
 
-// Order & Confirmation
-Route::get('/order', fn() => $flowController()->cartCheckout())->name('canonical.order');
-Route::get('/order/{order}', fn(\App\Models\Order $order) => $flowController()->confirmation($order))->name('canonical.order.confirmation');
+    // Order & Confirmation
+    Route::get('/order', fn() => $flowController()->cartCheckout())->name('canonical.order');
+    Route::get('/order/{order}', fn(\App\Models\Order $order) => $flowController()->confirmation($order))->name('canonical.order.confirmation');
+});
 
 // Tracking
 Route::get('/track', fn() => $flowController()->trackForm())->name('canonical.track.form');
@@ -214,6 +217,7 @@ Route::get('/local-print', [\App\Http\Controllers\LocalPrintController::class, '
 Route::get('/print', [\App\Http\Controllers\LocalPrintController::class, 'start'])->name('localprint.start');
 Route::get('/print/design', [\App\Http\Controllers\LocalPrintController::class, 'design'])->name('localprint.design');
 Route::get('/print/own-design/sizes', [\App\Http\Controllers\LocalPrintController::class, 'sizes'])->name('localprint.sizes');
+Route::get('/print/own-design/sizes-canvas', [\App\Http\Controllers\LocalPrintController::class, 'sizesCanvas'])->name('localprint.sizes-canvas');
 Route::get('/print/own-design/sizes/customizer', [\App\Http\Controllers\LocalPrintController::class, 'customizer'])->name('localprint.customizer');
 Route::post('/print/own-design/sizes/customizer/preview', [\App\Http\Controllers\LocalPrintController::class, 'preview'])->name('localprint.preview');
 // Double-sided business card: save both sides + generate the 7×10 and A4 sheets.
@@ -258,24 +262,47 @@ Route::post('/print/trays', [\App\Http\Controllers\LocalPrintController::class, 
 $registerFlowRoutes = function (string $controller, string $namePrefix, string $cartController = CartController::class) {
     Route::name("$namePrefix.")->group(function () use ($controller, $namePrefix, $cartController) {
         // Static Routes (Defined FIRST so wildcards do not intercept them)
+        //MIDDLEWARE FOR CHECK STORE IS SET
+
+        Route::middleware(['checkStore'])->group(function () use ($controller, $namePrefix, $cartController) {
+            Route::get('/cart-checkout', [$controller, 'cartCheckout'])->name('cart-checkout');
+            Route::post('/cart-checkout/cash', [$controller, 'cartCheckoutCash'])->name('cart-checkout.cash');
+            Route::post('/cart-checkout/paypal/create', [$controller, 'cartPaypalCreate'])->name('cart-checkout.paypal.create');
+            Route::post('/cart-checkout/paypal/capture', [$controller, 'cartPaypalCapture'])->name('cart-checkout.paypal.capture');
+           
+            Route::get('/cart', [$cartController, 'index'])->name('cart.index');
+            Route::post('/cart/add', [$cartController, 'add'])->name('cart.add');
+            Route::post('/cart/update/{itemId}', [$cartController, 'update'])->name('cart.update');
+            Route::delete('/cart/remove/{itemId}', [$cartController, 'remove'])->name('cart.remove');
+            Route::post('/cart/apply-coupon', [$cartController, 'applyCoupon'])->name('cart.apply-coupon');
+            Route::post('/cart/remove-coupon', [$cartController, 'removeCoupon'])->name('cart.remove-coupon');
+            Route::get('/cart/count', [$cartController, 'count'])->name('cart.count');
+
+            Route::get('/confirmation/{order}', [$controller, 'confirmation'])->name('confirmation');
+
+
+             // Dynamic Wildcard Patterns (Defined LAST)
+            Route::get('/{type}/{title}/{size}/templates', [$controller, 'category'])->name('templates');
+            Route::get('/{type}/{title}/{size}/design/{template?}', [$controller, 'customize'])->name('customize.design');
+            Route::get('/{type}', [$controller, 'category'])->name('category');
+
+
+              Route::post('/checkout', [$controller, 'checkout'])->name('checkout');
+            Route::post('/paypal/create', [$controller, 'createPaypalOrder'])->name('paypal.create');
+            Route::post('/paypal/capture', [$controller, 'capturePaypalOrder'])->name('paypal.capture');
+            Route::post('/checkout/cash', [$controller, 'checkoutCash'])->name('checkout.cash');
+        });
+
+
         Route::get('/find-store', [$controller, 'findStore'])->name('find-store');
         Route::get('/nearest-store', [$controller, 'getNearestStore'])->name('nearest-store');
         Route::get('/set-store', fn() => redirect()->route("$namePrefix.find-store"));
         Route::post('/set-store', [$controller, 'setStore'])->name('set-store');
         Route::post('/apply-coupon', [$controller, 'applyCoupon'])->name('apply-coupon');
 
-        Route::get('/cart-checkout', [$controller, 'cartCheckout'])->name('cart-checkout');
-        Route::post('/cart-checkout/cash', [$controller, 'cartCheckoutCash'])->name('cart-checkout.cash');
-        Route::post('/cart-checkout/paypal/create', [$controller, 'cartPaypalCreate'])->name('cart-checkout.paypal.create');
-        Route::post('/cart-checkout/paypal/capture', [$controller, 'cartPaypalCapture'])->name('cart-checkout.paypal.capture');
+        
 
-        Route::get('/cart', [$cartController, 'index'])->name('cart.index');
-        Route::post('/cart/add', [$cartController, 'add'])->name('cart.add');
-        Route::post('/cart/update/{itemId}', [$cartController, 'update'])->name('cart.update');
-        Route::delete('/cart/remove/{itemId}', [$cartController, 'remove'])->name('cart.remove');
-        Route::post('/cart/apply-coupon', [$cartController, 'applyCoupon'])->name('cart.apply-coupon');
-        Route::post('/cart/remove-coupon', [$cartController, 'removeCoupon'])->name('cart.remove-coupon');
-        Route::get('/cart/count', [$cartController, 'count'])->name('cart.count');
+        
 
         
         Route::get('/custom-print', fn() => redirect()->route("$namePrefix.qrinto"));
@@ -283,7 +310,7 @@ $registerFlowRoutes = function (string $controller, string $namePrefix, string $
         Route::post('/local-print/paypal/create', [$controller, 'qrintoPaypalCreate'])->name('qrinto.paypal.create');
         Route::post('/local-print/paypal/capture', [$controller, 'qrintoPaypalCapture'])->name('qrinto.paypal.capture');
 
-        Route::get('/confirmation/{order}', [$controller, 'confirmation'])->name('confirmation');
+        
         Route::get('/print/{order}', [$controller, 'printDesign'])->name('print');
         Route::get('/print/{order}/pdf', [$controller, 'viewPdf'])->name('print.pdf');
 
@@ -294,19 +321,13 @@ $registerFlowRoutes = function (string $controller, string $namePrefix, string $
 
         Route::post('/upload', [$controller, 'upload'])->name('upload');
         Route::post('/upload-composite', [$controller, 'uploadComposite'])->name('upload_composite');
-        Route::post('/checkout', [$controller, 'checkout'])->name('checkout');
-        Route::post('/paypal/create', [$controller, 'createPaypalOrder'])->name('paypal.create');
-        Route::post('/paypal/capture', [$controller, 'capturePaypalOrder'])->name('paypal.capture');
-        Route::post('/checkout/cash', [$controller, 'checkoutCash'])->name('checkout.cash');
+      
 
         Route::get('/product/{product:slug}', [$controller, 'product'])->name('product');
         Route::get('/customize/{product:slug}', [$controller, 'customize'])->name('customize');
         Route::get('/thumbnails/generate', [\App\Http\Controllers\UtilityController::class, 'generateThumbnails'])->name('utility.thumbnails');
 
-        // Dynamic Wildcard Patterns (Defined LAST)
-        Route::get('/{type}/{title}/{size}/templates', [$controller, 'category'])->name('templates');
-        Route::get('/{type}/{title}/{size}/design/{template?}', [$controller, 'customize'])->name('customize.design');
-        Route::get('/{type}', [$controller, 'category'])->name('category');
+       
     });
 };
 
@@ -400,6 +421,9 @@ $registerAdminRoutes = function ($prefix, $namePrefix) {
         Route::resource('templates', AdminTemplateController::class);
         Route::post('templates/{template}/toggle', [AdminTemplateController::class, 'toggle'])->name('templates.toggle');
         Route::post('templates/upload-asset', [AdminTemplateController::class, 'uploadAsset'])->name('templates.upload-asset');
+        // Card editor templates: design visually in the /editor UI, save pages back to the template.
+        Route::get('templates/{template}/design', [AdminTemplateController::class, 'design'])->name('templates.design');
+        Route::post('templates/{template}/design', [AdminTemplateController::class, 'saveDesign'])->name('templates.design.save');
 
         // Documentations
         Route::get('docs', [\App\Http\Controllers\Admin\DocumentationController::class, 'index'])->name('docs.index');
@@ -497,6 +521,13 @@ Route::get('/staff/dashboard', [AdminDashboardController::class, 'index'])->midd
 // -----------------------------------------------------------------------------
 // /editor/single = front only, /editor/double = front + back, /editor/folded (default) = front, inside, back.
 // Add /landscape (or /portrait, the default) after the type to choose the orientation, e.g. /editor/single/landscape.
+// Review dialog actions: prepare the session for print / PDF / pickup, and (admins) save as a product.
+Route::post('/editor/checkout/prepare', [\App\Http\Controllers\CardEditorController::class, 'prepareCheckout'])
+    ->middleware('throttle:30,1')->name('card-editor.prepare');
+Route::post('/editor/product-draft', [\App\Http\Controllers\CardEditorController::class, 'productDraft'])
+    ->middleware(['auth', 'admin', 'throttle:20,1'])->name('card-editor.product-draft');
+// Template library for the editor, served from the admin-managed templates table (kind=card).
+Route::get('/editor-templates.json', [\App\Http\Controllers\CardEditorController::class, 'templates'])->name('card-editor.templates');
 Route::get('/editor/{type}/{orientation}/{product?}', [\App\Http\Controllers\CardEditorController::class, 'index'])
     ->where(['type' => 'single|double|folded', 'orientation' => 'portrait|landscape'])
     ->name('card-editor.orientation');

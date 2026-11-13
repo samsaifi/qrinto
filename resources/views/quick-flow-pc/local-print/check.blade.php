@@ -1510,6 +1510,9 @@
                     // `bin=`). Only from live capabilities; empty = printer default.
                     if (this.printInputBin) cfg.inputBin = this.printInputBin;
 
+                    // Media type → bridge `mediaType` (same as PrintTrays demo).
+                    if (this.printMediaType) cfg.mediaType = this.printMediaType;
+
                     // New bridge options (new demo): fast-raster for PDFs; for a
                     // native image job, the page size of the composed image and the
                     // optional classic (Sumatra) engine.

@@ -27,6 +27,35 @@
     <form action="{{ isset($product) ? route($rPrefix . 'products.update', $product) : route($rPrefix . 'products.store') }}"
         method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
+        @if (!empty($editorDraft) && !isset($product))
+            {{-- From the card editor's "Save as product template": the card pages become the product images --}}
+            @php $draftLabels = ['frame_image' => 'Front', 'sample_image' => $editorDraft['no_of_pages'] == 2 ? 'Back' : 'Inside left', 'background_image' => 'Inside right', 'overlay_image' => 'Back']; @endphp
+            <div class="mb-6 p-5 rounded-2xl border border-brand-200 bg-brand-50/40">
+                <div class="flex items-center gap-2 mb-1 font-semibold text-surface-800"><i data-lucide="sparkles" class="w-4 h-4 text-brand-600"></i> Design from the card editor</div>
+                <p class="text-xs text-surface-500 mb-4">These card pages are saved as this product's images. Fill in the rest of the details and save.</p>
+                <div class="flex flex-wrap gap-4">
+                    @foreach ($editorDraft['images'] as $slot => $path)
+                        <figure class="text-center">
+                            <img src="{{ asset('storage/' . $path) }}" alt="{{ $draftLabels[$slot] ?? $slot }}" class="h-36 rounded-lg shadow-sm bg-white object-contain">
+                            <figcaption class="text-xs text-surface-500 mt-1">{{ $draftLabels[$slot] ?? $slot }}</figcaption>
+                        </figure>
+                        <input type="hidden" name="editor_{{ $slot }}" value="{{ $path }}">
+                    @endforeach
+                </div>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const d = @json($editorDraft);
+                    const set = (sel, v) => { const el = document.querySelector(sel); if (el && v != null && !el.value) { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); } };
+                    set('input[name="name"]', d.name);
+                    const pages = document.querySelector('select[name="no_of_pages"]'); if (pages) { pages.value = String(d.no_of_pages); pages.dispatchEvent(new Event('change', { bubbles: true })); }
+                    const pdf = document.querySelector('select[name="pdf_orientation"]'); if (pdf) pdf.value = d.pdf_orientation;
+                    // Show the front page in the frame upload box too
+                    const fp = document.getElementById('framePreview');
+                    if (fp && d.images.frame_image) { fp.querySelector('img').src = @json(asset('storage')) + '/' + d.images.frame_image; fp.querySelector('p').textContent = '✓ Front page from the card editor'; fp.classList.remove('hidden'); }
+                });
+            </script>
+        @endif
         @if (isset($product))
             @method('PUT')
         @endif
