@@ -90,7 +90,12 @@
                             class="{{ $input }}" placeholder="(555) 123-4567">
                         @error('phone') <p class="{{ $err }}">{{ $message }}</p> @enderror
                     </div>
-                    <div class="hidden sm:block"></div>
+                    <div>
+                        <label class="{{ $label }}">Current Password</label>
+                        <input type="password" name="current_password" autocomplete="current-password"
+                            class="{{ $input }}" placeholder="Required to change email or password">
+                        @error('current_password') <p class="{{ $err }}">{{ $message }}</p> @enderror
+                    </div>
                     <div>
                         <label class="{{ $label }}">New Password</label>
                         <input type="password" name="password" minlength="8" autocomplete="new-password"
@@ -191,7 +196,7 @@
                         </button>
                     </div>
                     <input type="file" name="logo" id="logo_input"
-                        accept="image/png,image/jpeg,image/webp,image/svg+xml" class="hidden" onchange="previewLogo(this)">
+                        accept="image/png,image/jpeg,image/webp" class="hidden" onchange="previewLogo(this)">
                 </div>
             </div>
         </div>

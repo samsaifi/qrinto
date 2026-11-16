@@ -36,14 +36,11 @@ class StorePanelController extends Controller
     /** Resolve the store this staff member operates. */
     protected function currentStore(): ?Store
     {
+        // Returning a redirect here violated the ?Store return type (TypeError 500);
+        // callers already handle null.
         $user = auth()->user();
-         
-        if ($user && $user->store_id) {
-           
-            return $user->store;
-        }else{
-            return redirect()->route('login')->with('error', 'You are not authorized to access this page.');
-        } 
+
+        return ($user && $user->store_id) ? $user->store : null;
     }
 
     public function orders(Request $request)
@@ -415,10 +412,21 @@ class StorePanelController extends Controller
             'country'    => 'nullable|string|max:100',
             'lat'        => 'nullable|numeric|between:-90,90',
             'lon'        => 'nullable|numeric|between:-180,180',
-            'logo'       => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
+            // SVG is not accepted: it is served from our origin and can carry script.
+            'logo'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            // Changing the login email or password needs the current password.
+            'current_password' => [
+                Rule::requiredIf(fn() => filled($request->password)
+                    || strcasecmp((string) $request->email, (string) $user->email) !== 0),
+                'nullable', 'current_password',
+            ],
         ], [
             'email.unique' => 'This email is already registered.',
+            'current_password.required' => 'Enter your current password to change your email or password.',
+            'current_password.current_password' => 'Your current password is incorrect.',
         ]);
+        $credentialsChanged = filled($validated['password'] ?? null)
+            || strcasecmp($validated['email'], (string) $user->email) !== 0;
 
         $oldLogo = $store->logo;
         $newLogo = $request->hasFile('logo')
@@ -463,6 +471,16 @@ class StorePanelController extends Controller
 
         if ($newLogo && $oldLogo) {
             Storage::disk('public')->delete($oldLogo);
+        }
+
+        // Credentials changed: end every other session and issue a fresh ID for this one.
+        if ($credentialsChanged) {
+            if (filled($validated['password'] ?? null)) {
+                \Illuminate\Support\Facades\Auth::logoutOtherDevices($validated['password']);
+            }
+            $user->setRememberToken(\Illuminate\Support\Str::random(60));
+            $user->save();
+            $request->session()->regenerate();
         }
 
         return redirect()->route('storepanel.profile')->with('status', 'Store details updated.');

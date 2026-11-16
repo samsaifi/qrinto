@@ -689,6 +689,22 @@ class BusinessCardTest extends TestCase
             ->assertViewHas('businessCard', fn($bc) => $bc['designId'] === $id);
     }
 
+    public function test_guest_card_is_claimed_by_user_on_login(): void
+    {
+        $id = $this->save($this->payload())->assertCreated()->json('design_id');
+        $this->assertNull(UserDesign::find($id)->user_id);
+
+        // Login fires before the session ID is regenerated.
+        session()->setId(self::SESSION_A);
+        session()->start();
+        event(new \Illuminate\Auth\Events\Login('web', \App\Models\User::find(8), false));
+
+        $this->assertSame(8, (int) UserDesign::find($id)->user_id);
+        // Afterwards the user reaches it from any session.
+        $this->actingAs(\App\Models\User::find(8))->asSession(self::SESSION_B)
+            ->get("/print/own-design/business-card/{$id}/side/front")->assertOk();
+    }
+
     public function test_preview_page_and_side_images_are_owner_only(): void
     {
         $id = $this->save($this->payload())->assertCreated()->json('design_id');

@@ -22,13 +22,15 @@ use Illuminate\Validation\ValidationException;
  */
 class BusinessCardController extends Controller
 {
-    /** Longest base64 data URI accepted per side (~12 MB decoded). */
-    // A 1200 DPI side (4200 × 2400 JPEG) can be several MB; base64 adds a third.
-    protected const MAX_IMAGE_CHARS = 54 * 1024 * 1024;
+    /**
+     * Longest base64 data URI accepted per side. The editor sends JPEG at 0.95,
+     * so a 1200 DPI side (4200 × 2400) is well under 16 MB decoded; base64 adds
+     * a third. Two sides stay ~43 MB per request, inside common post_max_size.
+     */
+    protected const MAX_IMAGE_CHARS = 22 * 1024 * 1024;
 
     /** Session key holding the last business card saved in this session. */
     public const SESSION_DESIGN = 'business_card_design_id';
-
     /* ── Customizer (reached from /print/own-design/sizes/customizer?title=business-card) ── */
     public function customizer(Request $request)
     {
@@ -320,6 +322,8 @@ class BusinessCardController extends Controller
     /** Owner = same signed-in user, or (for guest designs) the same session. */
     protected function authorizeDesign(UserDesign $design): void
     {
+        // Guest cards are claimed by the user at login (see AppServiceProvider),
+        // so they stay reachable after the session ID is regenerated.
         $owns = $design->user_id
             ? (int) $design->user_id === (int) auth()->id()
             : hash_equals((string) $design->session_id, (string) session()->getId());

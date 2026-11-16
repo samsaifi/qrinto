@@ -213,6 +213,11 @@ class TemplateController extends Controller
             'name'  => 'nullable|string|max:255',
             'pages' => 'required|array',
             'pages.front.els' => 'present|array',
+            'pages.*'         => 'array',
+            'pages.*.bg'      => 'nullable|string|max:64',
+            'pages.*.els'     => 'sometimes|array',
+            'pages.*.els.*'   => 'array',
+            'pages.*.els.*.src' => 'nullable|string',
         ]);
 
         $assetBase = asset('assets/templates') . '/';

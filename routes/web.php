@@ -197,8 +197,10 @@ Route::middleware(['checkStore'])->group(function () use ($flowController) {
 
     // Order & Confirmation
     Route::get('/order', fn() => $flowController()->cartCheckout())->name('canonical.order');
-    Route::get('/order/{order}', fn(\App\Models\Order $order) => $flowController()->confirmation($order))->name('canonical.order.confirmation');
 });
+
+// Order confirmation stays reachable after payment even if the store session is gone.
+Route::get('/order/{order}', fn(\App\Models\Order $order) => $flowController()->confirmation($order))->name('canonical.order.confirmation');
 
 // Tracking
 Route::get('/track', fn() => $flowController()->trackForm())->name('canonical.track.form');
@@ -225,7 +227,7 @@ Route::post('/print/own-design/business-card/save', [\App\Http\Controllers\Busin
     ->middleware('throttle:30,1')->name('business-card.save');
 Route::get('/print/own-design/business-card/{design}/pdf/{format}', [\App\Http\Controllers\BusinessCardController::class, 'download'])
     ->whereNumber('design')->whereIn('format', array_unique(array_merge(array_keys(\App\Services\BusinessCard\BusinessCard::FORMATS), ['edge_to_edge'])))
-    ->name('business-card.download');
+    ->middleware('throttle:30,1')->name('business-card.download');
 Route::get('/print/own-design/business-card/{design}/side/{side}', [\App\Http\Controllers\BusinessCardController::class, 'side'])
     ->whereNumber('design')->whereIn('side', ['front', 'back'])->name('business-card.side');
 Route::get('/print/own-design/sizes/customizer/preview/business-card', [\App\Http\Controllers\BusinessCardController::class, 'preview'])
@@ -268,7 +270,6 @@ $registerFlowRoutes = function (string $controller, string $namePrefix, string $
             Route::get('/cart-checkout', [$controller, 'cartCheckout'])->name('cart-checkout');
             Route::post('/cart-checkout/cash', [$controller, 'cartCheckoutCash'])->name('cart-checkout.cash');
             Route::post('/cart-checkout/paypal/create', [$controller, 'cartPaypalCreate'])->name('cart-checkout.paypal.create');
-            Route::post('/cart-checkout/paypal/capture', [$controller, 'cartPaypalCapture'])->name('cart-checkout.paypal.capture');
            
             Route::get('/cart', [$cartController, 'index'])->name('cart.index');
             Route::post('/cart/add', [$cartController, 'add'])->name('cart.add');
@@ -278,7 +279,6 @@ $registerFlowRoutes = function (string $controller, string $namePrefix, string $
             Route::post('/cart/remove-coupon', [$cartController, 'removeCoupon'])->name('cart.remove-coupon');
             Route::get('/cart/count', [$cartController, 'count'])->name('cart.count');
 
-            Route::get('/confirmation/{order}', [$controller, 'confirmation'])->name('confirmation');
 
 
              // Dynamic Wildcard Patterns (Defined LAST)
@@ -289,10 +289,15 @@ $registerFlowRoutes = function (string $controller, string $namePrefix, string $
 
               Route::post('/checkout', [$controller, 'checkout'])->name('checkout');
             Route::post('/paypal/create', [$controller, 'createPaypalOrder'])->name('paypal.create');
-            Route::post('/paypal/capture', [$controller, 'capturePaypalOrder'])->name('paypal.capture');
             Route::post('/checkout/cash', [$controller, 'checkoutCash'])->name('checkout.cash');
         });
 
+
+        // Outside checkStore: once PayPal has approved a payment, capture and the
+        // confirmation page must still work if the store session was lost meanwhile.
+        Route::post('/cart-checkout/paypal/capture', [$controller, 'cartPaypalCapture'])->name('cart-checkout.paypal.capture');
+        Route::get('/confirmation/{order}', [$controller, 'confirmation'])->name('confirmation');
+        Route::post('/paypal/capture', [$controller, 'capturePaypalOrder'])->name('paypal.capture');
 
         Route::get('/find-store', [$controller, 'findStore'])->name('find-store');
         Route::get('/nearest-store', [$controller, 'getNearestStore'])->name('nearest-store');

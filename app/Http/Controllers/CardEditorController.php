@@ -238,27 +238,31 @@ class CardEditorController extends Controller
             'orientation' => 'required|in:portrait,landscape',
             'name'        => 'nullable|string|max:255',
             'images'      => 'required|array',
-            'images.*'    => 'required|string',
+            // ~15 MB decoded per page as base64.
+            'images.*'    => 'required|string|max:' . (20 * 1024 * 1024),
         ]);
 
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
         $dir = 'products/drafts/' . date('Y/m');
         $images = [];
         foreach (self::SLOTS[$data['type']] as $slot) {
-            $uri = $data['images'][$slot] ?? null;
-            if (!$uri || !preg_match('#^data:image/(png|jpe?g);base64,#', $uri, $m)) {
+            try {
+                $img = \App\Services\DataUriImage::decode($data['images'][$slot] ?? null, self::DRAFT_MAX_BYTES);
+            } catch (\InvalidArgumentException) {
                 continue;
             }
-            $bytes = base64_decode(substr($uri, strpos($uri, ',') + 1), true);
-            if ($bytes === false || @getimagesizefromstring($bytes) === false) {
-                continue;
-            }
-            $path = $dir . '/' . \Illuminate\Support\Str::random(32) . '.' . ($m[1] === 'png' ? 'png' : 'jpg');
-            \Illuminate\Support\Facades\Storage::disk('public')->put($path, $bytes);
+            // Re-encoded, so only clean pixels are published on the public disk.
+            $path = $dir . '/' . \Illuminate\Support\Str::random(32) . '.' . ($img['type'] === 'png' ? 'png' : 'jpg');
+            $disk->put($path, \App\Services\DataUriImage::reencode($img['bin'], $img['type']));
             $images[$slot] = $path;
         }
         if (!$images) {
             return response()->json(['message' => 'The card pages could not be saved.'], 422);
         }
+
+        // The previous unfinished draft of this session is replaced; drop its files.
+        $this->deleteUnusedDrafts(session('card_editor_product_draft.images', []));
+        $this->pruneStaleDrafts();
 
         session(['card_editor_product_draft' => [
             'name'            => $data['name'] ?? null,
@@ -268,5 +272,36 @@ class CardEditorController extends Controller
         ]]);
 
         return response()->json(['redirect' => route('admin.products.create', ['from_editor' => 1])]);
+    }
+
+    /** Max decoded size of one draft page image. */
+    private const DRAFT_MAX_BYTES = 15 * 1024 * 1024;
+
+    /** Draft files older than this, not used by any product, are removed. */
+    private const DRAFT_TTL_SECONDS = 2 * 86400;
+
+    /** Delete draft image files that no product references (a saved product keeps its draft path). */
+    private function deleteUnusedDrafts(array $paths): void
+    {
+        $paths = array_values(array_filter($paths, fn($p) => is_string($p) && str_starts_with($p, 'products/drafts/') && !str_contains($p, '..')));
+        if (!$paths) {
+            return;
+        }
+
+        $used = [];
+        foreach (['frame_image', 'sample_image', 'background_image', 'overlay_image'] as $col) {
+            $used = array_merge($used, Product::whereIn($col, $paths)->pluck($col)->all());
+        }
+
+        \Illuminate\Support\Facades\Storage::disk('public')->delete(array_diff($paths, $used));
+    }
+
+    /** Remove abandoned drafts from earlier sessions (cheap: only runs on a new draft). */
+    private function pruneStaleDrafts(): void
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        $cutoff = time() - self::DRAFT_TTL_SECONDS;
+        $stale = array_filter($disk->allFiles('products/drafts'), fn($f) => $disk->lastModified($f) < $cutoff);
+        $this->deleteUnusedDrafts($stale);
     }
 }

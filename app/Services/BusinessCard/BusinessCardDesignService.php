@@ -6,8 +6,7 @@ use App\Models\UserDesign;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
+use App\Services\DataUriImage;
 
 /**
  * Persists a double-sided business card using the existing `user_designs`
@@ -25,7 +24,7 @@ class BusinessCardDesignService
     public const TYPE = 'business-card';
 
     /** Max decoded size of one side image. */
-    public const MAX_IMAGE_BYTES = 40 * 1024 * 1024;
+    public const MAX_IMAGE_BYTES = 16 * 1024 * 1024;
 
     /** Max encoded size of one side's editor JSON. */
     public const MAX_DESIGN_BYTES = 8 * 1024 * 1024;
@@ -119,24 +118,13 @@ class BusinessCardDesignService
      */
     protected function normaliseImage(mixed $dataUri, string $side, int $dpi = BusinessCard::DPI): string
     {
-        if (!is_string($dataUri) || !preg_match('#^data:image/(png|jpe?g);base64,#i', $dataUri, $m)) {
-            $this->fail("sides.{$side}.image", 'The ' . $side . ' side image must be a PNG or JPEG data URI.');
+        try {
+            $img = DataUriImage::decode($dataUri, self::MAX_IMAGE_BYTES);
+        } catch (\InvalidArgumentException $e) {
+            $this->fail("sides.{$side}.image", 'The ' . $side . ' side image ' . $e->getMessage());
         }
 
-        $bin = base64_decode(substr($dataUri, strlen($m[0])), true);
-        if ($bin === false || $bin === '') {
-            $this->fail("sides.{$side}.image", 'The ' . $side . ' side image could not be decoded.');
-        }
-        if (strlen($bin) > self::MAX_IMAGE_BYTES) {
-            $this->fail("sides.{$side}.image", 'The ' . $side . ' side image is too large.');
-        }
-
-        $info = @getimagesizefromstring($bin);
-        if (!$info || !in_array($info[2] ?? null, [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) {
-            $this->fail("sides.{$side}.image", 'The ' . $side . ' side image is not a valid PNG or JPEG.');
-        }
-
-        [$w, $h] = $info;
+        ['bin' => $bin, 'width' => $w, 'height' => $h] = $img;
         $expected = BusinessCard::WIDTH_IN / BusinessCard::HEIGHT_IN;
         if ($w < self::MIN_IMAGE_WIDTH || $w > self::MAX_IMAGE_WIDTH || $h <= 0
             || abs(($w / $h) - $expected) / $expected > self::ASPECT_TOLERANCE) {
@@ -146,10 +134,7 @@ class BusinessCardDesignService
             );
         }
 
-        $image = (new ImageManager(new Driver()))->read($bin);
-        $image->resize(BusinessCard::imageWidthPx($dpi), BusinessCard::imageHeightPx($dpi));
-
-        return (string) $image->toJpeg(95);
+        return DataUriImage::reencode($bin, 'jpeg', BusinessCard::imageWidthPx($dpi), BusinessCard::imageHeightPx($dpi));
     }
 
     /** Validate one side's editor serialisation and return it as JSON. */
