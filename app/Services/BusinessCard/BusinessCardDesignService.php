@@ -134,7 +134,7 @@ class BusinessCardDesignService
             );
         }
 
-        return DataUriImage::reencode($bin, 'jpeg', BusinessCard::imageWidthPx($dpi), BusinessCard::imageHeightPx($dpi));
+        return DataUriImage::reencode($bin, 'jpeg', BusinessCard::imageWidthPx($dpi), BusinessCard::imageHeightPx($dpi), $dpi);
     }
 
     /** Validate one side's editor serialisation and return it as JSON. */

@@ -370,7 +370,7 @@
                     <p x-show="selectedCard !== 'business-card'" class="text-xs text-slate-500 text-center mt-4" x-text="note"></p>
 
                     {{-- Business card selected: upload a finished PDF or images, then design. --}}
-                    @include('quick-flow-pc.local-print.partials.business-card-upload')
+                    @include('quick-flow-pc.local-print.partials.business-card-upload-panel')
 
                     <div x-show="selectedCard !== 'business-card'" class="w-full flex justify-end mt-4">
                         <a :href="valid ? href : null" :aria-disabled="!valid"

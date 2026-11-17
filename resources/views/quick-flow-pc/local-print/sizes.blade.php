@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="lp-sizes w-full min-h-screen font-sans"
-        x-data="{ orientMode: 'portrait', selectedCard: null, uploadOpen: false }">
+        x-data="{ orientMode: 'portrait', selectedCard: null, bcError: '' }">
         <div class="lp-wrap">
 
             {{-- Breadcrumb --}}
@@ -165,11 +165,34 @@
                                     </svg>
                                 </a>
                                 @if ($uploadKind === 'biz')
-                                    <button type="button" class="lp-btn lp-btn-line"
-                                        @click.stop="selectedCard = titleSlug; uploadOpen = true; $nextTick(() => document.querySelector('.bcu-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))">
-                                        @include('quick-flow-pc.local-print.partials.upload-icon')
-                                        Upload
-                                    </button>
+                                    {{-- Pick a PDF / images, read them in the browser, then open the editor with them. --}}
+                                    <label class="lp-btn lp-btn-line bcu-pick" :class="bcBusy && 'is-busy'" @click.stop
+                                        x-data="{
+                                            bcBusy: false,
+                                            async pick(e) {
+                                                const files = e.target.files ? Array.from(e.target.files) : [];
+                                                e.target.value = '';
+                                                if (!files.length || this.bcBusy) return;
+                                                this.bcBusy = true;
+                                                bcError = '';
+                                                try {
+                                                    const res = await BusinessCardPdf.read(files);
+                                                    if (!BusinessCardPdf.store(res)) throw new BusinessCardPdf.UploadError('Your browser could not keep this file. Close other tabs and try again.');
+                                                    window.location.assign('{{ route('localprint.customizer', ['size' => '3.5x2', 'orientation' => 'landscape', 'title' => 'business-card']) }}');
+                                                } catch (err) {
+                                                    bcError = BusinessCardPdf.message(err);
+                                                    this.bcBusy = false;
+                                                }
+                                            },
+                                        }">
+                                        <span class="bcu-spin" x-show="bcBusy" aria-hidden="true"></span>
+                                        <span x-show="!bcBusy" class="inline-flex">@include('quick-flow-pc.local-print.partials.upload-icon')</span>
+                                        <span x-text="bcBusy ? 'Reading file…' : 'Upload'">Upload</span>
+                                        <input type="file" class="bcu-input" :disabled="bcBusy"
+                                            accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" multiple
+                                            @change="pick($event)">
+                                    </label>
+                                    <p class="bcu-error" role="alert" x-show="bcError" x-cloak x-text="bcError"></p>
                                 @elseif ($uploadKind)
                                     <a :href="'{{ route('localprint.pdf') }}?kind={{ $uploadKind }}&shape=' + orientMode"
                                         class="lp-btn lp-btn-line">
@@ -188,6 +211,9 @@
 
             </div>
 
+            {{-- Business card Upload: shared reader script + styles. --}}
+            @include('quick-flow-pc.local-print.partials.business-card-upload')
+
             {{-- Custom Size (inches only) --}}
             <div x-data="{
                 cardType: 'folded',
@@ -196,7 +222,6 @@
                 min: 2,
                 max: 12,
                 presets: [
-                    { label: 'Business card 3.5 × 2 in', w: 3.5, h: 2, type: 'double' },
                     { label: 'Square 5 × 5 in', w: 5, h: 5 },
                     { label: 'Square 6 × 6 in', w: 6, h: 6 },
                     { label: 'Photo 4 × 6 in', w: 4, h: 6 },
@@ -211,13 +236,6 @@
                         this.presets.filter((p, i) => i < this.visiblePresets || this.isPreset(p));
                 },
                 init() {
-                    // Business card picked above: preview it here as a 3.5 × 2 in double-sided card.
-                    this.$watch('selectedCard', v => {
-                        if (v !== 'business-card') return;
-                        this.cardType = 'double';
-                        this.w = 3.5;
-                        this.h = 2;
-                    });
                     // Append printer paper sizes, skipping any already listed.
                     const paper = {{ Illuminate\Support\Js::from($paperPresets ?? []) }};
                     const key = p => Math.min(p.w, p.h) + 'x' + Math.max(p.w, p.h);
@@ -365,12 +383,9 @@
                         </div>
                     </div>
 
-                    <p x-show="selectedCard !== 'business-card'" class="text-xs text-slate-500 text-center mt-4" x-text="note"></p>
+                    <p class="text-xs text-slate-500 text-center mt-4" x-text="note"></p>
 
-                    {{-- Business card selected: upload a finished PDF or images, then design. --}}
-                    @include('quick-flow-pc.local-print.partials.business-card-upload')
-
-                    <div x-show="selectedCard !== 'business-card'" class="w-full flex justify-end mt-4">
+                    <div class="w-full flex justify-end mt-4">
                         <a :href="valid ? href : null" :aria-disabled="!valid"
                             :class="valid ? '' : 'is-off'" class="lp-btn lp-btn-solid px-5">
                             <span x-text="'Design ' + fmt(w) + ' in × ' + fmt(h) + ' in'"></span>

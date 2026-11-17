@@ -102,9 +102,38 @@ class BusinessCardController extends Controller
         ));
     }
 
+    /**
+     * The editor sends the save as multipart FILES (payload.json + front/back
+     * JPGs) because shared hosting (ModSecurity SecRequestBodyNoFilesLimit,
+     * ~1 MB) answers 413 to large JSON / text bodies. Rebuild the original
+     * JSON shape here so validation and the services stay unchanged.
+     */
+    protected function unpackMultipart(Request $request): void
+    {
+        $payload = $request->file('payload');
+        if (!$payload || !$payload->isValid()) {
+            return;
+        }
+        $data = json_decode((string) file_get_contents($payload->getRealPath()), true);
+        if (!is_array($data)) {
+            throw ValidationException::withMessages(['payload' => 'The design data could not be read.']);
+        }
+        foreach (['front', 'back'] as $side) {
+            $file = $request->file("{$side}_image");
+            if ($file && $file->isValid() && $file->getSize() <= self::MAX_IMAGE_CHARS) {
+                $mime = $file->getMimeType() === 'image/png' ? 'image/png' : 'image/jpeg';
+                $data['sides'][$side]['image'] = 'data:' . $mime . ';base64,'
+                    . base64_encode((string) file_get_contents($file->getRealPath()));
+            }
+        }
+        $request->replace($data);
+    }
+
     /* ── Save both sides + generate the print PDFs ──────────────── */
     public function save(Request $request, BusinessCardDesignService $designs, BusinessCardPdfService $pdfs)
     {
+        $this->unpackMultipart($request);
+
         $validated = $request->validate([
             'design_id'           => ['nullable', 'integer', 'min:1'],
             'product_id'          => ['required', 'integer', Rule::exists('products', 'id')],

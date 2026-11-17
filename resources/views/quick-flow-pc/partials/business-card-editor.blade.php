@@ -119,7 +119,7 @@
         const sideName = key => key === SIDE_KEYS.back ? 'back' : 'front';
 
         // Two pages (a PDF or two images): page 1 on the Front, page 2 on the Back.
-        // One image: only on `singleKey`. Replaces earlier uploaded artwork there;
+        // One page or image: on both sides if both are empty, else only `singleKey`. Replaces earlier uploaded artwork;
         // from the size page (clearSides) any old design in this browser is
         // cleared from both sides first.
         async function applyPages(pages, clearSides, singleKey) {
@@ -132,21 +132,25 @@
                     customizer._saveCanvasState(key);
                 });
             }
-            const targets = pages.length === 2 ? SIDE_ORDER : [singleKey || SIDE_KEYS.front];
+            // 2 pages → Front gets page 1, Back gets page 2. 1 page/image: both sides only when BOTH are empty; otherwise just the side being edited.
+            // From the size page (clearSides) both sides were just cleared.
+            const bothEmpty = clearSides || SIDE_ORDER.every(k => sideIsEmpty(k));
+            const targets = pages.length >= 2 || bothEmpty ? SIDE_ORDER : [singleKey || SIDE_KEYS.front];
             for (let i = 0; i < targets.length; i++) {
                 const key = targets[i];
                 const fc = customizer.canvases[key] && customizer.canvases[key].fabricCanvas;
                 if (!fc) continue;
                 uploadedArt(key).forEach(o => fc.remove(o));
-                await addArt(key, pages[i]);
+                await addArt(key, pages.length >= 2 ? pages[i] : pages[0]);
                 if (customizer.pushHistoryState) customizer.pushHistoryState(key);
             }
             customizer.updateUI();
             refreshUploadUi();
+            return targets.length === 2;
         }
 
-        function showResult(res, singleKey) {
-            showMsg(PDF.describe(res, sideName(singleKey)) + (res.note ? ' ' + res.note : ''), res.note ? 'warn' : 'ok');
+        function showResult(res, singleKey, both) {
+            showMsg(PDF.describe(res, both ? 'both' : sideName(singleKey)) + (res.note ? ' ' + res.note : ''), res.note ? 'warn' : 'ok');
         }
 
         async function handleFile(files) {
@@ -157,8 +161,8 @@
             refreshUploadUi();
             try {
                 const res = await PDF.read(files);
-                await applyPages(res.pages, false, target);
-                showResult(res, target);
+                const both = await applyPages(res.pages, false, target);
+                showResult(res, target, both);
             } catch (e) {
                 showMsg(PDF.message(e), 'err');
             } finally {
@@ -217,7 +221,7 @@
             });
             if (handoff) {
                 PDF.clear();
-                applyPages(handoff.pages, true, SIDE_KEYS.front).then(() => showResult(handoff, SIDE_KEYS.front));
+                applyPages(handoff.pages, true, SIDE_KEYS.front).then(both => showResult(handoff, SIDE_KEYS.front, both));
             }
             setTimeout(refreshUploadUi, 600);
         };
@@ -370,16 +374,36 @@
             }
         };
 
+        // data:image/jpeg;base64,... -> Blob (binary, no base64 overhead).
+        const dataUriToBlob = uri => {
+            const [head, b64] = uri.split(',');
+            const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+            const bin = atob(b64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return new Blob([bytes], { type: mime });
+        };
+
+        // Sent as multipart FILES, not a JSON body: shared hosting (ModSecurity)
+        // rejects large non-file request bodies with 413. The server rebuilds
+        // the JSON shape (BusinessCardController::unpackMultipart).
         customizer._postBusinessCard = async function(payload) {
+            const meta = JSON.parse(JSON.stringify(payload));
+            const form = new FormData();
+            ['front', 'back'].forEach(side => {
+                form.append(side + '_image', dataUriToBlob(payload.sides[side].image), side + '.jpg');
+                delete meta.sides[side].image;
+            });
+            form.append('payload', new Blob([JSON.stringify(meta)], { type: 'application/json' }), 'payload.json');
+
             const res = await fetch(BC.saveUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': this._config.csrfToken,
                 },
-                body: JSON.stringify(payload),
+                body: form,
             });
             let body = null;
             try { body = await res.json(); } catch (e) {}

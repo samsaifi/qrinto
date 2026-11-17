@@ -172,6 +172,27 @@ class BusinessCardTest extends TestCase
         $this->assertTrue($disk->exists($data['pdfs']['a4_centered']['path']));
     }
 
+    public function test_multipart_file_upload_save_is_accepted_and_stamped_300_dpi(): void
+    {
+        $p = $this->payload(['dpi' => 300]);
+        $files = [];
+        foreach (['front', 'back'] as $side) {
+            $bin = base64_decode(explode(',', $p['sides'][$side]['image'])[1]);
+            $files["{$side}_image"] = \Illuminate\Http\UploadedFile::fake()->createWithContent("{$side}.jpg", $bin);
+            unset($p['sides'][$side]['image']);
+        }
+        $files['payload'] = \Illuminate\Http\UploadedFile::fake()->createWithContent('payload.json', json_encode($p));
+
+        $res = $this->asSession(self::SESSION_A)
+            ->post('/print/own-design/business-card/save', $files, ['Accept' => 'application/json'])
+            ->assertCreated()->assertJsonPath('success', true);
+
+        $data = $this->design($res->json('design_id'))->design_data;
+        $jpg  = Storage::disk('local')->get($data['sides']['front']['image_path']);
+        $this->assertSame([1050, 600], array_slice(getimagesizefromstring($jpg), 0, 2));
+        $this->assertSame(['u' => 1, 'x' => 300, 'y' => 300], unpack('Cu/nx/ny', substr($jpg, 13, 5)));
+    }
+
     public function test_letter_10_up_pdf_is_exact_8_5x11_with_10_unscaled_cards_per_side(): void
     {
         $id  = $this->save($this->payload())->assertCreated()->json('design_id');

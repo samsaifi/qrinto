@@ -6,7 +6,7 @@
  *   - a PDF (PDF.js): any page count, page 1 = front, page 2 (if any) = back; ≤ 50 MB
  *   - 1 or 2 images (PNG / JPG / JPEG, checked by their bytes); ≤ 25 MB each.
  *     Two images: names containing "front" / "back" decide the side, otherwise
- *     the order they were chosen in. One image goes on one side only.
+ *     the order they were chosen in. One image / 1-page PDF goes on both sides when both are empty, else on the open side.
  * Every page / image is drawn onto a 1050 × 600 px JPEG (300 DPI at
  * 3.5 × 2 in): scaled to fill the card (never stretched) and the overflow
  * trimmed evenly. Other shapes and low-resolution images get a heads-up note.
@@ -30,6 +30,7 @@ window.BusinessCardPdf = (function () {
     var TOLERANCE_PT = 1.5;        // ± 0.02 in counts as an exact 3.5 × 2 page
     var MAX_PDF_BYTES = 50 * 1024 * 1024;
     var MAX_IMAGE_BYTES = 25 * 1024 * 1024;
+    var MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // any uploaded file, PDF or image
     var OUT_W = 1050;              // 300 DPI at 3.5 in → 1050 × 600
     var OUT_H = 600;
     var STORE_KEY = 'qrinto_bizcard_v1_upload';
@@ -196,6 +197,15 @@ window.BusinessCardPdf = (function () {
         var files = input instanceof File ? [input] : Array.prototype.slice.call(input || []);
         if (!files.length) throw new UploadError('Choose a PDF, PNG or JPG file.');
 
+        // Hard 20 MB cap per file: tell the customer right away (alert) and stop.
+        for (var j = 0; j < files.length; j++) {
+            if (files[j].size > MAX_UPLOAD_BYTES) {
+                var msg = files[j].name + ' is larger than 20 MB. Please upload a lighter file (under 20 MB).';
+                alert(msg);
+                throw new UploadError(msg);
+            }
+        }
+
         var kinds = [];
         for (var i = 0; i < files.length; i++) {
             var kind = await sniff(files[i]);
@@ -227,11 +237,13 @@ window.BusinessCardPdf = (function () {
     }
 
     /** "Using …" line for a result; `side` names where a single image went. */
+    // side: 'front' | 'back' | 'both' (where a single page / image was placed).
     function describe(result, side) {
+        var where = side === 'both' ? 'both the front and the back' : 'the ' + (side || 'front');
         if (result.kind === 'pdf') return 'Using ' + result.names[0] + (result.pages.length === 2
-            ? ': page 1 is on the front and page 2 on the back.' : ' on the front.');
+            ? ': page 1 is on the front and page 2 on the back.' : ' on ' + where + '.');
         if (result.pages.length === 2) return 'Using ' + result.names[0] + ' on the front and ' + result.names[1] + ' on the back.';
-        return 'Using ' + result.names[0] + ' on the ' + (side || 'front') + '.';
+        return 'Using ' + result.names[0] + ' on ' + where + '.';
     }
 
     // ── Hand-off between the size page and the editor (this tab only) ──

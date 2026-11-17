@@ -1,94 +1,7 @@
-{{-- Size page, Business card selected (shown under the custom-size preview):
-     upload finished artwork and/or go to
-     the editor. A PDF (page 1 front, page 2 back if any) or one or two
-     PNG / JPG images (front, then back) are checked and rendered in the browser
-     by public/js/business-card-pdf.js and handed to the editor, which places
-     them on Front (and Back). Runs inside the size page's x-data (selectedCard). --}}
-<section class="bcu" x-show="selectedCard === 'business-card'" x-cloak x-transition.opacity
-    aria-label="Business card file upload" x-data="{
-        busy: false,
-        error: '',
-        using: '',
-        hasBack: false,
-        note: '',
-        init() {
-            const s = window.BusinessCardPdf && BusinessCardPdf.stored();
-            if (s) { this.show(s); uploadOpen = true; }
-        },
-        show(res) {
-            this.using = BusinessCardPdf.describe(res, 'front');
-            this.hasBack = res.pages.length === 2;
-            this.note = res.note || '';
-        },
-        async pick(e) {
-            const files = e.target.files ? Array.from(e.target.files) : [];
-            e.target.value = '';
-            if (!files.length) return;
-            this.busy = true;
-            this.error = '';
-            try {
-                const res = await BusinessCardPdf.read(files);
-                if (!BusinessCardPdf.store(res)) throw new BusinessCardPdf.UploadError('Your browser could not keep this file. Close other tabs and try again.');
-                this.show(res);
-            } catch (err) {
-                this.error = BusinessCardPdf.message(err);
-            } finally {
-                this.busy = false;
-            }
-        },
-        remove() {
-            BusinessCardPdf.clear();
-            this.using = '';
-            this.error = '';
-            this.note = '';
-        },
-    }">
-    <div class="bcu-banner">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="6" width="18" height="12" rx="2" />
-            <path d="M7 10h6M7 14h4" />
-        </svg>
-        <span><strong>That’s a business card.</strong> After you design it, we’ll offer to print 10 on a 7 × 10 in sheet
-            or 12 on Letter or A4, with the backs lined up for cutting.</span>
-    </div>
-    {{-- Upload box opens from the card's Upload button (uploadOpen on the size page). --}}
-    <div class="bcu-box" x-show="uploadOpen">
-        <span class="bcu-text">
-            <strong x-text="using ? using : 'Already have it designed?'"></strong>
-            <span
-                x-text="using
-                ? (hasBack ? 'Front and back are loaded. Open the editor to check them or add more.' : 'The front is loaded. Add the back in the editor.')
-                : 'Upload a PDF (page 1 is the front, page 2 the back) or one or two PNG/JPG images (front, then back).'"></span>
-        </span>
-        <span class="bcu-actions">
-            <button type="button" class="bcu-link" :hidden="!using || busy" @click="remove()">Remove</button>
-            <label class="bcu-btn" :class="busy && 'is-busy'">
-                <span class="bcu-spin" x-show="busy" aria-hidden="true"></span>
-                <svg x-show="!busy" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    aria-hidden="true">
-                    <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
-                </svg>
-                <span x-text="busy ? 'Reading file…' : (using ? 'Replace file' : 'Upload file')"></span>
-                <input type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" multiple
-                    class="bcu-input" :disabled="busy" @change="pick($event)">
-            </label>
-        </span>
-    </div>
-    <p class="bcu-error" role="alert" :hidden="!uploadOpen || !error" x-text="error"></p>
-    <p class="bcu-note" role="status" :hidden="!uploadOpen || !note || !using || !!error" x-text="note"></p>
-    <div class="bcu-go">
-        <a class="bcu-design"
-            href="{{ route('localprint.customizer', ['size' => '3.5x2', 'orientation' => 'landscape', 'title' => 'business-card', 'fresh' => 1]) }}">
-            Design 3.5 in × 2 in
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-        </a>
-    </div>
-</section>
+{{-- Size page: the Business card card's Upload button picks a PDF (page 1 front,
+     page 2 back) or one or two PNG / JPG images, reads them in the browser with
+     public/js/business-card-pdf.js, hands them to the editor (sessionStorage)
+     and redirects there. This partial only carries the shared styles + script. --}}
 
 @push('styles')
     <style>
@@ -234,6 +147,10 @@
         .bcu [hidden] {
             display: none !important
         }
+
+        .bcu-pick { position: relative; cursor: pointer }
+        .bcu-pick.is-busy { cursor: progress; opacity: .8 }
+        .bcu-pick:focus-within { outline: 3px solid #9FCB98; outline-offset: 2px }
 
         .bcu-error {
             margin: 0;

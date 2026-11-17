@@ -43,13 +43,39 @@ class DataUriImage
     }
 
     /** Re-encode through GD: strips metadata and anything appended to the bytes. */
-    public static function reencode(string $bin, string $type, ?int $width = null, ?int $height = null): string
+    public static function reencode(string $bin, string $type, ?int $width = null, ?int $height = null, ?int $dpi = null): string
     {
         $image = (new ImageManager(new Driver()))->read($bin);
         if ($width && $height) {
             $image->resize($width, $height);
         }
 
-        return (string) ($type === 'png' ? $image->toPng() : $image->toJpeg(95));
+        if ($type === 'png') {
+            return (string) $image->toPng();
+        }
+        $jpeg = (string) $image->toJpeg(95);
+
+        return $dpi ? self::setJpegDpi($jpeg, $dpi) : $jpeg;
+    }
+
+    /**
+     * Stamp the JFIF density (pixels per inch) so the JPEG opens at its real
+     * print size, e.g. 1050×600 px @ 300 DPI = 3.5 × 2 in. GD writes 96 DPI.
+     */
+    public static function setJpegDpi(string $jpeg, int $dpi): string
+    {
+        if (strncmp($jpeg, "\xFF\xD8", 2) !== 0) {
+            return $jpeg;
+        }
+        $density = chr(1) . pack('nn', $dpi, $dpi); // units = dots per inch
+
+        if (substr($jpeg, 2, 2) === "\xFF\xE0" && substr($jpeg, 6, 5) === "JFIF\0") {
+            return substr_replace($jpeg, $density, 13, 5);
+        }
+
+        // No JFIF header: insert one right after SOI.
+        $app0 = "\xFF\xE0" . pack('n', 16) . "JFIF\0" . "\x01\x01" . $density . "\x00\x00";
+
+        return "\xFF\xD8" . $app0 . substr($jpeg, 2);
     }
 }
