@@ -134,6 +134,16 @@
                                         </span>
                                     </div>
                                 @endif
+
+                                {{-- Orientation badge (from the template's pdf_orientation) --}}
+                                @php $isLandscape = strtolower((string) $tpl->pdf_orientation) === 'landscape'; @endphp
+                                <span
+                                    style="position:absolute;z-index:20;right:8px;bottom:8px;width:30px;height:30px;border-radius:9999px;background:#287d3c;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.25);color:#fff"
+                                    title="{{ $isLandscape ? 'Landscape' : 'Portrait' }}"
+                                    aria-label="{{ $isLandscape ? 'Landscape' : 'Portrait' }} template">
+                                    <i data-lucide="{{ $isLandscape ? 'rectangle-horizontal' : 'rectangle-vertical' }}"
+                                        style="width:18px;height:18px;color:#fff"></i>
+                                </span>
                             </div>
 
                             {{-- Bottom Info Area --}}
