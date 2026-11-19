@@ -109,12 +109,50 @@
         }
         $flowData = session('quick_flow_data', []);
 
+        // Product design flow: the canvas must match the chosen card size
+        // (e.g. 3.5 × 5 portrait), not the product's admin mask canvas.
+        if (!$lpo && !empty($flowData['size_width']) && !empty($flowData['size_height'])) {
+            // Open in the template's own orientation: a landscape template on a
+            // 5×7 size opens as 7×5, a portrait one stays 5×7.
+            $tplOrient = strtolower((string) ($product->pdf_orientation ?? ''));
+            $szLong = max((float) $flowData['size_width'], (float) $flowData['size_height']);
+            $szShort = min((float) $flowData['size_width'], (float) $flowData['size_height']);
+            if ($tplOrient === 'landscape') {
+                $flowData['size_width'] = $szLong;
+                $flowData['size_height'] = $szShort;
+            } elseif ($tplOrient === 'portrait') {
+                $flowData['size_width'] = $szShort;
+                $flowData['size_height'] = $szLong;
+            }
+            $szAspect = (float) $flowData['size_width'] / (float) $flowData['size_height'];
+            $szW = $szAspect >= 1 ? 560 : (int) round(560 * $szAspect);
+            $szH = $szAspect >= 1 ? (int) round(560 / $szAspect) : 560;
+            foreach (array_keys($imageTypes) as $field) {
+                $cfg = is_array($maskData[$field] ?? null) ? $maskData[$field] : [];
+                $cw = (float) ($cfg['canvasWidth'] ?? 0);
+                $ch = (float) ($cfg['canvasHeight'] ?? 0);
+                if (!$cw || !$ch || abs($cw / $ch - $szAspect) > 0.02) {
+                    $cfg['canvasWidth'] = $szW;
+                    $cfg['canvasHeight'] = $szH;
+                }
+                $maskData[$field] = $cfg;
+            }
+        }
+
         // Local-print own-design editor (LocalPrintController / BusinessCardController):
         // page-thumbnail dock, simplified toolbar, trim + safe-area guides.
+        // Product design flow (/cards/{title}/{size}/design/...) uses the same UI;
+        // only the Continue target differs (cart vs local-print preview).
         $lpUi = null;
-        if ($lpo) {
-            $lpW = (float) ($flowData['size_width'] ?? ($lpo['isPortrait'] ? 3.5 : 5));
-            $lpH = (float) ($flowData['size_height'] ?? ($lpo['isPortrait'] ? 5 : 3.5));
+        if (true) {
+            $lpFirstMask = $maskData[array_key_first($imageTypes)] ?? [];
+            $lpPortrait = $lpo
+                ? $lpo['isPortrait']
+                : (($product->pdf_orientation ?? 'portrait') === 'portrait');
+            $lpFallbackW = !empty($lpFirstMask['canvasWidth']) && !empty($lpFirstMask['canvasHeight'])
+                ? 5 * (float) $lpFirstMask['canvasWidth'] / (float) $lpFirstMask['canvasHeight'] : null;
+            $lpW = (float) ($flowData['size_width'] ?? $lpFallbackW ?? ($lpPortrait ? 3.5 : 5));
+            $lpH = (float) ($flowData['size_height'] ?? ($lpFallbackW ? 5 : ($lpPortrait ? 5 : 3.5)));
             $lpLabels = $bizCard
                 ? array_values($bizCard['sides'])
                 : [1 => ['Front'], 2 => ['Front', 'Back'], 4 => ['Front', 'Inside left', 'Inside right', 'Back']][count($imageTypes)]
@@ -134,6 +172,7 @@
                         : ['w' => (int) round(72 * $scale * $lpAspect), 'h' => (int) round(72 * $scale)];
                 })(),
                 'businessCard' => (bool) $bizCard,
+                'cartMode'     => !$lpo,
             ];
         }
 
@@ -613,11 +652,7 @@
                     </div>
 
                     {{-- ═══ RIGHT: ABSOLUTE FLOATING VERTICAL STUDIO DOCK ═══ --}}
-@if ($lpUi)
                     @include('quick-flow-pc.partials.local-print-editor-right-dock')
-@else
-                    @include('quick-flow-pc.partials.customizer-right-dock', ['multiUpload' => false])
-@endif
 
                 </div>
             </div>

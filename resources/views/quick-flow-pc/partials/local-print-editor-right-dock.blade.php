@@ -41,22 +41,24 @@
     </button>
 
     <button type="button" id="lp-continue-btn" class="lp-rtool lp-rtool-go" onclick="customizer.lpContinue()"
-        title="{{ $lpUi['businessCard'] ? 'Save both sides and continue to sheet layout' : 'Continue to preview and print' }}">
+        title="{{ $lpUi['businessCard'] ? 'Save both sides and continue to sheet layout' : ($lpUi['cartMode'] ? 'Continue to order' : 'Continue to preview and print') }}">
         <span class="lp-rtool-ico"><i data-lucide="arrow-right" class="w-[18px] h-[18px]" aria-hidden="true"></i></span>
         <span class="lp-rtool-label">Continue</span>
     </button>
 
     @unless ($lpUi['businessCard'])
         {{-- Same submission as customizer-right-dock (read by customizer-base submitAllCanvases). --}}
-        <form action="{{ route('localprint.preview') }}" method="POST" id="checkout-form" class="hidden">
+        <form action="{{ $lpUi['cartMode'] ? route('flow.cart.add') : route('localprint.preview') }}" method="POST" id="checkout-form" class="hidden">
             @csrf
             <input type="hidden" name="product_id" value="{{ $product->id }}">
             <input type="hidden" name="upload_ids" id="upload_ids_field">
+            @unless ($lpUi['cartMode'])
             @php $fd = session('quick_flow_data', []); @endphp
             <input type="hidden" name="size_width" value="{{ $fd['size_width'] ?? '' }}">
             <input type="hidden" name="size_height" value="{{ $fd['size_height'] ?? '' }}">
             <input type="hidden" name="size_unit" value="{{ $fd['size_unit'] ?? 'in' }}">
             <input type="hidden" name="orientation" value="{{ $fd['orientation'] ?? 'portrait' }}">
+            @endunless
         </form>
     @endunless
 </div>
